@@ -1,0 +1,10 @@
+<h2>Search Chart of Accounts</h2>
+<form action="/coas" method="GET">
+    <label>Chart of Account Description: </label>
+    <input type="text" name="description" value="<%= searchOptions.description %>">
+    <button type="submit">Search</button>
+</form>
+<br>
+<% coas.forEach(coa => { %>
+    <div><%= coa.code%>   <%= coa.description%>  <%= coa.type%></div>
+<% }) %>
