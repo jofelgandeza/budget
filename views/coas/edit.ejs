@@ -1,0 +1,6 @@
+<h2 class="page-header">Edit Chart of Accounts</h2>
+<form action="/coas/<%= coa.id %>?_method=PUT" method="POST">
+<%- include('_form_fields') %>
+<a href="/coas/<%= coa.id %>">Cancel</a>
+<button type="submit">Update</button>
+</form>

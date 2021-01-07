@@ -1,0 +1,14 @@
+<h2 class="page-header">Search Cost Centers</h2>
+<form action="/coas" method="GET">
+    <label>Cost Center Description: </label>
+    <input type="text" name="description" value="<%= searchOptions.description %>">
+    <button type="submit">Search</button>
+</form>
+<br>
+<% cost_centers.forEach(cost_center => { %>
+    <div><%= cost_center.code%>   <%= cost_center.description%>  <%= cost_center.type%></div>
+    <a href="/cost_centers/<%= cost_center.id %>">View</a>
+    <a href="/cost_centers/<%= cost_center.id %>/edit">Edit</a>
+    <%- include('../partials/deleteForm', 
+                { url: `/cost_centers/${cost_center.id}` }) %>
+<% }) %> 

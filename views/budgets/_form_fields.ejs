@@ -1,0 +1,24 @@
+<div border: 3px>
+    <label>User</label>
+    <input type="text" name="user" value="<%= budget.user %>">
+    <label>Department</label>
+    <input type="text" name="department" size=50 value="<%= budget.department %>">
+</div>
+<label>Chart of Account</label>
+<select name="coa">
+<% coas.forEach(coa => { %>
+    <% if (coa.id === sub_ledger.coa) { %>
+        <option select label="<%= coa.description %>" value="<% sub_ledger.id %>"></option>
+   <% } else { %>
+        <option label="<%= coa.description %>" value="<%= sub_ledger.id %>"></option>
+  <%  } %>
+<% }) %> 
+</select>
+
+<label>Type</label>
+<input type="text" name="type" value="<%= sub_ledger.type %>">
+
+<label>Creation Date</label>
+<input type="date" name="createDate" 
+       value="<%= sub_ledger.createAt == null ? '' : 
+       sub_ledger.createAt.toISOString().split('T')[0] %>">

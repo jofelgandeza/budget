@@ -1,0 +1,14 @@
+<h2 class="page-header">Search Sub-Ledger Accounts</h2>
+<form action="/sub_ledgers" method="GET">
+    <label>Description: </label>
+    <input type="text" name="description" value="<%= searchOptions.description %>">
+    <button type="submit">Search</button>
+</form>
+<br>
+<% sub_ledgers.forEach(sub_ledger => { %>
+    <div><%= sub_ledger.code %>   <%= sub_ledger.description %>  <%= sub_ledger.type %>
+    <a href="/sub_ledgers/<%= sub_ledger.id %>">View</a>
+         <a href="/sub_ledgers/<%= sub_ledger.id %>/edit">Edit</a>
+         <%- include('../partials/deleteForm', { url: `/sub_ledgers/${sub_ledger.id}` }) %>
+         <% }) %>
+    </div>

@@ -1,4 +1,4 @@
-<h2>Search Chart of Accounts</h2>
+<h2 class="page-header">Search Chart of Accounts</h2>
 <form action="/coas" method="GET">
     <label>Chart of Account Description: </label>
     <input type="text" name="description" value="<%= searchOptions.description %>">
@@ -7,4 +7,8 @@
 <br>
 <% coas.forEach(coa => { %>
     <div><%= coa.code%>   <%= coa.description%>  <%= coa.type%></div>
-<% }) %>
+    <a href="/coas/<%= coa.id %>">View</a>
+    <a href="/coas/<%= coa.id %>/edit">Edit</a>
+    <%- include('../partials/deleteForm', 
+                { url: `/coas/${coa.id}` }) %>
+<% }) %> 

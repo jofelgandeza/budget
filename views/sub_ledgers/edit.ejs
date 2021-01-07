@@ -1,0 +1,6 @@
+<h2 class="page-header">Edit Sub-Ledger Account</h2>
+<form action="/sub_ledgers/<%= sub_ledger.id %>?_method=PUT" method="POST">
+<%- include('_form_fields') %>
+<a href="/sub_ledgers/<%= sub_ledger.id %>">Cancel</a>
+<button type="submit">Update</button>
+</form>

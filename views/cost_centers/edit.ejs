@@ -1,0 +1,6 @@
+<h2 class="page-header">Edit Cost Centers</h2>
+<form action="/cost_centers/<%= cost_center.id %>?_method=PUT" method="POST">
+<%- include('_form_fields') %>
+<a href="/cost_centers/<%= cost_center.id %>">Cancel</a>
+<button type="submit">Update</button>
+</form>
