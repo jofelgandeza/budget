@@ -33,8 +33,8 @@ const coa = new Coa({
 })
 try {
     const newCoa = await coa.save()
-    res.redirect('coas/${newCoa.id}')
-//    res.redirect('coas')
+//    res.redirect('coas/${newCoa.id}')
+    res.redirect('coas')
 } catch {
    let locals = {errorMessage: 'Something went wrong.'}
     res.render('coas/new', {
