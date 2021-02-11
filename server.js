@@ -12,6 +12,8 @@ const indexRouter = require('./routes/index.js')
 const coaRouter = require('./routes/coas.js')
 const sub_ledgerRouter = require('./routes/sub_ledgers.js')
 const cost_centerRouter = require('./routes/cost_centers.js')
+const budgetRouter = require('./routes/budgets.js')
+
 
 app.set('view engine', 'ejs')
 app.set('views', __dirname + '/views')
@@ -32,5 +34,6 @@ app.use('/', indexRouter)
 app.use('/coas', coaRouter)
 app.use('/sub_ledgers', sub_ledgerRouter)
 app.use('/cost_centers', cost_centerRouter)
+app.use('/budgets', budgetRouter)
 
 app.listen(process.env.PORT || 3000)

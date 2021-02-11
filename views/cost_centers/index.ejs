@@ -1,14 +1,32 @@
 <h2 class="page-header">Search Cost Centers</h2>
 <form action="/coas" method="GET">
-    <label>Cost Center Description: </label>
-    <input type="text" name="description" value="<%= searchOptions.description %>">
-    <button type="submit">Search</button>
+    <div class="form-row">
+        <div class="form-item">
+            <label>Cost Center Description: </label>
+            <input type="text" name="description" value="<%= searchOptions.description %>" autocomplete="off">
+            <button class="btn btn-primary" type="submit">Search</button>        
+        </div>
+    </div>
 </form>
 <br>
 <% cost_centers.forEach(cost_center => { %>
-    <div><%= cost_center.code%>   <%= cost_center.description%>  <%= cost_center.type%></div>
-    <a href="/cost_centers/<%= cost_center.id %>">View</a>
-    <a href="/cost_centers/<%= cost_center.id %>/edit">Edit</a>
-    <%- include('../partials/deleteForm', 
-                { url: `/cost_centers/${cost_center.id}` }) %>
+    <div class="form-row">
+        <div class="form-item form-item-no-grow">
+            <%= cost_center.code%> 
+        </div>
+        <div class="form-item">
+            <%= cost_center.description%>  
+        </div>
+        <div class="form-item">
+            <%= cost_center.type%>
+        </div>
+       <div class="form-item">
+            <div class="btn-row">
+                <a class="btn btn-primary" href="/cost_centers/<%= cost_center.id %>">View</a>
+                <a class="btn btn-primary" href="/cost_centers/<%= cost_center.id %>/edit">Edit</a>
+                <%- include('../partials/deleteForm', 
+                    { url: `/cost_centers/${cost_center.id}` }) %>
+            </div>
+        </div>
+    </div>
 <% }) %> 

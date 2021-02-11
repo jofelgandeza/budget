@@ -1,0 +1,43 @@
+<h2 class="page-header">Search Budgets</h2>
+<form action="/budgets" method="GET">
+    <label>Description: </label>
+    <input type="text" name="description" value="<%= searchOptions.description %>">
+    <button class="btn btn-primary" type="submit">Search</button>
+</form>
+<br>
+<div class="inputAmountContainer2">
+    <label class="accountLabel">ACCOUNT DESCRIPTION</label>
+    <label>TOTAL</label>
+    <label>JAN</label>
+    <label>FEB</label>
+    <label>MAR</label>
+    <label>APR</label>
+    <label>MAY</label>
+    <label>JUN</label>
+    <label>JUL</label>
+    <label>AUG</label>
+    <label>SEPT</label>
+    <label>OCT</label>
+    <label>DEC</label>
+</div>
+    <% budgets.forEach(budget => { %>
+        <div class="inputAmountContainer1">
+            <% coas.forEach(coa => { %>
+                <% if (budget.coa == coa.id) { %>
+                  <label class="accountLabel"> <%= coa.description %> </label>
+                <% } %>
+            <% }) %>
+            <label><%= budget.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <label><%= budget.january.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <label><%= budget.february.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <label><%= budget.march.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <label><%= budget.april.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <label><%= budget.may.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <label><%= budget.june.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <label><%= budget.july.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <label><%= budget.august.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <label><%= budget.september.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <label><%= budget.october.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <label><%= budget.november.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+        </div>
+        <% }) %>

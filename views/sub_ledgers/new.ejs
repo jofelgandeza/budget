@@ -1,6 +1,8 @@
 <h2 class="page-header">New Sub-Ledger Accounts</h2>
 <form action="/sub_ledgers" method="POST">
-<%- include('_form_fields') %>
-<a href="/sub_ledgers">Cancel</a>
-<button type="submit">Create</button>
+            <%- include('_form_fields') %>
+<div class="form-item">
+    <a class="btn btn-primary" href="/sub_ledgers">Cancel</a>
+    <button class="btn btn-primary" type="submit">Create</button>
+</div>
 </form>

@@ -1,6 +1,9 @@
 @import 'shared/variables.css';
 @import 'shared/fonts.css';
 @import 'shared/header.css';
+@import 'shared/buttons.css';
+@import 'shared/form.css';
+/* @import '../javascipts/cleave.js'; */
 
 :root {
     font-family: 'Gotham Rounded';
@@ -19,7 +22,7 @@ body {
 
 .container {
     max-width: 1200px;
-    margin: auto;
+    margin: 0;
     margin-bottom: 3rem;
 }
 
@@ -27,7 +30,87 @@ body {
     margin: 0 2rem;
 }
 
+.inputAmountContainer2 {
+    width: 95vw;
+    height: 5vh;
+    font-size: 16px;
+    font-family: sans-serif;
+    text-align: right;
+    align-items: center;
+    background-color: rgb(112, 112, 231);
+    margin: 10px auto;
+    outline: 2px solid #3b28b4;
+    display: grid;
+    grid-template-columns: 200px repeat(13, minmax(90px, 1fr));
+    grid-template-rows: 30px;
+    grid-auto-columns: 90px 120px 350px;
+    grid-auto-rows: 30px;
+    grid-auto-flow: column;
+ }
+
+.inputAmountContainer1 {
+    width: 95vw;
+    height: 5vh;
+    font-size: 16px;
+    font-family: sans-serif;
+    text-align: right;
+    align-items: center;
+    background-color: rgb(112, 112, 231);
+    margin: 10px auto;
+    outline: 2px solid #3b28b4;
+    display: grid;
+    grid-template-columns: 200px repeat(13, minmax(90px, 1fr));
+    grid-template-rows: 30px;
+    grid-auto-columns: 90px 120px 350px;
+    grid-auto-rows: 30px;
+    grid-auto-flow: column;
+ }
+.inputAmountContainer {
+    width: 100vw;
+    height: 10vh;
+    font-size: 16px;
+    font-family: sans-serif;
+    text-align: right;
+    background-color: blue;
+    margin: 10px auto;
+    outline: 2px solid #3b28b4;
+    display: grid;
+    grid-template-columns: 150px 150px repeat(13, 90px);
+    grid-template-rows: 30px 30px;
+    grid-auto-columns: 90px 120px 350px;
+    grid-auto-rows: 30px;
+    grid-auto-flow: column;
+}
+
+.accountLabel {
+    text-align: left;
+}
+
 .page-header {
     font-size: 1.5rem;
     font-weight: 500;
 }
+ 
+.select_ledger {
+    size: 25;
+    font-size: 16px;
+}
+
+.input_amount {
+    min-height: 10px;
+    display: flex;
+    text-align: right;
+    border-bottom: 1px solid #F1F1F1;
+  }
+
+.input_label {
+    text-align: right;
+}
+  
+.item {
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px;
+  }
+  

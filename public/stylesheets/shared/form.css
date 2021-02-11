@@ -1,0 +1,102 @@
+:root {
+    --form-label-font-size: 1rem;
+    --form-input-background-color: hsl(var(--color-base-hue), 100%, 31%);
+    --form-input-border-color: hsl(var(--color-base-hue), 100%, 50%);
+}
+
+.form-row {
+    display: flex;
+    margin-bottom: .5rem;
+}
+
+.form-item {
+    display: flex;
+    flex-direction: row;
+    margin-left: 2rem;
+    flex-grow: 1;
+    flex-basis: 0;
+    font-size: var(--form-label-font-size);
+
+}
+
+.form-item-column {
+    display: flex;
+    flex-direction: column;
+    margin-left: 2rem;
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.form-item-column > label {
+    font-size: var(--form-label-font-size);
+    margin-bottom: 0;
+    margin-left: .25rem;
+    text-justify: left;
+    text-align: left;
+}
+
+.form-item-column input, .form-item-column select {
+    height: 1.4rem;
+    padding: .25rem 1rem;
+    border-radius: .25rem;
+    border: 1px solid var(--form-input-border-color);
+    background-color: var(--form-input-background-color);
+    color: var(--color-text-light);
+    font-size: .8rem;
+    font-weight: normal;
+    font-family: 'Gotham Rounded';
+    outline: none;
+
+}
+.form-item-search {
+    display: flex;
+    flex-direction: row;
+    margin-left: 2rem;
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.form-item:first-child {
+    margin-left: 0;
+}
+
+.form-item-no-grow {
+    flex-grow: .5;
+}
+
+.form-item > label {
+    font-size: var(--form-label-font-size);
+    margin-bottom: 0;
+    margin-left: .25rem;
+    text-justify: center;
+    text-align: center;
+}
+
+.form-item input, .form-item select {
+    height: 1.4rem;
+    padding: .25rem 1rem;
+    border-radius: .25rem;
+    border: 1px solid var(--form-input-border-color);
+    background-color: var(--form-input-background-color);
+    color: var(--color-text-light);
+    font-size: .8rem;
+    font-weight: normal;
+    font-family: 'Gotham Rounded';
+    outline: none;
+
+}
+
+
+.row-item {
+    display: flex;
+    align-items: flex-start;
+    width: 30px;
+}
+
+.row-item > * {
+    margin-left: 1rem;
+}
+
+.row-item > *:first-child {
+    margin-left: 0;
+}

@@ -20,61 +20,64 @@ const budgetSchema = new mongoose.Schema({
         ref: 'Sub_ledger'
     },
     cost_center: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'Cost_center'
+        type: String,
+        required: false
+    },
+    total: {
+        type: Number,
+        required: true
+    },
+    january: {
+        type: Number,
+        required: false
+    },
+    february: {
+        type: Number,
+        required: false
+    },
+    march: {
+        type: Number,
+        required: false
+    },
+    april: {
+        type: Number,
+        required: false
+    },
+    may: {
+        type: Number,
+        required: false
+    },
+    june: {
+        type: Number,
+        required: false
+    },
+    july: {
+        type: Number,
+        required: false
+    },
+    august: {
+        type: Number,
+        required: false
+    },
+    september: {
+        type: Number,
+        required: false
+    },
+    october: {  
+        type: Number,
+        required: false
+    },
+    november: {
+        type: Number,
+        required: false
+    },
+    december: {
+        type: Number,
+        required: false
     },
     type: {
         type: String,
         required: true
-    },
-    January: {
-        type: Number,
-        required: false
-    },
-    February: {
-        type: Number,
-        required: false
-    },
-    March: {
-        type: Number,
-        required: false
-    },
-    April: {
-        type: Number,
-        required: false
-    },
-    May: {
-        type: Number,
-        required: false
-    },
-    June: {
-        type: Number,
-        required: false
-    },
-    July: {
-        type: Number,
-        required: false
-    },
-    August: {
-        type: Number,
-        required: false
-    },
-    September: {
-        type: Number,
-        required: false
-    },
-    October: {
-        type: Number,
-        required: false
-    },
-    November: {
-        type: Number,
-        required: false
-    },
-    December: {
-        type: Number,
-        required: false
     },
     createAt: {
         type: Date,

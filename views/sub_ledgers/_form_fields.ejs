@@ -1,24 +1,37 @@
-<div>
-    <label>Code</label>
-    <input type="text" name="code" value="<%= sub_ledger.code %>">
-    <label>Description</label>
-    <input type="text" name="description" size=50 value="<%= sub_ledger.description %>">
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Code</label>
+        <input type="text" name="code" value="<%= sub_ledger.code %>" autocomplete="off">
+    </div>
+    <div class="form-item-column">
+            <label>Description</label>
+        <input type="text" name="description" size=50 value="<%= sub_ledger.description %>" autocomplete="off">
+    </div>
 </div>
-<label>Chart of Account</label>
-<select name="coa">
-<% coas.forEach(coa => { %>
-    <% if (coa.id === sub_ledger.coa) { %>
-        <option select label="<%= coa.description %>" value="<% sub_ledger.id %>"></option>
-   <% } else { %>
-        <option label="<%= coa.description %>" value="<%= sub_ledger.id %>"></option>
-  <%  } %>
-<% }) %> 
-</select>
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Chart of Account</label>
+        <select name="coa">
+            <% coas.forEach(coa => { %>
+                <% if (coa.id === sub_ledger.coa) { %>
+                   <option select label="<%= coa.description %>" value="<% sub_ledger.id %>"></option>
+                <% } else { %>
+                    <option label="<%= coa.description %>" value="<%= sub_ledger.id %>"></option>
+                <%  } %>
+            <% }) %> 
+        </select>
+    </div>
+    <div class="form-item-column">
+        <label>Type</label>
+        <input type="text" name="type" value="<%= sub_ledger.type %>" autocomplete="off">
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Creation Date</label>
+        <input type="date" name="createDate" 
+           value="<%= sub_ledger.createAt == null ? '' : 
+           sub_ledger.createAt.toISOString().split('T')[0] %>">
+    </div>
 
-<label>Type</label>
-<input type="text" name="type" value="<%= sub_ledger.type %>">
-
-<label>Creation Date</label>
-<input type="date" name="createDate" 
-       value="<%= sub_ledger.createAt == null ? '' : 
-       sub_ledger.createAt.toISOString().split('T')[0] %>">
+</div>
