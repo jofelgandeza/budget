@@ -100,3 +100,7 @@
 .row-item > *:first-child {
     margin-left: 0;
 }
+
+.errorMessage {
+    color: red;
+}

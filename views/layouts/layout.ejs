@@ -10,7 +10,9 @@
     <div class="container">
         <%- include('../partials/header.ejs') %>
         <div class="inner-container">
-            <%- include('../partials/errorMessage.ejs') %>
+            <div class="errorMessage">
+                <%- include('../partials/errorMessage.ejs') %>
+            </div>
             <%- body %>
         </div>
     </div>

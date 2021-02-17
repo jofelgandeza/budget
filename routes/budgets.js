@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
         const budgets = await Budget.find(searchOptions)
 
         const coas = await Coa.find({})
-        console.log(coas)
+//        console.log(coas)
         res.render('budgets/index', {
             budgets: budgets,
             coas: coas,
@@ -98,12 +98,34 @@ router.post('/', async (req, res) => {
         type: req.body.type,
         createAt: req.body.createDate
     })
-
+let isAdd = false
     try {
-        const newBudget = await budget.save()
-
+        const coas = await Coa.find({})
+        const sub_ledgers = await Sub_ledger.find({})
+        const cost_centers = await Cost_center.find({})
+       await Budget.findOne({code: req.body.code}, function (err, foundItem) {
+            if (!err) {
+                if (!foundItem) {
+                    isAdd = true
+                    const newCoa = budget.save()
+                    res.redirect('/budgets')
+    
+                } else {
+                    let locals = {errorMessage: 'Chart Account Code already exists!'}
+             
+                    res.render('budgets/new', {
+                            locals: locals,
+                            budget: budget,
+                            coas: coas,
+                            sub_ledgers: sub_ledgers,
+                            cost_centers: cost_centers 
+                    })            
+                }
+            }
+        })
+    if (isAdd) {    
         seekCoa = await Coa.findById(req.body.coa)
-        console.log(seekCoa)
+//        console.log(seekCoa)
 
         curJanBudget = seekCoa.budget_jan
         curFebBudget = seekCoa.budget_feb
@@ -137,12 +159,12 @@ router.post('/', async (req, res) => {
         seekCoa.budget_total = seekCoa.budget_jan + seekCoa.budget_feb + seekCoa.budget_mar + seekCoa.budget_apr + seekCoa.budget_may + 
                seekCoa.budget_jun + seekCoa.budget_jul + seekCoa.budget_aug + seekCoa.budget_sep + seekCoa.budget_oct + seekCoa.budget_nov + seekCoa.budget_dec 
 
-        console.log(seekCoa)
-        await seekCoa.save()
+            //console.log(seekCoa)
+            await seekCoa.save()
 
-        //res.redirect(`sub_ledgers/${newSub-Ledger.id}`)
-        res.redirect('budgets')
-
+            //res.redirect(`sub_ledgers/${newSub-Ledger.id}`)
+            res.redirect('budgets')
+        }
     } catch (err) {
         console.log(err)
     }

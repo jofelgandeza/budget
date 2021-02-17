@@ -13,10 +13,11 @@ router.get('/', async (req, res) => {
         const coas = await Coa.find(searchOptions)
         res.render('coas/index', {
             coas: coas,
-            searchOptions: req.query
+            searchOptions: req.query,
+            Swal: Swal
         })
     } catch {
-        res.redirect('/')
+        res.redirect('/', {Swal})
     }
 })
 
@@ -69,7 +70,7 @@ try {
                 res.redirect('/coas')
 
             } else {
-                let locals = {errorMessage: 'Chart Account already exists!'}
+                let locals = {errorMessage: 'Chart Account Code already exists!'}
                 res.render('coas/new', {
                         coa: coa,
                         locals: locals
@@ -81,7 +82,6 @@ try {
 //    res.redirect('coas/${newCoa.id}')
 //    res.redirect('coas')
 } catch (err) {
-    console.log(err)
    let locals = {errorMessage: 'Something WENT went wrong.'}
     res.render('coas/new', {
             coa: coa,

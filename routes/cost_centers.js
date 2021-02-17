@@ -31,13 +31,38 @@ const cost_center = new Cost_center({
     description: req.body.description,
     type: req.body.type
 })
+
+
 try {
-    const newCost_center = await cost_center.save()
+
+let isAdd = false
+
+    Cost_center.findOne({code: req.body.code}, function (err, foundItem) {
+        if (!err) {
+            if (!foundItem) {
+                isAdd = true
+            } else {
+                let locals = {errorMessage: 'Cost Center Code already exists!'}
+                res.render('cost_centers/new', {
+                        cost_center: cost_center,
+                        locals: locals
+                })            
+            }
+        }
+    } )
+
+    if (isAdd) {
+        const newCoa = await cost_center.save()
+        res.redirect('/cost_centers')
+
+    }
+
+//    const newCost_center = await cost_center.save()
 //    res.redirect('cost_centers/${newCost_center.id}')
-    res.redirect('cost_centers')
+//    res.redirect('cost_centers')
 } catch {
    let locals = {errorMessage: 'Something went wrong.'}
-    res.render('cost_centes/new', {
+    res.render('cost_centers/new', {
             cost_center: cost_center,
             locals: locals
     })

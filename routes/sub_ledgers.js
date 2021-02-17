@@ -40,6 +40,7 @@ router.get('/new', async (req, res) => {
 
 // Create Sub-Ledger Route
 router.post('/', async (req, res) => {
+
     const sub_ledger = new Sub_ledger({
         code: req.body.code,
         description: req.body.description,
@@ -47,10 +48,33 @@ router.post('/', async (req, res) => {
         coa: req.body.coa,
         createAt: req.body.createDate
     })
+
+    let isAdd = false
+
     try {
-        const newSub_ledger = await sub_ledger.save()
+  
+        Sub_ledger.findOne({code: req.body.code}, function (err, foundItem) {
+            if (!err) {
+                if (!foundItem) {
+                    isAdd = true
+                } else {
+                    let locals = {errorMessage: 'Sub-Ledger Code already exists!'}
+                    res.render('sub_ledgers/new', {
+                            sub_ledger: sub_ledger,
+                            locals: locals
+                    })            
+                }
+            }
+        } )
+    
+        if (isAdd) {
+            const newSub_ledger = await sub_ledger.save()
+            res.redirect('/sub_ledgers')
+    
+        }
+//         const newSub_ledger = await sub_ledger.save()
         //res.redirect(`sub_ledgers/${newSub-Ledger.id}`)
-        res.redirect('sub_ledgers')
+//      res.redirect('sub_ledgers')
     } catch {
 
     }
@@ -107,8 +131,25 @@ router.put('/:id', async (req, res) => {
       }
     })
 
-router.delete('/:id', (req, res) => {
-    res.send('Delete Sub-Ledger account ' + req.params.id)
-})
+router.delete('/:id', async (req, res) => {
+
+    let sub_ledger
+
+    try {
+        sub_ledger = await Sub_ledger.findById(req.params.id)
+        await sub_ledger.remove()  
+        res.redirect('/sub_ledgers')
+    } catch {
+        if (sub_ledger == null) {
+            res.redirect('/sub_ledgers')
+        } else {
+            let locals = {errorMessage: 'Something went wrong.'}
+            res.render(`/cost_centers/${sub_ledger.id}`, {
+                    sub_ledger: sub_ledger,
+                    locals: locals
+        })
+      }   
+      }})
+//    res.send('Delete Sub-Ledger account ' + req.params.id)
 
 module.exports = router
