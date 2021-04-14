@@ -2,6 +2,7 @@
     --form-label-font-size: 1rem;
     --form-input-background-color: hsl(var(--color-base-hue), 100%, 31%);
     --form-input-border-color: hsl(var(--color-base-hue), 100%, 50%);
+    --form-input-border-color-light: hsl(var(--color-base-hue), 100%, 80%)
 }
 
 .form-row {
@@ -11,12 +12,20 @@
 
 .form-item {
     display: flex;
+    flex-direction: column;
+    margin-left: 2rem;
+    flex-grow: 1;
+    flex-basis: 0;
+    font-size: var(--form-label-font-size);
+}
+
+.form-item-search {
+    display: flex;
     flex-direction: row;
     margin-left: 2rem;
     flex-grow: 1;
     flex-basis: 0;
     font-size: var(--form-label-font-size);
-
 }
 
 .form-item-column {
@@ -29,7 +38,7 @@
 
 .form-item-column > label {
     font-size: var(--form-label-font-size);
-    margin-bottom: 0;
+    margin-bottom: .25rem;
     margin-left: .25rem;
     text-justify: left;
     text-align: left;
@@ -61,20 +70,27 @@
 }
 
 .form-item-no-grow {
-    flex-grow: .5;
+    flex-grow: 0;
+}
+
+.form-row-end {
+    justify-content: flex-end;
+}
+
+.form-row-start {
+    justify-content: flex-start;
 }
 
 .form-item > label {
     font-size: var(--form-label-font-size);
-    margin-bottom: 0;
+    margin-bottom: .15rem;
     margin-left: .25rem;
-    text-justify: center;
-    text-align: center;
 }
 
-.form-item input, .form-item select {
+.form-item input, .form-item select, .form-item textarea {
     height: 1.4rem;
     padding: .25rem 1rem;
+    margin-left: .3rem;
     border-radius: .25rem;
     border: 1px solid var(--form-input-border-color);
     background-color: var(--form-input-background-color);
@@ -83,9 +99,11 @@
     font-weight: normal;
     font-family: 'Gotham Rounded';
     outline: none;
-
 }
 
+.form-item input:focus, .form-item select:focus, .form-item textarea:focus {
+    border-color: var(--form-input-border-color-light);
+}
 
 .row-item {
     display: flex;
@@ -104,3 +122,100 @@
 .errorMessage {
     color: red;
 }
+
+
+.form-item-target select, .form-item-target input {
+    height: 1.4rem;
+    padding: .25rem 1rem;
+    margin-left: .5rem;
+    width: 165px;
+    border-radius: .25rem;
+    border: 1px solid var(--form-input-border-color);
+    background-color: var(--form-input-background-color);
+    color: var(--color-text-light);
+    font-size: .8rem;
+    font-weight: normal;
+    font-family: 'Gotham Rounded';
+    outline: none;}
+
+.form-item-target label {
+    height: 1.4rem;
+    margin-right: 2rem;
+    width: 150px;
+    color: var(--color-text-light);
+    font-size: 1.2rem;
+    font-weight: normal;
+    font-family: 'Gotham Rounded';
+    outline: none;
+}
+
+.item {
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #F1F1F1;
+  }
+  
+/* table {
+    border-spacing: 0;
+    top: 50%;
+    bottom: 50%;
+}
+
+th, td {
+    padding: .5px 1.5px;
+    text-align: left;
+    width: 10Opx;
+    size: 120px;
+} */
+
+.content-table {
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 0.9em;
+    min-width: 600px;
+}
+
+.content-table thead, tr {
+    text-align: left;
+}
+
+.content-table th,
+.content-table td {
+    padding: 10px 15px;
+}
+
+.content-table tbody tr {
+    border-bottom: .5px solid #1f58f7;
+}
+
+
+.content-table-brnView {
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 0.7em;
+    min-width: 600px;
+}
+
+.content-table-brnView thead, tr {
+    text-align: left;
+}
+
+.content-table-brnView th,
+.content-table-brnView td {
+    padding: 10px 15px;
+}
+
+.content-table-brnView tbody tr {
+    border-bottom: 1px solid #1f58f7;
+}
+
+.td-bold {
+    font-weight: 500;
+}
+
+::placeholder {
+    color: var(--color-text-light-pHolder);
+    opacity: 1;
+  }
+  

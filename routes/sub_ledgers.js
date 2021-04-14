@@ -49,7 +49,7 @@ router.post('/', async (req, res) => {
         createAt: req.body.createDate
     })
 
-    let isAdd = false
+    let isAdd = true
 
     try {
   
@@ -58,6 +58,7 @@ router.post('/', async (req, res) => {
                 if (!foundItem) {
                     isAdd = true
                 } else {
+                    isAdd = false
                     let locals = {errorMessage: 'Sub-Ledger Code already exists!'}
                     res.render('sub_ledgers/new', {
                             sub_ledger: sub_ledger,
@@ -75,8 +76,8 @@ router.post('/', async (req, res) => {
 //         const newSub_ledger = await sub_ledger.save()
         //res.redirect(`sub_ledgers/${newSub-Ledger.id}`)
 //      res.redirect('sub_ledgers')
-    } catch {
-
+    } catch (err) {
+        console.log(err)
     }
 })
 
@@ -106,7 +107,10 @@ router.put('/:id', async (req, res) => {
    let sub_ledger
 
     try {
-  //      coas = await Coa.find({})
+        coas = await Coa.find({})
+
+//        const coas = await Coa.find({})
+
         sub_ledger = await Sub_ledger.findById(req.params.id)
         sub_ledger.code = req.body.code
         sub_ledger.description = req.body.description
@@ -125,6 +129,7 @@ router.put('/:id', async (req, res) => {
             let locals = {errorMessage: 'Something went wrong.'}
             res.render('sub_ledgers/edit', {
                     sub_ledger: sub_ledger,
+                    coas: coas,
                     locals: locals
         })
       }   
@@ -147,9 +152,10 @@ router.delete('/:id', async (req, res) => {
             res.render(`/cost_centers/${sub_ledger.id}`, {
                     sub_ledger: sub_ledger,
                     locals: locals
-        })
-      }   
-      }})
+            })
+        }   
+    }
+})
 //    res.send('Delete Sub-Ledger account ' + req.params.id)
 
 module.exports = router

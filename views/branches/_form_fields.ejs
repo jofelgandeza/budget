@@ -1,0 +1,48 @@
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Employee Code</label>
+        <input type="text" name="empCode" value="<%= emp.emp_code %>" autocomplete="off">
+    </div>
+    <div class="form-item-column">
+        <label>Branch Code</label>
+        <input type="text" name="brnCode" value="<%= emp.branch %>">
+    </div>
+    <div class="form-item-column">
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Last Name</label>
+        <input type="text" name="lName" value="<%= emp.last_name %>" autocomplete="off">
+    </div>
+    <div class="form-item-column">
+            <label>First Name</label>
+        <input type="text" name="fName" value="<%= emp.first_name %>" autocomplete="off">
+    </div>
+    <div class="form-item-column">
+        <label>Middle Name</label>
+        <input type="text" name="mName" value="<%= emp.middle_name %>" autocomplete="off">
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Position</label>
+        <select id="ayApo" name="ayPost" onchange="setPositValue()">
+            <% posit.forEach(positi => { %>
+                <% if ( positi.id == emp.position_code) { %>
+                   <option selected value="<%= positi.id %>" label="<%= positi.title %>"> </option>
+                <% } else { %>
+                    <option value="<%= positi.id %>" label="<%= positi.title %>"> </option>
+                <%  } %>
+            <% }) %> 
+        </select>
+    </div>
+    <div class="form-item-column">
+        <label>Unit</label>
+        <input type="text" enable name="poUnit" id="poUnit" value="<%= emp.unit %>">
+    </div>
+    <div class="form-item-column">
+        <label>PO Number</label>
+        <input type="number" name="poNumber" id="poNumber" value="<%= emp.po_number %>" autocomplete="off" min="1" max="15">
+    </div>
+</div>

@@ -2,17 +2,35 @@ const express = require('express')
 const router  = express.Router()
 const Swal = require('sweetalert2')
 const Coa = require('../models/coa')
+const _ = require('lodash')
+
+
+const coaClass = ["Income", "Expense","Asset - Current", "Asset - Non-current", "Contra Asset",
+"Liabilities - Current", "Liabilities - Con-current", "Fund Balance"]
 
 // All Chart of Accounts Route
 router.get('/', async (req, res) => {
+
     let searchOptions = {}
-    if (req.query.description  !=null && req.query.description !== '') {
-        searchOptions.description = RegExp(req.query.description, 'i')
+    if (req.query.title  !=null && req.query.title !== '') {
+        searchOptions.description = RegExp(req.query.title, 'i')
     }
     try {
         const coas = await Coa.find(searchOptions)
+
+        sortedCoas = coas.sort( function (a,b) {
+            if  ( a.empSortKey < b.empSortKey ){
+                return -1;
+              }
+              if ( a.empSortKey > b.empSortKey ){
+                return 1;
+              }
+               return 0;
+        })
+
+
         res.render('coas/index', {
-            coas: coas,
+            coas: sortedCoas,
             searchOptions: req.query,
             Swal: Swal
         })
@@ -23,16 +41,25 @@ router.get('/', async (req, res) => {
 
 // New Chart of Account Route
 router.get('/new', (req, res) => {
+
     let locals = {}
-    res.render('coas/new', { coa: new Coa() })
+
+    res.render('coas/new', { coa: new Coa(), coaClass: coaClass })
 })
 
 // Create Chart of Account Route
 router.post('/', async (req, res) => {
+   
+    console.log(req.body.description)
+//    const coaClass = ["Income", "Expense"]
+
+    const trimCoa = _.trim(req.body.coa)
 let coa = new Coa({
-    code: req.body.code,
+    code: _.trim(req.body.code),
+    title: _.trim(req.body.title),
     description: req.body.description,
-    type: req.body.type,
+    class: _.trim(req.body.class),
+    type: _.trim(req.body.type),
     budget_total: 0,
     actual_total: 0,
     budget_jan: 0,
@@ -63,7 +90,7 @@ let coa = new Coa({
 })
 try {
 
-    Coa.findOne({code: req.body.code}, function (err, foundItem) {
+    Coa.findOne({code: trimCoa}, function (err, foundItem) {
         if (!err) {
             if (!foundItem) {
                 const newCoa = coa.save()
@@ -73,6 +100,7 @@ try {
                 let locals = {errorMessage: 'Chart Account Code already exists!'}
                 res.render('coas/new', {
                         coa: coa,
+                        coaClass: coaClass,
                         locals: locals
                 })            
             }
@@ -96,14 +124,20 @@ try {
 router.get('/:id', async (req, res) => {
     const coa = await Coa.findById(req.params.id)
 
-    res.send('Showing Chart of Account : ' + coa.description)
+    res.send('Showing Chart of Account : ' + coa.title)
 })
 
 // Edit Chart of Account
 router.get('/:id/edit', async (req, res) => {
+
+    const coaClass = ["Income", "Expense","Asset - Current", "Asset - Non-current", "Contra Asset",
+                    "Liabilities - Current", "Liabilities - Con-current", "Fund Balance"]
+
     try {
         const coa = await Coa.findById(req.params.id)
-        res.render('coas/edit', { coa: coa })
+//        console.log(coa.class);
+//        console.log(coaClass);
+        res.render('coas/edit', { coa: coa, coaClass: coaClass })
 
     } catch {
         res.redirect('/coas')
@@ -120,6 +154,8 @@ router.put('/:id', async (req, res) => {
     try {
         coa = await Coa.findById(req.params.id)
         coa.code = req.body.code
+        coa.title = req.body.title
+        coa.class = req.body.class
         coa.description = req.body.description
         coa.type = req.body.type
         await coa.save()  

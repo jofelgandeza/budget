@@ -1,0 +1,8 @@
+<h2 class="page-header">Edit Employee</h2>
+<form action="/branches/putEditedEmp/<%= emp._id %>?_method=PUT" method="POST">
+    <%- include('_form_fields') %>
+    <div class="form-item">
+        <a class="btn btn-primary" href="/branches/employees/<%= emp.branch %>">Cancel</a>
+        <button class="btn btn-primary" type="submit">Update</button>
+    </div>
+</form>

@@ -1,13 +1,13 @@
 <h2 class="page-header">Search Chart of Accounts</h2>
 <form action="/coas" method="GET">
     <div class="form-row">
-        <div class="form-item">
+        <div class="form-item form-item-search">
             <label>Chart of Account Description: </label>
-            <input type="text" name="description" value="<%= searchOptions.description %>" autocomplete="off">
+            <input type="text" name="title" value="<%= searchOptions.description %>" autocomplete="off">
             <button class="btn btn-primary" type="submit">Search</button>
-       </div>
+        </div>
     </div>
-</form>
+ </form>
 <br>
 <% coas.forEach(coa => { %>
     <div class="form-row">
@@ -15,15 +15,18 @@
             <%= coa.code%> 
         </div> 
         <div class="form-item">
-            <%= coa.description%>
+            <%= coa.title%>
+        </div> 
+        <div class="form-item">
+            <%= coa.class%>
         </div> 
         <div class="form-item">
             <%= coa.type%>
         </div> 
         <div class="form-item">
             <div class="btn-row">
-                <a class="btn btn-primary" href="/coas/<%= coa.id %>">View</a>
                 <a class="btn btn-primary" href="/coas/<%= coa.id %>/edit">Edit</a>
+                <a class="btn btn-primary" href="/coas/<%= coa.id %>">Budget</a>
                 <%- include('../partials/deleteForm', 
                         { url: `/coas/${coa.id}` }) %>
             </div>

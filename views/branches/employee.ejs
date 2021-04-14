@@ -1,0 +1,28 @@
+<section class="s1">
+    <div class="main-container">
+       <h4> BRANCH EMPLOYEES MAINTENANCE</h4>
+        <table class="content-table">
+            <tr>
+                <th> POSITION</th>
+                <th> NAME</th>
+                <th> LINKS</th>
+            </tr>
+            <% fndEmploy.forEach(brnEmployee => { %>
+                <tr>
+                    <td><%= brnEmployee.empPost %> </td>
+                    <td><%= brnEmployee.empName %> </td>
+                    <td>
+                        <div class="btn-row">
+                            <a class="btn btn-primary" href="/branches/getEmpForEdit/<%= brnEmployee.empCode %>/edit">Edit</a>
+                            <%- include('../partials/deleteForm', { url: `/branches/deleteEmp/${brnEmployee.empID}` }) %>
+                        </div>        
+                    </td>
+                </tr>
+            <% }) %> 
+        </table>
+        <div>
+            <a class="btn btn-primary" href="/branches/newEmployee/<%= branchCode %>">ADD NEW EMPLOYEE</a>
+        </div>
+    </div>
+</section>
+

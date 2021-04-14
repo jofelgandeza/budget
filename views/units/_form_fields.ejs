@@ -1,0 +1,24 @@
+<div class="form-row">
+    <div class="form-item-column">
+        <label>PO Number</label>
+        <input type="number" name="poNum" value="<%= po.po_number %>" autocomplete="off" min="1" max="10">
+    </div>
+    <div class="form-item-column">
+    </div>
+    <div class="form-item-column">
+        <label>Loan Type</label>
+        <select name="poLoan" id="poLon" >
+            <option select value="">Select here...</option>
+            <% lonType.forEach(lnTyp => { %>
+                <% if ( lnTyp.title == po.loan_type) { %>
+                   <option selected value="<%= lnTyp.title %>"> <%= lnTyp.title %></option>
+                <% } else { %>
+                    <option value="<%= lnTyp.title %>"> <%= lnTyp.title %></option>
+                <%  } %>
+            <% }) %> 
+        </select>
+    </div>
+    <div class="form-item-column">
+        <input type="hidden" id="brnCode" name="branCode" value="<%= unitCode %>">
+    </div>
+</div>

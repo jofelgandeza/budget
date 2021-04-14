@@ -1,0 +1,65 @@
+<h2 class="page-header">Search Center</h2>
+<form action="/centers" method="GET">
+    <div class="form-row">
+        <div class="form-item form-item-search">
+            <label>Center Code: </label>
+            <input type="text" name="title" value="<%= searchOptions.description %>" autocomplete="off">
+            <button class="btn btn-primary" type="submit">Search</button>
+        </div>
+    </div>
+ </form>
+<br>
+<div>
+    <h3>
+        PO: <%= POname%> 
+    </h3>
+</div>
+<div class="form-row">
+    <div class="form-item-target">
+        <label>Centers</label>
+    </div>
+    <div class="form-item-target">
+        <label>New Client</label>
+    </div>
+    <div class="form-item-target">
+        <label>New Client Amt</label>
+    </div>
+    <div class="form-item-target">
+        <label>Old Client</label>
+    </div>
+    <div class="form-item-target">
+        <label>Old Client Amt</label>
+    </div>
+    <div class="form-item-target">
+        <label>Resigned</label>
+    </div>
+</div>
+<% centers.forEach(center => { %>
+    <div class="form-row">
+        <div class="form-item">
+            <%= center.center%> 
+        </div> 
+        <div class="form-item">
+            <%= center.newClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%>
+        </div> 
+        <div class="form-item">
+            <%= center.newClientAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%>
+        </div> 
+        <div class="form-item">
+            <%= center.oldClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%>
+        </div> 
+        <div class="form-item">
+            <%= center.oldClientAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%>
+        </div> 
+        <div class="form-item">
+            <%= center.resClient%>
+        </div> 
+        <div class="form-item">
+            <div class="btn-row">
+                <a class="btn btn-primary" href="/centers/<%= center.center %>">View</a>
+                <a class="btn btn-primary" href="/centers/<%= center.center %>/edit">Edit</a>
+            </div>
+        
+        </div>
+    </div>
+<% }) %> 

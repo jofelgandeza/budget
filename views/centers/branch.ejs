@@ -1,0 +1,59 @@
+
+<div class="box" id="heading">
+    <h3> <%= officerName %> </h3>
+    <h4> <%= listTitle %> </h4>
+</div>
+
+<table>
+    <tr>
+        <th>PO NO.</th>
+        <th>PROGRAM OFFICER</th>
+        <th>New Client</th>
+        <th>New Client Amt</th>
+        <th>Old Client</th>
+        <th>Old Client Amt</th>
+        <th>Resigned</th>
+    </tr>
+    
+    <form  action="/centers/delete" method="post">
+        <% Units.forEach(units => { %>
+        <tr>
+            <td colspan="2">
+                <%= units.first_name%> <%= units.last_name%>
+            </td>
+        </tr>
+
+        <% POs.forEach(po => { %>
+            <%if (po.unit === units.unit) { %>
+                <tr class="form-item-target">
+                    <td>
+                        <%= po.po_num%> 
+                    </td>
+                    <td>
+                        <%= po.po_name%> 
+                    </td>
+                    <td>
+                        <%= po.newClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%>
+                    </td>
+                    <td>
+                        <%= po.newClientAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%>
+                    </td>
+                    <td>
+                        <%= po.oldClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%>
+                    </td>
+                    <td>
+                        <%= po.oldClientAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%>
+                    </td>
+                    <td>
+                        <%= po.resClient%>
+                    </td>
+                    <td>
+                        <a class="btn btn-primary" href="/centers/<%= listTitle %>">View</a>
+                    </td>
+                </tr>
+            <% } %>
+        <% }) %> 
+    <% }) %> 
+</form>
+
+</table>

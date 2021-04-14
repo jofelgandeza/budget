@@ -12,11 +12,12 @@
     <div class="form-item-column">
         <label>Chart of Account</label>
         <select name="coa">
+            <option value="">Select CAO</option>
             <% coas.forEach(coa => { %>
-                <% if (coa.id === sub_ledger.coa) { %>
-                   <option select label="<%= coa.description %>" value="<% sub_ledger.id %>"></option>
+                <% if (coa.id == sub_ledger.coa) { %>
+                   <option label="<%= coa.title %>" value="<%= coa.id %>"></option>
                 <% } else { %>
-                    <option label="<%= coa.description %>" value="<%= sub_ledger.id %>"></option>
+                    <option selected label="<%= coa.title %>" value="<%= coa.id %>"></option>
                 <%  } %>
             <% }) %> 
         </select>

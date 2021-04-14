@@ -1,0 +1,91 @@
+
+    <div class="box" id="heading">
+      <h1> <%= listTitle %> </h1>
+    </div>
+            <table>
+                <tr>
+                    <th></th>
+                    <th>LOAN TYPE</th>
+                    <th>MONTH</th>
+                    <TH>PERIOD</TH>
+                    <TH>NO. OF CLIENTS</TH>
+                    <TH>AMOUNT</TH>
+                    <th>TOTAL</th>
+                    <th>REMARKS</th>
+                </tr>
+                <% newListItems.forEach(function(item) { %>
+                    <form  action="/centers/delete" method="post">
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="checkbox" value="<%=item._id%>" onChange="this.form.submit()">
+                            </td>
+                            <td>
+                                <p><%= item.loan_type %></p>
+                            </td>
+                            <td>
+                                <p><%= item.month %></p>
+                            </td>
+                            <td>
+                                <p><%= item.semester %></p>
+                            </td>
+                            <td>
+                                <p><%= item.numClient %></p>
+                            </td>
+                            <td>
+                                <p><%= item.amount %></p>                        
+                            </td>
+                            <td>
+                                <p><%= item.totAmount %></p>
+                            </td>
+                            <td>
+                                <p><%= item.resClient %></p>
+                            </td>
+                            <td>
+                                <p><%= item.remarks %></p>
+                            </td>
+                    </tr>
+                    <input type="hidden" name="listName" value="<%= listTitle %>"> </input>
+                </form>
+                <% }) %>
+                <tr class="form-item-target">
+                    <form action="/centers/<%= listTitle %>?_method=PUT" method="POST">
+                    <td>New:</td>
+                    <td>
+                        <select name="loanType" id="loanType">
+                            <% loanType.forEach(function(loan_type, index) { %>
+                                    <option label="<%= loan_type.title %>" value="<%= loan_type.title  %>"></option>
+                            <% }) %>
+                        </select>            
+                    </td>
+                    <td>
+                        <select name="month" id="monthID" onchange="getSemester()">
+                            <% monthSelect.forEach(function(month, index) { %>
+                                    <option label="<%= month %>" value="<%= month  %>"></option>
+                            <% }) %>
+                        </select>            
+                    </td>
+                    <td>
+                        <input type="text" name="semester" id="semesterID" placeholder="Semester">
+                    </td>
+                    <td>
+                        <input type="text" name="numClient" placeholder="Number of Clients" autocomplete="off">
+                    </td>
+                    <td>
+                        <input type="text" class="targetAmt" name="amount" placeholder="Loan Amount" autocomplete="off">
+                    </td>
+                    <td>
+                        <select name="remarks" id="remarks">
+                            <option value="New Loan">New Loan</option>
+                            <option value="Re-loan">Re-loan</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button type="submit" name="list" value=<%= listTitle %>>+</button>
+                    </td>
+                    <td class="btn-row">
+                            <a class="btn btn-primary" href="/centers/center/<%= unitID %>">Done</a>
+
+                        </td>
+                    </form>
+                </tr>
+            </table>
