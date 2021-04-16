@@ -18,6 +18,20 @@ const centerLoanBegBal = {
     beg_client_count: Number,
     dispView: Number
 }
+const centerInfo = {
+    address: String, 
+    president: String,
+    vice_president: String,
+    secretaty: String,
+    treasurer: String
+}
+const centerLoan = {
+    address: String, 
+    president: String,
+    vice_president: String,
+    secretaty: String,
+    treasurer: String
+}
 
   const centersSchema = new mongoose.Schema({
     area: {
@@ -36,10 +50,34 @@ const centerLoanBegBal = {
         type: String,
         required: true
     },
-        center: {
+    po_code: {
         type: String,
         required: true
     },
+    center_no: {
+        type: String,
+        required: true
+    },
+    center: {
+        type: String,
+        required: true
+    },
+    active_clients: {
+        type: Number,
+    },
+    active_loan_amt: {
+        type: Number,
+    },
+    loan_cycle: {
+        type: Number,
+    },
+    loan_type: {
+        type: String,
+    },
+    status: {
+        type: String,
+    },
+    Info: [centerInfo],
     Targets: [centerTargetSchema],
     Loan_beg_bal : [centerLoanBegBal],
     newClient: {

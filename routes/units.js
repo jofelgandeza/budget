@@ -268,6 +268,251 @@ router.put('/putEditedPo/:id', async function(req, res){
   
 })
 
+//Set/View CENTERS per PO 
+
+router.get('/setPOCenters/:id', async (req, res) => {
+
+    const IDcode = req.params.id
+
+    const poNumber = IDcode.substr(5,1)
+    const unit_Code = IDcode.substr(0,5)
+    const unitCode = IDcode.substr(4,1)
+    const branchCode = IDcode.substr(0,3)
+
+    console.log(IDcode)
+
+    let foundCenter = []
+    let fndCenter = []
+
+    try {
+
+        const loanType = await Loan_type.find({})
+
+        const center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber}, function (err, foundCenters) {
+            foundCenter = foundCenters
+        })
+        
+        foundCenter.forEach(fndCtr => {
+            
+
+        })
+            
+
+            res.render('units/center', {
+                poCode: IDcode,
+                unitCode: unitCode,
+                unit_Code: unit_Code,
+                centers: foundCenter
+            })
+        } catch (err) {
+            console.log(err)
+            res.redirect('/')
+        }
+})
+
+// Get NEW CENTER
+router.get('/newCenter/:id', async (req, res) => {
+    
+    const poCode = req.params.id
+    const uniCode = poCode.substr(0,5)
+    const centerStatus = ["Targetted","Active"]
+    const ctrAdd = ""
+    const lonType = await Loan_type.find({})
+
+        res.render('units/newCenter', { 
+            center: new Center(),
+            centerAdd: ctrAdd,
+            poCode: poCode,
+            unitCode: uniCode,
+            lonType: lonType,
+            centerStatus: centerStatus
+        })
+
+})
+
+// POST or Save new CENTER
+router.post('/postNewCenter/:id', async (req, res) => {
+
+    const centerPoCode = req.body.po_Code
+    const poNumber = centerPoCode.substr(5,1)
+    const unitCode = centerPoCode.substr(4,1)
+    const branchCode = centerPoCode.substr(0,3)
+    const cntrNum = req.body.cntrNum
+    let cntrCode
+    if (cntrNum.length === 1) {
+        cntrCode = centerPoCode + _.padStart(cntrNum, 2, '0')        
+    } else {
+        cntrCode = centerPoCode + cntrNum
+    }
+    const cntrLoanType = req.body.cntrLoan
+    const cntrAdd = req.body.centerAdd
+    const cntrStat = req.body.centerStat
+
+    const cntrInfo = [
+        {address: cntrAdd}
+      ]
+ 
+ let center = new Center({
+ 
+    area: "NLE",
+    branch: branchCode,
+    unit: unitCode,
+    po: poNumber,
+    po_code: centerPoCode,
+    center_no: cntrNum,
+    center: cntrCode,
+    active_clients: 0,
+    active_loan_amt: 0,
+    loan_cycle: 0,
+    loan_type: cntrLoanType,
+    status: cntrStat,
+    Info : cntrInfo,
+    Targets: [],
+    Loan_beg_bal: [],
+    newClient: 0,
+    newClientAmt: 0,
+    oldClient: 0,
+    oldClientAmt: 0,
+    resClient: 0
+ })
+ 
+ let locals
+ let fondCtr
+ //console.log(brnCode)
+ let canProceed = true
+ try {
+     fondCtr = await Center.findOne({center: cntrCode})
+
+     if (!fondCtr) {
+        const newCoa = await center.save()
+        res.redirect('/units/setPOCenters/'+ centerPoCode)
+    } else {
+        canProceed = false
+        const centerStatus = ["Targetted","Active"]
+
+        const lonType = await Loan_type.find({})
+     
+        locals = {errorMessage: 'Center number for the PO is already exist!'}
+        res.render('units/newCenter', { 
+            center: fondCtr,
+            centerAdd: cntrAdd,
+            poCode: centerPoCode,
+            unitCode: unitCode,
+            lonType: lonType,
+            centerStatus: centerStatus,
+            locals: locals
+        })
+   }
+
+ } catch (err) {
+     console.log(err)
+    let locals = {errorMessage: 'Something WENT went wrong.'}
+     res.redirect('/units/setPOCenters/'+ centerPoCode)
+ }
+ })
+ 
+
+ // Get a CENTER for EDIT
+router.get('/getCenterForEdit/:id/edit', async (req, res) => {
+
+    const centerID = req.params.id
+    const centerStatus = ["Targetted","Active"]
+
+try {
+    const ctrLonType = await Loan_type.find({})
+
+    const Fndcenter = await Center.findById(centerID)
+
+        const ctrPoCod = Fndcenter.center.substr(0,6)
+        const ctrUniCod = ctrPoCod.substr(0,5)
+        const ctrBranch = ctrPoCod.substr(0,3)
+
+        const ctrAdd = Fndcenter.Info[0].address
+//        console.log(ctrAdd)
+
+    const lonType = await Loan_type.find({})
+
+    res.render('units/editCenter', { 
+        center: Fndcenter, 
+        centerAdd: cntrAdd,
+        poCode: ctrPoCod,
+        unitCode: ctrUniCod,
+        lonType: ctrLonType,
+        centerStatus: centerStatus
+    })
+
+} catch (err) {
+        console.log(err)
+        let locals = {errorMessage: 'Something WENT went wrong.'}
+        res.redirect('/units/pos/'+ uUnitCode)
+}
+})
+
+
+ // SAVE EDITed Center
+
+router.put('/putEditedCenter/:id', async function(req, res){
+    //params.id is center.center
+    const centerPoCode = req.body.po_Code
+    const poNumber = centerPoCode.substr(5,1)
+    const unitCode = centerPoCode.substr(4,1)
+    const branchCode = centerPoCode.substr(0,3)
+    const cntrNum = req.body.cntrNum
+    let cntrCode
+    if (cntrNum.length === 1) {
+        cntrCode = centerPoCode + _.padStart(cntrNum, 2, '0')        
+    } else {
+        cntrCode = centerPoCode + cntrNum
+    }
+
+    const cntrLoanType = req.body.cntrLoan
+    const cntrAdd = req.body.centerAdd
+    const cntrStat = req.body.centerStat
+
+    const cntrInfo = [
+        {address: cntrAdd}
+      ]
+
+    let center_no
+        try {
+
+            center = await Center.findOne({center: req.params.id})
+
+            center.center_no = cntrNum
+            center.center = cntrCode
+            center.loan_type = cntrLoanType
+            center.status = cntrStat
+            center.address = req.body.unitAdd
+            center.Info = cntrInfo
+        
+            await center.save()
+        
+            res.redirect('/units/setPOCenters/'+ centerPoCode)
+
+        } catch (err) {
+            console.log(err)
+            let locals = {errorMessage: 'Something WENT went wrong.'}
+            res.redirect('/units/setPOCenters/'+ centerPoCode, {
+            locals: locals
+            })
+        }
+})
+
+router.delete('/deleteCenter/:id', async (req, res) => {
+
+    let poCntr
+
+    try {
+        poCntr = await Center.findById(req.params.id)
+        delCenterPO = poCntr.center.substr(0,6)
+        await poCntr.remove()  
+        res.redirect('/units/setPOCenters/'+delCenterPO)
+    } catch (err) {
+        console.log(err)
+    }
+})
+
+
 router.delete('/deletePO/:id', async (req, res) => {
 
     let unPO
@@ -281,7 +526,6 @@ router.delete('/deletePO/:id', async (req, res) => {
         console.log(err)
     }
 })
-
 
 
 // View Unit per PO  - TUG-A
@@ -673,39 +917,6 @@ router.get('/budget/:id', async (req, res) => {
     }
 })
 
-// Edit Targets
-
-//Save targets to Targets array field in center collection
-
-router.put('/:id', async (req, res) => {
-    // const coa = new Coa({
-    //     code: req.body.code,
-    //     description: req.body.description,
-    //     type: req.body.type
-    let coa
-
-    try {
-        coa = await Coa.findById(req.params.id)
-        coa.code = req.body.code
-        coa.title = req.body.title
-        coa.class = req.body.class
-        coa.description = req.body.description
-        coa.type = req.body.type
-        await coa.save()  
-        res.redirect('/coas')
-        //res.redirect(`/coas/${coa.id}`)
-    } catch {
-        if (author == null) {
-            res.redirect('/')
-        } else {
-            let locals = {errorMessage: 'Something went wrong.'}
-            res.render('coas/edit', {
-                    coa: coa,
-                    locals: locals
-        })
-      }   
-      }
-    })
 
 router.post('/delete', async (req, res) => {
  //   alert('Are you sure you want to delete this record?')

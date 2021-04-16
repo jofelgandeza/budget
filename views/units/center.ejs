@@ -1,0 +1,36 @@
+<section class="s1">
+    <div class="main-container">
+       <h4> PO CENTER MAINTENANCE - <%= poCode %></h4>
+        <table class="content-table">
+            <tr>
+                <th> CENTER NUMBER</th>
+                <th> CENTER CODE</th>
+                <th> ADDRESS</th>
+                <th> STATUS</th>
+            </tr>
+            <% centers.forEach(fndCenter => { %>
+                <tr>
+                    <td><%= fndCenter.center_no %> </td>
+                    <td><%= fndCenter.center %> </td>
+                    <td>
+                        <% for(var adres of fndCenter.Info) { %>
+                            <%= adres.address %>                        
+                        <% } %>
+                    </td>
+                    <td><%= fndCenter.status %> </td>
+                    <td>
+                        <div class="btn-row">
+                            <a class="btn btn-primary" href="/units/getCenterForEdit/<%= fndCenter._id %>/edit">Edit</a>
+                            <%- include('../partials/deleteForm', { url: `/units/deleteCenter/${fndCenter._id}` }) %>
+                        </div>        
+                    </td>
+                </tr>
+            <% }) %> 
+        </table>
+        <div>
+            <a class="btn btn-primary" href="/units/newCenter/<%= poCode %>">ADD NEW CENTER</a>
+            <a class="btn btn-primary" href="/units/pos/<%= unit_Code %>">DONE</a>
+        </div>
+    </div>
+</section>
+

@@ -17,6 +17,7 @@
                     <td>
                         <div class="btn-row">
                             <a class="btn btn-primary" href="/units/getPOForEdit/<%= fndPOs.poCode %>/edit">Edit</a>
+                            <a class="btn btn-primary" href="/units/setPOCenters/<%= fndPOs.poCode %>">Centers</a>
                             <%- include('../partials/deleteForm', { url: `/units/deletePO/${fndPOs.poID}` }) %>
                         </div>        
                     </td>
@@ -25,6 +26,7 @@
         </table>
         <div>
             <a class="btn btn-primary" href="/units/newPO/<%= uniCod %>">ADD NEW PROGRAM OFFICER</a>
+            <a class="btn btn-primary" href="/units/<%= uniCod %>">DONE</a>
         </div>
     </div>
 </section>

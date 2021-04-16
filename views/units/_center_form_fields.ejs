@@ -1,0 +1,43 @@
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Center Number</label>
+        <input type="number" name="cntrNum" value="<%= center.center_no %>" autocomplete="off" min="1" max="15">
+    </div>
+    <div class="form-item-column">
+        <label>Loan Type</label>
+        <select name="cntrLoan" id="cntrLon" >
+            <option select value="">Select here...</option>
+            <% lonType.forEach(lnTyp => { %>
+                <% if (lnTyp.title === center.loan_type) { %>
+                   <option selected value="<%= lnTyp.title %>"> <%= lnTyp.title %></option>
+                <% } else { %>
+                    <option value="<%= lnTyp.title %>"> <%= lnTyp.title %></option>
+                <%  } %>
+            <% }) %> 
+        </select>
+    </div>
+    <div class="form-item-column">
+        <input type="hidden" id="poCode" name="po_Code" value="<%= poCode %>">
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Address</label>
+        <input type="text" name="centerAdd" value="<%= centerAdd %>" autocomplete="off">
+    </div>
+    <div class="form-item-column">
+        <label>Status</label>
+        <select name="centerStat" id="centerStat" >
+            <% centerStatus.forEach(centerStat => { %>
+                <% if (centerStat === center.loan_type) { %>
+                   <option selected value="<%= centerStat %>"> <%= centerStat %></option>
+                <% } else { %>
+                    <option value="<%= centerStat %>"> <%= centerStat %></option>
+                <%  } %>
+            <% }) %> 
+        </select>
+    </div>
+    <div class="form-item-column">
+        <input type="hidden" id="brnCode" name="branCode" value="<%= unitCode %>">
+    </div>
+</div>

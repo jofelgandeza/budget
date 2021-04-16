@@ -64,7 +64,7 @@ router.get('/center/:id', async (req, res) => {
      let lnType 
      let POname =" "
      let POposition = " "
-     const POdata = await Employee.findOne({assign_code: IDcode}, function (err, foundedEmp) {
+     const POdata = await Employee.findOne({assign_code: assignCode}, function (err, foundedEmp) {
         POname = foundedEmp.first_name + " " + foundedEmp.middle_name.substr(0,1) + ". " + foundedEmp.last_name
         POposition = foundedEmp.position_code
     })
