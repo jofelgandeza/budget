@@ -345,7 +345,7 @@ router.post('/postNewCenter/:id', async (req, res) => {
     
     switch(poNumber) {
         case "1": 
-            if (cntrNum.length === 1) {
+            if (cntrNum < 10) {
                 cntrCode = centerPoCode + _.padStart(cntrNum, 2, '0')        
             } else {
                 cntrCode = centerPoCode + cntrNum
