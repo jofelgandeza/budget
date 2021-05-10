@@ -5,6 +5,8 @@ const centerTargetSchema = {
     month: String,
     semester: String,
     numClient: Number,
+    newClient: Number,
+    oldClient: Number,
     amount: Number,
     totAmount: Number,
     remarks: String,
@@ -15,7 +17,11 @@ const centerTargetSchema = {
 const centerLoanBegBal = {
     loan_type: String, 
     beg_amount: Number,
+    beg_interest: Number,
+    beg_principal: Number,
     beg_client_count: Number,
+    expected_maturity_date: String,
+    month_number: Number,
     dispView: Number
 }
 const centerInfo = {
@@ -79,6 +85,9 @@ const centerLoan = {
     },
     Info: [centerInfo],
     Targets: [centerTargetSchema],
+    center_cnt_begBal: {
+        type: Number,
+    },
     Loan_beg_bal : [centerLoanBegBal],
     newClient: {
         type: Number,

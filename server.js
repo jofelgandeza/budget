@@ -23,10 +23,11 @@ app.set('layout', 'layouts/layout')
 app.use(expressLayouts)
 app.use(methodOverride('_method'))
 app.use(express.static('public'))
-app.use(express.json()); 
-app.use(express.urlencoded({ extended: true })); //Parse URL-encoded bodies
-// app.use(bodyParser.json())
-// app.use(bodyParser.urlencoded({ extended: true }))
+// app.use(express.json()) 
+// app.use(express.urlencoded()) 
+//Parse URL-encoded bodies
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
 
 const mongoose = require('mongoose')
 mongoose.connect(process.env.DATABASE_URL, {

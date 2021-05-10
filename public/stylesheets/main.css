@@ -36,10 +36,11 @@ body {
 }
 
 .inputAmountContainer2 {
-    width: 95vw;
+    width: 105vw;
     height: 5vh;
-    font-size: 16px;
-    font-family: sans-serif;
+    font-family: 'Gotham Rounded';
+    font-size: 20px;
+    color: var(--color-text-light);
     text-align: right;
     align-items: center;
     background-color: rgb(112, 112, 231);
@@ -54,15 +55,34 @@ body {
  }
 
 .inputAmountContainer1 {
-    width: 95vw;
+    width: 105vw;
     height: 5vh;
+    font-family: 'Gotham Rounded';
     font-size: 16px;
-    font-family: sans-serif;
+    color: var(--color-text-light);
     text-align: right;
     align-items: center;
-    background-color: rgb(112, 112, 231);
+    background-color: rgb(44, 97, 196);
     margin: 10px auto;
     outline: 2px solid #3b28b4;
+    display: grid;
+    grid-template-columns: 200px repeat(13, minmax(90px, 1fr));
+    grid-template-rows: 30px;
+    grid-auto-columns: 90px 120px 350px;
+    grid-auto-rows: 30px;
+    grid-auto-flow: column;
+ }
+ .inputAmountContainer2 {
+    width: 105vw;
+    height: 5vh;
+    font-family: 'Gotham Rounded';
+    font-size: 16px;
+    color: var(--color-text-light);
+    text-align: right;
+    align-items: center;
+    background-color: rgb(114, 121, 22);
+    margin: 10px auto;
+    outline: 2px solid #444e0d;
     display: grid;
     grid-template-columns: 200px repeat(13, minmax(90px, 1fr));
     grid-template-rows: 30px;

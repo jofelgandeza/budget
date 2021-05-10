@@ -6,9 +6,11 @@
                   <tr>
                       <th></th>
                       <th>LOAN TYPE</th>
-                      <th>BEG. CLIENTS COUNT</th>
+                      <th>CLIENTS COUNT</th>
+                      <th>PRINCIPAL AMT</th>
+                      <th>INTEREST AMT</th>
+                      <th>MATURITY</th>
                       <th></th>
-                      <TH>BEG. AMOUNT</TH>
                   </tr>
                   <% newListItems.forEach(function(item) { %>
                       <form  action="/centers/delBegBal" method="post">
@@ -23,17 +25,21 @@
                                   <p><%= item.begBalClientCnt %></p>
                               </td>
                               <td>
-                                  
+                                <p><%= item.beg_principal %></p>                                  
                               </td>
                               <td>
-                                  <p><%= item.begBalAmt %></p>
+                                  <p><%= item.beg_interest %></p>
                               </td>
-                      </tr>
+                              <td>
+                                <p><%= item.expected_maturity_date %></p>
+                            </td>
+                    </tr>
                       <input type="hidden" name="listName" value="<%= listTitle %>"> </input>
                   </form>
                   <% }) %>
                   <tr class="form-item-target">
                       <form action="/centers/putBegBal/<%= listTitle %>?_method=PUT" method="POST">
+                        <%- include('../partials/errorMessage') %>    
                       <td>New:</td>
                       <td>
                           <select name="loanType" id="loanType">
@@ -43,15 +49,24 @@
                           </select>            
                       </td>
                       <td>
-                          <input type="text" name="numClient" placeholder="Number of Clients" autocomplete="off">
-                      </td>
-                      <td></td>
-                      <td>
-                          <input type="text" class="begBalAmt" name="begBalAmt" placeholder="Loan Amount" autocomplete="off">
+                          <input type="text" name="numClient" placeholder="No. of Clients" autocomplete="off">
                       </td>
                       <td>
+                          <input type="text" class="begBalAmt" name="begBalAmt" placeholder="Principal Amt" autocomplete="off">
+                      </td>
+                      <td>
+                        <input type="text" class="begBalInt" name="begBalInt" placeholder="Interest Amt" autocomplete="off">
+                    </td>
+                    <td>
+                        <select name="numMonth" id="numMonth"">
+                            <% monthSelect.forEach(function(month, index) { %> 
+                                    <option label="<%= month %>" value="<%= month  %>"></option>
+                            <% }) %>
+                        </select>            
+                    </td>
+                    <td>
                           <button type="submit" name="list" value=<%= listTitle %>>+</button>
-                        </td>
+                    </td>
                       <td class="btn-row">
                               <a class="btn btn-primary" href="/centers/center/<%= unitID %>">Done</a>
   

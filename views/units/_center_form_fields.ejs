@@ -6,7 +6,6 @@
     <div class="form-item-column">
         <label>Loan Type</label>
         <select name="cntrLoan" id="cntrLon" >
-            <option select value="">Select here...</option>
             <% lonType.forEach(lnTyp => { %>
                 <% if (lnTyp.title === center.loan_type) { %>
                    <option selected value="<%= lnTyp.title %>"> <%= lnTyp.title %></option>
@@ -29,7 +28,7 @@
         <label>Status</label>
         <select name="centerStat" id="centerStat" >
             <% centerStatus.forEach(centerStat => { %>
-                <% if (centerStat === center.loan_type) { %>
+                <% if (centerStat === center.status) { %>
                    <option selected value="<%= centerStat %>"> <%= centerStat %></option>
                 <% } else { %>
                     <option value="<%= centerStat %>"> <%= centerStat %></option>
