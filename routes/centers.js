@@ -1143,7 +1143,7 @@ router.put("/:id", async function(req, res){
     
                         }else {
                             hasPrevReLoan = true
-                            firstSemReLoan + firstSemReLoan + targClientCountd
+                            firstSemReLoan + firstSemReLoan + targClientCount
                             if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan") {
                                 rExPrevOldClient = rExPrevOldClient + target.numClient
                                 rExOldClientAmt = rExOldClientAmt + target.totAmount
@@ -1168,19 +1168,49 @@ router.put("/:id", async function(req, res){
                 if (remarks === "Re-loan") { 
                     if (loanType === "Group Loan" || tarLoanType === "Agricultural Loan") {
 
-                        if (hasLoanBegBal && curMaturityMonthBeg === withReloanMonth) {
+                        // if HAS Beginning Balances, New Target month = BegBalMaturityMonth, No other Reloan yet
+                        if (hasLoanBegBal && !hasCurReLoan && !hasPrevReLoan) {
+                            resiClient = curLoanTypeCliBegBal - numClient
+                        }
+                        // if HAS Beginning Balances, New Target month = BegBalMaturityMonth, With other Reloans
+                        if (hasLoanBegBal && hasCurReLoan && !hasPrevReLoan) {
                             resiClient = curLoanTypeCliBegBal - (rExOldClient + numClient)
                         }
-
-                        if (hasLoanBegBal && hasCurReLoan && hasPrevReLoan) {
-                            resiClient = (firstSemNewLoan + firstSemReLoan) - (rExOldClient + numClient)
+                        // if HAS Beginning Balances, New Target month = BegBalMaturityMonth, With other Reloans
+                        if (hasLoanBegBal && !hasCurReLoan && hasPrevReLoan && !hasPrevNewLoan) {
+                            resiClient = rExPrevOldClient - numClient
                         }
+                        // if HAS Beginning Balances, New Target month = BegBalMaturityMonth, Has previous loan - Okay
+                        if (hasLoanBegBal && !hasCurReLoan && hasPrevReLoan && hasPrevNewLoan) {
+                            resiClient = (rExPrevOldClient + rExPrevNewClient) - numClient
+                        }
+                        // Okay
+                        if (hasLoanBegBal && hasCurReLoan && hasPrevReLoan && !hasPrevNewLoan) {
+                            resiClient = rExPrevOldClient - (rExOldClient + numClient)
+                        }
+                        // Okay
+                        if (hasLoanBegBal && hasCurReLoan && hasPrevReLoan && hasPrevNewLoan) {
+                            resiClient = (rExPrevOldClient + rExPrevNewClient) - (rExOldClient + numClient)
+                        }
+
 
                         if (!hasLoanBegBal && hasPrevNewLoan && hasCurReLoan) {
                             resiClient = firstSemNewLoan - (rExOldClient + numClient)
                         }
-                        if (!hasLoanBegBal && hasPrevReLoan) {
-                            resiClient = firstSemNewLoan - (rExOldClient + numClient)
+
+                        // if (hasLoanBegBal && curMaturityMonthBeg === withReloanMonth) {
+                        //     resiClient = curLoanTypeCliBegBal - (rExOldClient + numClient)
+                        // }
+
+                        // if (hasLoanBegBal && hasCurReLoan && hasPrevReLoan) {
+                        //     resiClient = (firstSemNewLoan + firstSemReLoan) - (rExOldClient + numClient)
+                        // }
+
+                        // if (!hasLoanBegBal && hasPrevReLoan && !hasPrevNewLoan) {
+                        //     resiClient = firstSemReLoan - (rExPrevOldClient + numClient)
+                        // }
+                        if (!hasLoanBegBal && hasPrevReLoan && hasPrevNewLoan) {
+                            resiClient = (firstSemNewLoan + rExPrevOldClient) - numClient
                         }
 
                     } else {
