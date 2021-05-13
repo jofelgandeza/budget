@@ -29,9 +29,9 @@
                         <tr>
                             <th>LOAN TYPES</th>
                             <th>BEGINNING BALANCE</th>
-                            <th>RE-LOAN CLIENTS</th>
-                            <th>RESIGN CLIENTS</th>
                             <th>NEW CLIENTS</th>
+                            <th>RESIGN CLIENTS</th>
+                            <th>RE-LOAN CLIENTS</th>
                             <th>ENDING BALANCE</th>
                             <th></th>
                             <th>DISBURSEMENT AMOUNT</th>
@@ -40,9 +40,9 @@
                             <tr> 
                                 <td><%= loan.loan_type %></td>
                                 <td><%= loan.begClientTot %></td>
-                                <td><%= loan.onumClient %></td>
-                                <td><%= loan.resloanTot %></td>
                                 <td><%= loan.nnumClient %></td>
+                                <td><%= loan.resloanTot %></td>
+                                <td><%= loan.onumClient %></td>
                                 <td><%= loan.budgEndBal %></td>
                                 <td></td>
                                 <td><%= loan.amtDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
@@ -52,9 +52,9 @@
                             <td>TOTAL</td>
                             <% poGrandTot.forEach( gTot => { %>
                                 <td> <%= gTot.bClient %></td>
-                                <td> <%= gTot.oClient %></td>
-                                <td> <%= gTot.rClient %></td>
                                 <td> <%= gTot.nClient %></td>
+                                <td> <%= gTot.rClient %></td>
+                                <td> <%= gTot.oClient %></td>
                                 <td> <%= gTot.budgEndBal %></td>
                                 <td></td>
                                 <td> <%= gTot.totDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>

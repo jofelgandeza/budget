@@ -134,7 +134,7 @@ router.get('/center/:id', async (req, res) => {
                         } else {
                             oloanTot = oloanTot + centerLoan.totAmount
                             oloanTotCount = oloanTotCount + centerLoan.numClient
-                            resloanTot = resloanTot + resignClient
+                            resloanTot = resloanTot + centerLoan.resignClient
                         }
                     }
                 })
@@ -608,6 +608,11 @@ router.put("/putBegBal/:id", async function(req, res){
     let locals
     let canSaveBegBal = false
     let canAddCenterBudg = false
+    let canAddCenter2Budg = false
+    let doneSaveNewFromOldAmt = false
+    let doneSaveNewFromOldClient = false
+    let doneSaveExistFromOldAmt = false
+    let doneSaveExistFromOldClient = false
 
       const centerFound = await Center.findOne({center: centerCode}, function(err, foundList){ 
         if (err) {
@@ -675,10 +680,12 @@ router.put("/putBegBal/:id", async function(req, res){
                         console.log(foundVwList)
 
                         foundVwList.beg_bal = bClientCnt
+                        foundVwList.beg_bal_amt = begBalPrinc
+                        foundVwList.beg_bal_int = begBalInterest
                         
                         foundVwList.save();
 
-                        res.redirect('/centers/setBegBal/' + centerCode)
+                        doneSaveExistFromOldClient = true
                     }
                 }
             })
@@ -686,16 +693,60 @@ router.put("/putBegBal/:id", async function(req, res){
             if (canAddCenterBudg) {
                 let newCtrCliBudg = new Center_budget_det({
                     region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                    view_type: "PUH", loan_type: begLoanType, view_code: "OldLoanClient", beg_bal: bClientCnt, beg_bal_amt: bBalAmt,
+                    view_type: "PUH", loan_type: begLoanType, view_code: "OldLoanClient", beg_bal: bClientCnt, beg_bal_amt: bBalAmt, beg_bal_int: begBalInterest,
                     jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
                     may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
                     sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                 })
                 const nwCtrClient = await newCtrCliBudg.save()
 
-                res.redirect('/centers/setBegBal/' + centerCode)
+                doneSaveNewFromOldClient = true
+            }
+            
+            const ctrBudgAmtDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanAmt"}, function(err, fndVwOldAmtList){ 
+                if (err) {
+                    console.log(err)
+                }
+                else {
+                    if (isNull(fndVwOldAmtList)) {
+                        canAddCenter2Budg = true
+                    } else {
+                        console.log(fndVwOldAmtList)
+
+                        fndVwOldAmtList.beg_bal = bBalAmt
+                        fndVwOldAmtList.beg_bal_amt = begBalPrinc
+                        fndVwOldAmtList.beg_bal_int = begBalInterest
+                        
+                        fndVwOldAmtList.save();
+
+                        doneSaveExistFromOldAmt = true
+                    }
+                }
+            })
+
+            if (canAddCenter2Budg) {
+                let newCtrCliBudg = new Center_budget_det({
+                    region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                    view_type: "PUH", loan_type: begLoanType, view_code: "OldLoanAmt", beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest,
+                    jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
+                    may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
+                    sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
+                })
+                const nwCtrClient = await newCtrCliBudg.save()
+                doneSaveNewFromOldAmt = true
 
             }
+
+            if (doneSaveExistFromOldClient && doneSaveExistFromOldAmt) {
+
+                res.redirect('/centers/setBegBal/' + centerCode)
+ 
+            } else {
+                if (doneSaveNewFromOldClient && doneSaveNewFromOldAmt) {
+                    res.redirect('/centers/setBegBal/' + centerCode)
+                }
+            }
+
         } else {
             res.redirect('/centers/setBegBal/' + centerCode)
         }
@@ -735,22 +786,45 @@ router.put("/putBegBal/:id", async function(req, res){
                }
            })
    
-        // Updating Loan Beginning Balances to center_budget_dets.. 
-        const centerBudgDetFound = await Center_budget_det.findOne({center: listName, loan_type: delLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
-            if (err) {
-                console.log(err)
-            }
-            else {
-                console.log(foundVwList)
+            // Updating Loan Beginning Balances to center_budget_dets.. 
+            let doneUpdateOldClient = false
+            let doneUpdateOldAmt = false
+            const centerBudgDetFound = await Center_budget_det.findOne({center: listName, loan_type: delLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
+                if (err) {
+                    console.log(err)
+                }
+                else {
+                    console.log(foundVwList)
 
-                foundVwList.beg_bal = 0
-                foundVwList.beg_bal_amt = 0
-                
-                foundVwList.save();
+                    foundVwList.beg_bal = 0
+                    foundVwList.beg_bal_amt = 0
+                    
+                    foundVwList.save();
 
+                    doneUpdateOldClient = true
+                }
+            })
+
+            const center2BudgDetFound = await Center_budget_det.findOne({center: listName, loan_type: delLoanType, view_code: "OldLoanAmt"}, function(err, foundBegAmtList){ 
+                if (err) {
+                    console.log(err)
+                }
+                else {
+                    console.log(foundBegAmtList)
+
+                    foundBegAmtList.beg_bal = 0
+                    foundBegAmtList.beg_bal_amt = 0
+                    foundBegAmtList.beg_bal_int = 0
+                    
+                    foundBegAmtList.save();
+
+                    doneUpdateOldAmt = true
+                }
+            })
+
+            if (doneUpdateOldClient && doneUpdateOldAmt) {
                 res.redirect('/centers/setBegBal/' + centerCode)
             }
-        })
 
         } catch (err) {
            console.log(err)
@@ -898,11 +972,13 @@ router.put("/:id", async function(req, res){
         let rOldClient = 0
         let rOldClientAmt = 0
         let rExNewClient =  0 
-        let rExPrevNewClient =  0 
         let rExNewClientAmt = 0
+        let rExPrevNewClient =  0 
+        let rExPrevNewAmt =  0 
         let rExOldClient = 0
-        let rExPrevOldClient = 0
         let rExOldClientAmt = 0
+        let rExPrevOldClient = 0
+        let rExPrevOldAmt = 0
         let resClient = 0
 
         if (_.trim(remarks) === "New Loan") {
@@ -1114,19 +1190,22 @@ router.put("/:id", async function(req, res){
                             hasCurNewLoan = true
                             newLoanCount = newLoanCount + target.numClient
                             newLoanAmount = newLoanAmount + target.totAmount
-                            if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan") {
+                            // if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan") {
                                 rExNewClient = rExNewClient + target.numClient
                                 rExNewClientAmt = rExNewClientAmt + target.totAmount
-                            }
-                            rNewClient = rNewClient + target.numClient
-                            rNewClientAmt = rNewClientAmt + target.numClient
+                            // }
+                            rNewClient = rNewClient + target.numClient   //
+                            rNewClientAmt = rNewClientAmt + target.numClient //
+
                         } else {
                             hasPrevNewLoan = true
                             firstSemNewLoan = firstSemNewLoan + targClientCount
-                            if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan") {
+                            // if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan") {
                                 rExPrevNewClient = rExPrevNewClient + target.numClient
-//                                rExNewClientAmt = rExNewClientAmt + target.totAmount
-                            }
+                                rExPrevNewAmt = rExPrevNewAmt + target.totAmount
+                            // }
+                            rNewClient = rNewClient + target.numClient   //
+                            rNewClientAmt = rNewClientAmt + target.numClient //
                         }
                     }
                     if (tarLoanType === loanType  &&_.trim(target.remarks) === "Re-loan" ) {
@@ -1136,19 +1215,19 @@ router.put("/:id", async function(req, res){
                                 oldLoanCount  = oldLoanCount + target.numClient
                                 oldLoanAmount = oldLoanAmount + target.totAmount
                                 targetKeyForUpdet = target.id
-                                 if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan") {
+                                //  if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan") {
                                     rExOldClient = rExOldClient + target.numClient
                                     rExOldClientAmt = rExOldClientAmt + target.totAmount
-                                 }
+                                //  }
     
-                        }else {
+                        } else {
                             hasPrevReLoan = true
                             firstSemReLoan + firstSemReLoan + targClientCount
-                            if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan") {
+                            // if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan") {
                                 rExPrevOldClient = rExPrevOldClient + target.numClient
-                                rExOldClientAmt = rExOldClientAmt + target.totAmount
-                             }
-                    }
+                                rExPrevOldAmt = rExPrevOldAmt + target.totAmount
+                            //  }
+                        }
                     }
                 }) // end of forEach() loop
                 
@@ -1166,7 +1245,7 @@ router.put("/:id", async function(req, res){
                     // }
 
                 if (remarks === "Re-loan") { 
-                    if (loanType === "Group Loan" || tarLoanType === "Agricultural Loan") {
+//                    if (loanType === "Group Loan" || loanType === "Agricultural Loan") {
 
                         // if HAS Beginning Balances, New Target month = BegBalMaturityMonth, No other Reloan yet
                         if (hasLoanBegBal && !hasCurReLoan && !hasPrevReLoan) {
@@ -1192,10 +1271,13 @@ router.put("/:id", async function(req, res){
                         if (hasLoanBegBal && hasCurReLoan && hasPrevReLoan && hasPrevNewLoan) {
                             resiClient = (rExPrevOldClient + rExPrevNewClient) - (rExOldClient + numClient)
                         }
-
+                        //
+                        if (!hasLoanBegBal && hasPrevNewLoan && !hasCurReLoan) {
+                            resiClient = rExPrevNewClient - numClient
+                        }
 
                         if (!hasLoanBegBal && hasPrevNewLoan && hasCurReLoan) {
-                            resiClient = firstSemNewLoan - (rExOldClient + numClient)
+                            resiClient = rExPrevNewClient - (rExOldClient + numClient)
                         }
 
                         // if (hasLoanBegBal && curMaturityMonthBeg === withReloanMonth) {
@@ -1213,32 +1295,35 @@ router.put("/:id", async function(req, res){
                             resiClient = (firstSemNewLoan + rExPrevOldClient) - numClient
                         }
 
-                    } else {
+                    } 
+                //     else {
 
-                        if (hasLoanBegBal && curMaturityMonthBeg === withReloanMonth) {
-                            resiClient = curLoanTypeCliBegBal - (oldLoanCount + numClient)
-                        }
+                //         if (hasLoanBegBal && curMaturityMonthBeg === withReloanMonth) {
+                //             resiClient = curLoanTypeCliBegBal - (oldLoanCount + numClient)
+                //         }
 
-                        if (hasLoanBegBal && hasCurReLoan && hasPrevReLoan) {
-                            resiClient = (firstSemNewLoan + firstSemReLoan) - (oldLoanCount + numClient)
-                        }
+                //         if (hasLoanBegBal && hasCurReLoan && hasPrevReLoan) {
+                //             resiClient = (firstSemNewLoan + firstSemReLoan) - (oldLoanCount + numClient)
+                //         }
 
-                        if (!hasLoanBegBal && hasPrevReLoan) {
-                            resiClient = firstSemNewLoan - (newLoanCount + numClient)
-                        }
+                //         if (!hasLoanBegBal && hasPrevReLoan) {
+                //             resiClient = firstSemNewLoan - (newLoanCount + numClient)
+                //         }
 
-                        if (hasCurNewLoan) {
-                            rOldClient = rOldClient + rExOldClient
-                            rOldClientAmt = rOldClientAmt + rExOldClientAmt
+                //         if (hasCurNewLoan) {
+                //             rOldClient = rOldClient + rExOldClient
+                //             rOldClientAmt = rOldClientAmt + rExOldClientAmt
                     
-                                if (rOldClient > 0) {
-                                    resiClient = rNewClient - rOldClient
-                                } else {
-                                    resiClient = rNewClient - numClient
-                                }
-                        }
-                    }
-                }
+                //                 if (rOldClient > 0) {
+                //                     resiClient = rNewClient - rOldClient
+                //                 } else {
+                //                     resiClient = rNewClient - numClient
+                //                 }
+                //         }
+                //     }
+                // } else {
+
+                // }
 
                     // if (hasLoanBegBal) {
                     //     if (orderMonth == nMonthBegBal) {
@@ -1278,14 +1363,21 @@ router.put("/:id", async function(req, res){
                 resignClient: resiClient
             }
             if (loanType === "Group Loan" || loanType === "Agricultural Loan") {
-                foundList.resClient = resiClient
+                foundList.resClient = resiClient //+ (curLoanTypeCliBegBal - rExPrevOldClient)
                 if (remarks === "Re-loan") {
-                    foundList.oldClientAmt = rExOldClientAmt + totAmount
-                    foundList.oldClient = rExOldClient + numClient
+                    foundList.oldClient = (rExOldClient + rExPrevOldClient) + numClient
+                    foundList.oldClientAmt = (rExOldClientAmt + rExPrevOldAmt) + totAmount
                 } else {
-                    foundList.newClient = rExNewClient + numClient
-                    foundList.newClientAmt = rExNewClientAmt + totAmount
+                    foundList.newClient = (rExNewClient + rExPrevNewClient) + numClient
+                    foundList.newClientAmt = (rExNewClientAmt + rExPrevNewAmt) + totAmount
                 }
+            } else {
+                if (remarks === "Re-loan") {
+                    foundList.oldClientAmt = (rExOldClientAmt + rExPrevOldAmt) + totAmount
+                } else {
+                    foundList.newClientAmt = (rExNewClientAmt + rExPrevNewAmt) + totAmount
+                }
+
             }
 
             // saving to center collections and its Target array field
@@ -2217,7 +2309,7 @@ router.get('/viewTargetsMonthly/:id', async (req, res) => {
                 console.log(viewPOCode)
                 let poVSum = []
 
-
+                // Accessing loan_types
                 vwloanType.forEach(loan_type => {
                     const typeLoanDet = loan_type.title
                     const vwlnType = loan_type.loan_type
@@ -2267,6 +2359,7 @@ router.get('/viewTargetsMonthly/:id', async (req, res) => {
                     let oct_detNewtotAmt = 0
                     let nov_detNewtotAmt = 0
                     let dec_detNewtotAmt = 0
+                        let begBaldetOldtotAmt = 0 
                         let jan_detOldtotAmt = 0 
                         let feb_detOldtotAmt = 0
                         let mar_detOldtotAmt = 0
@@ -2343,6 +2436,7 @@ router.get('/viewTargetsMonthly/:id', async (req, res) => {
                                     dec_detNewtotAmt = dec_detNewtotAmt + centerDet.dec_budg 
                                     break;
                                 case "OldLoanAmt": orderMonth = 14
+                                    begBaldetOldtotAmt = begBaldetOldtotAmt + centerDet.beg_bal
                                     jan_detOldtotAmt = jan_detOldtotAmt + centerDet.jan_budg 
                                     feb_detOldtotAmt = feb_detOldtotAmt + centerDet.feb_budg 
                                     mar_detOldtotAmt = mar_detOldtotAmt + centerDet.mar_budg 
@@ -2409,7 +2503,7 @@ router.get('/viewTargetsMonthly/:id', async (req, res) => {
                             + jul_detOldtotAmt + aug_detOldtotAmt + sep_detOldtotAmt + oct_detOldtotAmt + nov_detOldtotAmt + dec_detOldtotAmt
 
                             if (oloanTotAmt > 0) {
-                                poSumView.push({title: typeLoanDet + " - OLA", desc: "oldLoanAmt", sortkey: 16, group: 1, jan_value : jan_detOldtotAmt, feb_value : feb_detOldtotAmt, mar_value : mar_detOldtotAmt, apr_value : apr_detOldtotAmt,
+                                poSumView.push({title: typeLoanDet + " - OLA", desc: "oldLoanAmt", sortkey: 16, group: 1, beg_bal : begBaldetOldtotAmt, jan_value : jan_detOldtotAmt, feb_value : feb_detOldtotAmt, mar_value : mar_detOldtotAmt, apr_value : apr_detOldtotAmt,
                                     may_value : may_detOldtotAmt, jun_value : jun_detOldtotAmt, jul_value : jul_detOldtotAmt, aug_value : aug_detOldtotAmt,
                                     sep_value : sep_detOldtotAmt, oct_value : oct_detOldtotAmt, nov_value : nov_detOldtotAmt, dec_value : dec_detOldtotAmt 
                                 })         

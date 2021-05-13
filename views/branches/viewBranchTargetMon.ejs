@@ -1,4 +1,4 @@
-<h6 class="page-header">PO Budget Summary per Month - <%= poCode %></h6>
+<h5 class="page-header">BRANCH Budget Executive Summary per Month - <%= vwBranchCod %></h5>
 <div class="inputAmountContainer2">
     <label class="accountLabel">TITLE</label>
     <label>BEG BAL</label>
@@ -17,8 +17,8 @@
 </div>
     <% poSumView.forEach(poView => { %>
         <div class="<%= poView.group == 1 ? "inputAmountContainer1" : "inputAmountContainer2" %>">
-
             <label class="accountLabel"> <%= poView.title %> </label>
+            <label></label>
             <% if (poView.beg_bal > 1000) { %>
                 <label><%= poView.beg_bal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
             <% } else { %>
@@ -86,6 +86,6 @@
             <% } %>
         </div>
         <% }) %>
-    <div>
-        <a class="btn btn-primary" href="/centers/center/<%= poCode %>">Done</a>
-    </div>
+        <div>
+            <a class="btn btn-primary" href="/branches/budget/<%= vwBranchCod %>">Done</a>
+        </div>

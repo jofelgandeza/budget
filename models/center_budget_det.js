@@ -47,6 +47,10 @@ const mongoose = require('mongoose')
         type: Number,
         required: false
     },
+    beg_bal_int: {
+        type: Number,
+        required: false
+    },
     jan_budg: {
         type: Number,
         required: false

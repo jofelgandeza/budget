@@ -19,6 +19,11 @@
         <div class="<%= poView.group == 1 ? "inputAmountContainer1" : "inputAmountContainer2" %>">
             <label class="accountLabel"> <%= poView.title %> </label>
             <label></label>
+            <% if (poView.beg_bal > 1000) { %>
+                <label><%= poView.beg_bal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                    <label><%= poView.beg_bal %></label>
+            <% } %>
             <% if (poView.jan_value > 1000) { %>
                 <label><%= poView.jan_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
             <% } else { %>
@@ -81,3 +86,7 @@
             <% } %>
         </div>
         <% }) %>
+        <div>
+            <a class="btn btn-primary" href="/units/<%= vwUniCod %>">Done</a>
+        </div>
+    

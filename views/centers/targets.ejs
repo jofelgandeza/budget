@@ -32,10 +32,10 @@
                                 <p><%= item.numClient %></p>
                             </td>
                             <td>
-                                <p><%= item.amount %></p>                        
+                                <p><%= item.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></p>                        
                             </td>
                             <td>
-                                <p><%= item.totAmount %></p>
+                                <p><%= item.totAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></p>                        
                             </td>
                             <td>
                                 <p><%= item.resClient %></p>
