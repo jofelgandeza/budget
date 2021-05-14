@@ -64,6 +64,7 @@ router.get('/center/:id', async (req, res) => {
      let bClient = 0
      let resignClient = 0
      let budgBegBal = 0
+     let budgBegBalCli = 0
      let tbudgEndBal = 0
      let totDisburse = 0
      let lnType 
@@ -91,7 +92,8 @@ router.get('/center/:id', async (req, res) => {
             oClientAmt = _.sumBy(foundCenters, function(o) { return o.oldClientAmt; });
             rClient = _.sumBy(foundCenters, function(o) { return o.resClient; });
             budgBegBal = _.sumBy(foundCenters, function(o) { return o.budget_BegBal; });
-            tbudgEndBal = (oClient + nClient) - rClient
+            budgBegBalCli = _.sumBy(foundCenters, function(o) { return o.budget_BegBalCli; });
+            // tbudgEndBal = (oClient + nClient) - rClient
             totDisburse = nClientAmt + oClientAmt
 
             foundCenter = foundCenters
@@ -109,7 +111,7 @@ router.get('/center/:id', async (req, res) => {
             let resloanTot = 0
             let begLoanTot = 0
             let begClientTot = 0
-            bClient = 0
+            let budgEndBal = 0
 
             lnType = loan_type.loan_type
 //            console.log(typeLoan)
@@ -144,23 +146,23 @@ router.get('/center/:id', async (req, res) => {
                 LoanBegBal.forEach(centerBegBal => {
                     if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
                         begLoanTot = centerBegBal.beg_amount
-                        begClientTot = centerBegBal.beg_client_count
-                        bClient = bClient + begClientTot
+                        begClientTot = begClientTot+ centerBegBal.beg_client_count
+                        bClient = bClient + centerBegBal.beg_client_count
                     }
                 })
 
 
             })
             let totAmounts = nloanTot + oloanTot 
-            let budgEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
+                budgEndBal =  (begClientTot +  nloanTotCount) - resloanTot
 //            let amtDisburse = oloanTot + oloanTot
             
-            poLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClient,
+            poLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: begClientTot,
                 ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgEndBal})
 
             resloanTot = 0
+            tbudgEndBal = tbudgEndBal + budgEndBal
         })
-        tbudgEndBal = tbudgEndBal + bClient
 
         // console.log(poLoanGrandTot)
 
@@ -729,8 +731,7 @@ router.put("/putBegBal/:id", async function(req, res){
                     doneSaveFromOldAmt = true
                 }
             })
-
-
+            
             if (doneSaveFromOldClient && doneSaveFromOldAmt) {
 
                 res.redirect('/centers/setBegBal/' + centerCode)

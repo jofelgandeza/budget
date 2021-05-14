@@ -414,6 +414,8 @@ router.post('/postNewCenter/:id', async (req, res) => {
     Info : cntrInfo,
     Targets: [],
     Loan_beg_bal: [],
+    budgBegBalCli: 0,
+    budgBegBal: 0,
     newClient: 0,
     newClientAmt: 0,
     oldClient: 0,

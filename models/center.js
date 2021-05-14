@@ -89,6 +89,12 @@ const centerLoan = {
         type: Number,
     },
     Loan_beg_bal : [centerLoanBegBal],
+    budget_BegBalCli: {
+        type: Number,
+    },
+    budget_BegBal: {
+        type: Number,
+    },
     newClient: {
         type: Number,
     },
