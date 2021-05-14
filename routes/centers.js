@@ -109,6 +109,8 @@ router.get('/center/:id', async (req, res) => {
             let resloanTot = 0
             let begLoanTot = 0
             let begClientTot = 0
+            bClient = 0
+
             lnType = loan_type.loan_type
 //            console.log(typeLoan)
 
@@ -153,7 +155,7 @@ router.get('/center/:id', async (req, res) => {
             let budgEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
 //            let amtDisburse = oloanTot + oloanTot
             
-            poLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: begClientTot,
+            poLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClient,
                 ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgEndBal})
 
             resloanTot = 0
@@ -614,6 +616,9 @@ router.put("/putBegBal/:id", async function(req, res){
     let doneSaveExistFromOldAmt = false
     let doneSaveExistFromOldClient = false
 
+    let doneSaveFromOldClient = false
+    let doneSaveFromOldAmt = false
+
       const centerFound = await Center.findOne({center: centerCode}, function(err, foundList){ 
         if (err) {
             console.log(err)
@@ -675,7 +680,15 @@ router.put("/putBegBal/:id", async function(req, res){
                 }
                 else {
                     if (isNull(foundVwList)) {
-                        canAddCenterBudg = true
+                        let newCtrCliBudg = new Center_budget_det({
+                            region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                            view_type: "PUH", loan_type: begLoanType, view_code: "OldLoanClient", beg_bal: bClientCnt, beg_bal_amt: bBalAmt, beg_bal_int: begBalInterest,
+                            jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
+                            may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
+                            sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
+                        })
+                        const nwCtrClient = newCtrCliBudg.save()
+
                     } else {
                         console.log(foundVwList)
 
@@ -684,32 +697,26 @@ router.put("/putBegBal/:id", async function(req, res){
                         foundVwList.beg_bal_int = begBalInterest
                         
                         foundVwList.save();
-
-                        doneSaveExistFromOldClient = true
                     }
+                    doneSaveFromOldClient = true
                 }
             })
 
-            if (canAddCenterBudg) {
-                let newCtrCliBudg = new Center_budget_det({
-                    region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                    view_type: "PUH", loan_type: begLoanType, view_code: "OldLoanClient", beg_bal: bClientCnt, beg_bal_amt: bBalAmt, beg_bal_int: begBalInterest,
-                    jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
-                    may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
-                    sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
-                })
-                const nwCtrClient = await newCtrCliBudg.save()
-
-                doneSaveNewFromOldClient = true
-            }
-            
             const ctrBudgAmtDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanAmt"}, function(err, fndVwOldAmtList){ 
                 if (err) {
                     console.log(err)
                 }
                 else {
                     if (isNull(fndVwOldAmtList)) {
-                        canAddCenter2Budg = true
+                        let newCtrCliBudg = new Center_budget_det({
+                            region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                            view_type: "PUH", loan_type: begLoanType, view_code: "OldLoanAmt", beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest,
+                            jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
+                            may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
+                            sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
+                        })
+                        const nwCtrClient = newCtrCliBudg.save()
+
                     } else {
                         console.log(fndVwOldAmtList)
 
@@ -718,33 +725,20 @@ router.put("/putBegBal/:id", async function(req, res){
                         fndVwOldAmtList.beg_bal_int = begBalInterest
                         
                         fndVwOldAmtList.save();
-
-                        doneSaveExistFromOldAmt = true
                     }
+                    doneSaveFromOldAmt = true
                 }
             })
 
-            if (canAddCenter2Budg) {
-                let newCtrCliBudg = new Center_budget_det({
-                    region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                    view_type: "PUH", loan_type: begLoanType, view_code: "OldLoanAmt", beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest,
-                    jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
-                    may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
-                    sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
-                })
-                const nwCtrClient = await newCtrCliBudg.save()
-                doneSaveNewFromOldAmt = true
 
-            }
-
-            if (doneSaveExistFromOldClient && doneSaveExistFromOldAmt) {
+            if (doneSaveFromOldClient && doneSaveFromOldAmt) {
 
                 res.redirect('/centers/setBegBal/' + centerCode)
  
-            } else {
-                if (doneSaveNewFromOldClient && doneSaveNewFromOldAmt) {
-                    res.redirect('/centers/setBegBal/' + centerCode)
-                }
+            // } else {
+            //     if (doneSaveNewFromOldClient && doneSaveNewFromOldAmt) {
+            //         res.redirect('/centers/setBegBal/' + centerCode)
+            //     }
             }
 
         } else {
