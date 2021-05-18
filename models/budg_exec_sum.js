@@ -16,28 +16,6 @@ const mongoose = require('mongoose')
         type: String,
         required: true
     },
-    po: {
-        type: String,
-        required: true
-    },
-    po_code: {
-        type: String,
-        required: true
-    },
-    center: {
-        type: String,
-        required: true
-    },
-    view_type: {
-        type: String,
-        required: true
-    },
-    loan_type: {
-        type: String,
-    },
-    client_count_included: {
-        type: Boolean,
-    },
     view_code: {
         type: String,
         required: true
@@ -107,4 +85,4 @@ const mongoose = require('mongoose')
     },
   });
   
-module.exports = mongoose.model('center_budget_det', centerBudgDetSchema)
+module.exports = mongoose.model('Budg_exec_sum', centerBudgDetSchema)

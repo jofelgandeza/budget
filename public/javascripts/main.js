@@ -136,7 +136,7 @@ function setPositValue() {
 
     acqPositValue = document.getElementById("ayApo").value
 
-    alert(acqPositValue)
+//    alert(acqPositValue)
 
 }
 

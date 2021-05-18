@@ -1,0 +1,98 @@
+<h5 class="page-header">UNIT PROJECTED INCOME - <%= vwUniCod %></h5>
+<div class="inputAmountContainer2">
+    <label class="accountLabel">MONTH</label>
+    <label>AMOUNT</label>
+    <label>JAN</label>
+    <label>FEB</label>
+    <label>MAR</label>
+    <label>APR</label>
+    <label>MAY</label>
+    <label>JUN</label>
+    <label>JUL</label>
+    <label>AUG</label>
+    <label>SEPT</label>
+    <label>OCT</label>
+    <label>NOV</label>
+    <label>DEC</label>
+    <label>TOTAL</label>
+</div>
+    <% poSumView.forEach(poView => { %>
+        <div class="inputAmountContainer1" %>">
+            <label class="accountLabel"> <%= poView.month %> </label>
+            <% if (poView.loanAmount > 1000) { %>
+                <label><%= poView.loanAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                    <label><%= poView.loanAmount %></label>
+            <% } %>
+            <% if (poView.jan_loan_int > 1000) { %>
+                <label><%= poView.jan_loan_int.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                    <label><%= poView.jan_loan_int %></label>
+            <% } %>
+            <% if (poView.feb_loan_int > 1000) { %>
+                <label><%= poView.feb_loan_int.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                <label><%= poView.feb_loan_int %></label>
+            <% } %>
+            <% if (poView.mar_loan_int > 1000) { %>
+                <label><%= poView.mar_loan_int.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                <label><%= poView.mar_loan_int %></label>
+            <% } %>
+            <% if (poView.apr_loan_int > 1000) { %>
+                <label><%= poView.apr_loan_int.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                <label><%= poView.apr_loan_int %></label>
+            <% } %>
+            <% if (poView.may_loan_int > 1000) { %>
+                <label><%= poView.may_loan_int.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                <label><%= poView.may_loan_int %></label>
+            <% } %>
+            <% if (poView.jun_loan_int > 1000) { %>
+                <label><%= poView.jun_loan_int.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                <label><%= poView.jun_loan_int %></label>
+            <% } %>
+            <% if (poView.jul_loan_int > 1000) { %>
+                <label><%= poView.jul_loan_int.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                <label><%= poView.jul_loan_int %></label>
+            <% } %>
+            <% if (poView.aug_loan_int > 1000) { %>
+                <label><%= poView.aug_loan_int.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                <label><%= poView.aug_loan_int %></label>
+            <% } %>
+            <% if (poView.sep_loan_int > 1000) { %>
+                <label><%= poView.sep_loan_int.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                <label><%= poView.sep_loan_int %></label>
+            <% } %>
+            <% if (poView.oct_loan_int > 1000) { %>
+                <label><%= poView.oct_loan_int.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                <label><%= poView.oct_loan_int %></label>
+            <% } %>
+            <% if (poView.nov_loan_int > 1000) { %>
+                <label><%= poView.nov_loan_int.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                <label><%= poView.nov_loan_int %></label>
+            <% } %>
+            <% if (poView.dec_loan_int > 1000) { %>
+                <label><%= poView.dec_loan_int.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                <label><%= poView.dec_loan_int %></label>
+            <% } %>
+            <% if (poView.rowTotloanInt > 1000) { %>
+                <label><%= poView.rowTotloanInt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+            <% } else { %>
+                <label><%= poView.rowTotloanInt %></label>
+            <% } %>
+            
+        </div>
+        <% }) %>
+        <div>
+            <a class="btn btn-primary" href="/units/budget/<%= vwUniCod %>">Done</a>
+        </div>
+    
