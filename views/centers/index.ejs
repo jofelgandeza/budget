@@ -107,7 +107,7 @@
                         <td><%= center.newClientAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
                         <td><%= center.oldClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
                         <td><%= center.oldClientAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
-                        <td><%= center.resClient%> </td>
+                        <td><%= center.resClient + center.resClient2%> </td>
                         <td>
                             <div class="btn-row">
                                 <a class="btn btn-primary" href="/centers/<%= center.center %>/edit">Target</a>

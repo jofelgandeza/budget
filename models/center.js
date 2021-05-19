@@ -110,6 +110,9 @@ const centerLoan = {
     resClient: {
         type: Number,
     },
+    resClient2: {
+        type: Number,
+    },
   });
   
 module.exports = mongoose.model('Center', centersSchema)

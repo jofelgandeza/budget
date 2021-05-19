@@ -61,6 +61,7 @@ router.get('/center/:id', async (req, res) => {
      let oClient = 0
      let oClientAmt = 0
      let rClient = 0
+     let rClient2 = 0
      let bClient = 0
      let resignClient = 0
      let budgBegBal = 0
@@ -91,6 +92,7 @@ router.get('/center/:id', async (req, res) => {
             oClient = _.sumBy(foundCenters, function(o) { return o.oldClient; });
             oClientAmt = _.sumBy(foundCenters, function(o) { return o.oldClientAmt; });
             rClient = _.sumBy(foundCenters, function(o) { return o.resClient; });
+            rClient2 = _.sumBy(foundCenters, function(o) { return o.resClient2; });
             budgBegBal = _.sumBy(foundCenters, function(o) { return o.budget_BegBal; });
             budgBegBalCli = _.sumBy(foundCenters, function(o) { return o.budget_BegBalCli; });
             // tbudgEndBal = (oClient + nClient) - rClient
@@ -121,7 +123,7 @@ router.get('/center/:id', async (req, res) => {
                 let centerTargets = center.Targets
                 let LoanBegBal = center.Loan_beg_bal
 //                let centerLoanBegBal = center.Loan_beg_bal                
-                let resignClient = center.resClient
+                let resignClient = center.resClient + center.resClient2
                 
                 if (lnType === _.trim(lnType)) {
                     BudgBegBal = center.budget_BegBal
@@ -167,7 +169,7 @@ router.get('/center/:id', async (req, res) => {
         // console.log(poLoanGrandTot)
 
         poLoanGrandTot.push({nClient: nClient, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
-            rClient: rClient, bClient: bClient, budgEndBal: tbudgEndBal, totDisburse: totDisburse})
+            rClient: rClient + rClient2, bClient: bClient, budgEndBal: tbudgEndBal, totDisburse: totDisburse})
 
 //       console.log(poLoanGrandTot)
 
@@ -184,237 +186,6 @@ router.get('/center/:id', async (req, res) => {
             console.log(err)
             res.redirect('/')
         }
-})
-
-
-// View Unit per PO  - TUG-A
-router.get('/unit/:id', async (req, res) => {
-    
-    const IDcode = req.params.id
-   
-    const unitCode = IDcode.substr(4,1)
-    const branchCode = IDcode.substr(0,3)
-    const uniCode = IDcode.substr(0,4)
-   
-    // console.log(IDcode)
-    // console.log(unitCode)
-    // console.log(uniCode)
-   
-    let foundCenter = []
-    let foundPOunits = []
-    let foundPO = []
-    let officerName = ""
-      
-       try {
-           const employee = await Employee.find({branch: branchCode, unit: unitCode}, function (err, foundPOs){
-               foundPOunits = foundPOs
-           })
-           
-           foundPOunits.sort( function (a,b) {
-            if ( a.assign_code < b.assign_code ){
-                return -1;
-              }
-              if ( a.assign_code > b.assign_code ){
-                return 1;
-              }
-              return 0;
-           })
-
-        // console.log(foundPOunits)
-   
-        //    s( a, b ) {
-
-           const center = await Center.find({branch: branchCode, unit: unitCode}, function (err, foundCenters) {
-   
-   //            console.log(foundCenters)   
-   
-   //            cost unitOfficer = await Employee
-               foundCenter = foundCenters
-               const unitTitle = "Unit " + foundCenters.unit
-               const poNumber = foundCenters.po
-               const nClient = _.sumBy(foundCenters, function(o) { return o.newClient; });
-               const nClientAmt = _.sumBy(foundCenters, function(o) { return o.newClientAmt; });
-               const oClient = _.sumBy(foundCenters, function(o) { return o.oldClientAmt; });
-               const oClientAmt = _.sumBy(foundCenters, function(o) { return o.oldClientAmt; });
-               const rClient = _.sumBy(foundCenters, function(o) { return o.resClient; });
-   
-               const resClient = _.sumBy(foundCenters, function(o) { return o.resClient; });
-   
-   
-   //            console.log(foundCenters) 
-   //           res.send(req.params.id)
-   //                coa: coa,
-   //                locals: locals
-   //        })            
-           })
-           //console.log (foundPOunits)
-           let poNumber
-           foundPOunits.forEach(po_data => {
-               
-               POnumber = po_data.po_number
-               const POname = po_data.first_name + " " + po_data.middle_name.substr(0,1) + ". " + po_data.last_name
-   
-              let neClientNum = 0
-              let neClientAmt = 0
-              let olClientNum = 0 
-              let olClientAmt = 0 
-              let reClientNum = 0
-   
-//               console.log(foundCenter)
-   
-               foundCenter.forEach(center_data => {
-                   if (center_data.po === POnumber) {
-                       neClientNum = neClientNum + center_data.newClient
-                       neClientAmt = neClientAmt + center_data.newClientAmt
-                       olClientNum = olClientNum + center_data.oldClient
-                       olClientAmt = olClientAmt + center_data.oldClientAmt
-                       reClientNum = reClientNum + center_data.resClient
-               }
-               })
-   
-               if (POnumber !== "") {
-                   foundPO.push({
-                       po_name: POname,
-                       po_num: POnumber,
-                       newClient: neClientNum,
-                       newClientAmt: neClientAmt,
-                       oldClient: olClientNum,
-                       oldClientAmt: olClientAmt,
-                       resClient: reClientNum
-                   })
-               } else {
-                   officerName =  POname
-               }
-               })
-//               console.log(foundPO)
-   
-               res.render('centers/unit', {
-                   listTitle: branchCode+"-"+unitCode,
-                   officerName: officerName,
-                   POs: foundPO,
-                   searchOptions: req.query,
-                   Swal: Swal
-               })
-   
-       } 
-       catch (err) {
-           console.log(err)
-       }
-   })
-   
-   
-// View BRANCH per UNIT  - TUG-A
-router.get('/branch/:id', async (req, res) => {
-    
-    const branchCode = req.params.id
-
-//     const unitCode = IDcode.substr(4,1)
-//     const branchCode = IDcode.substr(0,3)
-//     const uniCode = IDcode.substr(0,4)
-
-//     console.log(IDcode)
-//     console.log(unitCode)
-//     console.log(uniCode)
-
-    let foundManager = []
-    let foundCenter = []
-    let foundPOunits = []
-    let foundPO = []
-    let officerName = ""
-   
-    try {
-        const branchManager = await Employee.find({branch: branchCode, position_code: "BRN-MGR"}, function (err, foundPOs){
-            foundManager = foundPOs
-           })
-
-        branchManager.forEach(manager => {
-            officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
-
-            })
-        const unitOfficers = await Employee.find({branch: branchCode, position_code: "UNI-OFR"}, function (err, foundPOs){
-            foundPOunits = foundPOs
-            })
-        const programOfficers = await Employee.find({branch: branchCode, position_code: "PROG-OFR"}, function (err, foundPOs){
-            foundProgOff = foundPOs
-            })
-
-        // console.log(officerName)
-//        console.log(foundPOunits)
-        // console.log(programOfficers)
-
-        const center = await Center.find({branch: branchCode}, function (err, foundCenters) {
-
-//            console.log(foundCenters)   
-
-//            cost unitOfficer = await Employee
-            foundCenter = foundCenters
-            const unitTitle = "Unit " + foundCenters.unit
-            const poNumber = foundCenters.po
-            const nClient = _.sumBy(foundCenters, function(o) { return o.newClient; });
-            const nClientAmt = _.sumBy(foundCenters, function(o) { return o.newClientAmt; });
-            const oClient = _.sumBy(foundCenters, function(o) { return o.oldClientAmt; });
-            const oClientAmt = _.sumBy(foundCenters, function(o) { return o.oldClientAmt; });
-            const rClient = _.sumBy(foundCenters, function(o) { return o.resClient; });
-
-            const resClient = _.sumBy(foundCenters, function(o) { return o.resClient; });
-            
-        })
-        let poNumber
-        programOfficers.forEach(po_data => {
-            
-            POnumber = po_data.po_number
-            POunit = po_data.unit
-            const POname = po_data.first_name + " " + po_data.middle_name.substr(0,1) + ". " + po_data.last_name
-
-           let neClientNum = 0
-           let neClientAmt = 0
-           let olClientNum = 0 
-           let olClientAmt = 0 
-           let reClientNum = 0
-
-//            console.log(foundCenter)
-
-            foundCenter.forEach(center_data => {
-                if (center_data.po === POnumber) {
-
-                    neClientNum = neClientNum + center_data.newClient
-                    neClientAmt = neClientAmt + center_data.newClientAmt
-                    olClientNum = olClientNum + center_data.oldClient
-                    olClientAmt = olClientAmt + center_data.oldClientAmt
-                    reClientNum = reClientNum + center_data.resClient
-            }
-            })
-
-            if (POnumber !== "") {
-                foundPO.push({
-                    po_name: POname,
-                    po_num: POnumber,
-                    unit: POunit,
-                    newClient: neClientNum,
-                    newClientAmt: neClientAmt,
-                    oldClient: olClientNum,
-                    oldClientAmt: olClientAmt,
-                    resClient: reClientNum
-                })
-            } else {
-                officerName =  POname
-            }
-            })
-            // console.log(foundPOunits)
- 
-            res.render('centers/branch', {
-                listTitle: branchCode,
-                officerName: officerName,
-                Units: foundPOunits,
-                POs: foundPO,
-                searchOptions: req.query,
-                Swal: Swal
-            })
-
-    } 
-    catch (err) {
-        console.log(err)
-    }
 })
 
 // Edit Targets
@@ -677,6 +448,8 @@ router.put("/putBegBal/:id", async function(req, res){
 
     // Saving Loan Beginning Balances to center_budget_dets.. NOTE: To be done only when setting Targets is finished!
     if (canSaveBegBal) {
+        let canSaveOldLoanCli = false  
+        let canSaveOldLoanAmt = false
 
         const centerBudgDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
                 if (err) {
@@ -684,15 +457,15 @@ router.put("/putBegBal/:id", async function(req, res){
                 }
                 else {
                     if (isNull(foundVwList)) {
-                        let newCtrCliBudg = new Center_budget_det({
-                            region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                            view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanClient", beg_bal: bClientCnt, beg_bal_amt: bBalAmt, beg_bal_int: begBalInterest,
-                            jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
-                            may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
-                            sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
-                        })
-                        const nwCtrClient = newCtrCliBudg.save()
-
+                        // let newCtrCliBudg = new Center_budget_det({
+                        //     region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                        //     view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanClient", beg_bal: bClientCnt, beg_bal_amt: bBalAmt, beg_bal_int: begBalInterest,
+                        //     jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
+                        //     may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
+                        //     sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
+                        // })
+                        // const nwCtrClient = newCtrCliBudg.save()
+                        canSaveOldLoanCli = true
                     } else {
                         console.log(foundVwList)
 
@@ -705,7 +478,8 @@ router.put("/putBegBal/:id", async function(req, res){
                     doneSaveFromOldClient = true
                 }
             })
-            if (isNull(centerBudgDetFound)) {
+            if (isNull(centerBudgDetFound && canSaveOldLoanCli)) {
+
                     let newCtrCliBudg = new Center_budget_det({
                         region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                         view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanClient", beg_bal: bClientCnt, beg_bal_amt: bBalAmt, beg_bal_int: begBalInterest,
@@ -723,15 +497,17 @@ router.put("/putBegBal/:id", async function(req, res){
                 }
                 else {
                     if (isNull(fndVwOldAmtList)) {
-                        let newCtrCliBudg = new Center_budget_det({
-                            region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                            view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanAmt", beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest,
-                            jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
-                            may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
-                            sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
-                        })
-                        const nwCtrClient = newCtrCliBudg.save()
+                    //     let newCtrCliBudg = new Center_budget_det({
+                    //         region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                    //         view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanAmt", beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest,
+                    //         jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
+                    //         may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
+                    //         sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
+                    //     })
+                        // const nwCtrClient = newCtrCliBudg.save()
 
+                        let canSaveOldLoanAmt = true
+                    
                     } else {
                         console.log(fndVwOldAmtList)
 
@@ -744,7 +520,7 @@ router.put("/putBegBal/:id", async function(req, res){
                     doneSaveFromOldAmt = true
                 }
             })
-            if (isNull(ctrBudgAmtDetFound)) {
+            if (isNull(ctrBudgAmtDetFound && canSaveOldLoanAmt)) {
                 let newCtrCliBudg = new Center_budget_det({
                     region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanAmt", beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest,
@@ -1389,7 +1165,11 @@ router.put("/:id", async function(req, res){
                 resignClient: resiClient
             }
             if (loanType === "Group Loan" || loanType === "Agricultural Loan") {
-                foundList.resClient = resiClient //+ (curLoanTypeCliBegBal - rExPrevOldClient)
+                if (semester === "Second Half") {
+                    foundList.resClient2 = resiClient // saving to resClient2 field for 2nd half/semester
+                } else {
+                    foundList.resClient = resiClient //+ (curLoanTypeCliBegBal - rExPrevOldClient)
+                }
                 if (remarks === "Re-loan") {
                     foundList.oldClient = (rExOldClient + rExPrevOldClient) + numClient
                     foundList.oldClientAmt = (rExOldClientAmt + rExPrevOldAmt) + totAmount
@@ -1894,196 +1674,6 @@ router.post('/delete', async (req, res) => {
          }   
    })
    
-   
-//Save targets to Targets array field in center collection
-router.put("center/:id/center", async function(req, res){
-    const loanType = req.body.loanType
-    const month = req.body.month
-    const semester = req.body.semester
-    const numClient = _.toNumber(_.replace(req.body.numClient,',',''))
-    const amount = _.toNumber(_.replace(req.body.amount,',',''))
-    const totAmount = numClient * amount
-    const remarks = req.body.remarks
-    const centerCode = req.params.id
-    let fnView = 0, orderMonth = 0
-    let item =[]
-    let curItem = []
-
-    switch(month) {
-        case "January": orderMonth = 11 
-            break;
-        case "February": orderMonth = 12
-            break;
-        case "March": orderMonth = 13
-            break;
-        case "April": orderMonth = 14
-        break;
-        case "May": orderMonth = 15
-        break;
-        case "June": orderMonth = 16
-        break;
-        case "July": orderMonth = 17
-        break;
-        case "August": orderMonth = 18
-        break;
-        case "September": orderMonth = 19
-        break;
-        case "October": orderMonth = 20
-        break;
-        case "November": orderMonth = 21
-        break;
-        case "December": orderMonth = 22
-        break;
-        default:
-            orderMonth = 0
-    }   
-
-//    console.log(loanType)
-    try {
-    const loanViewOrder = await Loan_type.findOne({title: _.trim(loanType)}, function(err, foundloanView) {
-        if (!err) {
-            const finView = foundloanView.display_order
-            fnView = finView
-      } else {
-            console.log(err)
-        }
-    })
-
-//   console.log(dispOrder)
-    
-
-    let newClient =  0 
-    let newClientAmt = 0
-    let oldClient = 0
-    let oldClientAmt = 0
-
-    let targIDforResiUpdet = ""
-    let curTarAmt = 0
-    let curTarClient = 0
-    let curTarTotAmt = 0
-
-      const centerFound = await Center.findOne({center: centerCode}, function(err, foundList){ 
-        if (err) {
-            console.log(err)
-        }
-        else {
-
-            if (_.trim(remarks) === "New Loan") {
-                newClient = foundList.newClient + numClient
-                newClientAmt = foundList.newClientAmt + totAmount
-                foundList.newClient = newClient
-                foundList.newClientAmt = newClientAmt
-                }
-            else {
-                oldClient = foundList.oldClient + numClient
-                oldClientAmt = foundList.oldClientAmt + totAmount
-                foundList.oldClientAmt = oldClientAmt
-                foundList.oldClient = oldClient
-                }
-
-            const curTargets = foundList.Targets.sort({loand_type: 'asc'})
-//            console.log(curTargets)
-            
-            let resiClient = 0
-            let newLoanCount = 0
-            let oldLoanCount = 0
-            let hasNewLoan = false
-            let hasLoanType = ""
-
-            if (curTargets.length === 0) {
-
-            } else {
-                curTargets.forEach(target => {
-                     const tarLoanType = target.loan_type
-
-                     if (target.loan_type === loanType && target.month === month) {
-
-                        if (_.trim(target.remarks) === "New Loan") {
-                            hasNewLoan = true
-                            hasLoanType = tarLoanType
-                            newLoanCount = newLoanCount + target.numClient
-                        }
-                        if (hasNewLoan && _.trim(remarks) === "Re-loan") {
-                            oldLoanCount = oldLoanCount + target.numClient
-                            if ( target.resignClient > 0 ) {
-                                targIDforResiUpdet = target.id
-                                curTarAmt = target.amount
-                                curTarClient = target.numClient
-                                curTarTotAmt = target.totAmount
-                            }
-                        }
-                     }
-                })
-                if (oldLoanCount > 0 && _.trim(remarks) === "Re-loan") {
-                    resiClient = newLoanCount - (oldLoanCount + numClient)
-                }
-
-            }
-//            console.log(resiClient)
-            
-            if (curTarClient > 0) {
-                curTarcenter =  Center.findOneAndUpdate({center: listName}, {$pull: {Targets :{_id: targIDforResiUpdet }}}, function(err, foundList){
-                    if (err) {
-                        console.log(err)
-                    }
-                })
-            }
-
-            if (curTarClient > 0) {
-                curItem = {
-                    loan_type: loanType,
-                    month: month,
-                    semester: semester,
-                    numClient: curTarClient  ,
-                    amount: curTarAmt,
-                    totAmount: curTarTotAmt,
-                    remarks: remarks,
-                    monthOrder: orderMonth,
-                    dispView: fnView,
-                    resignClient: 0
-                }
-                foundList.Targets.push(curItem);
-            }
-
-            item = {
-                loan_type: loanType,
-                month: month,
-                semester: semester,
-                numClient: numClient,
-                amount: amount,
-                totAmount: totAmount,
-                remarks: remarks,
-                monthOrder: orderMonth,
-                dispView: fnView,
-                resignClient: resiClient
-            }
-
-            foundList.resClient = resiClient
-
-            foundList.Targets.push(item);
-            // console.log(item)
-
-            foundList.save();
-            res.redirect('/centers/' + centerCode + '/edit')
-         }
-      })
-
-
-    //     if (!err) {
-
-    //         res.redirect('/centers/' + centerCode + '/edit')
-
-    //     } else {
-    //         console.log(err)
-    //     }
-    // })
-
-
-    } catch(err) {
-        console.log(err)
-    }
-
-  })
 
 // View PO Targets per month ROUTE
 router.get('/viewTargetsMonthly/:id', async (req, res) => {
@@ -2819,3 +2409,194 @@ module.exports = router
                     // oct_totValue = _.sumBy(fndPOV, function(o) { return o.oct_budg; })
                     // nov_totValue = _.sumBy(fndPOV, function(o) { return o.nov_budg; })
                     // dec_totValue = _.sumBy(fndPOV, function(o) { return o.dec_budg; })
+
+                       
+// //Save targets to Targets array field in center collection
+// router.put("center/:id/center", async function(req, res){
+//     const loanType = req.body.loanType
+//     const month = req.body.month
+//     const semester = req.body.semester
+//     const numClient = _.toNumber(_.replace(req.body.numClient,',',''))
+//     const amount = _.toNumber(_.replace(req.body.amount,',',''))
+//     const totAmount = numClient * amount
+//     const remarks = req.body.remarks
+//     const centerCode = req.params.id
+//     let fnView = 0, orderMonth = 0
+//     let item =[]
+//     let curItem = []
+
+//     switch(month) {
+//         case "January": orderMonth = 11 
+//             break;
+//         case "February": orderMonth = 12
+//             break;
+//         case "March": orderMonth = 13
+//             break;
+//         case "April": orderMonth = 14
+//         break;
+//         case "May": orderMonth = 15
+//         break;
+//         case "June": orderMonth = 16
+//         break;
+//         case "July": orderMonth = 17
+//         break;
+//         case "August": orderMonth = 18
+//         break;
+//         case "September": orderMonth = 19
+//         break;
+//         case "October": orderMonth = 20
+//         break;
+//         case "November": orderMonth = 21
+//         break;
+//         case "December": orderMonth = 22
+//         break;
+//         default:
+//             orderMonth = 0
+//     }   
+
+// //    console.log(loanType)
+//     try {
+//     const loanViewOrder = await Loan_type.findOne({title: _.trim(loanType)}, function(err, foundloanView) {
+//         if (!err) {
+//             const finView = foundloanView.display_order
+//             fnView = finView
+//       } else {
+//             console.log(err)
+//         }
+//     })
+
+// //   console.log(dispOrder)
+    
+
+//     let newClient =  0 
+//     let newClientAmt = 0
+//     let oldClient = 0
+//     let oldClientAmt = 0
+
+//     let targIDforResiUpdet = ""
+//     let curTarAmt = 0
+//     let curTarClient = 0
+//     let curTarTotAmt = 0
+
+//       const centerFound = await Center.findOne({center: centerCode}, function(err, foundList){ 
+//         if (err) {
+//             console.log(err)
+//         }
+//         else {
+
+//             if (_.trim(remarks) === "New Loan") {
+//                 newClient = foundList.newClient + numClient
+//                 newClientAmt = foundList.newClientAmt + totAmount
+//                 foundList.newClient = newClient
+//                 foundList.newClientAmt = newClientAmt
+//                 }
+//             else {
+//                 oldClient = foundList.oldClient + numClient
+//                 oldClientAmt = foundList.oldClientAmt + totAmount
+//                 foundList.oldClientAmt = oldClientAmt
+//                 foundList.oldClient = oldClient
+//                 }
+
+//             const curTargets = foundList.Targets.sort({loand_type: 'asc'})
+// //            console.log(curTargets)
+            
+//             let resiClient = 0
+//             let newLoanCount = 0
+//             let oldLoanCount = 0
+//             let hasNewLoan = false
+//             let hasLoanType = ""
+
+//             if (curTargets.length === 0) {
+
+//             } else {
+//                 curTargets.forEach(target => {
+//                      const tarLoanType = target.loan_type
+
+//                      if (target.loan_type === loanType && target.month === month) {
+
+//                         if (_.trim(target.remarks) === "New Loan") {
+//                             hasNewLoan = true
+//                             hasLoanType = tarLoanType
+//                             newLoanCount = newLoanCount + target.numClient
+//                         }
+//                         if (hasNewLoan && _.trim(remarks) === "Re-loan") {
+//                             oldLoanCount = oldLoanCount + target.numClient
+//                             if ( target.resignClient > 0 ) {
+//                                 targIDforResiUpdet = target.id
+//                                 curTarAmt = target.amount
+//                                 curTarClient = target.numClient
+//                                 curTarTotAmt = target.totAmount
+//                             }
+//                         }
+//                      }
+//                 })
+//                 if (oldLoanCount > 0 && _.trim(remarks) === "Re-loan") {
+//                     resiClient = newLoanCount - (oldLoanCount + numClient)
+//                 }
+
+//             }
+// //            console.log(resiClient)
+            
+//             if (curTarClient > 0) {
+//                 curTarcenter =  Center.findOneAndUpdate({center: listName}, {$pull: {Targets :{_id: targIDforResiUpdet }}}, function(err, foundList){
+//                     if (err) {
+//                         console.log(err)
+//                     }
+//                 })
+//             }
+
+//             if (curTarClient > 0) {
+//                 curItem = {
+//                     loan_type: loanType,
+//                     month: month,
+//                     semester: semester,
+//                     numClient: curTarClient  ,
+//                     amount: curTarAmt,
+//                     totAmount: curTarTotAmt,
+//                     remarks: remarks,
+//                     monthOrder: orderMonth,
+//                     dispView: fnView,
+//                     resignClient: 0
+//                 }
+//                 foundList.Targets.push(curItem);
+//             }
+
+//             item = {
+//                 loan_type: loanType,
+//                 month: month,
+//                 semester: semester,
+//                 numClient: numClient,
+//                 amount: amount,
+//                 totAmount: totAmount,
+//                 remarks: remarks,
+//                 monthOrder: orderMonth,
+//                 dispView: fnView,
+//                 resignClient: resiClient
+//             }
+
+//             foundList.resClient = resiClient
+
+//             foundList.Targets.push(item);
+//             // console.log(item)
+
+//             foundList.save();
+//             res.redirect('/centers/' + centerCode + '/edit')
+//          }
+//       })
+
+
+//     //     if (!err) {
+
+//     //         res.redirect('/centers/' + centerCode + '/edit')
+
+//     //     } else {
+//     //         console.log(err)
+//     //     }
+//     // })
+
+
+//     } catch(err) {
+//         console.log(err)
+//     }
+
+//   })
