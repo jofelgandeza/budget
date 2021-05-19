@@ -705,6 +705,17 @@ router.put("/putBegBal/:id", async function(req, res){
                     doneSaveFromOldClient = true
                 }
             })
+            if (isNull(centerBudgDetFound)) {
+                    let newCtrCliBudg = new Center_budget_det({
+                        region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                        view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanClient", beg_bal: bClientCnt, beg_bal_amt: bBalAmt, beg_bal_int: begBalInterest,
+                        jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
+                        may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
+                        sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
+                    })
+                    const nwCtrClient = newCtrCliBudg.save()
+                    doneSaveFromOldClient = true
+            }
 
             const ctrBudgAmtDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanAmt"}, function(err, fndVwOldAmtList){ 
                 if (err) {
@@ -733,7 +744,18 @@ router.put("/putBegBal/:id", async function(req, res){
                     doneSaveFromOldAmt = true
                 }
             })
-            
+            if (isNull(ctrBudgAmtDetFound)) {
+                let newCtrCliBudg = new Center_budget_det({
+                    region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                    view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanAmt", beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest,
+                    jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
+                    may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
+                    sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
+                })
+                const nwCtrClient = newCtrCliBudg.save()
+                doneSaveFromOldAmt = true
+            }
+
             if (doneSaveFromOldClient && doneSaveFromOldAmt) {
 
                 res.redirect('/centers/setBegBal/' + centerCode)
@@ -816,7 +838,7 @@ router.put("/putBegBal/:id", async function(req, res){
                     foundBegAmtList.save();
 
                     doneUpdateOldAmt = true
-                }
+                  }
             })
 
             if (doneUpdateOldClient && doneUpdateOldAmt) {
