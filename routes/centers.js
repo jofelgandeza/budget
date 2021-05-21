@@ -478,7 +478,7 @@ router.put("/putBegBal/:id", async function(req, res){
                     doneSaveFromOldClient = true
                 }
             })
-            if (isNull(centerBudgDetFound && canSaveOldLoanCli)) {
+            if (isNull(centerBudgDetFound) || canSaveOldLoanCli) {
 
                     let newCtrCliBudg = new Center_budget_det({
                         region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
@@ -520,7 +520,8 @@ router.put("/putBegBal/:id", async function(req, res){
                     doneSaveFromOldAmt = true
                 }
             })
-            if (isNull(ctrBudgAmtDetFound && canSaveOldLoanAmt)) {
+            
+            if (isNull(ctrBudgAmtDetFound) || canSaveOldLoanAmt) {
                 let newCtrCliBudg = new Center_budget_det({
                     region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanAmt", beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest,

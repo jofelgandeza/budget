@@ -1282,15 +1282,386 @@ router.get('/viewUnitTargetMon/:id', async (req, res) => {
             poSumView.push({title: "TOTAL AMOUNT OF LOAN", sortkey: 8, group: 2, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
                 apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
                 aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan
-            
             })
+
+            // COMPUTATION OF PRINCIPAL AND INTEREST AMOUNTS
+
+                let jan_totColAmt = 0 
+                let feb_totColAmt = 0 
+                let mar_totColAmt = 0 
+                let apr_totColAmt = 0 
+                let may_totColAmt = 0 
+                let jun_totColAmt = 0 
+                let jul_totColAmt = 0 
+                let aug_totColAmt = 0 
+                let sep_totColAmt = 0 
+                let oct_totColAmt = 0 
+                let nov_totColAmt = 0 
+                let dec_totColAmt = 0 
+                    let jan_totIntAmt = 0 
+                    let feb_totIntAmt = 0
+                    let mar_totIntAmt = 0
+                    let apr_totIntAmt = 0
+                    let may_totIntAmt = 0
+                    let jun_totIntAmt = 0
+                    let jul_totIntAmt = 0
+                    let aug_totIntAmt = 0
+                    let sep_totIntAmt = 0
+                    let oct_totIntAmt = 0
+                    let nov_totIntAmt = 0
+                    let dec_totIntAmt = 0
+
+            let jan_loanReleaseAmt = 0 
+            let feb_loanReleaseAmt = 0
+            let mar_loanReleaseAmt = 0
+            let apr_loanReleaseAmt = 0
+            let may_loanReleaseAmt = 0
+            let jun_loanReleaseAmt = 0
+            let jul_loanReleaseAmt = 0
+            let aug_loanReleaseAmt = 0
+            let sep_loanReleaseAmt = 0
+            let oct_loanReleaseAmt = 0
+            let nov_loanReleaseAmt = 0
+            let dec_loanReleaseAmt = 0
+
+            let rowGranTotloanInt = 0
+            let loanAmount = 0
+
+            const interestPerMo = .2
+
+                for (var i = 0; i < monthSelect.length; i++) {
+    
+                    let monthToSave = monthSelect[i]
+
+                    let jan_CollectAmt = 0 
+                    let feb_CollectAmt = 0 
+                    let mar_CollectAmt = 0 
+                    let apr_CollectAmt = 0 
+                    let may_CollectAmt = 0 
+                    let jun_CollectAmt = 0 
+                    let jul_CollectAmt = 0 
+                    let aug_CollectAmt = 0 
+                    let sep_CollectAmt = 0 
+                    let oct_CollectAmt = 0 
+                    let nov_CollectAmt = 0 
+                    let dec_CollectAmt = 0 
+                        let jan_InterestAmt = 0 
+                        let feb_InterestAmt = 0
+                        let mar_InterestAmt = 0
+                        let apr_InterestAmt = 0
+                        let may_InterestAmt = 0
+                        let jun_InterestAmt = 0
+                        let jul_InterestAmt = 0
+                        let aug_InterestAmt = 0
+                        let sep_InterestAmt = 0
+                        let oct_InterestAmt = 0
+                        let nov_InterestAmt = 0
+                        let dec_InterestAmt = 0
+                    let rowTotCollectAmt = 0
+                    let rowTotInterest = 0
+                    let loanAmount = 0
+
+
+                    switch(monthToSave) {
+                        case "January":
+                            loanAmount = janTotAmtLoan
+                            jan_loanReleaseAmt = janTotAmtLoan
+                                jan_InterestAmt = 0
+                                    jan_CollectAmt = 0
+                                feb_InterestAmt = _.round((jan_loanReleaseAmt * interestPerMo) * .29)
+                                    feb_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - feb_InterestAmt)
+                                        feb_totIntAmt = feb_totIntAmt + feb_InterestAmt
+                                        feb_totColAmt = feb_totColAmt + feb_CollectAmt
+                                mar_InterestAmt = _.round((jan_loanReleaseAmt * interestPerMo) * .24)
+                                    mar_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - mar_InterestAmt)
+                                        mar_totIntAmt = mar_totIntAmt + mar_InterestAmt
+                                        mar_totColAmt = mar_totColAmt + mar_CollectAmt
+                                apr_InterestAmt = _.round((jan_loanReleaseAmt * interestPerMo) * .2)
+                                    apr_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - apr_InterestAmt)
+                                        apr_totIntAmt = apr_totIntAmt + apr_InterestAmt
+                                        apr_totColAmt = apr_totColAmt + apr_CollectAmt
+                                may_InterestAmt = _.round((jan_loanReleaseAmt * interestPerMo) * .15)
+                                    may_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - may_InterestAmt)
+                                        may_totIntAmt = may_totIntAmt + may_InterestAmt
+                                        may_totColAmt = may_totColAmt + may_CollectAmt
+                                jun_InterestAmt = _.round((jan_loanReleaseAmt * interestPerMo) * .09)
+                                    jun_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - jun_InterestAmt)
+                                        jun_totIntAmt = jun_totIntAmt + jun_InterestAmt
+                                        jun_totColAmt = jun_totColAmt + jun_CollectAmt
+                                jul_InterestAmt = _.round((jan_loanReleaseAmt * interestPerMo) * .03)
+                                    jul_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
+                                        jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
+                                        jul_totColAmt = jul_totColAmt + jul_CollectAmt
+                        break;
+                        case "February":
+                            loanAmount = febTotAmtLoan
+                            feb_loanReleaseAmt = febTotAmtLoan
+                                feb_InterestAmt = 0
+                                    feb_CollectAmt = 0
+                                mar_InterestAmt = _.round((feb_loanReleaseAmt * interestPerMo) * .29)
+                                    mar_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - mar_InterestAmt)
+                                        mar_totIntAmt = mar_totIntAmt + mar_InterestAmt
+                                        mar_totColAmt = mar_totColAmt + mar_CollectAmt
+                                apr_InterestAmt = _.round((feb_loanReleaseAmt * interestPerMo) * .24)
+                                    apr_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - apr_InterestAmt)
+                                        apr_totIntAmt = apr_totIntAmt + apr_InterestAmt
+                                        apr_totColAmt = apr_totColAmt + apr_CollectAmt
+                                may_InterestAmt = _.round((feb_loanReleaseAmt * interestPerMo) * .2)
+                                    may_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - may_InterestAmt)
+                                        may_totIntAmt = may_totIntAmt + may_InterestAmt
+                                        may_totColAmt = may_totColAmt + may_CollectAmt
+                                jun_InterestAmt = _.round((feb_loanReleaseAmt * interestPerMo) * .15)
+                                    jun_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - jun_InterestAmt)
+                                        jun_totIntAmt = jun_totIntAmt + jun_InterestAmt
+                                        jun_totColAmt = jun_totColAmt + jun_CollectAmt
+                                jul_InterestAmt = _.round((feb_loanReleaseAmt * interestPerMo) * .09)
+                                    jul_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
+                                        jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
+                                        jul_totColAmt = jul_totColAmt + jul_CollectAmt
+                                aug_InterestAmt = _.round((feb_loanReleaseAmt * interestPerMo) * .03)
+                                    aug_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
+                                        aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
+                                        aug_totColAmt = aug_totColAmt + aug_CollectAmt
+                            break;
+                        case "March":
+                            loanAmount = marTotAmtLoan
+                            mar_loanReleaseAmt = marTotAmtLoan
+                                mar_InterestAmt = 0
+                                    mar_CollectAmt = 0
+                                apr_InterestAmt = _.round((mar_loanReleaseAmt * interestPerMo) * .29)
+                                    apr_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - apr_InterestAmt)
+                                        apr_totIntAmt = apr_totIntAmt + apr_InterestAmt
+                                        apr_totColAmt = apr_totColAmt + apr_CollectAmt
+                                may_InterestAmt = _.round((mar_loanReleaseAmt * interestPerMo) * .24)
+                                    may_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - may_InterestAmt)
+                                        may_totIntAmt = may_totIntAmt + may_InterestAmt
+                                        may_totColAmt = may_totColAmt + may_CollectAmt
+                                jun_InterestAmt = _.round((mar_loanReleaseAmt * interestPerMo) * .2)
+                                    jun_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - jun_InterestAmt)
+                                        jun_totIntAmt = jun_totIntAmt + jun_InterestAmt
+                                        jun_totColAmt = jun_totColAmt + jun_CollectAmt
+                                jul_InterestAmt = _.round((mar_loanReleaseAmt * interestPerMo) * .15)
+                                    jul_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
+                                        jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
+                                        jul_totColAmt = jul_totColAmt + jul_CollectAmt
+                                aug_InterestAmt = _.round((mar_loanReleaseAmt * interestPerMo) * .09)
+                                    aug_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
+                                        aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
+                                        aug_totColAmt = aug_totColAmt + aug_CollectAmt
+                                sep_InterestAmt = _.round((mar_loanReleaseAmt * interestPerMo) * .03)
+                                    sep_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
+                                        sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
+                                        sep_totColAmt = sep_totColAmt + sep_CollectAmt
+                            break;
+                        case "April":
+                            loanAmount = aprTotAmtLoan
+                            apr_loanReleaseAmt = aprTotAmtLoan
+                                apr_InterestAmt = 0
+                                    apr_CollectAmt = 0
+                                may_InterestAmt = _.round((apr_loanReleaseAmt * interestPerMo) * .29)
+                                    may_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - may_InterestAmt)
+                                        may_totIntAmt = may_totIntAmt + may_InterestAmt
+                                        may_totColAmt = may_totColAmt + may_CollectAmt
+                                jun_InterestAmt = _.round((apr_loanReleaseAmt * interestPerMo) * .24)
+                                    jun_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - jun_InterestAmt)
+                                        jun_totIntAmt = jun_totIntAmt + jun_InterestAmt
+                                        jun_totColAmt = jun_totColAmt + jun_CollectAmt
+                                jul_InterestAmt = _.round((apr_loanReleaseAmt * interestPerMo) * .2)
+                                    jul_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
+                                        jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
+                                        jul_totColAmt = jul_totColAmt + jul_CollectAmt
+                                aug_InterestAmt = _.round((apr_loanReleaseAmt * interestPerMo) * .15)
+                                    aug_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
+                                        aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
+                                        aug_totColAmt = aug_totColAmt + aug_CollectAmt
+                                sep_InterestAmt = _.round((apr_loanReleaseAmt * interestPerMo) * .09)
+                                    sep_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
+                                        sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
+                                        sep_totColAmt = sep_totColAmt + sep_CollectAmt
+                                oct_InterestAmt = _.round((apr_loanReleaseAmt * interestPerMo) * .03)
+                                    oct_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
+                                        oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
+                                        oct_totColAmt = oct_totColAmt + oct_CollectAmt
+                            break;
+                        case "May":
+                            loanAmount = mayTotAmtLoan
+                            may_loanReleaseAmt = mayTotAmtLoan
+                                may_InterestAmt = 0
+                                    may_CollectAmt = 0
+                                jun_InterestAmt = _.round((may_loanReleaseAmt * interestPerMo) * .29)
+                                    jun_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - jun_InterestAmt)
+                                        jun_totIntAmt = jun_totIntAmt + jun_InterestAmt
+                                        jun_totColAmt = jun_totColAmt + jun_CollectAmt
+                                jul_InterestAmt = _.round((may_loanReleaseAmt * interestPerMo) * .24)
+                                    jul_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
+                                        jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
+                                        jul_totColAmt = jul_totColAmt + jul_CollectAmt
+                                aug_InterestAmt = _.round((may_loanReleaseAmt * interestPerMo) * .2)
+                                    aug_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
+                                        aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
+                                        aug_totColAmt = aug_totColAmt + aug_CollectAmt
+                                sep_InterestAmt = _.round((may_loanReleaseAmt * interestPerMo) * .15)
+                                    sep_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
+                                        sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
+                                        sep_totColAmt = sep_totColAmt + sep_CollectAmt
+                                oct_InterestAmt = _.round((may_loanReleaseAmt * interestPerMo) * .09)
+                                    oct_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
+                                        oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
+                                        oct_totColAmt = oct_totColAmt + oct_CollectAmt
+                                nov_InterestAmt = _.round((may_loanReleaseAmt * interestPerMo) * .03)                        
+                                    nov_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
+                                        nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
+                                        nov_totColAmt = nov_totColAmt + nov_CollectAmt
+                        break;
+                        case "June":
+                            loanAmount = junTotAmtLoan
+                            jun_loanReleaseAmt = junTotAmtLoan
+                                jun_InterestAmt = 0
+                                    may_CollectAmt = 0
+                                july_InterestAmt = _.round((jun_loanReleaseAmt * interestPerMo) * .29)
+                                    jul_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
+                                        jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
+                                        jul_totColAmt = jul_totColAmt + jul_CollectAmt
+                                aug_InterestAmt = _.round((jun_loanReleaseAmt * interestPerMo) * .24)
+                                    aug_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
+                                        aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
+                                        aug_totColAmt = aug_totColAmt + aug_CollectAmt
+                                sep_InterestAmt = _.round((jun_loanReleaseAmt * interestPerMo) * .2)
+                                    sep_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
+                                        sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
+                                        sep_totColAmt = sep_totColAmt + sep_CollectAmt
+                                oct_InterestAmt = _.round((jun_loanReleaseAmt * interestPerMo) * .15)
+                                    oct_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
+                                        oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
+                                        oct_totColAmt = oct_totColAmt + oct_CollectAmt
+                                nov_InterestAmt = _.round((jun_loanReleaseAmt * interestPerMo) * .09)
+                                    nov_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
+                                        nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
+                                        nov_totColAmt = nov_totColAmt + nov_CollectAmt
+                                dec_InterestAmt = _.round((jun_loanReleaseAmt * interestPerMo) * .03)
+                                    dec_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
+                                        dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
+                                        dec_totColAmt = dec_totColAmt + dec_CollectAmt
+                            break;
+                        case "July":
+                            loanAmount = julTotAmtLoan
+                            jul_loanReleaseAmt = julTotAmtLoan
+                                jul_InterestAmt = 0
+                                    jul_CollectAmt = 0
+                                aug_InterestAmt = _.round((jul_loanReleaseAmt * interestPerMo) * .29)
+                                    aug_CollectAmt = _.round((jul_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
+                                        aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
+                                        aug_totColAmt = aug_totColAmt + aug_CollectAmt
+                                sep_InterestAmt = _.round((jul_loanReleaseAmt * interestPerMo) * .24)
+                                    sep_CollectAmt = _.round((jul_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
+                                        sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
+                                        sep_totColAmt = sep_totColAmt + sep_CollectAmt
+                                oct_InterestAmt = _.round((jul_loanReleaseAmt * interestPerMo) * .2)
+                                    oct_CollectAmt = _.round((jul_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
+                                        oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
+                                        oct_totColAmt = oct_totColAmt + oct_CollectAmt
+                                nov_InterestAmt = _.round((jul_loanReleaseAmt * interestPerMo) * .15)
+                                    nov_CollectAmt = _.round((jul_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
+                                        nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
+                                        nov_totColAmt = nov_totColAmt + nov_CollectAmt
+                                dec_InterestAmt = _.round((jul_loanReleaseAmt * interestPerMo) * .09)
+                                    dec_CollectAmt = _.round((jul_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
+                                        dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
+                                        dec_totColAmt = dec_totColAmt + dec_CollectAmt
+                        break;
+                        case "August":
+                            loanAmount = augTotAmtLoan
+                            aug_loanReleaseAmt = augTotAmtLoan
+                                aug_InterestAmt = 0
+                                    aug_CollectAmt = 0
+                                sep_InterestAmt = _.round((aug_loanReleaseAmt * interestPerMo) * .29)
+                                     sep_CollectAmt = _.round((aug_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
+                                        sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
+                                        sep_totColAmt = sep_totColAmt + sep_CollectAmt
+                                 oct_InterestAmt = _.round((aug_loanReleaseAmt * interestPerMo) * .24)
+                                    oct_CollectAmt = _.round((aug_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
+                                        oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
+                                        oct_totColAmt = oct_totColAmt + oct_CollectAmt
+                                nov_InterestAmt = _.round((aug_loanReleaseAmt * interestPerMo) * .2)
+                                    nov_CollectAmt = _.round((aug_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
+                                        nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
+                                        nov_totColAmt = nov_totColAmt + nov_CollectAmt
+                                dec_InterestAmt = _.round((aug_loanReleaseAmt * interestPerMo) * .15)
+                                    dec_CollectAmt = _.round((aug_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
+                                        dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
+                                        dec_totColAmt = dec_totColAmt + dec_CollectAmt
+                            break;
+                        case "September":
+                            loanAmount = sepTotAmtLoan
+                            sep_loanReleaseAmt = sepTotAmtLoanv
+                                sep_InterestAmt = 0
+                                    sep_CollectAmt = 0
+                                oct_InterestAmt = _.round((sep_loanReleaseAmt * interestPerMo) * .29)
+                                    oct_CollectAmt = _.round((sep_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
+                                        oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
+                                        oct_totColAmt = oct_totColAmt + oct_CollectAmt
+                                nov_InterestAmt = _.round((sep_loanReleaseAmt * interestPerMo) * .24)
+                                    nov_CollectAmt = _.round((sep_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
+                                        nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
+                                        nov_totColAmt = nov_totColAmt + nov_CollectAmt
+                                dec_InterestAmt = (_.round(sep_loanReleaseAmt * interestPerMo) * .2)
+                                    dec_CollectAmt = _.round((sep_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
+                                        dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
+                                        dec_totColAmt = dec_totColAmt + dec_CollectAmt
+                            break;
+                        case "October":
+                            loanAmount = octTotAmtLoan
+                            oct_loanReleaseAmt = octTotAmtLoan
+                                oct_InterestAmt = 0
+                                    oct_CollectAmt = 0
+                                nov_InterestAmt = _.round((oct_loanReleaseAmt * interestPerMo) * .29)
+                                    nov_CollectAmt = _.round((oct_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
+                                        nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
+                                        nov_totColAmt = nov_totColAmt + nov_CollectAmt
+                            dec_InterestAmt = _.round((oct_loanReleaseAmt * interestPerMo) * .24)
+                                    dec_CollectAmt = _.round((oct_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
+                                        dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
+                                        dec_totColAmt = dec_totColAmt + dec_CollectAmt
+                            break;
+                        case "November":
+                            loanAmount = novTotAmtLoan
+                            nov_loanReleaseAmt = novTotAmtLoan
+                                nov_InterestAmt = 0
+                                    oct_CollectAmt = 0
+                                dec_InterestAmt = _.round((nov_loanReleaseAmt * interestPerMo) * .29)
+                                    dec_CollectAmt = _.round((nov_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
+                                        dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
+                                        dec_totColAmt = dec_totColAmt + dec_CollectAmt
+                            break;
+                        case "December":
+                            loanAmount = decTotAmtLoan
+                            dec_loanReleaseAmt = decTotAmtLoan
+                                dec_InterestAmt = 0
+                                break;
+                        default:
+                            month = ""
+                            break;
+                    }
+                }
+                rowTotCollectAmt = jan_CollectAmt + feb_CollectAmt + mar_CollectAmt + apr_CollectAmt + may_CollectAmt + jun_CollectAmt
+                    + jul_CollectAmt + aug_CollectAmt + sep_CollectAmt + oct_CollectAmt + nov_CollectAmt + dec_CollectAmt
+
+                rowTotInterest = jan_InterestAmt + feb_InterestAmt + mar_InterestAmt + apr_InterestAmt + may_InterestAmt + jun_InterestAmt + 
+                    jul_InterestAmt + aug_InterestAmt + sep_InterestAmt + oct_InterestAmt + nov_InterestAmt + dec_InterestAmt
+
+                poSumView.push({title: "MONTHLY COLLECTION", sortkey: 13, group: 1, jan_value : jan_CollectAmt, feb_value : feb_CollectAmt, mar_value : mar_CollectAmt, 
+                    apr_value : apr_CollectAmt, may_value : may_CollectAmt, jun_value : jun_CollectAmt, jul_value : jul_CollectAmt, 
+                    aug_value : aug_CollectAmt, sep_value : sep_CollectAmt, oct_value : oct_CollectAmt, nov_value : nov_CollectAmt, dec_value : dec_CollectAmt
+                
+                })
+    
             poSumView.push({title: "LOAN PORTFOLIO", sortkey: 9, group: 1})
 
             poSumView.push({title: "MONTHLY DISBURSEMENT (P)", sortkey: 10, group: 1, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
                 apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
                 aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan
             
-            })
+                })
 
             let janRunBalAmt = janTotAmtLoan
             let febRunBalAmt = janRunBalAmt + febTotAmtLoan
@@ -1305,7 +1676,7 @@ router.get('/viewUnitTargetMon/:id', async (req, res) => {
             let novRunBalAmt = octRunBalAmt + novTotAmtLoan
             let decRunBalAmt = novRunBalAmt + decTotAmtLoan
 
-            poSumView.push({title: "MONTHLY LOAN PORTFOLIO", sortkey: 12, group: 1, jan_value : janRunBalAmt, feb_value : febRunBalAmt, mar_value : marRunBalAmt, 
+            poSumView.push({title: "MONTHLY LOAN PORTFOLIO", sortkey: 13, group: 1, jan_value : janRunBalAmt, feb_value : febRunBalAmt, mar_value : marRunBalAmt, 
                 apr_value : aprRunBalAmt, may_value : mayRunBalAmt, jun_value : junRunBalAmt, jul_value : julRunBalAmt, 
                 aug_value : augRunBalAmt, sep_value : sepRunBalAmt, oct_value : octRunBalAmt, nov_value : novRunBalAmt, dec_value : decRunBalAmt
             
@@ -1562,16 +1933,6 @@ router.get('/viewUnitTargetMon/:id', async (req, res) => {
                             }
                     })         
 
-
-                    // for (var i = 0; i < monthSelect.length; i++) {
-
-                    //     const monthToSave = monthSelect[i]
-
-                    //     res.json("iteration " + i);
-                    //     res.json('name:' + user[i].name + user[i].address);
-                    // } 
-
-                    // let poBudgExecTotLonAmt = []
 
                     console.log(fndUnitBudgExecTotLonAmt)
 
