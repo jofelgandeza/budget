@@ -1392,7 +1392,7 @@ router.get('/viewUnitTargetMon/:id', async (req, res) => {
                                     jul_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
                                         jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
                                         jul_totColAmt = jul_totColAmt + jul_CollectAmt
-                        break;
+                            break;
                         case "February":
                             loanAmount = febTotAmtLoan
                             feb_loanReleaseAmt = febTotAmtLoan
@@ -1422,7 +1422,7 @@ router.get('/viewUnitTargetMon/:id', async (req, res) => {
                                     aug_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
                                         aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
                                         aug_totColAmt = aug_totColAmt + aug_CollectAmt
-                            break;
+                                break;
                         case "March":
                             loanAmount = marTotAmtLoan
                             mar_loanReleaseAmt = marTotAmtLoan
@@ -1452,7 +1452,7 @@ router.get('/viewUnitTargetMon/:id', async (req, res) => {
                                     sep_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
                                         sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
                                         sep_totColAmt = sep_totColAmt + sep_CollectAmt
-                            break;
+                                break;
                         case "April":
                             loanAmount = aprTotAmtLoan
                             apr_loanReleaseAmt = aprTotAmtLoan
@@ -1482,7 +1482,7 @@ router.get('/viewUnitTargetMon/:id', async (req, res) => {
                                     oct_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
                                         oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
                                         oct_totColAmt = oct_totColAmt + oct_CollectAmt
-                            break;
+                                break;
                         case "May":
                             loanAmount = mayTotAmtLoan
                             may_loanReleaseAmt = mayTotAmtLoan
@@ -1512,7 +1512,7 @@ router.get('/viewUnitTargetMon/:id', async (req, res) => {
                                     nov_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
                                         nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
                                         nov_totColAmt = nov_totColAmt + nov_CollectAmt
-                        break;
+                                break;
                         case "June":
                             loanAmount = junTotAmtLoan
                             jun_loanReleaseAmt = junTotAmtLoan
@@ -1542,7 +1542,7 @@ router.get('/viewUnitTargetMon/:id', async (req, res) => {
                                     dec_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
                                         dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
                                         dec_totColAmt = dec_totColAmt + dec_CollectAmt
-                            break;
+                                break;
                         case "July":
                             loanAmount = julTotAmtLoan
                             jul_loanReleaseAmt = julTotAmtLoan
@@ -1568,7 +1568,7 @@ router.get('/viewUnitTargetMon/:id', async (req, res) => {
                                     dec_CollectAmt = _.round((jul_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
                                         dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
                                         dec_totColAmt = dec_totColAmt + dec_CollectAmt
-                        break;
+                                break;
                         case "August":
                             loanAmount = augTotAmtLoan
                             aug_loanReleaseAmt = augTotAmtLoan
@@ -1593,7 +1593,7 @@ router.get('/viewUnitTargetMon/:id', async (req, res) => {
                             break;
                         case "September":
                             loanAmount = sepTotAmtLoan
-                            sep_loanReleaseAmt = sepTotAmtLoanv
+                            sep_loanReleaseAmt = sepTotAmtLoan
                                 sep_InterestAmt = 0
                                     sep_CollectAmt = 0
                                 oct_InterestAmt = _.round((sep_loanReleaseAmt * interestPerMo) * .29)
@@ -1642,16 +1642,16 @@ router.get('/viewUnitTargetMon/:id', async (req, res) => {
                             month = ""
                             break;
                     }
+                    rowTotCollectAmt = jan_CollectAmt + feb_CollectAmt + mar_CollectAmt + apr_CollectAmt + may_CollectAmt + jun_CollectAmt
+                        + jul_CollectAmt + aug_CollectAmt + sep_CollectAmt + oct_CollectAmt + nov_CollectAmt + dec_CollectAmt
+
+                    rowTotInterest = jan_InterestAmt + feb_InterestAmt + mar_InterestAmt + apr_InterestAmt + may_InterestAmt + jun_InterestAmt + 
+                        jul_InterestAmt + aug_InterestAmt + sep_InterestAmt + oct_InterestAmt + nov_InterestAmt + dec_InterestAmt
                 }
-                rowTotCollectAmt = jan_CollectAmt + feb_CollectAmt + mar_CollectAmt + apr_CollectAmt + may_CollectAmt + jun_CollectAmt
-                    + jul_CollectAmt + aug_CollectAmt + sep_CollectAmt + oct_CollectAmt + nov_CollectAmt + dec_CollectAmt
 
-                rowTotInterest = jan_InterestAmt + feb_InterestAmt + mar_InterestAmt + apr_InterestAmt + may_InterestAmt + jun_InterestAmt + 
-                    jul_InterestAmt + aug_InterestAmt + sep_InterestAmt + oct_InterestAmt + nov_InterestAmt + dec_InterestAmt
-
-                poSumView.push({title: "MONTHLY COLLECTION", sortkey: 13, group: 1, jan_value : jan_CollectAmt, feb_value : feb_CollectAmt, mar_value : mar_CollectAmt, 
-                    apr_value : apr_CollectAmt, may_value : may_CollectAmt, jun_value : jun_CollectAmt, jul_value : jul_CollectAmt, 
-                    aug_value : aug_CollectAmt, sep_value : sep_CollectAmt, oct_value : oct_CollectAmt, nov_value : nov_CollectAmt, dec_value : dec_CollectAmt
+                poSumView.push({title: "MONTHLY COLLECTION", sortkey: 13, group: 1, jan_value : jan_totColAmt, feb_value : feb_totColAmt, mar_value : mar_totColAmt, 
+                    apr_value : apr_totColAmt, may_value : may_totColAmt, jun_value : jun_totColAmt, jul_value : jul_totColAmt, 
+                    aug_value : aug_totColAmt, sep_value : sep_totColAmt, oct_value : oct_totColAmt, nov_value : nov_totColAmt, dec_value : dec_totColAmt
                 
                 })
     
@@ -2011,7 +2011,6 @@ router.get('/viewUnitProjInc/:id', async (req, res) => {
         let doneReadOLA = false
 
         let fndUnitBudgExecTotLonAmt = []
-
 
         const poBudgExecTotLonAmt = await Budg_exec_sum.findOne({unit: viewUnitCode, view_code: "TotLoanAmt"}, function (err, fndTotLonAmt) {
         fndUnitBudgExecTotLonAmt = fndTotLonAmt
