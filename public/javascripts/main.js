@@ -1,7 +1,27 @@
 //alert('Reply from main.js')
 //const Cleave = require('cleave')
 
+const cleaveNumCli = new Cleave('.targNumCli', {
+    numeral: true,
+    numeralThousandGroupStyle: 'thousand'
+})
+
 const cleaveAmt = new Cleave('.targetAmt', {
+    numeral: true,
+    numeralThousandGroupStyle: 'thousand'
+})
+
+const cleaveBegCli = new Cleave('.BegBalCli', {
+    numeral: true,
+    numeralThousandGroupStyle: 'thousand'
+})
+
+const cleaveBegPrin = new Cleave('.BegBalPrin', {
+    numeral: true,
+    numeralThousandGroupStyle: 'thousand'
+})
+
+const cleaveBgInt = new Cleave('.BegBalInt', {
     numeral: true,
     numeralThousandGroupStyle: 'thousand'
 })

@@ -466,6 +466,7 @@ router.put("/putBegBal/:id", async function(req, res){
                         // })
                         // const nwCtrClient = newCtrCliBudg.save()
                         canSaveOldLoanCli = true
+
                     } else {
                         console.log(foundVwList)
 
@@ -482,7 +483,8 @@ router.put("/putBegBal/:id", async function(req, res){
 
                     let newCtrCliBudg = new Center_budget_det({
                         region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                        view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanClient", beg_bal: bClientCnt, beg_bal_amt: bBalAmt, beg_bal_int: begBalInterest,
+                        view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanClient", 
+                        beg_bal: bClientCnt, beg_bal_amt: bBalAmt, beg_bal_int: begBalInterest,
                         jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
                         may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
                         sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
@@ -506,7 +508,7 @@ router.put("/putBegBal/:id", async function(req, res){
                     //     })
                         // const nwCtrClient = newCtrCliBudg.save()
 
-                        let canSaveOldLoanAmt = true
+                        canSaveOldLoanAmt = true
                     
                     } else {
                         console.log(fndVwOldAmtList)
@@ -536,7 +538,7 @@ router.put("/putBegBal/:id", async function(req, res){
             if (doneSaveFromOldClient && doneSaveFromOldAmt) {
 
                 res.redirect('/centers/setBegBal/' + centerCode)
- 
+
             // } else {
             //     if (doneSaveNewFromOldClient && doneSaveNewFromOldAmt) {
             //         res.redirect('/centers/setBegBal/' + centerCode)
@@ -1737,7 +1739,7 @@ router.get('/viewTargetsMonthly/:id', async (req, res) => {
         let nov_resCliTot = 0
         let dec_resCliTot = 0
 
-        let jan_newCTotValue = 0  
+    let jan_newCTotValue = 0  
     let feb_newCTotValue = 0
     let mar_newCTotValue = 0
     let apr_newCTotValue = 0
@@ -1750,7 +1752,7 @@ router.get('/viewTargetsMonthly/:id', async (req, res) => {
     let nov_newCTotValue = 0
     let dec_newCTotValue = 0
         let begBalOldClient = 0
-        let jan_oldCTotValue = 0  
+        let jan_oldCTotValue = 0   
         let feb_oldCTotValue = 0
         let mar_oldCTotValue = 0
         let apr_oldCTotValue = 0
