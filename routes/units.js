@@ -439,7 +439,7 @@ router.post('/postNewCenter/:id', async (req, res) => {
         res.redirect('/units/setPOCenters/'+ centerPoCode)
     } else {
         canProceed = false
-        const centerStatus = ["Targetted","Active"]
+        const centerStatus = ["Target","Active"]
 
         const lonType = await Loan_type.find({})
      
@@ -1950,6 +1950,7 @@ if (doneReadNLCli && doneReadOLCli && doneReadResCli) {
                 poSumView.push({title: "NEW LOAN AMOUNTS", sortkey: 27, group: 1})
                 poSumView.push({title: "OLD LOAN CLIENTS", sortkey: 28, group: 2})
                 poSumView.push({title: "OLD LOAN AMOUNTS", sortkey: 29, group: 1})
+                poSumView.push({title: "RESIGN CLIENTS", sortkey: 30, group: 2})
 
                 // Accessing loan_types
                 vwloanType.forEach(loan_type => {
@@ -2155,7 +2156,7 @@ if (doneReadNLCli && doneReadOLCli && doneReadResCli) {
                             + jul_detResCli + aug_detResCli + sep_detResCli + oct_detResCli + nov_detResCli + dec_detResCli
         
                             if (rloanTotCli > 0) {
-                                poSumView.push({title: typeLoanDet + " - RES", desc: "ResClientCount", sortkey: 28, jan_value : jan_detResCli, feb_value : feb_detResCli, mar_value : mar_detResCli, apr_value : apr_detResCli,
+                                poSumView.push({title: typeLoanDet + " - RES", desc: "ResClientCount", sortkey: 30, jan_value : jan_detResCli, feb_value : feb_detResCli, mar_value : mar_detResCli, apr_value : apr_detResCli,
                                     may_value : may_detResCli, jun_value : jun_detResCli, jul_value : jul_detResCli, aug_value : aug_detResCli,
                                     sep_value : sep_detResCli, oct_value : oct_detResCli, nov_value : nov_detResCli, dec_value : dec_detResCli 
                                 })         

@@ -451,7 +451,7 @@ router.put("/putBegBal/:id", async function(req, res){
         let canSaveOldLoanCli = false  
         let canSaveOldLoanAmt = false
 
-        const centerBudgDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
+        const centerBudgOLCFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
                 if (err) {
                     console.log(err)
                 }
@@ -479,17 +479,16 @@ router.put("/putBegBal/:id", async function(req, res){
                     doneSaveFromOldClient = true
                 }
             })
-            if (isNull(centerBudgDetFound) || canSaveOldLoanCli) {
+            if (isNull(centerBudgOLCFound) || canSaveOldLoanCli) {
 
-                    let newCtrCliBudg = new Center_budget_det({
+                    let OLDCtrCliBudg = new Center_budget_det({
                         region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                        view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanClient", 
-                        beg_bal: bClientCnt, beg_bal_amt: bBalAmt, beg_bal_int: begBalInterest,
+                        view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanClient", beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest,
                         jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
                         may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
                         sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
-                    })
-                    const nwCtrClient = newCtrCliBudg.save()
+                        })
+                    const OLCtrClient = OLDCtrCliBudg.save()
                     doneSaveFromOldClient = true
             }
 
@@ -524,14 +523,14 @@ router.put("/putBegBal/:id", async function(req, res){
             })
             
             if (isNull(ctrBudgAmtDetFound) || canSaveOldLoanAmt) {
-                let newCtrCliBudg = new Center_budget_det({
+                let OLFCtrAMTBudg = new Center_budget_det({
                     region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanAmt", beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest,
                     jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
                     may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
                     sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                 })
-                const nwCtrClient = newCtrCliBudg.save()
+                const OLCtrAMT = OLFCtrAMTBudg.save()
                 doneSaveFromOldAmt = true
             }
 
@@ -2123,6 +2122,7 @@ router.get('/viewTargetsMonthly/:id', async (req, res) => {
                 poSumView.push({title: "NEW LOAN AMOUNTS", sortkey: 20, group: 1})
                 poSumView.push({title: "OLD LOAN CLIENTS", sortkey: 21, group: 2})
                 poSumView.push({title: "OLD LOAN AMOUNTS", sortkey: 22, group: 1})
+                poSumView.push({title: "RESIGN CLIENTS", sortkey: 23, group: 2})
 
                 // Accessing loan_types
                 vwloanType.forEach(loan_type => {
