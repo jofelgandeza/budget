@@ -7,6 +7,8 @@ const app = express()
 const expressLayouts = require('express-ejs-layouts')
 const bodyParser = require('body-parser')
 const methodOverride = require('method-override')
+const bcrypt = require('bcrypt')
+const { model } = require('mongoose')
 
 const indexRouter = require('./routes/index.js')
 const coaRouter = require('./routes/coas.js')

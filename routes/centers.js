@@ -76,6 +76,9 @@ router.get('/center/:id', async (req, res) => {
         POposition = foundedEmp.position_code
     })
 
+    let doneCenterRead = false
+    let doneTargetRead = false
+    let doneLoanTypeRead = false
 
 //    console.log(POname)
     try {
@@ -99,6 +102,7 @@ router.get('/center/:id', async (req, res) => {
             totDisburse = nClientAmt + oClientAmt
 
             foundCenter = foundCenters
+            doneCenterRead = true
     })
    
   //console.log(foundCenter)
@@ -118,6 +122,9 @@ router.get('/center/:id', async (req, res) => {
             lnType = loan_type.loan_type
 //            console.log(typeLoan)
 
+            if (isNull(foundCenter)) {
+                doneCenterRead = true
+            }
             foundCenter.forEach(center => {
                 const lnType = center.loan_code
                 let centerTargets = center.Targets
@@ -152,8 +159,7 @@ router.get('/center/:id', async (req, res) => {
                         bClient = bClient + centerBegBal.beg_client_count
                     }
                 })
-
-
+                doneTargetRead = true
             })
             let totAmounts = nloanTot + oloanTot 
                 budgEndBal =  (begClientTot +  nloanTotCount) - resloanTot
@@ -164,6 +170,8 @@ router.get('/center/:id', async (req, res) => {
 
             resloanTot = 0
             tbudgEndBal = tbudgEndBal + budgEndBal
+
+            doneLoanTypeRead = true
         })
 
         // console.log(poLoanGrandTot)
@@ -173,15 +181,17 @@ router.get('/center/:id', async (req, res) => {
 
 //       console.log(poLoanGrandTot)
 
-            res.render('centers/index', {
-                POname: POname,
-                poCode: IDcode,
-                loanTots: poLoanTotals,
-                poGrandTot: poLoanGrandTot,
-                centers: foundCenter,
-                searchOptions: req.query,
-                Swal: Swal
-            })
+            if (doneLoanTypeRead && doneCenterRead && doneTargetRead) {
+                res.render('centers/index', {
+                    POname: POname,
+                    poCode: IDcode,
+                    loanTots: poLoanTotals,
+                    poGrandTot: poLoanGrandTot,
+                    centers: foundCenter,
+                    searchOptions: req.query,
+                    Swal: Swal
+                })
+            }
         } catch (err) {
             console.log(err)
             res.redirect('/')
@@ -483,10 +493,8 @@ router.put("/putBegBal/:id", async function(req, res){
 
                     let OLDCtrCliBudg = new Center_budget_det({
                         region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                        view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanClient", beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest,
-                        jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
-                        may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
-                        sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
+                        view_type: "PUH", loan_type: begLoanType, beg_bal: bClientCnt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanClient", 
+                        jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                         })
                     const OLCtrClient = OLDCtrCliBudg.save()
                     doneSaveFromOldClient = true
@@ -525,10 +533,8 @@ router.put("/putBegBal/:id", async function(req, res){
             if (isNull(ctrBudgAmtDetFound) || canSaveOldLoanAmt) {
                 let OLFCtrAMTBudg = new Center_budget_det({
                     region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                    view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanAmt", beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest,
-                    jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
-                    may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
-                    sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
+                    view_type: "PUH", loan_type: begLoanType, beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanAmt", 
+                    jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                 })
                 const OLCtrAMT = OLFCtrAMTBudg.save()
                 doneSaveFromOldAmt = true
@@ -1444,6 +1450,7 @@ router.post('/delete', async (req, res) => {
         try {       
 
             recCounter =  recCounter + 1
+            
             if (recCounter === 1) {
 
                modiCenter = await Center.findOne({center: listName})  //, function(err, modiCenter) {

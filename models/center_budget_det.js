@@ -35,13 +35,6 @@ const mongoose = require('mongoose')
     loan_type: {
         type: String,
     },
-    client_count_included: {
-        type: Boolean,
-    },
-    view_code: {
-        type: String,
-        required: true
-    },
     beg_bal: {
         type: Number,
         required: false
@@ -53,6 +46,13 @@ const mongoose = require('mongoose')
     beg_bal_int: {
         type: Number,
         required: false
+    },
+    client_count_included: {
+        type: Boolean,
+    },
+    view_code: {
+        type: String,
+        required: true
     },
     jan_budg: {
         type: Number,
