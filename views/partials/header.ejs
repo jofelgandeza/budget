@@ -1,14 +1,35 @@
 <header> 
-    <link rel="stylesheet" href="../node_modules/sweetalert2/dist/sweetalert2.css"/>
 <nav class="header-nav">
-    <a class="header-title" href="/">Budget Module</a>
-    <ul>
-        <li class="header-link"> <a href="/coas">Chart of Accounts</a></li>
-        <li class="header-link"><a href="/coas/new">New CoA</a></li>
-        <li class="header-link"> <a href="/sub_ledgers">Sub-Ledger Accounts</a></li>
-        <li class="header-link"><a href="/sub_ledgers/new">New SLA</a></li>
-        <li class="header-link"> <a href="/cost_centers">Cost Centers</a></li>
-        <li class="header-link"><a href="/cost_centers/new">New Cost Center</a></li>
-    </ul>
+    <% if (yuser.name) { %>
+        <div class="header-nav header-title"> 
+           Budget Module 
+        </div> 
+
+        <div>
+            <div class="header-nav header-nav-user"> 
+                <p>Hi <%= yuser.name %>, <%= yuser.assCode %></p>
+                <a class="logout" href="/logout">Logout</a>
+            </div>
+            <ul>
+                <%if (yuser.role === "PO") { %>
+                    <li class="header-nav header-link"> <a href="/">Home</a></li>
+                    <li class="header-nav header-link"> <a href="/centers/viewTarget/<%= yuser.assCode %>">Set Targets</a></li>
+                    <li class="header-nav header-link"> <a href="/centers/viewTargetsMonthly/<%=yuser.assCode %>" >Monthly View</a></li>
+                <% } %>
+                <%if (yuser.role === "PUH") { %>
+                    <li class="header-nav header-link"> <a href="/units/<%= yuser.assCode %>">Home</a></li>
+                    <li class="header-nav header-link"> <a href="/units/<%= yuser.assCode %>">Budgets</a></li>
+                    <li class="header-nav header-link"> <a href="/units/pos/<%= yuser.assCode %>">PO's</a></li>
+                <% } %>
+                <%if (yuser.role === "ADMIN") { %>
+                    <li class="header-nav header-link"> <a href="/admins/register">Register User</a></li>
+                    <li class="header-nav header-link"><a href="/admins/budget">Budget</a></li>
+                    <li class="header-nav header-link"> <a href="/">Home</a></li>
+                <% } %>
+
+            </ul>
+        </div>
+    <% } %>
 </nav>
 </header>
+

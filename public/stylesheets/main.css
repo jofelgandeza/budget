@@ -56,11 +56,22 @@ body {
   text-transform: uppercase;
   color: #fff;
 }
-
+  
 .login-container {
   background: #ebebeb;
   padding: 12px;
+  color: rgb(63, 159, 236);
+  text-align: center;
+  align-content: center;
+
 }
+
+.login-container button {
+	background: #28d;
+	padding: 8px;
+	font-size: 1em;
+	align-self: center;
+  }
 
 /* Every row inside .login-container is defined with p tags */
 .login p {
@@ -108,7 +119,7 @@ body {
   border-color: #05a;
 }
 
-/* End of CSS class for Loging */
+/* End of CSS class for Login */
 
 .container {
     max-width: 1200px;
@@ -343,14 +354,13 @@ h6 { font-size: 16px;}
 	background-color: var(--mainColor);
 }
 
-#navigation a{
-	color:var(--mainText);
-}
-
-
 #navigation{
 	margin:0;
 	padding: 5px;
+}
+
+#navigation a{
+	color:var(--mainText);
 }
 
 #navigation li,

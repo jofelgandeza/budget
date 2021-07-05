@@ -1,0 +1,35 @@
+
+    <section class="s1">
+		<div class="main-container">
+            Budget Breakdown per PO  
+            <table class="content-table">
+                <tr>
+                    <th> PO NO.</th>
+                    <th> PO OFFICER</th>
+                    <th> LOAN TYPE</th>
+                    <th> BEG BAL</th>
+                    <th> NEW CLIENT</th>
+                    <th> OLD CLIENT</th>
+                    <th> RESIGN</th>
+                    <th> LINKS</th>
+                </tr>
+                <% unitLoanTots.forEach(unit => { %>
+                    <tr>
+                        <td><%= unit.po%> </td>
+                        <td><%= unit.unitHead%> </td>
+                        <td><%= unit.loan_type%> </td>
+                        <td><%= unit.begClientTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <td><%= unit.nnumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <td><%= unit.onumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <td><%= unit.resiloanTot%> </td>
+                        <td>
+                            <div class="btn-row">
+                                <a class="btn btn-primary" href="/branches/<%= unit.unit %>/edit">View</a>
+                            </div>        
+                        </td>
+                    </tr>
+                <% }) %> 
+            </table>
+        </div>
+    </section>
+

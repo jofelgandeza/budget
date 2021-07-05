@@ -11,14 +11,20 @@ const Po = require('../models/po')
 const _ = require('lodash')
 const Cleave = require('../public/javascripts/cleave.js')
 const loan_type = require('../models/loan_type')
+const { authUser, authRole } = require('../public/javascripts/basicAuth.js')
+const { canViewProject, canDeleteProject, scopedProjects } = require('../public/javascripts/permissions/project.js')
+const user = require('../models/user')
+const { ROLE } = require('../public/javascripts/data.js')
 
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
 
-
+// authUser, authRole("BM", "ADMIN"), 
+console.log(ROLE)
 // All Chart of Accounts Route
-router.get('/:id', async (req, res) => {
+router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 
     const branchCode = req.params.id
+    const _user = req.user
     let searchOptions = {}
 
     if (req.query.title  !=null && req.query.title !== '') {
@@ -33,7 +39,7 @@ router.get('/:id', async (req, res) => {
         res.render('branches/index', {
             branchCode: branchCode,
             searchOptions: req.query,
-            Swal: Swal
+            yuser: _user
         })
     } catch (err) {
         console.log(err)
@@ -41,14 +47,311 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-//  router.get('/:id/edit', async (req, res) => {
- 
+// View BRANCH per UNIT  - TUG-A
+router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+    
+    const branchCode = req.params.id
+    const _user = req.user
+
+//     const unitCode = IDcode.substr(4,1)
+//     const branchCode = IDcode.substr(0,3)
+//     const uniCode = IDcode.substr(0,4)
+
+//     console.log(IDcode)
+//     console.log(unitCode)
+//     console.log(uniCode)
+
+    let foundManager = []
+    let foundPOunits = []
+    let foundPO = []
+    let officerName = ""
+    let fndPositi = []
+    let postManager = ""
+    let postUnitHead = ""
+    let postProgOfr = ""
+
+    let poLoanTotals = []
+    let unitLoanTotals = []
+    let brnLoanTotals = []
+    let brnLoanGrandTot = []
+    let centerTargets = []
+    let foundCenter = []
+    
+
+    let newClients = 0
+    let nClientAmt = 0
+    let oClient = 0
+    let oClientAmt = 0
+    let rClient = 0
+    let resloanTot = 0
+    let resignClient = 0
+    let budgEndBal = 0
+    let totDisburse = 0
+    let budgBegBal = 0
+    let tbudgEndBal = 0
+
+    let lnType 
+    // const POdata = await Employee.findOne({assign_code: IDcode})
+    // const POname = POdata.first_name + " " + POdata.middle_name.substr(0,1) + ". " + POdata.last_name
+    // const POposition = POdata.position_code
+
+    let doneReadCenter = false
+    let doneFoundPO = false
+    let doneReadLonTyp = false
+   
+    try {
+
+        const postEmp = await Position.find({dept_code: "BRN"}, function (err, fndPosi) {
+            fndPositi = fndPosi
+        })
+
+//        console.log(fndPositi)
+
+        fndPositi.forEach(fndPosii => {
+            const fndPositionEmp = fndPosii.code
+            const fndPositID = fndPosii.id
+            if (fndPositionEmp === "BRN_MGR") {
+                postManager = fndPositID
+            }
+            if (fndPositionEmp === "UNI_HED") {
+                postUnitHead = fndPositID
+            }
+            if (fndPositionEmp === "PRO_OFR") {
+                postProgOfr = fndPositID
+            }
+        })
+
+        const branchManager = await Employee.find({branch: branchCode, position_code: postManager}, function (err, foundBMs){
+            foundManager = foundBMs
+
+           })
+        
+           if (branchManager) {
+                branchManager.forEach(manager => {
+                    officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
+
+                })
+            }            
+        const unitOfficers = await Employee.find({branch: branchCode, position_code: postUnitHead}, function (err, foundUHs){
+            foundPOunits = foundUHs
+            })
+        const programOfficers = await Employee.find({branch: branchCode, position_code: postProgOfr}, function (err, foundPO){
+            foundPOs = foundPO
+            })
+
+        // console.log(officerName)
+        // console.log(foundPOunits)
+        // console.log(foundPOs)
+
+        const loanType = await Loan_type.find({})
+
+        const center = await Center.find({branch: branchCode}, function (err, foundCenters) {
+//        const center = await Center.find(searchOptions)
+
+            newClients = _.sumBy(foundCenters, function(o) { return o.newClient; });
+            nClientAmt = _.sumBy(foundCenters, function(o) { return o.newClientAmt; });
+            oClient = _.sumBy(foundCenters, function(o) { return o.oldClient; });
+            oClientAmt = _.sumBy(foundCenters, function(o) { return o.oldClientAmt; });
+            rClient = _.sumBy(foundCenters, function(o) { return o.resClient; });
+            budgBegBal = _.sumBy(foundCenters, function(o) { return o.budget_BegBal; });
+            budgEndBal = oClient + newClients 
+            totDisburse = nClientAmt + oClientAmt
+            tbudgEndBal = (oClient + newClients) - rClient
+
+            foundCenter = foundCenters.sort()
+
+            doneReadCenter = true   
+    })
+        if (center) {
+        } else {
+            doneReadCenter = true   
+        }
+    foundPOunits.forEach(uh => {
+
+        let unCode = _.trim(uh.unit)
+        let uniCode = unCode
+        let unHeadName = uh.first_name + " " + uh.middle_name.substr(0,1) + ". " + uh.last_name
+
+        let nUnitLoanTot = 0
+        let nUnitLoanTotCount = 0
+        let oUnitLoanTot = 0
+        let oUnitLoanTotCount = 0
+        let resUnitLoanTot = 0
+        let begUnitLoanTot = 0
+        let begUnitClientTot = 0
+        let bUnitClient = 0
+        let bUnitClientCnt = 0
+
+        let typeLoan = ""
+        let count = 0 
+    
+        loanType.forEach(loan_type => {
+            typeLoan = loan_type.title
+            let nloanTot = 0
+            let nloanTotCount = 0
+            let oloanTot = 0
+            let oloanTotCount = 0
+            let resloanTot = 0
+            let begLoanTot = 0
+            let begClientTot = 0
+            let bClientAmt = 0
+            let bClientCnt = 0
+            lnType = loan_type.loan_type
+
+            count = count + 1
+            if (count !== 1) {
+                uniCode = " "
+                unHeadName = ""
+            } 
+
+            foundCenter.forEach(center => {
+                const unitCode = center.unit
+                if (unitCode === unCode) { 
+                    const lnType = center.loan_code
+                    let centerTargets = center.Targets
+                    let LoanBegBal = center.Loan_beg_bal
+//                  let centerLoanBegBal = center.Loan_beg_bal                
+                    let resignClient = center.resClient
+            
+                    if (lnType === _.trim(lnType)) {
+                        BudgBegBal = center.budget_BegBal
+                    }
+                    // console.log(resignClient)
+                    // console.log(resloanTot)
+
+                    centerTargets.forEach(centerLoan => {
+                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
+                            const loanRem = centerLoan.remarks
+                            if (_.trim(loanRem) === "New Loan") {
+                                nloanTot = nloanTot + centerLoan.totAmount
+                                nloanTotCount = nloanTotCount + centerLoan.numClient
+                            } else {
+                                oloanTot = oloanTot + centerLoan.totAmount
+                                oloanTotCount = oloanTotCount + centerLoan.numClient
+                                resloanTot = resloanTot + resignClient
+                            }
+                        }
+                    })
+
+                    LoanBegBal.forEach(centerBegBal => {
+                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
+                            begLoanTot = centerBegBal.beg_amount
+                            begClientTot = centerBegBal.beg_client_count
+                            bClientCnt = bClientCnt + begClientTot
+                            bClientAmt = bClientAmt + begLoanTot
+                        }
+                    })
+                }
+            })
+            let totAmounts = nloanTot + oloanTot 
+            let budgEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
+//            let amtDisburse = oloanTot + oloanTot
+            
+            unitLoanTotals.push({unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClientCnt,
+                begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: budgEndBal})
+
+            nUnitLoanTot = nUnitLoanTot + nloanTot
+            nUnitLoanTotCount = nUnitLoanTotCount + nloanTotCount
+            oUnitLoanTot = oUnitLoanTot + oloanTot
+            oUnitLoanTotCount = oUnitLoanTotCount + oloanTotCount
+            resUnitLoanTot = resUnitLoanTot + resloanTot
+            begUnitLoanTot = begUnitLoanTot + begLoanTot
+            begUnitClientTot = begUnitClientTot + begClientTot
+            
+        })
+
+        typeLoan = "UNIT TOTALS"
+        let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
+        let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
+
+        unitLoanTotals.push({unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
+            begClientAmt: begUnitLoanTot, ntotAmount: nUnitLoanTot, onumClient: oUnitLoanTotCount, ototAmount: oUnitLoanTot, resiloanTot: resUnitLoanTot, budgEndBal: budgUnitEndBal})
+
+            doneFoundPO = true
+    })
+
+    if (foundPO) {
+
+    } else {
+        doneFoundPO = true   
+    }
+
+// LOOP for getting Different Loan products totals in the branch
+    let gtBegBalClient = 0
+    let gtBegBalAmt = 0
+
+    loanType.forEach(loan_type => {
+        const typeLoan = loan_type.title
+        let nloanTot = 0
+        let nloanTotCount = 0
+        let oloanTot = 0
+        let oloanTotCount = 0
+        let resloanTot = 0
+        let begLoanTot = 0
+        let begClientTot = 0
+        let bClient = 0
+        let bClientCnt = 0
+        const lonType = loan_type.loan_type
+//        let unCode = ""
+        unitLoanTotals.forEach(uLoanTots => {
+            const ulnType = uLoanTots.loan_type
+            if (ulnType === typeLoan) {
+                nloanTot = nloanTot + uLoanTots.ntotAmount
+                nloanTotCount = nloanTotCount + uLoanTots.nnumClient
+                oloanTot = oloanTot + uLoanTots.ototAmount
+                oloanTotCount = oloanTotCount + uLoanTots.onumClient
+                resloanTot = resloanTot + uLoanTots.resiloanTot
+                begLoanTot = begLoanTot + uLoanTots.begClientAmt
+                begClientTot = begClientTot + uLoanTots.begClientTot
+
+                gtBegBalClient = gtBegBalClient + uLoanTots.begClientTot
+                gtBegBalAmt = gtBegBalAmt + uLoanTots.begClientAmt
+            }
+
+        })
+        let totBranchAmounts = nloanTot + oloanTot 
+        let budgBranchEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
+
+        brnLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totBranchAmounts, begClientTot: begClientTot,
+            begClientAmt: begLoanTot, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgBranchEndBal})
+
+            doneReadLonTyp = true
+
+    })
+
+ //   console.log(unitLoanTotals)
+//    console.log(brnLoanTotals)
+
+            brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
+                rClient: rClient, budgBegBal: budgBegBal, budgEndBal: budgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
+
+            console.log(totDisburse)
+
+//            console.log(foundPOunits)
+        if ( doneReadCenter && doneFoundPO && doneReadLonTyp) {
+            res.render('branches/budget', {
+                listTitle: branchCode,
+                officerName: officerName,
+                loanTots: brnLoanTotals,
+                poGrandTot: brnLoanGrandTot,
+                unitLoanTots: unitLoanTotals,
+                searchOptions: req.query,
+                yuser: _user
+            })
+        }
+    } 
+    catch (err) {
+        console.log(err)
+    }
+})
 
 //View EMPLOYEES per BRANCH Level - TUG
 
-router.get('/employees/:id', async (req, res) => {
+router.get('/employees/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
     const brnCode = req.params.id
+    const _user = req.user
+
 
     let fondEmploy = []
     let sortedEmp = []
@@ -123,7 +426,7 @@ router.get('/employees/:id', async (req, res) => {
             fndEmploy: sortedEmp,
             fndPosition: fndPosition,
             searchOptions: req.query,
-            Swal: Swal
+            yuser: _user
         })
     })
     } catch (err) {
@@ -134,18 +437,22 @@ router.get('/employees/:id', async (req, res) => {
 
 
 // New EMPLOYEE Route
-router.get('/newEmployee/:id', (req, res) => {
+router.get('/newEmployee/:id', authUser, authRole(ROLE.BM), (req, res) => {
     
     const branchCode = req.params.id
+    const _user = req.user
 
     const newEmpPost = Position.find({group_code: "BRN"}, function (err, fndPost) {
          const pstCode = fndPost
         console.log(branchCode)
+        const newEmp = new Employee()
+        newEmp.branch = branchCode
 
          res.render('branches/newEmployee', { 
-            emp: new Employee(), 
+            emp: newEmp, 
             posit: fndPost,
-            branchCode: branchCode
+            branchCode: branchCode,
+            yuser: _user
         })
     })
 //    console.log(position)
@@ -153,7 +460,7 @@ router.get('/newEmployee/:id', (req, res) => {
 })
 
 // POST or Save new Employee
-router.post('/postNewEmp', async (req, res) => {
+router.post('/postNewEmp', authUser, authRole(ROLE.BM), async (req, res) => {
    let eUnit
    let ePONum
    const emPostCod = req.body.ayPost
@@ -257,11 +564,12 @@ try {
 })
 
 // Get an Employee for EDIT
-router.get('/getEmpForEdit/:id/edit', async (req, res) => {
+router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, res) => {
 
     branCod = req.body.branCode
     empID = req.params.id
     empCode = req.body.emp_code
+    const _user = req.user
     let locals = ""
     let possit
     let foundEmploy = []
@@ -285,7 +593,8 @@ router.get('/getEmpForEdit/:id/edit', async (req, res) => {
             posit: pst_Code,
             // empPostCod: possit,
             emp: employe, 
-            locals: locals
+            locals: locals,
+            yuser: _user
        })
 
 //        res.render('centers/edit', { centers: center, coaClass: coaClass })
@@ -300,7 +609,7 @@ router.get('/getEmpForEdit/:id/edit', async (req, res) => {
 
 // SAVE EDITed Employee
 
-router.put('/putEditedEmp/:id', async function(req, res){
+router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req, res){
 
     const assignUnit = _.trim(req.body.poUnit) + _.trim(req.body.poNumber)
     const brnCode = req.body.brnCode 
@@ -356,16 +665,18 @@ router.put('/putEditedEmp/:id', async function(req, res){
 })
 
 // Get UNITS for Maintenance
-router.get('/units/:id', async (req, res) => {
+router.get('/units/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
     const brnCode = req.params.id
+    const _user = req.user
 
     let foundEmployee = []
     let sortedEmp = []
     let fndUnit = []
     let empCode = ""
     let empName = ""
-    
+    let doneReadUnit = false
+
     const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
         fndPosition = foundPosit
     })
@@ -394,6 +705,7 @@ router.get('/units/:id', async (req, res) => {
                     empName = fndEmp.first_name + " " + fndEmp.middle_name.substr(0,1) + ". " + fndEmp.last_name
                 })
                 fndUnit.push({id: id, unitCode: unitCode, unitUnit: unitUnit, unitHead: unitHead, unitLoanProd: unitLoanProd, unitOffLoc: unitOffLoc})
+                doneReadUnit = true
             })
 
                 console.log(fndUnit)
@@ -407,13 +719,14 @@ router.get('/units/:id', async (req, res) => {
                       }
                        return 0;
                 })
-        
-            res.render('branches/unit', {
-            branchCode: brnCode,
-            fondUnits: sortedUnits,
-            searchOptions: req.query,
-            Swal: Swal
-        })
+            if (doneReadUnit) {
+                res.render('branches/unit', {
+                branchCode: brnCode,
+                fondUnits: sortedUnits,
+                searchOptions: req.query,
+                yuser: _user
+                })
+            }
     })
     } catch (err) {
         console.log(err)
@@ -422,16 +735,18 @@ router.get('/units/:id', async (req, res) => {
 })
 
 // GET NEW UNIT
-router.get('/newUnit/:id', async (req, res) => {
+router.get('/newUnit/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     
     const branchCode = req.params.id
+    const _user = req.user
 
     const loanType = await Loan_type.find({})
 
          res.render('branches/newUnit', { 
             unit: new Unit(), 
             lonType: loanType,
-            branchCode: branchCode
+            branchCode: branchCode,
+            yuser: _user
         })
     // })
 //    console.log(position)
@@ -439,7 +754,7 @@ router.get('/newUnit/:id', async (req, res) => {
 })
 
 // POST or Save new Unit
-router.post('/postNewUnit/:id', async (req, res) => {
+router.post('/postNewUnit/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     
     const param = req.params.id
     const brnCod = req.params.id
@@ -495,11 +810,12 @@ router.post('/postNewUnit/:id', async (req, res) => {
  })
  
  // Get a UNIT for EDIT
-router.get('/getUnitForEdit/:id/edit', async (req, res) => {
+router.get('/getUnitForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, res) => {
     const param = req.params.id
     const brnCod = param.substring(0,3)
     const uUnit = req.body.uUnit
     const uUnitCode = param
+    const _user = req.user
 
     let fondUnit = []
 
@@ -514,7 +830,8 @@ router.get('/getUnitForEdit/:id/edit', async (req, res) => {
         res.render('branches/editUnit', { 
            unit: fondUnit, 
            lonType: loanType,
-           branchCode: brnCod
+           branchCode: brnCod,
+           yuser : _user
        })
 
     } catch (err) {
@@ -526,7 +843,7 @@ router.get('/getUnitForEdit/:id/edit', async (req, res) => {
 
 // SAVE EDITed Unit
 
-router.put('/putEditedUnit/:id', async function(req, res){
+router.put('/putEditedUnit/:id', authUser, authRole(ROLE.BM), async function(req, res){
     const param = req.params.id
     const brnCod = param.substring(0,3)
     const uUnit = req.body.uUnit
@@ -562,7 +879,7 @@ router.put('/putEditedUnit/:id', async function(req, res){
   
 })
 
-router.delete('/deleteUnit/:id', async (req, res) => {
+router.delete('/deleteUnit/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
     let unUnit
 
@@ -579,10 +896,11 @@ router.delete('/deleteUnit/:id', async (req, res) => {
 
 
 // View Unit per PO  - TUG-A
-router.get('/unit/:id', async (req, res) => {
+router.get('/unit/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     
     const IDcode = req.params.id
-   
+    const _user = req.user
+
     const unitCode = IDcode.substr(4,1)
     const branchCode = IDcode.substr(0,3)
     const uniCode = IDcode.substr(0,4)
@@ -672,7 +990,7 @@ router.get('/unit/:id', async (req, res) => {
                    officerName: officerName,
                    POs: foundPO,
                    searchOptions: req.query,
-                   Swal: Swal
+                   yuser: _user
                })
    
        } 
@@ -682,289 +1000,11 @@ router.get('/unit/:id', async (req, res) => {
    })
    
    
-// View BRANCH per UNIT  - TUG-A
-router.get('/budget/:id', async (req, res) => {
-    
-    const branchCode = req.params.id
-
-//     const unitCode = IDcode.substr(4,1)
-//     const branchCode = IDcode.substr(0,3)
-//     const uniCode = IDcode.substr(0,4)
-
-//     console.log(IDcode)
-//     console.log(unitCode)
-//     console.log(uniCode)
-
-    let foundManager = []
-    let foundPOunits = []
-    let foundPO = []
-    let officerName = ""
-    let fndPositi = []
-    let postManager = ""
-    let postUnitHead = ""
-    let postProgOfr = ""
-
-    let poLoanTotals = []
-    let unitLoanTotals = []
-    let brnLoanTotals = []
-    let brnLoanGrandTot = []
-    let centerTargets = []
-    let foundCenter = []
-    
-
-    let newClients = 0
-    let nClientAmt = 0
-    let oClient = 0
-    let oClientAmt = 0
-    let rClient = 0
-    let resloanTot = 0
-    let resignClient = 0
-    let budgEndBal = 0
-    let totDisburse = 0
-    let budgBegBal = 0
-    let tbudgEndBal = 0
-
-    let lnType 
-    // const POdata = await Employee.findOne({assign_code: IDcode})
-    // const POname = POdata.first_name + " " + POdata.middle_name.substr(0,1) + ". " + POdata.last_name
-    // const POposition = POdata.position_code
-
-
-   
-    try {
-
-        const postEmp = await Position.find({dept_code: "BRN"}, function (err, fndPosi) {
-            fndPositi = fndPosi
-        })
-
-//        console.log(fndPositi)
-
-        fndPositi.forEach(fndPosii => {
-            const fndPositionEmp = fndPosii.code
-            const fndPositID = fndPosii._id
-            if (fndPositionEmp === "BRN_MGR") {
-                postManager = fndPositID
-            }
-            if (fndPositionEmp === "UNI_HED") {
-                postUnitHead = fndPositID
-            }
-            if (fndPositionEmp === "PRO_OFR") {
-                postProgOfr = fndPositID
-            }
-        })
-
-        const branchManager = await Employee.find({branch: branchCode, position_code: postManager}, function (err, foundBMs){
-            foundManager = foundBMs
-           })
-
-        branchManager.forEach(manager => {
-            officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
-
-            })
-        const unitOfficers = await Employee.find({branch: branchCode, position_code: postUnitHead}, function (err, foundUHs){
-            foundPOunits = foundUHs
-            })
-        const programOfficers = await Employee.find({branch: branchCode, position_code: postProgOfr}, function (err, foundPO){
-            foundPOs = foundPO
-            })
-
-        // console.log(officerName)
-        // console.log(foundPOunits)
-        // console.log(foundPOs)
-
-        const loanType = await Loan_type.find({})
-
-        const center = await Center.find({branch: branchCode}, function (err, foundCenters) {
-//        const center = await Center.find(searchOptions)
-
-            newClients = _.sumBy(foundCenters, function(o) { return o.newClient; });
-            nClientAmt = _.sumBy(foundCenters, function(o) { return o.newClientAmt; });
-            oClient = _.sumBy(foundCenters, function(o) { return o.oldClient; });
-            oClientAmt = _.sumBy(foundCenters, function(o) { return o.oldClientAmt; });
-            rClient = _.sumBy(foundCenters, function(o) { return o.resClient; });
-            budgBegBal = _.sumBy(foundCenters, function(o) { return o.budget_BegBal; });
-            budgEndBal = oClient + newClients 
-            totDisburse = nClientAmt + oClientAmt
-            tbudgEndBal = (oClient + newClients) - rClient
-
-            foundCenter = foundCenters.sort()
-    })
-
-    foundPOunits.forEach(uh => {
-
-        let unCode = _.trim(uh.unit)
-        let uniCode = unCode
-        let unHeadName = uh.first_name + " " + uh.middle_name.substr(0,1) + ". " + uh.last_name
-
-        let nUnitLoanTot = 0
-        let nUnitLoanTotCount = 0
-        let oUnitLoanTot = 0
-        let oUnitLoanTotCount = 0
-        let resUnitLoanTot = 0
-        let begUnitLoanTot = 0
-        let begUnitClientTot = 0
-        let bUnitClient = 0
-        let bUnitClientCnt = 0
-
-        let typeLoan = ""
-        let count = 0 
-    
-        loanType.forEach(loan_type => {
-            typeLoan = loan_type.title
-            let nloanTot = 0
-            let nloanTotCount = 0
-            let oloanTot = 0
-            let oloanTotCount = 0
-            let resloanTot = 0
-            let begLoanTot = 0
-            let begClientTot = 0
-            let bClientAmt = 0
-            let bClientCnt = 0
-            lnType = loan_type.loan_type
-
-            count = count + 1
-            if (count !== 1) {
-                uniCode = " "
-                unHeadName = ""
-            } 
-
-            foundCenter.forEach(center => {
-                const unitCode = center.unit
-                if (unitCode === unCode) { 
-                    const lnType = center.loan_code
-                    let centerTargets = center.Targets
-                    let LoanBegBal = center.Loan_beg_bal
-//                  let centerLoanBegBal = center.Loan_beg_bal                
-                    let resignClient = center.resClient
-            
-                    if (lnType === _.trim(lnType)) {
-                        BudgBegBal = center.budget_BegBal
-                    }
-                    // console.log(resignClient)
-                    // console.log(resloanTot)
-
-                    centerTargets.forEach(centerLoan => {
-                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
-                            const loanRem = centerLoan.remarks
-                            if (_.trim(loanRem) === "New Loan") {
-                                nloanTot = nloanTot + centerLoan.totAmount
-                                nloanTotCount = nloanTotCount + centerLoan.numClient
-                            } else {
-                                oloanTot = oloanTot + centerLoan.totAmount
-                                oloanTotCount = oloanTotCount + centerLoan.numClient
-                                resloanTot = resloanTot + resignClient
-                            }
-                        }
-                    })
-
-                    LoanBegBal.forEach(centerBegBal => {
-                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
-                            begLoanTot = centerBegBal.beg_amount
-                            begClientTot = centerBegBal.beg_client_count
-                            bClientCnt = bClientCnt + begClientTot
-                            bClientAmt = bClientAmt + begLoanTot
-                        }
-                    })
-                }
-            })
-            let totAmounts = nloanTot + oloanTot 
-            let budgEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
-//            let amtDisburse = oloanTot + oloanTot
-            
-            unitLoanTotals.push({unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClientCnt,
-                begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: budgEndBal})
-
-            nUnitLoanTot = nUnitLoanTot + nloanTot
-            nUnitLoanTotCount = nUnitLoanTotCount + nloanTotCount
-            oUnitLoanTot = oUnitLoanTot + oloanTot
-            oUnitLoanTotCount = oUnitLoanTotCount + oloanTotCount
-            resUnitLoanTot = resUnitLoanTot + resloanTot
-            begUnitLoanTot = begUnitLoanTot + begLoanTot
-            begUnitClientTot = begUnitClientTot + begClientTot
-    
-        })
-
-        typeLoan = "UNIT TOTALS"
-        let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
-        let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
-
-        unitLoanTotals.push({unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
-            begClientAmt: begUnitLoanTot, ntotAmount: nUnitLoanTot, onumClient: oUnitLoanTotCount, ototAmount: oUnitLoanTot, resiloanTot: resUnitLoanTot, budgEndBal: budgUnitEndBal})
-
-    })
-
-// LOOP for getting Different Loan products totals in the branch
-    let gtBegBalClient = 0
-    let gtBegBalAmt = 0
-
-    loanType.forEach(loan_type => {
-        const typeLoan = loan_type.title
-        let nloanTot = 0
-        let nloanTotCount = 0
-        let oloanTot = 0
-        let oloanTotCount = 0
-        let resloanTot = 0
-        let begLoanTot = 0
-        let begClientTot = 0
-        let bClient = 0
-        let bClientCnt = 0
-        const lonType = loan_type.loan_type
-//        let unCode = ""
-        unitLoanTotals.forEach(uLoanTots => {
-            const ulnType = uLoanTots.loan_type
-            if (ulnType === typeLoan) {
-                nloanTot = nloanTot + uLoanTots.ntotAmount
-                nloanTotCount = nloanTotCount + uLoanTots.nnumClient
-                oloanTot = oloanTot + uLoanTots.ototAmount
-                oloanTotCount = oloanTotCount + uLoanTots.onumClient
-                resloanTot = resloanTot + uLoanTots.resiloanTot
-                begLoanTot = begLoanTot + uLoanTots.begClientAmt
-                begClientTot = begClientTot + uLoanTots.begClientTot
-
-                gtBegBalClient = gtBegBalClient + uLoanTots.begClientTot
-                gtBegBalAmt = gtBegBalAmt + uLoanTots.begClientAmt
-            }
-
-        })
-        let totBranchAmounts = nloanTot + oloanTot 
-        let budgBranchEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
-
-        brnLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totBranchAmounts, begClientTot: begClientTot,
-            begClientAmt: begLoanTot, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgBranchEndBal})
-
-    })
-
- //   console.log(unitLoanTotals)
-//    console.log(brnLoanTotals)
-
-            brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
-                rClient: rClient, budgBegBal: budgBegBal, budgEndBal: budgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
-
-            console.log(totDisburse)
-
-//            console.log(foundPOunits)
- 
-            res.render('branches/budget', {
-                listTitle: branchCode,
-                officerName: officerName,
-                loanTots: brnLoanTotals,
-                poGrandTot: brnLoanGrandTot,
-                unitLoanTots: unitLoanTotals,
-                searchOptions: req.query,
-                Swal: Swal
-            })
-
-    } 
-    catch (err) {
-        console.log(err)
-    }
-})
-
 // Edit Targets
 
 //Save targets to Targets array field in center collection
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     // const coa = new Coa({
     //     code: req.body.code,
     //     description: req.body.description,
@@ -994,7 +1034,7 @@ router.put('/:id', async (req, res) => {
       }
     })
 
-router.post('/delete', async (req, res) => {
+router.post('/delete', authUser, authRole(ROLE.BM), async (req, res) => {
  //   alert('Are you sure you want to delete this record?')
      let centerCode = req.body.listName
      const checkedItemId = req.body.checkbox;
@@ -1014,7 +1054,7 @@ router.post('/delete', async (req, res) => {
       console.log(center)
 })
 
-router.delete('/deleteEmp/:id', async (req, res) => {
+router.delete('/deleteEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
     let empYee
 
@@ -1029,10 +1069,11 @@ router.delete('/deleteEmp/:id', async (req, res) => {
 })
 
 // View BRANCH Targets per month ROUTE
-router.get('/viewBranchTargetMon/:id', async (req, res) => {
+router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
     const viewBranchCode = req.params.id
     let foundPOV = []
+    const _user = req.user
     // let foundCenterDet = []
 
     const vwloanType = await Loan_type.find({})
@@ -1532,7 +1573,8 @@ router.get('/viewBranchTargetMon/:id', async (req, res) => {
 
         res.render('branches/viewBranchTargetMon', {
             vwBranchCod: viewBranchCode,
-            poSumView: poSumView
+            poSumView: poSumView,
+            yuser: _user
         })
     } catch (err) {
         console.log(err)

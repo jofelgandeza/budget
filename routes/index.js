@@ -1,57 +1,44 @@
-const { query } = require('express')
+
 const express = require('express')
-const { model } = require('mongoose')
-const User = require('../models/user')
-
-// const router  = express.Router()
-
-
 const router  = express.Router()
+const app = express()
+const bodyParser = require('body-parser')
+const methodOverride = require('method-override')
+const { model } = require('mongoose')
 
-router.get('/', (req, res) => {
-    res.render('index')
+let LoggedUser = {}
+// app.use(setSysUser)
+
+
+app.get('/', async (req, res) => {
+    // console.log(req.params.id)
+    console.log(req.user)
+    const logUser = req.user
+    res.render('/dashboards/dashboard', {
+        yuser : logUser
+    })
 })
+//          if (user.role === "PO") {
+//             res.redirect('/centers/' + user.assCode)
+//         } else if (user.role === "PUH") {
 
-router.post('/register', async (req, res) => {
+//             res.redirect('/units/' + user.assCode)
 
-    let locals
-    let canProceed = false
-    const userName = req.body.name
+//         } else if (user.role === "BM") {
 
-    try {
-        const hashedPassword = await bcrypt.hash(req.body.password, 10)
-        
-        const getExistingUser = await User.findOne({name: userName}, function (err, foundUser) {
-            console.log(foundUser)
+//             res.redirect('/branches/' + user.assCode)
+//         }
+//     }
 
-            if (!err) {
-                if (!foundUser) {
-                    canProceed = true 
-                } else {
-                    canProceed = false
-                    locals = {errorMessage: "USER already exist!"}
-                }
-            }
-        })
-        let user  = new User({
-
-            userName: req.body.name,
-            email: req.body.email,
-            password: hashedPassword
-        })
-    
-        if (canProceed) {
-            const saveUser = user.save()
-            res.redirect('/login')
-        } else {
-            res.redirect('/register')
-        }
-
-    } catch {
-        console.log(err)
-        res.redirect('/register')
-    }
+app.get('/dash', async (req, res) => {
+    res.send('Dash page')
 })
-
+// function setSysUser(req, res, next) {
+//     const LogUser = req.user
+//     if (LogUser) {
+//         LoggedUser = LogUser
+//     }
+//     next()
+//   }
 
 module.exports = router

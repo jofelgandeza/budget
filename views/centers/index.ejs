@@ -1,92 +1,3 @@
-
-
-	<section class="s1">
-		<div class="main-container">
-
-            <div class="intro-wrapper">
-				<div class="nav-wrapper">
-
-					<!-- Link around dots-wrapper added after tutorial video -->
-					<a href="index.html">
-						<div>  
-                            PO Name: <%= POname%>
-						</div>
-					</a>
-					
-
-					<ul id="navigation">
-						<li><a href="index.html#contact">As of Date Today</Date></a></li>
-
-					</ul>
-				</div>
-
-				<div class="left-column">
-                    <table class="content-table-brnView">
-                        <tr>
-                            <th>BUDGET</th>
-                            <th colspan="7"></th>
-                        </tr>
-                        <tr>
-                            <th>LOAN TYPES</th>
-                            <th>BEGINNING BALANCE</th>
-                            <th>NEW CLIENTS</th>
-                            <th>RESIGN CLIENTS</th>
-                            <th>RE-LOAN CLIENTS</th>
-                            <th>ENDING BALANCE</th>
-                            <th></th>
-                            <th>DISBURSEMENT AMOUNT</th>
-                        </tr>
-                        <% loanTots.forEach(loan => {  %>
-                            <tr> 
-                                <td><%= loan.loan_type %></td>
-                                <td><%= loan.begClientTot %></td>
-                                <td><%= loan.nnumClient %></td>
-                                <td><%= loan.resloanTot %></td>
-                                <td><%= loan.onumClient %></td>
-                                <td><%= loan.budgEndBal %></td>
-                                <td></td>
-                                <td><%= loan.amtDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
-                            </tr>
-                        <% }) %>
-                        <tr class="td-bold">
-                            <td>TOTAL</td>
-                            <% poGrandTot.forEach( gTot => { %>
-                                <td> <%= gTot.bClient %></td>
-                                <td> <%= gTot.nClient %></td>
-                                <td> <%= gTot.rClient %></td>
-                                <td> <%= gTot.oClient %></td>
-                                <td> <%= gTot.budgEndBal %></td>
-                                <td></td>
-                                <td> <%= gTot.totDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
-
-                            <% }) %>
-                        </tr>
-                    </table>
-				</div>
-
-				<div class="right-column">
-
-					<div id="preview-shadow">
-						<div id="preview">
-							<div id="corner-tl" class="corner"></div>
-							<div id="corner-tr" class="corner"></div>
-                            <ul id="navigation">
-                                <lh>OTHER VIEWS</lh>
-                                <li><a href="/centers/viewTargetsMonthly/<%= poCode %>">MONTHLY VIEW </a></li>
-                                <li><a href="#">OTHERS </a></li>
-                            </ul>
-                            <div id="corner-br" class="corner"></div>
-							<div id="corner-bl" class="corner"></div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-    </section>
-    <div>
-        <h5>
-        </h5>
-    </div>
     <section class="s1">
 		<div class="main-container">
             Budget Breakdown per CENTER  
@@ -103,14 +14,35 @@
                 <% centers.forEach(center => { %>
                     <tr>
                         <td><%= center.center%> </td>
-                        <td><%= center.newClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
-                        <td><%= center.newClientAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
-                        <td><%= center.oldClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
-                        <td><%= center.oldClientAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
-                        <td><%= center.resClient + center.resClient2%> </td>
+                        <% if (center.newClient > 0) { %>
+                            <td><%= center.newClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
+                        <% if (center.newClientAmt > 0) { %>
+                            <td><%= center.newClientAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td>-</td>
+                        <% } %>
+                        <% if (center.oldClient > 0) { %>
+                            <td><%= center.oldClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td>-</td>
+                        <% } %>
+                        <% if (center.oldClientAmt > 0) { %>
+                            <td><%= center.oldClientAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td>-</td>
+                        <% } %>
+                        <% if ((center.resClient + center.resClient2) > 0) { %>
+                            <td><%= center.resClient + center.resClient2%> </td>
+                            <% } else { %>
+                            <td>-</td>
+                        <% } %>
                         <td>
                             <div class="btn-row">
-                                <a class="btn btn-primary" href="/centers/<%= center.center %>/edit">Target</a>
+                                <!-- <a class="btn btn-primary" href="/centers/<%= center.center %>/edit">Target</a> -->
+                                <a class="btn btn-primary" href="/centers/<%= center.center %>/edit">Set Target</a>
                                 <a class="btn btn-primary" href="/centers/setBegBal/<%= center.center %>">Beg Bal</a>
                             </div>        
                         </td>
@@ -119,4 +51,3 @@
             </table>
         </div>
     </section>
-
