@@ -73,8 +73,6 @@ app.use(passport.initialize())
 app.use(passport.session())
 app.use(setUser)
 
-//app.use('/', indexRouter)
-
 app.use('/index', indexRouter)
 // app.use('/coas', coaRouter)
 // app.use('/sub_ledgers', sub_ledgerRouter)
@@ -88,10 +86,10 @@ let locals = {}
 app.locals.yuser = user
 app.locals.userRole = ROLE
 
-console.log(app.locals.yuser)
+// console.log(app.locals.yuser)
 
 app.get('/', async (req, res) => {
-    console.log(user.role)
+    // console.log(user.role)
     if (isEmpty(user)) {
         res.redirect('/login') 
     } else {
@@ -144,7 +142,7 @@ app.post('/login', async (req, res) => {
     //   return res.status(400).send('Cannot find user')
     }
     try {
-        console.log(fnduser.email)
+        // console.log(fnduser.email)
       if(await bcrypt.compare(req.body.password, fnduser.password)) {
           req.user = fnduser
         //   next()
@@ -169,61 +167,9 @@ app.get('/logout', async (req, res) => {
     
 })
 
-// app.get('/register', (req, res) => {
-
-//     res.render('register')
-// })
-
-// app.post('/register', async (req, res) => {
-
-//     let locals
-//     let canProceed = false
-//     const userName = req.body.name
-//     const eMail = req.body.email
-//     const password = req.body.password
-//     const assCode = req.body.assCode
-//     const role = req.body.role
- 
-//     try {
-//         const hashedPassword = await bcrypt.hash(password, 10)
-        
-//         const getExistingUser = await User.findOne({name: userName}, function (err, foundUser) {
-//             // console.log(foundUser)
-
-//             if (!err) {
-//                 if (!foundUser) {
-//                     canProceed = true 
-//                 } else {
-//                     canProceed = false
-//                     locals = {errorMessage: "USER already exist!"}
-//                 }
-//             }
-//         })
-//         if (canProceed) {
-//             let nUser  = new User({
-
-//                 name: userName,
-//                 email: eMail,
-//                 password: hashedPassword,
-//                 assCode: assCode,
-//                 role: role
-//             })
-        
-//                const saveUser = nUser.save()
-//             res.redirect('/login')
-//         } else {
-//             res.redirect('/register')
-//         }
-
-//     } catch (err) {
-//         console.log(err)
-//         res.redirect('/register')
-//     }
-// })  
-
 function setUser(req, res, next) {
     const userId = user.email
-    console.log(user + "User atuy")
+    // console.log(user + "User atuy")
     if (userId) {
       req.user = user
       

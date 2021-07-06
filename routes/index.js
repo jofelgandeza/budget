@@ -12,7 +12,7 @@ let LoggedUser = {}
 
 app.get('/', async (req, res) => {
     // console.log(req.params.id)
-    console.log(req.user)
+    // console.log(req.user)
     const logUser = req.user
     res.render('/dashboards/dashboard', {
         yuser : logUser

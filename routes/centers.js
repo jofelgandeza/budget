@@ -284,7 +284,7 @@ router.get('/:id/edit', authUser, authRole("PO", "ADMIN"), async (req, res) => {
 
      centerCode = req.params.id
      unit_ID = centerCode.substr(0,6)
-    console.log(unit_ID)
+    const yuser = req.user
     let lnType = []
     let forSortTargets = []
     let sortedTargets = []  

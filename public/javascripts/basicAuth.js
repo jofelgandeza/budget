@@ -15,7 +15,7 @@ function authUser(req, res, next) {
         if (req.user.role === "PO") {
           paramsID = req.params.id.substr(0,6)
         }          
-        console.log(paramsID + ", " + req.user.assCode)
+        // console.log(paramsID + ", " + req.user.assCode)
         if (req.user.role !== role || req.user.assCode !== paramsID) {
           res.status(401)
           return res.send('Not allowed')
