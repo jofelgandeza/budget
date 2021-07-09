@@ -1,3 +1,5 @@
+// const Position = require('../models/position')
+
 //alert('Reply from main.js')
 //const Cleave = require('cleave')
 
@@ -86,28 +88,33 @@ const cleave11 = new Cleave('.decAmount', {
     numeralThousandGroupStyle: 'thousand'
 })
 
-function hideUnitPoInputs() {
-    var e = document.getElementById("ePosition");
+function hideUnitPoInputs(selected) {
+    var e = document.getElementById("ayApo");
 
-    const posi = e.value;
+    const hidePosit = e.value;
+   
+    const posi = hidePosit
 
     let y = document.getElementById("poUnit");
     let z = document.getElementById("poNumber");
-    y.disabled = false;
-    z.disabled = false;
+    // y.disabled = false;
+    // z.disabled = false;
+// BRN_MGR = 604f06bf7ca02f8a731fa8a6
+// UNI_HED = 604f07087ca02f8a731fa8a7
+// PRO_OFR = 604f074e7ca02f8a731fa8a8
 
-    if ( posi === "BRN_MGR" || posi === "BRN_ACT" || posi === "BRN_AST" ) {
+    if ( posi === "604f06bf7ca02f8a731fa8a6" || posi === "BRN_ACT" || posi === "BRN_AST" ) {
         y.disabled = true;
-        z.disabled = true;
         y.value = "Not Applicable";
+        z.disabled = true;
         z.value = "Not Applicable";
     }
-    if (posi === "UNI_HED"){
+    if (posi === "604f07087ca02f8a731fa8a7"){
         z.value = "Not Applicable";
         y.value = "";
         z.disabled = true;
     } 
-    if (posi === "PRO_OFR") {
+    if (posi === "604f074e7ca02f8a731fa8a8") {
         y.value = "";
         z.value = "";
         y.disabled = false;
@@ -115,7 +122,7 @@ function hideUnitPoInputs() {
     }
 
     var ePosition = e.options[e.selectedIndex].value;
-    e.value = ePosition;
+    // e.value = ePosition;
   }
 
 

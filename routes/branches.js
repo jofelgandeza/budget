@@ -8,6 +8,10 @@ const Loan_type = require('../models/loan_type')
 const Center_budget_det = require('../models/center_budget_det')
 const Unit = require('../models/unit')
 const Po = require('../models/po')
+const User = require('../models/user')
+
+const bcrypt = require('bcrypt')
+
 const _ = require('lodash')
 const Cleave = require('../public/javascripts/cleave.js')
 const loan_type = require('../models/loan_type')
@@ -39,7 +43,8 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
         res.render('branches/index', {
             branchCode: branchCode,
             searchOptions: req.query,
-            yuser: _user
+            yuser: _user,
+            dateToday: new Date()
         })
     } catch (err) {
         console.log(err)
@@ -336,7 +341,9 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
                 poGrandTot: brnLoanGrandTot,
                 unitLoanTots: unitLoanTotals,
                 searchOptions: req.query,
-                yuser: _user
+                yuser: _user,
+                dateToday: new Date()
+
             })
         }
     } 
@@ -446,13 +453,17 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.BM), (req, res) => {
          const pstCode = fndPost
         console.log(branchCode)
         const newEmp = new Employee()
+        const newUser = new User()
         newEmp.branch = branchCode
 
          res.render('branches/newEmployee', { 
             emp: newEmp, 
+            user: newUser,
             posit: fndPost,
             branchCode: branchCode,
-            yuser: _user
+            yuser: _user,
+            newEmp: true,
+            resetPW: false
         })
     })
 //    console.log(position)
@@ -460,12 +471,20 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.BM), (req, res) => {
 })
 
 // POST or Save new Employee
-router.post('/postNewEmp', authUser, authRole(ROLE.BM), async (req, res) => {
+router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => {
    let eUnit
    let ePONum
    const emPostCod = req.body.ayPost
     const emPosition =  await Position.findById(req.body.ayPost)
         const ePosition = emPosition.code
+        const eShortTitle = emPosition.short_title
+    const nEmpCode = _.trim(req.body.empCode)
+    const nEmail = _.trim(req.body.email)
+    const nLName = _.trim(req.body.lName)
+    const nFName = _.trim(req.body.fName) 
+    const nMName = _.trim(req.body.mName)
+    const nName =  nLName + ", " + nFName + " " + nMName
+
 
     if (ePosition === "BRN_MGR" || ePosition === "BRN_ACT" || ePosition === "BRN_AST") {
         eUnit = "NA"
@@ -486,25 +505,15 @@ router.post('/postNewEmp', authUser, authRole(ROLE.BM), async (req, res) => {
     const assCode = brnCode + "-" + assignUnit
     const empCod = req.body.empCode
 
-let employee = new Employee({
-
-    emp_code: req.body.empCode,
-    last_name: req.body.lName,
-    first_name: req.body.fName,
-    middle_name: req.body.mName,
-    position_code: emPostCod,
-    assign_code: assCode,
-    po_number: ePONum,
-    branch: req.body.brnCode,
-    unit: eUnit
-})
 
 let locals
 //console.log(brnCode)
 let canProceed = true
+let UserProceed = true
+
 try {
 
-    const fndEmp = await Employee.findOne({emp_code: empCod}, function (err, foundEmp) {
+    const fndEmp = await Employee.findOne({emp_code: nEmpCode}, function (err, foundEmp) {
         console.log(foundEmp)
         let canProceed = false
 
@@ -529,16 +538,52 @@ try {
             })
         }
     })
-
-    if (canProceed) {
+            const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                
+            const getExistingUser = await User.findOne({name: nEmail}, function (err, foundUser) {
+                // console.log(foundUser)
+                let UserProceed = false
+                if (!err) {
+                    if (!foundUser) {
+                        UserProceed = true 
+                    } else {
+                        UserProceed = false
+                        locals = {errorMessage: "USER NAME already exists!"}
+                    }
+                }
+            })
+            
+    if (canProceed && UserProceed)  {
         if (ePosition === "PRO_OFR") {
             const poAssignCode = await Po.findOneAndUpdate({"po_code": assCode}, {$set:{"emp_code": req.body.empCode}})
         } 
         if (ePosition === "UNI_HED") {
 //           const unAssignCode = await Po.findOneAndUpdate({"po_code": assCode}, {$set:{"emp_code": req.body.empCode}})
         } 
+        let employee = new Employee({
+
+            emp_code: nEmpCode,
+            last_name: nLName,
+            first_name: nFName,
+            middle_name: nMName,
+            position_code: emPostCod,
+            assign_code: assCode,
+            po_number: ePONum,
+            branch: req.body.brnCode,
+            unit: eUnit
+        })
         
-        const newCoa = await employee.save()
+        const newCoa = employee.save()
+
+        let nUser = new User({
+            name: nName,
+            email: req.body.email,
+            password: hashedPassword,
+            assCode: assCode,
+            role: eShortTitle
+        })
+        const saveUser = nUser.save()
+
         res.redirect('/branches/employees/'+ brnCode)
     } else {
 
@@ -547,7 +592,7 @@ try {
     //         console.log(pstCode)
     
             res.render('branches/newEmployee'+ brnCode, { 
-                emp: new Employee(), 
+                emp: employee, 
                 posit: fndPost,
                 branchCode: brnCode,
                 locals: locals
@@ -566,9 +611,13 @@ try {
 // Get an Employee for EDIT
 router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, res) => {
 
+    paramsID = req.params.id
+        console.log(paramsID)
+
     branCod = req.body.branCode
     empID = req.params.id
-    empCode = req.body.emp_code
+    empCode = _.trim(paramsID.substr(3,9))
+        console.log(empCode)
     const _user = req.user
     let locals = ""
     let possit
@@ -579,7 +628,7 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, r
      
    try {
         let brnCod
-        const employe = await Employee.findOne({emp_code: req.params.id}, function (err, foundEmp) {
+        const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
 //            console.log(foundlist)
             foundEmploy = foundEmp
             brnCod = foundEmp.branch
@@ -587,14 +636,17 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, r
            console.log(possit)
         })
         // console.log(employe)
+        const newUser = new User()
 
         res.render("branches/editEmployee", {
             branchCode: brnCod,
             posit: pst_Code,
-            // empPostCod: possit,
+            user: newUser,
             emp: employe, 
             locals: locals,
-            yuser: _user
+            yuser: _user,
+            newEmp: false,
+            resetPW: false
        })
 
 //        res.render('centers/edit', { centers: center, coaClass: coaClass })
@@ -605,11 +657,16 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, r
    }
 })
 
-
-
 // SAVE EDITed Employee
 
 router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req, res){
+
+    paramsID = req.params.id
+        console.log(paramsID)
+
+    branCod = paramsID.substr(0,3)
+    // empID = req.params.id
+    empID = _.trim(paramsID.substr(3,45))
 
     const assignUnit = _.trim(req.body.poUnit) + _.trim(req.body.poNumber)
     const brnCode = req.body.brnCode 
@@ -633,7 +690,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
                 empPost = fndEmPost.code
             } )
 
-            employee = await Employee.findById(req.params.id)
+            employee = await Employee.findById(empID)
             console.log(employee)
 
             employee.emp_code = eCode
@@ -664,6 +721,99 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
   
 })
 
+// GET Employee User for RESET PASSWORD
+router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.BM), async (req, res) => {
+
+    paramsID = req.params.id
+
+    branCod = req.body.branCode
+    empID = req.params.id
+    empCode = _.trim(paramsID.substr(3,9))
+
+    const _user = req.user
+    let locals = ""
+    let possit = ""
+    let foundEmploy = []
+    
+    let ass_Code = ""
+
+   try {
+        let brnCod
+        const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
+//            console.log(foundlist)
+            foundEmploy = foundEmp
+            brnCod = foundEmp.branch
+            possit = _.trim(foundEmploy.position_code)
+           console.log(possit)
+           ass_Code = foundEmploy.assign_code
+        })
+        
+        const emPosit = await Position.findById(possit)
+        const posisyon = emPosit.title
+    
+            // console.log(employe)
+        const yuser = await User.findOne({assCode: ass_Code}, function (err, foundUser) {
+            //            console.log(foundlist)
+            fndUser = foundUser
+            console.log(fndUser)
+        })
+
+        yuser.password = ""
+            
+        res.render("branches/resetPassword", {
+            branchCode: brnCod,
+            posit: posisyon,
+            user: yuser,
+            emp: employe, 
+            locals: locals,
+            yuser: _user,
+            newEmp: false,
+            resetPW: true
+       })
+
+//        res.render('centers/edit', { centers: center, coaClass: coaClass })
+
+   } catch (err) {
+       console.log(err)
+       res.redirect('employees/'+ branCod)
+   }
+})
+
+router.put('/putEditedPass/:id', authUser, authRole(ROLE.BM), async function(req, res){
+
+    paramsID = req.params.id
+        console.log(paramsID)
+
+    branCod = paramsID.substr(0,3)
+    // empID = req.params.id
+    empID = _.trim(paramsID.substr(3,45))
+
+    const userID = req.body.user_id
+    
+    console.log(req.body.user_id)
+    let getExistingUser
+    
+        try {
+            const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                
+            getExistingUser = await User.findById(userID)
+
+            getExistingUser.password = hashedPassword
+
+            await getExistingUser.save()
+        
+            res.redirect('/branches/employees/'+ branCod)
+
+        } catch (err) {
+            console.log(err)
+            let locals = {errorMessage: 'Something WENT went wrong.'}
+            res.render('/branches/employee/'+ branCod, {
+            locals: locals
+            })
+        }
+  
+})
+
 // Get UNITS for Maintenance
 router.get('/units/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
@@ -677,12 +827,12 @@ router.get('/units/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     let empName = ""
     let doneReadUnit = false
 
-    const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
-        fndPosition = foundPosit
-    })
-    const brnEmployees = await Employee.find({branch: brnCode}, function (err, fndEmployees) {
-        foundEmployee = fndEmployees
-    })
+    // const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
+    //     fndPosition = foundPosit
+    // })
+    // const brnEmployees = await Employee.find({branch: brnCode}, function (err, fndEmployees) {
+    //     foundEmployee = fndEmployees
+    // })
 
     try {
         const brnUnits = await Unit.find({branch: brnCode}, function (err, foundUnits) {
@@ -719,7 +869,7 @@ router.get('/units/:id', authUser, authRole(ROLE.BM), async (req, res) => {
                       }
                        return 0;
                 })
-            if (doneReadUnit) {
+            if (doneReadUnit || fndUnit.length === 0) {
                 res.render('branches/unit', {
                 branchCode: brnCode,
                 fondUnits: sortedUnits,
@@ -1056,13 +1206,23 @@ router.post('/delete', authUser, authRole(ROLE.BM), async (req, res) => {
 
 router.delete('/deleteEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
+    const paramsID = req.params.id
+
+    console.log(paramsID)
+    branCod = paramsID.substr(0,3)
+    // empID = req.params.id
+    empID = _.trim(paramsID.substr(3,45))
+
+
+
     let empYee
 
     try {
-        empYee = await Employee.findById(req.params.id)
+        empYee = await Employee.findById(empID)
         delBranCode = empYee.branch
         await empYee.remove()  
         res.redirect('/branches/employees/'+delBranCode)
+        
     } catch (err) {
         console.log(err)
     }

@@ -169,7 +169,7 @@ app.get('/logout', async (req, res) => {
 
 function setUser(req, res, next) {
     const userId = user.email
-    // console.log(user + "User atuy")
+    console.log(user + "User atuy")
     if (userId) {
       req.user = user
       

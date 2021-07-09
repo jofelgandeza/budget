@@ -55,6 +55,7 @@ const monthSelect = ["January","February", "March", "April", "May", "June", "Jul
 router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     
     const unitCode = req.params.id
+    console.log(unitCode)
     const branchCode = unitCode.substring(0,3)
     const unitLetter = unitCode.substr(4,1)
     const _user = req.user
@@ -121,15 +122,18 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
 //        console.log(fnd)
 
-        const branchManager = await Employee.find({branch: branchCode, position_code: postUnitHead, assign_code: unitCode}, function (err, foundBMs){
+        const branchManager = await Employee.find({branch: branchCode, position_code: postManager, assign_code: unitCode}, function (err, foundBMs){
             foundManager = foundBMs
            })
 
-        branchManager.forEach(manager => {
-            officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
+           if (branchManager) {
+                branchManager.forEach(manager => {
+                officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
 
-            })
-        const unitOfficers = await Employee.find({branch: branchCode, assign_code: unitCode}, function (err, foundUHs){
+                })
+           }            
+
+        const unitOfficers = await Employee.find({branch: branchCode, assign_code: postUnitHead}, function (err, foundUHs){
             foundPOunits = foundUHs
             })
         const programOfficers = await Employee.find({branch: branchCode, unit: unitLetter, position_code: postProgOfr}, function (err, foundPO){

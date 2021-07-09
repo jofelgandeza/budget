@@ -1,5 +1,5 @@
 <h2 class="page-header">New Employee Entry</h2>
-<form action="/branches/postNewEmp" method="POST">
+<form action="/branches/postNewEmp/<%= emp.branch %>" method="POST">
             <%- include('../partials/errorMessage') %>    
             <%- include('_form_fields') %>
 <div class="form-row">

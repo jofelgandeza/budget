@@ -13,8 +13,9 @@
                     <td><%= brnEmployee.empName %> </td>
                     <td>
                         <div class="btn-row">
-                            <a class="btn btn-primary" href="/branches/getEmpForEdit/<%= brnEmployee.empCode %>/edit">Edit</a>
-                            <%- include('../partials/deleteForm', { url: `/branches/deleteEmp/${brnEmployee.empID}` }) %>
+                            <a class="btn btn-primary" href="/branches/getEmpForEdit/<%= branchCode + brnEmployee.empCode %>/edit">Edit</a>
+                            <a class="btn btn-primary" href="/branches/getEmpEditPass/<%= branchCode + brnEmployee.empCode %>/edit">Reset Password</a>
+                            <%- include('../partials/deleteForm', { url: `/branches/deleteEmp/${branchCode+brnEmployee.empID}` }) %>
                         </div>        
                     </td>
                 </tr>
