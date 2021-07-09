@@ -167,6 +167,11 @@ app.get('/logout', async (req, res) => {
     
 })
 
+app.delete('/logout', (req, res) => {
+    req.logOut()
+    res.redirect('/login')
+  })
+  
 function setUser(req, res, next) {
     const userId = user.email
     console.log(user + "User atuy")

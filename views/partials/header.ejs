@@ -8,7 +8,10 @@
         <div>
             <div class="header-nav header-nav-user"> 
                 <p>Hi <%= yuser.name %>, <%= yuser.assCode %></p>
-                <a class="logout" href="/logout">Logout</a>
+                <form action="/logout?_method=DELETE" method="POST">
+                    <button type="submit">Log Out</button>
+                  </form>
+                                  <!-- <a class="logout" href="/logout">Logout</a> -->
             </div>
             <ul>
                 <%if (yuser.role === "PO") { %>
