@@ -480,9 +480,9 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
         const eShortTitle = emPosition.short_title
     const nEmpCode = _.trim(req.body.empCode)
     const nEmail = _.trim(req.body.email)
-    const nLName = _.trim(req.body.lName)
-    const nFName = _.trim(req.body.fName) 
-    const nMName = _.trim(req.body.mName)
+    const nLName = _.trim(req.body.lName).toUpperCase()
+    const nFName = _.trim(req.body.fName).toUpperCase()
+    const nMName = _.trim(req.body.mName).toUpperCase()
     const nName =  nLName + ", " + nFName + " " + nMName
 
 
@@ -673,16 +673,36 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
     const assCode = brnCode + "-" + assignUnit
     const emPost =  req.body.ayPost
 
-    const eCode = req.body.empCode
-    const eLName =  req.body.lName
-    const eFName = req.body.fName
-    const eMName =  req.body.mName
-
     const eAssCode = assCode
-    const ePONnumber = req.body.poNumber
-    const eUnit = req.body.poUnit
+    
+    let ePONum = "NA"
+    let eUnit = "NA"
+    
+        const emPosition =  await Position.findById(req.body.ayPost)
+            const ePosition = emPosition.code
+            const eShortTitle = emPosition.short_title
 
-    console.log(req.params.id)
+            const eCode = _.trim(req.body.empCode)
+            const eLName = _.trim(req.body.lName).toUpperCase()
+            const eFName = _.trim(req.body.fName).toUpperCase()
+            const eMName = _.trim(req.body.mName).toUpperCase()
+            const nName =  eLName + ", " + eFName + " " + eMName
+        
+        
+            if (ePosition === "BRN_MGR" || ePosition === "BRN_ACT" || ePosition === "BRN_AST") {
+                eUnit = "NA"
+                ePONum = "NA"
+            }
+            if (ePosition === "UNI_HED") {
+                eUnit = req.body.poUnit
+                ePONum = "NA"
+            } 
+            if (ePosition === "PRO_OFR") {
+                eUnit = req.body.poUnit
+                ePONum = req.body.poNumber    
+            } 
+    
+            console.log(req.params.id)
     let employee
     let empPost
         try {
@@ -699,7 +719,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
             employee.middle_name = eMName
             employee.position_code = emPost
             employee.assign_code = eAssCode
-            employee.po_number = ePONnumber
+            employee.po_number = ePONum
             employee.branch = brnCode
             employee.unit = eUnit
         
@@ -714,7 +734,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
         } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.render('/branches/newEmployee/'+ brnCode, {
+            res.redirect('/branches/employees/'+ brnCode, {
             locals: locals
             })
         }

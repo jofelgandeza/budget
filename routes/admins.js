@@ -24,7 +24,7 @@ router.get('/register', async (req, res) => {
     res.render('admins/register')
 })
 
-router.post('/register', async (req, res) => {
+router.post('/saveRegister', async (req, res) => {
 
     let locals
     let canProceed = false
@@ -71,6 +71,10 @@ router.post('/register', async (req, res) => {
     }
 })  
 
+router.get('/users', async (req, res) => {
+    res.send('System USERS VIEW Page! - ONGOING DEVELOPMENT.')
+    // res.render('admins/register')
+})
 
 router.get('/getAccess', async (req, res) => {
     res.send('User access page' + req.user.name)

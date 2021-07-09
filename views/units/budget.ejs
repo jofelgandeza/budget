@@ -37,25 +37,73 @@
                         <% loanTots.forEach(loan => {  %>
                             <tr>
                                 <td><%= loan.loan_type %></td>
-                                <td><%= loan.begClientTot %></td>
-                                <td><%= loan.onumClient %></td>
-                                <td><%= loan.resloanTot %></td>
-                                <td><%= loan.nnumClient %></td>
-                                <td><%= loan.budgEndBal %></td>
+                                <% if (loan.begClientTot > 0) { %>
+                                    <td><%= loan.begClientTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (loan.onumClient > 0) { %>
+                                    <td><%= loan.onumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (loan.resloanTot > 0) { %>
+                                    <td><%= loan.resloanTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (loan.nnumClient > 0) { %>
+                                    <td><%= loan.nnumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (loan.budgEndBal > 0) { %>
+                                    <td><%= loan.budgEndBal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
                                 <td></td>
-                                <td><%= loan.amtDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% if (loan.amtDisburse > 0) { %>
+                                    <td><%= loan.amtDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                <td style=>-</td>
+                                <% } %>
                             </tr>
                         <% }) %>
                         <tr class="td-bold">
                             <td>TOTAL</td>
                             <% poGrandTot.forEach( gTot => { %>
-                                <td> <%= gTot.budBegBalClient %></td>
-                                <td> <%= gTot.oClient %></td>
-                                <td> <%= gTot.rClient %></td>
-                                <td> <%= gTot.nClient %></td>
-                                <td> <%= gTot.budgEndBal %></td>
+                                <% if (gTot.budBegBalClient > 0) { %>
+                                    <td><%= gTot.budBegBalClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (gTot.oClient > 0) { %>
+                                    <td><%= gTot.oClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (gTot.rClient > 0) { %>
+                                    <td><%= gTot.rClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (gTot.nClient > 0) { %>
+                                    <td><%= gTot.nClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (gTot.budgEndBal > 0) { %>
+                                    <td><%= gTot.budgEndBal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
                                 <td></td>
-                                <td> <%= gTot.totalDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% if (gTot.totalDisburse > 0) { %>
+                                    <td> <%= gTot.totalDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
 
                             <% }) %>
                         </tr>
