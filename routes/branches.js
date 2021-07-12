@@ -491,11 +491,11 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
         ePONum = "NA"
     }
     if (ePosition === "UNI_HED") {
-        eUnit = req.body.poUnit
+        eUnit = _.trim(req.body.poUnit).toUpperCase()
         ePONum = "NA"
     } 
     if (ePosition === "PRO_OFR") {
-        eUnit = req.body.poUnit.toUpperCase()
+        eUnit = _.trim(req.body.poUnit).toUpperCase()
         ePONum = req.body.poNumber    
     } 
     
