@@ -1233,14 +1233,18 @@ router.delete('/deleteEmp/:id', authUser, authRole(ROLE.BM), async (req, res) =>
     // empID = req.params.id
     empID = _.trim(paramsID.substr(3,45))
 
-
-
     let empYee
+    let sysUser
 
     try {
+        
         empYee = await Employee.findById(empID)
-        delBranCode = empYee.branch
+        const delBranCode = empYee.branch
+        // const 
+
         await empYee.remove()  
+
+
         res.redirect('/branches/employees/'+delBranCode)
         
     } catch (err) {
