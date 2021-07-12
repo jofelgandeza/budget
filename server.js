@@ -41,9 +41,6 @@ app.use(expressLayouts)
 app.use(methodOverride('_method'))
 
 app.use(express.static('public'))
-// app.use(express.json()) 
-// app.use(express.urlencoded()) 
-//Parse URL-encoded bodies
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
@@ -137,7 +134,7 @@ app.post('/login', async (req, res) => {
         fnduser = foundUser
         user = foundUser
     })
-    if (fnduser == null) {
+    if (fnduser === null) {
         locals = {errorMessage: 'Cannot find user!'}
     //   return res.status(400).send('Cannot find user')
     }
@@ -159,14 +156,6 @@ app.post('/login', async (req, res) => {
     }
 })
 
-app.get('/logout', async (req, res) => {
-    user = []
-    req.user = []
-    app.locals.yuser = []
-    res.redirect('/login') 
-    
-})
-
 app.delete('/logout', (req, res) => {
     user = []
     req.user = []
@@ -179,8 +168,7 @@ function setUser(req, res, next) {
     const userId = user.email
     console.log(user + "User atuy")
     if (userId) {
-      req.user = user
-      
+      req.user = user  
     }
     next()
   }

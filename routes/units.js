@@ -164,6 +164,10 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             doneReadTot = true
         })
 
+        if (center.length === 0) {
+            doneReadTot = true
+        }
+
 //    console.log(foundCenter)
 
     foundPOs.forEach(uh => {
