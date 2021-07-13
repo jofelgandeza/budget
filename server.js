@@ -87,9 +87,7 @@ app.locals.userRole = ROLE
 
 app.get('/', async (req, res) => {
     // console.log(user.role)
-    if (isEmpty(user)) {
-        res.redirect('/login') 
-    } else {
+    if (!isEmpty(user)) {
         const asignCode = _.trim(user.assCode)
         req.user = user
             // res.redirect('/centers/' + user.assCode)
@@ -110,7 +108,9 @@ app.get('/', async (req, res) => {
             res.redirect('/admins')
             // next()
         }
-    }
+    } else {
+        res.redirect('/login') 
+        }
 })
 
 // app.get('/dashboard', authUser, (req, res) => {

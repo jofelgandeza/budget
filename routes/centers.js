@@ -2,7 +2,7 @@ const { query } = require('express')
 const express = require('express')
 const { model } = require('mongoose')
 const router  = express.Router()
-const Swal = require('sweetalert2')
+// const Swal = require('sweetalert2')
 const Center = require('../models/center')
 const Employee = require('../models/employee')
 const Loan_type = require('../models/loan_type')
@@ -182,7 +182,6 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
                     loanTots: poLoanTotals,
                     poGrandTot: poLoanGrandTot,
                     searchOptions: req.query,
-                    Swal: Swal,
                     yuser: yuser   
                 })
             }
@@ -271,7 +270,6 @@ router.get('/viewTarget/:id', authUser, authRole("PO", "ADMIN"), async (req, res
                     poCode: IDcode,
                     centers: foundCenter,
                     searchOptions: req.query,
-                    Swal: Swal,
                     yuser: yuser   
                 })
             }

@@ -2,7 +2,7 @@ const { query } = require('express')
 const express = require('express')
 const { model } = require('mongoose')
 const router  = express.Router()
-const Swal = require('sweetalert2')
+// const Swal = require('sweetalert2')
 const Center = require('../models/center')
 const Employee = require('../models/employee')
 const Position = require('../models/position')
@@ -650,7 +650,6 @@ console.log(unitCode)
                 uniCod: unitCode,
                 fondPos: sortedPOs,
                 searchOptions: req.query,
-                Swal: Swal,
                 yuser: yuser
             })
     } catch (err) {
@@ -1266,7 +1265,6 @@ router.get('/unit/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                    officerName: officerName,
                    POs: foundPO,
                    searchOptions: req.query,
-                   Swal: Swal,
                    yuser: yuser
                })
    
