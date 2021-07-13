@@ -45,7 +45,7 @@ const begMonthSelect = ["January","February", "March", "April", "May", "June"];
 
 //View CENTERS per PO Level - TUG-A1
 
-console.log(user)
+// console.log(user)
 
 router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
 
@@ -175,7 +175,7 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
 
 //       console.log(poLoanGrandTot)
 
-            if (doneLoanTypeRead && doneTargetRead) {
+            if (doneCenterRead && doneLoanTypeRead) {
                 res.render('centers/viewTargets', {
                     POname: POname,
                     poCode: IDcode,
@@ -288,7 +288,7 @@ router.get('/:id/edit', authUser, authRole("PO", "ADMIN"), async (req, res) => {
     let lnType = []
     let forSortTargets = []
     let sortedTargets = []  
-    let doneReadCenter = false
+    let doneReadEditCenter = false
     let doneSortData = false
     try {
 
@@ -315,7 +315,7 @@ router.get('/:id/edit', authUser, authRole("PO", "ADMIN"), async (req, res) => {
                 forSortTargets.push({_id: _id, sortKey: sortKey, loan_type: loan_type, month: month, semester: semester, numClient: numClient, amount: amount, totAmount: totAmount, remarks: remarks})
 
             } )
-            doneReadCenter = true
+            doneReadEditCenter = true
         })
         // console.log(forSortTargets)
 
@@ -329,7 +329,7 @@ router.get('/:id/edit', authUser, authRole("PO", "ADMIN"), async (req, res) => {
                return 0;
         })
         
-        if (doneReadCenter) {
+        if (doneReadEditCenter) {
             res.render("centers/targets", {
                 centerID: centerCode,
                 loanType: loanType,
@@ -500,7 +500,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(r
             console.log(err)
         }
         else {
-                console.log(foundList)
+                // console.log(foundList)
 
                 const curLoanBeg = foundList.Loan_beg_bal
 
@@ -569,7 +569,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(r
                         canSaveOldLoanCli = true
 
                     } else {
-                        console.log(foundVwList)
+                        // console.log(foundVwList)
 
                         foundVwList.beg_bal = bClientCnt
                         foundVwList.beg_bal_amt = begBalPrinc
@@ -609,7 +609,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(r
                         canSaveOldLoanAmt = true
                     
                     } else {
-                        console.log(fndVwOldAmtList)
+                        // console.log(fndVwOldAmtList)
 
                         fndVwOldAmtList.beg_bal = bBalAmt
                         fndVwOldAmtList.beg_bal_amt = begBalPrinc
@@ -658,8 +658,8 @@ router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(r
         const listName = _.trim(req.body.listName)
         const yuser = req.user
 
-       console.log(checkedItemId)
-       console.log(centerCode)
+    //    console.log(checkedItemId)
+    //    console.log(centerCode)
        let center
        let delLoanType = ""
        let delLoanAmt = 0
@@ -669,7 +669,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(r
       
            center = await Center.findOneAndUpdate({center: listName}, {$pull: {Loan_beg_bal :{_id: checkedItemId }}}, function(err, foundList){
                if (!err) {
-                  console.log(foundList)
+                //   console.log(foundList)
                   delLoanType = foundList.loan_type
                   delLoanClient = foundList.beg_client_count
                   delLoanAmt = foundList.beg_amount
@@ -689,7 +689,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(r
                     console.log(err)
                 }
                 else {
-                    console.log(foundVwList)
+                    // console.log(foundVwList)
 
                     foundVwList.beg_bal = 0
                     foundVwList.beg_bal_amt = 0
@@ -705,7 +705,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(r
                     console.log(err)
                 }
                 else {
-                    console.log(foundBegAmtList)
+                    // console.log(foundBegAmtList)
 
                     foundBegAmtList.beg_bal = 0
                     foundBegAmtList.beg_bal_amt = 0
@@ -1026,7 +1026,7 @@ router.put("/:id", authUser, authRole("PO", "ADMIN"), async function(req, res){
 
     // Saving to Center collection
       const centerFound = await Center.findOne({center: centerCode}, function(err, foundList){ 
-          console.log(foundList)
+        //   console.log(foundList)
         if (err) {
             console.log(err)
         }
@@ -1241,7 +1241,7 @@ router.put("/:id", authUser, authRole("PO", "ADMIN"), async function(req, res){
                             if (err) {
                                 console.log(err)
                             } else {
-                                console.log(foundResList)
+                                // console.log(foundResList)
                             }
                         })                                
                     }
@@ -1430,7 +1430,7 @@ router.put("/:id", authUser, authRole("PO", "ADMIN"), async function(req, res){
             console.log(err)
         }
         else {
-            console.log(foundPOCenters)
+            // console.log(foundPOCenters)
 
             const curLoanBeg = foundPOCenters.Loan_beg_bal
 //            console.log(curTargets)
@@ -1790,7 +1790,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
     // let foundCenterDet = []
 
     const vwloanType = await Loan_type.find({})
-    console.log(vwloanType)
+    // console.log(vwloanType)
 
     let poSumView = []
     let poTotLoanAmtArray = []
@@ -1900,7 +1900,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
     const foundCenterDet = await Center_budget_det.find({po_code: viewPOCode})
 
-    console.log(foundCenterDet)
+    // console.log(foundCenterDet)
 
     poSumView.push({title: "CENTERS", sortkey: 1, group: 1})
     poSumView.push({title: "NUMBER OF CENTERS", sortkey: 2, group: 1})
@@ -2217,7 +2217,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 let nov_totValue = 0
                 let dec_totValue = 0
 
-                console.log(viewPOCode)
+                // console.log(viewPOCode)
                 let poVSum = []
 
                 poSumView.push({title: "NEW LOAN CLIENTS", sortkey: 19, group: 2})
@@ -2473,7 +2473,7 @@ function setProject(req, res, next) {
   }
   
   function authGetProject(req, res, next) {
-      console.log(req.user.role)
+    //   console.log(req.user.role)
     if (req.user.role === "PO") {
         next()
       } else {
