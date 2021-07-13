@@ -98,7 +98,7 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
     })
    
   //console.log(foundCenter)
-
+        let totDisburseAmt = 0
     
         loanType.forEach(loan_type => {
             let typeLoan = loan_type.title
@@ -155,6 +155,8 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
             })
             let totAmounts = nloanTot + oloanTot 
                 budgEndBal =  (begClientTot +  nloanTotCount) - resloanTot
+
+                totDisburseAmt = totDisburseAmt + totAmounts
 //            let amtDisburse = oloanTot + oloanTot
             
             poLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: begClientTot,
@@ -169,11 +171,11 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
         // console.log(poLoanGrandTot)
 
         poLoanGrandTot.push({nClient: nClient, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
-            rClient: rClient + rClient2, bClient: bClient, budgEndBal: tbudgEndBal, totDisburse: totDisburse})
+            rClient: rClient + rClient2, bClient: bClient, budgEndBal: tbudgEndBal, totDisburse: totDisburseAmt})
 
 //       console.log(poLoanGrandTot)
 
-            if (doneLoanTypeRead) {
+            if (doneLoanTypeRead && doneTargetRead) {
                 res.render('centers/viewTargets', {
                     POname: POname,
                     poCode: IDcode,
@@ -1520,7 +1522,7 @@ router.put("/:id", authUser, authRole("PO", "ADMIN"), async function(req, res){
 
 // Post deleted items in Center.Targets and update Monthly views as well..
     
-router.post('/delete', authUser, authRole("PO", "ADMIN"), async (req, res) => {
+router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
     //   alert('Are you sure you want to delete this record?')
         let centerCode = req.body.listName
         const checkedItemId = req.body.checkbox

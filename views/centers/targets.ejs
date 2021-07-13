@@ -13,7 +13,7 @@
                     <th>REMARKS</th>
                 </tr>
                 <% newListItems.forEach(function(item) { %>
-                    <form  action="/centers/delete" method="post">
+                    <form  action="/centers/delete/<%= listTitle %>" method="post">
                         <tr>
                             <td>
                                 <input type="checkbox" name="checkbox" value="<%=item._id%>" onChange="this.form.submit()">

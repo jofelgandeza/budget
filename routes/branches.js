@@ -499,7 +499,7 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
         ePONum = req.body.poNumber    
     } 
     
-    const assignUnit = _.trim(req.body.poUnit) + _.trim(req.body.poNumber)
+    const assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
 
     const brnCode = req.body.brnCode 
     const assCode = brnCode + "-" + assignUnit

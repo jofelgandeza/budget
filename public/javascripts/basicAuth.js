@@ -11,13 +11,18 @@ function authUser(req, res, next) {
   
   function authRole(role) {
     return (req, res, next) => {
-        let paramsID = req.params.id
-        console.log(paramsID)
+        let params_ID = req.params.id
+        let paramsID = ""
+
+        console.log(params_ID)
         if (req.user.role === "PO") {
-          paramsID = req.params.id.substr(0,6)
+          paramsID = params_ID.substr(0,6)
+        }          
+        if (req.user.role === "PUH") {
+          paramsID = params_ID.substr(0,5)
         }          
         if (req.user.role === "BM") {
-          paramsID = req.params.id.substr(0,3)
+          paramsID = params_ID.id.substr(0,3)
         }          
         // console.log(paramsID + ", " + req.user.assCode)
         if (req.user.role !== role || req.user.assCode !== paramsID) {

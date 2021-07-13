@@ -62,7 +62,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     console.log(_user)
 
     let foundPOunits = []
-    let foundPO = []
+    let foundPOs = []
     let officerName = ""
     let fndPositi = []
     let postManager = ""
@@ -168,6 +168,9 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             doneReadTot = true
         }
 
+        if (foundPOs.length === 0) {
+            doneReadSubTot = true
+        }
 //    console.log(foundCenter)
 
     foundPOs.forEach(uh => {
@@ -353,19 +356,19 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 // View UNIT's Budget per PO  - TUG-A
 router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     
-    const unitCode = req.params.id
-    const branchCode = unitCode.substring(0,3)
-    const unitLetter = unitCode.substr(4,1)
-    const _user = req.user
-    console.log(_user)
+    const unitCodePO = req.params.id
+    const branchCodePO = unitCodePO.substring(0,3)
+    const unitLetterPO = unitCodePO.substr(4,1)
+    const _userPO = req.user
+    console.log(_userPO)
 
     let foundPOunits = []
     let foundPO = []
-    let officerName = ""
-    let fndPositi = []
-    let postManager = ""
-    let postUnitHead = ""
-    let postProgOfr = ""
+    let officerNamePO = ""
+    let fndPositiPO = []
+    let postManagerPO = ""
+    let postUnitHeadPO = ""
+    let postProgOfrPO = ""
 
     let unitLoanTotals = []
     let foundCenter = []
@@ -381,39 +384,43 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     try {
 
         const postEmp = await Position.find({dept_code: "BRN"}, function (err, fndPosi) {
-            fndPositi = fndPosi
+            fndPositiPO = fndPosi
         })
 
 //        console.log(fndPositi)
+     let fndPositionEmp 
+     let fndPositID
 
-        fndPositi.forEach(fndPosii => {
-            const fndPositionEmp = fndPosii.code
-            const fndPositID = fndPosii._id
+        fndPositiPO.forEach(fndPosii => {
+             fndPositionEmp = fndPosii.code
+             fndPositID = fndPosii.id
             if (fndPositionEmp === "BRN_MGR") {
-                postManager = fndPositID
+                postManagerPO = fndPositID
             }
             if (fndPositionEmp === "UNI_HED") {
-                postUnitHead = fndPositID
+                postUnitHeadPO = fndPositID
             }
             if (fndPositionEmp === "PRO_OFR") {
-                postProgOfr = fndPositID
+                postProgOfrPO = fndPositID
             }
         })
 
 //        console.log(fnd)
 
-        const branchManager = await Employee.find({branch: branchCode, position_code: postUnitHead, assign_code: unitCode}, function (err, foundBMs){
+        const branchManager = await Employee.find({branch: branchCodePO, position_code: postManagerPO, assign_code: unitCodePO}, function (err, foundBMs){
             foundManager = foundBMs
            })
+           if (branchManager) {
+                branchManager.forEach(manager => {
+                    officerNamePO = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
 
-        branchManager.forEach(manager => {
-            officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
+                })
+                }            
 
-            })
-        const unitOfficers = await Employee.find({branch: branchCode, assign_code: unitCode}, function (err, foundUHs){
+        const unitOfficers = await Employee.find({branch: branchCodePO, assign_code: unitCodePO}, function (err, foundUHs){
             foundPOunits = foundUHs
             })
-        const programOfficers = await Employee.find({branch: branchCode, unit: unitLetter, position_code: postProgOfr}, function (err, foundPO){
+        const programOfficers = await Employee.find({branch: branchCodePO, unit: unitLetterPO, position_code: postProgOfrPO}, function (err, foundPO){
             foundPOs = foundPO
             })
 
@@ -423,13 +430,16 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
         const loanType = await Loan_type.find({})
 
-        const center = await Center.find({branch: branchCode, unit: unitLetter}, function (err, foundCenters) {
+        const center = await Center.find({branch: branchCodePO, unit: unitLetterPO}, function (err, foundCenters) {
 //        const center = await Center.find(searchOptions)
 
             foundCenter = foundCenters.sort()
             doneReadTot = true
         })
 
+        if (center.length === 0) {
+            doneReadSubTot = true  
+        }
 //    console.log(foundCenter)
 
     foundPOs.forEach(uh => {
@@ -536,7 +546,7 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             doneReadSubTot = true
     })
     // console.log(unitLoanTotals)
-
+            if (unitLoanTotals.length !== 0) {
                 sortedPOs = unitLoanTotals.sort( function (a,b) {
                     if ( a.sortkey < b.sortkey ){
                         return -1;
@@ -546,12 +556,14 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                       }
                        return 0;
                 })
+            }
+
         if (doneReadTot && doneReadSubTot) {
             // res.send('Eto oh!')
             res.render('units/budgetPerPO', {
-                yuser: _user,
-                perUnitCode: unitCode,
-                officerName: officerName,
+                yuser: _userPO,
+                perUnitCode: unitCodePO,
+                officerName: officerNamePO,
                 unitLoanTots: unitLoanTotals
             })
         }             
@@ -813,6 +825,7 @@ router.get('/setPOCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) =
 
     let foundCenter = []
     let fndCenter = []
+    let doneReadCtr = false
 
     try {
 
@@ -820,14 +833,18 @@ router.get('/setPOCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) =
 
         const center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber}, function (err, foundCenters) {
             foundCenter = foundCenters
+            doneReadCtr = true
         })
-        
+
+        if (center.length === 0) {
+            doneReadCtr = true
+        }
         foundCenter.forEach(fndCtr => {
             
 
         })
-            
-
+        
+        if (doneReadCtr) {
             res.render('units/center', {
                 poCode: IDcode,
                 unitCode: unitCode,
@@ -835,10 +852,11 @@ router.get('/setPOCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) =
                 centers: foundCenter,
                 yuser: yuser
             })
-        } catch (err) {
-            console.log(err)
-            res.redirect('/')
         }
+    } catch (err) {
+        console.log(err)
+        res.redirect('/')
+    }
 })
 
 // Get NEW CENTER
@@ -1128,9 +1146,9 @@ router.delete('/deleteCenter/:id', authUser, authRole(ROLE.PUH), async (req, res
 
     try {
         poCntr = await Center.findById(req.params.id)
-        delCenterPO = poCntr.center.substr(0,6)
+        const delCenterPO = poCntr.center.substr(0,6)
         await poCntr.remove()  
-        res.redirect('/units/setPOCenters/'+delCenterPO)
+        res.redirect('/units/setPOCenters/' + delCenterPO)
     } catch (err) {
         console.log(err)
     }
