@@ -23,14 +23,17 @@ const unitsRouter = require('./routes/units.js')
 const passport = require('passport')
 const flash = require('express-flash')
 const session = require('express-session')
+// const router  = express.Router()
 const bcrypt = require('bcrypt')
+// const suser = require('./data.js')
+const User = require('./models/user')
 const Position = require('./models/position')
 const { authUser, authRole } = require('./public/javascripts/basicAuth')
 const { ROLE } = require('./public/javascripts/data')
 const { forEach, isNull, isEmpty } = require('lodash')
 const _ = require('lodash')
 
-
+let user = []
 app.set('view engine', 'ejs')
 app.set('views', __dirname + '/views')
 app.set('layout', 'layouts/layout')
@@ -48,17 +51,13 @@ const db = mongoose.connection
 db.on('error', error => console.error(error))
 db.once('open', () => console.log('Connected to Mongo Database'))
 
-const User = require('./models/user')
 const initializePassport = require('./public/javascripts/passport-config.js')
 
 initializePassport(
     passport,
-    email => users.find(user => user.email === email),
-    id => users.find(user => user.id === id)
+    email => user.find(user => user.email === email),
+    id => user.findById(user => user._id === id)
     )
-
-let users = [ ]
-// console.log (users)
 
 app.use(express.json()) 
 app.use(flash())
@@ -81,31 +80,31 @@ app.use('/units', unitsRouter)
 app.use('/branches', branchesRouter)
 app.use('/admins', adminRouter)
 let locals = {}
-app.locals.yuser = users
+app.locals.yuser = user
 app.locals.userRole = ROLE
 
 // console.log(app.locals.yuser)
 
-app.get('/', checkAuthenticated, async (req, res) => {
-    console.log(req.user)
-    if (!isEmpty(req.user)) {
-        const asignCode = _.trim(req.user.assCode)
-        // req.user = user
+app.get('/', async (req, res) => {
+    // console.log(user.role)
+    if (!isEmpty(user)) {
+        const asignCode = _.trim(user.assCode)
+        req.user = user
             // res.redirect('/centers/' + user.assCode)
         // res.redirect('dashboards/' + user.assCode)
-        if (req.user.role === "PO") {
-            res.redirect('/centers/' + req.user.assCode)
+        if (user.role === "PO") {
+            res.redirect('/centers/' + user.assCode)
             // next()
         }
-        if (req.user.role === "PUH") {
+        if (user.role === "PUH") {
             res.redirect('/units/' + asignCode)
             // next()
         }
-        if (req.user.role === "BM") {
-            res.redirect('/branches/' + req.user.assCode)
+        if (user.role === "BM") {
+            res.redirect('/branches/' + user.assCode)
             // next()
         }
-        if (req.user.role === "ADMIN") {
+        if (user.role === "ADMIN") {
             res.redirect('/admins')
             // next()
         }
@@ -114,70 +113,62 @@ app.get('/', checkAuthenticated, async (req, res) => {
         }
 })
 
-// app.get('/', checkAuthenticated, (req, res) => {
-//     res.render('index.ejs', { name: req.user.name })
-//   })
-  
-  app.get('/login', checkNotAuthenticated, (req, res) => {
-    res.render('login.ejs')
-  })
-  
-  app.post('/login', checkNotAuthenticated, passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/login',
-    failureFlash: true
-  }))
-  
-  app.get('/register', checkNotAuthenticated, (req, res) => {
-    res.render('register.ejs')
-  })
-  
-  app.post('/register', checkNotAuthenticated, async (req, res) => {
-    try {
-      const hashedPassword = await bcrypt.hash(req.body.password, 10)
-      users.push({
-        id: Date.now().toString(),
-        name: req.body.name,
-        email: req.body.email,
-        password: hashedPassword
-      })
-      res.redirect('/login')
-    } catch {
-      res.redirect('/register')
+// app.get('/dashboard', authUser, (req, res) => {
+//     res.send('Dashboard page.')
+// })
+
+app.get('/login', async (req, res) => {
+        if (isEmpty(locals)) {
+            res.render('login.ejs')
+        } else {
+            res.render('login.ejs', {
+                locals: locals
+            })            
+        }
+    
+})
+
+app.post('/login', async (req, res) => {
+    let fnduser = []
+   const sysUser = await User.findOne({email: req.body.email}, function (err, foundUser) {
+        fnduser = foundUser
+        user = foundUser
+    })
+    if (fnduser === null) {
+        locals = {errorMessage: 'Cannot find user!'}
+    //   return res.status(400).send('Cannot find user')
     }
-  })
-  
-  app.delete('/logout', (req, res) => {
+    try {
+        // console.log(fnduser.email)
+      if(await bcrypt.compare(req.body.password, fnduser.password)) {
+          req.user = fnduser
+        //   next()
+        res.redirect('/')
+      } else {
+        // req.user = []
+        locals = {errorMessage: 'Username / Password incorrect!'}
+        res.render('login.ejs', {
+            locals: locals
+        })            
+}
+    } catch {
+      res.status(500).send()
+    }
+})
+
+app.delete('/logout', (req, res) => {
+    user = []
+    req.user = []
+    app.locals.yuser = []
     req.logOut()
     res.redirect('/login')
   })
-  
-  function checkAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-      return next()
-    }
-  
-    res.redirect('/login')
-  }
-  
-  function checkNotAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-      return res.redirect('/')
-    }
-    next()
-  }
-  
-  function setUser(req, res, next) {
-    // const userId = req.user
-    // console.log(user + "User atuy")
-    // if (userId) {
-    //   req.user = user  
-    // }
-    if (users.length === 0) {
-        const Yusers = User.find({}, function (err, foundUsers) {
-            users = foundUsers
-        })
-        // console.log(Yusers)
+
+function setUser(req, res, next) {
+    const userId = user.email
+    console.log(user + "User atuy")
+    if (userId) {
+      req.user = user  
     }
     next()
   }
