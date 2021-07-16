@@ -12,7 +12,9 @@
     
             <h2 class="login-header">Login</h2>
     
-            <form class="login-container" action="/login" method="POST">
+            <% if (messages.error) { %>
+                <%= messages.error %>
+              <% } %>            <form class="login-container" action="/login" method="POST">
                 <label for="email">E-mail</label>  
                 <p><input type="email" placeholder="Email" name="email" required></p>
                 <label for="name">Password</label>

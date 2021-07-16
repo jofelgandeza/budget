@@ -288,7 +288,7 @@ router.get('/:id/edit', authUser, authRole("PO", "ADMIN"), async (req, res) => {
     let lnType = []
     let forSortTargets = []
     let sortedTargets = []  
-    let doneReadEditCenter = false
+    let doneRedEditCenter = false
     let doneSortData = false
     try {
 
@@ -298,9 +298,13 @@ router.get('/:id/edit', authUser, authRole("PO", "ADMIN"), async (req, res) => {
         })
 
 //        console.log(loanType)
-        const center = await Center.findOne({center: req.params.id}, function (err, foundlist) {
-             
-            foundlist.Targets.forEach( list => {
+        const Editcenter = await Center.findOne({center: req.params.id}, function (err, foundlist) {
+
+        })
+
+        if (Editcenter.length !== 0) {
+                         
+            Editcenter.Targets.forEach( list => {
                 const _id = list._id
                 const loan_type = list.loan_type
                 const month = list.month
@@ -315,9 +319,11 @@ router.get('/:id/edit', authUser, authRole("PO", "ADMIN"), async (req, res) => {
                 forSortTargets.push({_id: _id, sortKey: sortKey, loan_type: loan_type, month: month, semester: semester, numClient: numClient, amount: amount, totAmount: totAmount, remarks: remarks})
 
             } )
-            doneReadEditCenter = true
-        })
-        // console.log(forSortTargets)
+            doneRedEditCenter = true
+
+        } else {
+            doneRedEditCenter = true
+        }
 
         sortedTargets = forSortTargets.sort( function (a,b) {
             if ( a.sortKey < b.sortKey ){
@@ -329,7 +335,7 @@ router.get('/:id/edit', authUser, authRole("PO", "ADMIN"), async (req, res) => {
                return 0;
         })
         
-        if (doneReadEditCenter) {
+        if (doneRedEditCenter) {
             res.render("centers/targets", {
                 centerID: centerCode,
                 loanType: loanType,
@@ -354,12 +360,13 @@ router.get('/setBegBal/:id', authUser, authRole("PO", "ADMIN"), async (req, res)
     yuser = req.user
 //    console.log(unit_ID)
    let forSortTargets = []
-   let sortedTargets = []  
+   let sortedTargets = []
+   let foundTarg = []
     let loanType = []
     let locals = ""
     let doneReadCenter = false
 
-   try {
+    try {
 
        loType = await Loan_type.find({}, function (err, foundLoan) {
            loanType = foundLoan
@@ -367,30 +374,36 @@ router.get('/setBegBal/:id', authUser, authRole("PO", "ADMIN"), async (req, res)
     //    console.log(loanType)
 
        const center = await Center.findOne({center: req.params.id}, function (err, foundlist) {
-
-           foundlist.Loan_beg_bal.forEach( begBalList => {
-               const _id = begBalList._id
-               const loanCode = begBalList.loan_type
-               const begBalAmt = begBalList.beg_amount
-               const begBalClientCnt = begBalList.beg_client_count
-               const beg_principal = begBalList.beg_principal
-               const beg_interest = begBalList.beg_interest
-               const expected_maturity_date = begBalList.expected_maturity_date
-               const sortKey = _.toString(begBalList.dispView + loanCode)
-               let lnType = ""
-               
-               loanType.forEach( lonTyp => {
-                   if (_.trim(lonTyp.title) === _.trim(loanCode)) {
-                    lnType = lonTyp.title
-                   }
-               })
-
-               forSortTargets.push({_id: _id, sortKey: sortKey, loanCode: loanCode, loan_type: lnType, 
-                        begBalAmt: begBalAmt, begBalClientCnt: begBalClientCnt, beg_principal: beg_principal, beg_interest: beg_interest, expected_maturity_date: expected_maturity_date})
-           } )
-           doneReadCenter = true
+        foundTarg = foundlist
        })
-    //    console.log(forSortTargets)
+
+        if (center.length !== 0) {
+            center.Loan_beg_bal.forEach( begBalList => {
+                const _id = begBalList._id
+                const loanCode = begBalList.loan_type
+                const begBalAmt = begBalList.beg_amount
+                const begBalClientCnt = begBalList.beg_client_count
+                const beg_principal = begBalList.beg_principal
+                const beg_interest = begBalList.beg_interest
+                const expected_maturity_date = begBalList.expected_maturity_date
+                const sortKey = _.toString(begBalList.dispView + loanCode)
+                let lnType = ""
+                
+                loanType.forEach( lonTyp => {
+                    if (_.trim(lonTyp.title) === _.trim(loanCode)) {
+                    lnType = lonTyp.title
+                    }
+                })
+
+                forSortTargets.push({_id: _id, sortKey: sortKey, loanCode: loanCode, loan_type: lnType, 
+                        begBalAmt: begBalAmt, begBalClientCnt: begBalClientCnt, beg_principal: beg_principal, beg_interest: beg_interest, expected_maturity_date: expected_maturity_date})
+            })
+            doneReadCenter = true
+        } else {
+            doneReadCenter = true
+        }
+
+       //    console.log(forSortTargets)
 
        sortedTargets = forSortTargets.sort( function (a,b) {
            if ( a.sortKey < b.sortKey ){

@@ -168,11 +168,6 @@ app.get('/', checkAuthenticated, async (req, res) => {
   }
   
   function setUser(req, res, next) {
-    // const userId = req.user
-    // console.log(user + "User atuy")
-    // if (userId) {
-    //   req.user = user  
-    // }
     if (users.length === 0) {
         const Yusers = User.find({}, function (err, foundUsers) {
             users = foundUsers
