@@ -136,11 +136,14 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
                         if (_.trim(loanRem) === "New Loan") {
                             nloanTot = nloanTot + centerLoan.totAmount
                             nloanTotCount = nloanTotCount + centerLoan.numClient
+                            nClient = nClient + centerLoan.numClient
                         } else {
                             oloanTot = oloanTot + centerLoan.totAmount
                             oloanTotCount = oloanTotCount + centerLoan.numClient
                             resloanTot = resloanTot + centerLoan.resignClient
+                            oClient = oClient + centerLoan.numClient
                         }
+                        rClient = rClient + centerLoan.resignClient
                     }
                 })
 
@@ -171,7 +174,7 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
         // console.log(poLoanGrandTot)
 
         poLoanGrandTot.push({nClient: nClient, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
-            rClient: rClient + rClient2, bClient: bClient, budgEndBal: tbudgEndBal, totDisburse: totDisburseAmt})
+            rClient: rClient, bClient: bClient, budgEndBal: tbudgEndBal, totDisburse: totDisburseAmt})
 
 //       console.log(poLoanGrandTot)
 
