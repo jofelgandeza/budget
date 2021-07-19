@@ -24,7 +24,6 @@ const passport = require('passport')
 const flash = require('express-flash')
 const session = require('express-session')
 const bcrypt = require('bcrypt')
-const Position = require('./models/position')
 const { authUser, authRole } = require('./public/javascripts/basicAuth')
 const { ROLE } = require('./public/javascripts/data')
 const { forEach, isNull, isEmpty } = require('lodash')
@@ -49,6 +48,8 @@ db.on('error', error => console.error(error))
 db.once('open', () => console.log('Connected to Mongo Database'))
 
 const User = require('./models/user')
+const Position = require('./models/position')
+const Employee = require('./models/employee')
 const initializePassport = require('./public/javascripts/passport-config.js')
 
 initializePassport(
@@ -82,6 +83,8 @@ app.use('/branches', branchesRouter)
 app.use('/admins', adminRouter)
 let locals = {}
 app.locals.yuser = users
+app.locals.posisyon = []
+app.locals.brnEmployees = []
 app.locals.userRole = ROLE
 
 // console.log(app.locals.yuser)
@@ -167,15 +170,24 @@ app.get('/', checkAuthenticated, async (req, res) => {
     next()
   }
   
-  function setUser(req, res, next) {
+  async function setUser(req, res, next) {
     if (users.length === 0) {
-        const Yusers = User.find({}, function (err, foundUsers) {
+        const Yusers = await User.find({}, function (err, foundUsers) {
             users = foundUsers
         })
         // console.log(Yusers)
+        posisyon = await Position.find({group_code: "BRN"})
+        
+    } else {
+        if (req.user) {
+            const branCode = req.user.assCode
+            const brnCode = branCode.substr(0,3)
+            brnEmployees = await Employee.find({branch: brnCode})
+            // console.log(req.user)
+        }
     }
     next()
   }
 
 
-app.listen(process.env.PORT || 3000)
+app.listen(process.env.PORT || 5000)

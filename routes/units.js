@@ -19,37 +19,11 @@ const { canViewProject, canDeleteProject, scopedProjects } = require('../public/
 const user = require('../models/user')
 const { ROLE } = require('../public/javascripts/data.js')
 
+
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
 
 
-// All Chart of Accounts Route
-// router.get('/:id', authUser, authRole("PUH", "ADMIN"), async (req, res) => {
-
-//     const unitCode = req.params.id
-//     const yuser = req.user
-//     let searchOptions = {}
-
-//     if (req.query.title  !=null && req.query.title !== '') {
-//         searchOptions.description = RegExp(req.query.title, 'i')
-//     }
-//     try {
-//         // const brnEmployees = await Employee.find({branch: branchCode})
-
-//         // const center = await Center.find(searchOptions)
-
-//         branchName = "UNIT ACCESS VIEW"
-//         res.render('units/index', {
-//             unitCode: unitCode,
-//             searchOptions: req.query,
-//             Swal: Swal,
-//             yuser: yuser
-//         })
-//     } catch (err) {
-//         console.log(err)
-//         res.redirect('/')
-//     }
-// })
-
+let unitPosition = []
 
 // View UNIT's Buget  - TUG-A
 router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
@@ -58,8 +32,12 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     console.log(unitCode)
     const branchCode = unitCode.substring(0,3)
     const unitLetter = unitCode.substr(4,1)
+
+    const unitPosition = posisyon
+
+    // console.log(posisyon)
+
     const _user = req.user
-    console.log(_user)
 
     let foundPOunits = []
     let foundPOs = []
@@ -100,13 +78,13 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
    
     try {
 
-        const postEmp = await Position.find({dept_code: "BRN"}, function (err, fndPosi) {
-            fndPositi = fndPosi
-        })
+        // const postEmp = await Position.find({dept_code: "BRN"}, function (err, fndPosi) {
+        //     fndPositi = fndPosi
+        // })
 
 //        console.log(fndPositi)
 
-        fndPositi.forEach(fndPosii => {
+        unitPosition.forEach(fndPosii => {
             const fndPositionEmp = fndPosii.code
             const fndPositID = fndPosii._id
             if (fndPositionEmp === "BRN_MGR") {
@@ -120,25 +98,36 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             }
         })
 
-//        console.log(fnd)
+       console.log(postManager)
+       console.log(postUnitHead)
+       console.log(postProgOfr)
 
-        const branchManager = await Employee.find({branch: branchCode, position_code: postManager, assign_code: unitCode}, function (err, foundBMs){
-            foundManager = foundBMs
-           })
+        console.log(brnEmployees)
 
-           if (branchManager) {
-                branchManager.forEach(manager => {
-                officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
+        const branchManager = _.find(brnEmployees, {position_code: postManager})
 
-                })
-           }            
+        const unitOfficers = _.find(brnEmployees, {unit: unitLetter, position_code: postUnitHead})
+         const   officerName = unitOfficers.first_name + " " + unitOfficers.middle_name.substr(0,1) + ". " + unitOfficers.last_name
+ 
+         const programOfficers = _.find(brnEmployees, {unit: unitLetter, position_code: postProgOfr})
 
-        const unitOfficers = await Employee.find({branch: branchCode, assign_code: postUnitHead}, function (err, foundUHs){
-            foundPOunits = foundUHs
-            })
-        const programOfficers = await Employee.find({branch: branchCode, unit: unitLetter, position_code: postProgOfr}, function (err, foundPO){
-            foundPOs = foundPO
-            })
+        // const branchManager = await Employee.find({branch: branchCode, position_code: postManager, assign_code: unitCode}, function (err, foundBMs){
+        //     foundManager = foundBMs
+        //    })
+
+        //    if (branchManager) {
+        //         branchManager.forEach(manager => {
+        //         officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
+
+        //         })
+        //    }            
+
+        // const unitOfficers = await Employee.find({branch: branchCode, assign_code: postUnitHead}, function (err, foundUHs){
+        //     foundPOunits = foundUHs
+        //     })
+        // const programOfficers = await Employee.find({branch: branchCode, unit: unitLetter, position_code: postProgOfr}, function (err, foundPO){
+        //     foundPOs = foundPO
+        //     })
 
         // console.log(officerName)
         // console.log(foundPOunits)
@@ -362,14 +351,17 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     const _userPO = req.user
     console.log(_userPO)
 
+    const unitPosisyon = posisyon
+
     let foundPOunits = []
-    let foundPO = []
     let officerNamePO = ""
-    let fndPositiPO = []
+    let foundPOs = []
     let postManagerPO = ""
     let postUnitHeadPO = ""
     let postProgOfrPO = ""
 
+    // console.log(unitPosisyon)
+    
     let unitLoanTotals = []
     let foundCenter = []
     
@@ -381,52 +373,38 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     let doneReadSubTot = false
     let doneReadLoanTot = false
    
+    unitPosisyon.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii._id
+        if (fndPositionEmp === "BRN_MGR") {
+            postManagerPO = fndPositID
+        }
+        if (fndPositionEmp === "UNI_HED") {
+            postUnitHeadPO = fndPositID
+        }
+        if (fndPositionEmp === "PRO_OFR") {
+            postProgOfrPO = fndPositID
+        }
+    })
+
+    const branchManager = _.find(brnEmployees, {position_code: postManagerPO})
+
+    const unitOfficers = _.find(brnEmployees, {unit: unitLetterPO, position_code: postUnitHeadPO})
+     const  officerName = unitOfficers.first_name + " " + unitOfficers.middle_name.substr(0,1) + ". " + unitOfficers.last_name
+
+    // foundPOs = brnEmployees.find({unit: unitLetterPO, position_code: postProgOfrPO})
+  
+    // const founPOs = await brnEmployees.find(brnEmp => (brnEmp.unit === unitLetterPO || brnEmp.position_code === postProgOfrPO))
+  
+    
     try {
 
-        const postEmp = await Position.find({dept_code: "BRN"}, function (err, fndPosi) {
-            fndPositiPO = fndPosi
-        })
-
-//        console.log(fndPositi)
-     let fndPositionEmp 
-     let fndPositID
-
-        fndPositiPO.forEach(fndPosii => {
-             fndPositionEmp = fndPosii.code
-             fndPositID = fndPosii.id
-            if (fndPositionEmp === "BRN_MGR") {
-                postManagerPO = fndPositID
-            }
-            if (fndPositionEmp === "UNI_HED") {
-                postUnitHeadPO = fndPositID
-            }
-            if (fndPositionEmp === "PRO_OFR") {
-                postProgOfrPO = fndPositID
-            }
-        })
-
-//        console.log(fnd)
-
-        const branchManager = await Employee.find({branch: branchCodePO, position_code: postManagerPO, assign_code: unitCodePO}, function (err, foundBMs){
-            foundManager = foundBMs
-           })
-           if (branchManager) {
-                branchManager.forEach(manager => {
-                    officerNamePO = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
-
-                })
-                }            
-
-        const unitOfficers = await Employee.find({branch: branchCodePO, assign_code: unitCodePO}, function (err, foundUHs){
-            foundPOunits = foundUHs
-            })
         const programOfficers = await Employee.find({branch: branchCodePO, unit: unitLetterPO, position_code: postProgOfrPO}, function (err, foundPO){
             foundPOs = foundPO
             })
 
-        // console.log(officerName)
-        // console.log(foundPOunits)
-        // console.log(foundPOs)
+        let fndPositionEmp 
+        let fndPositID
 
         const loanType = await Loan_type.find({})
 
@@ -438,7 +416,7 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
         })
 
         if (center.length === 0) {
-            doneReadSubTot = true  
+            doneReadTot = true  
         }
 //    console.log(foundCenter)
 
@@ -2834,7 +2812,6 @@ router.get('/viewUnitProjCol/:id', authUser, authRole(ROLE.PUH), async (req, res
     //          //write what you want to do
     //         }
     //    })); };
-       
 
 module.exports = router
 

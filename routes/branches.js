@@ -472,6 +472,7 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.BM), (req, res) => {
 
 // POST or Save new Employee
 router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+    const _user = req.user
    let eUnit
    let ePONum
    const emPostCod = req.body.ayPost
@@ -484,6 +485,7 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
     const nFName = _.trim(req.body.fName).toUpperCase()
     const nMName = _.trim(req.body.mName).toUpperCase()
     const nName =  nLName + ", " + nFName + " " + nMName
+    const empID = req.params.id
 
 
     if (ePosition === "BRN_MGR" || ePosition === "BRN_ACT" || ePosition === "BRN_AST") {
@@ -511,48 +513,76 @@ let locals
 let canProceed = true
 let UserProceed = true
 
+let errEmp = []
+let errUser = []
 try {
 
-    const fndEmp = await Employee.findOne({emp_code: nEmpCode}, function (err, foundEmp) {
-        console.log(foundEmp)
-        let canProceed = false
+    let canProceed = false
 
-        if (!err) {
-            if (!foundEmp) {
+    const branchEmployees = await Employee.find({branch: brnCode})
+    console.log(branchEmployees)
+
+    const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
+
+    const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
+
+    const sameAssign = _.find(branchEmployees, {assign_code: assCode})
+    console.log(sameAssign)
+
+    if (branchEmployees) {
+        if (sameName) {
+            locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+            canProceed = false
+        } else if (sameAssign) {
+            locals = {errorMessage: 'Assign Code: ' + assCode + ' already exists!'}
+            canProceed = false
+
+          } else if (sameCode) {
+                locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                canProceed = false
+            } else {
                 canProceed = true
-            } else {
-                const empUnit = foundEmp.unit
-                const assUnit = _.trim(empUnit) + _.trim(foundEmp.po_number)
-                if (assUnit === assignUnit) {
-                    canProceed = false
-                    locals = {errorMessage: 'PO number in the unit is already exist!'}
-                }
-                if (foundEmp.emp_code === empCod) {
-                    canProceed = false
-                    locals = {errorMessage: 'Employee Code already exists!'}
-                }
-             }
-            } else {
-            res.render('branches/newEmployee', { 
-                locals: locals
-            })
-        }
-    })
-            const hashedPassword = await bcrypt.hash(req.body.password, 10)
+            }
+
+    } else {
+        canProceed = true
+    }
+
+        const hashedPassword = await bcrypt.hash(req.body.password, 10)
                 
-            const getExistingUser = await User.findOne({name: nEmail}, function (err, foundUser) {
-                // console.log(foundUser)
-                let UserProceed = false
-                if (!err) {
-                    if (!foundUser) {
-                        UserProceed = true 
-                    } else {
-                        UserProceed = false
-                        locals = {errorMessage: "USER NAME already exists!"}
-                    }
+        const getExistingUser = await User.findOne({email: nEmail}, function (err, foundUser) {
+            // console.log(foundUser)
+           let UserProceed = false
+            if (!err) {
+                if (!foundUser) {
+                    UserProceed = true 
+                } else {
+                    UserProceed = false
+                    locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
                 }
-            })
-            
+            }
+        })
+    
+        // if (!canProceed || !UserProceed) {
+        //     const brnPosition = await Position.find({group_code: "BRN"})
+
+        //     errUser.push({email: nEmail, password: req.body.password})
+
+        //     errEmp.push({emp_code: nEmpCode, branch: brnCode, last_name: nLName, first_name: nFName, middle_name:    nMName, position_code: emPostCod, unit: eUnit, po_number: ePONum})
+                            
+        //     res.render('branches/newEmployee', { 
+        //         emp: errEmp, 
+        //         user: errUser,
+        //         posit: brnPosition,
+        //         branchCode: brnCode,
+        //         yuser: _user,
+        //         newEmp: true,
+        //         resetPW: false,
+        //         locals: locals
+        //     })
+        // }
+
+    
     if (canProceed && UserProceed)  {
         if (ePosition === "PRO_OFR") {
             const poAssignCode = await Po.findOneAndUpdate({"po_code": assCode}, {$set:{"emp_code": req.body.empCode}})
@@ -585,20 +615,30 @@ try {
         const saveUser = nUser.save()
 
         res.redirect('/branches/employees/'+ brnCode)
-    } else {
+    } 
+    else {
+        let psitCode
+        const rePosition = await Position.find({group_code: "BRN"}, function (err, fndPost) {
+             psitCode = fndPost
+        })
+        console.log(psitCode)
 
-        const position = Position.find({group_code: "BRN"}, function (err, fndPost) {
-             const pstCode = fndPost
-    //         console.log(pstCode)
-    
-            res.render('branches/newEmployee'+ brnCode, { 
-                emp: employee, 
-                posit: fndPost,
+            errUser.push({email: nEmail, password: req.body.password})
+
+            errEmp.push({emp_code: nEmpCode, branch: brnCode, last_name: nLName, first_name: nFName, middle_name:    nMName, position_code: emPostCod, unit: eUnit, po_number: ePONum})
+            console.log(errEmp)
+
+            res.render('branches/newEmployee', { 
+                emp: errEmp, 
+                user: errUser,
+                posit: psitCode,
                 branchCode: brnCode,
+                yuser: _user,
+                newEmp: true,
+                resetPW: false,
                 locals: locals
             })
-        })
-     }
+}
 
 
 } catch (err) {
@@ -1789,20 +1829,3 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
 
 module.exports = router
 
-// Swal.fire({
-//     title: 'Are you sure?',
-//     text: "You won't be able to revert this!",
-//     icon: 'warning',
-//     showCancelButton: true,
-//     confirmButtonColor: '#3085d6',
-//     cancelButtonColor: '#d33',
-//     confirmButtonText: 'Yes, delete it!'
-//   }).then((result) => {
-//     if (result.isConfirmed) {
-//       Swal.fire(
-//         'Deleted!',
-//         'Your file has been deleted.',
-//         'success'
-//       )
-//     }
-//   })
