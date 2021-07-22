@@ -1,7 +1,6 @@
 {
   "name": "budget",
   "version": "1.0.0",
-  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "devStart": "nodemon server.js"
@@ -28,14 +27,13 @@
     "lodash": "^4.17.21",
     "method-override": "^3.0.0",
     "mongoose": "^5.11.12",
-    "node": "^16.5.0",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "sweetalert2": "^10.14.0"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",
-    "nodemon": "^2.0.6"
+    "nodemon": "^2.0.12"
   },
   "description": ""
 }
