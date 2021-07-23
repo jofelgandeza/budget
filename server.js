@@ -176,7 +176,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
         const Yusers = await User.find({}, function (err, foundUsers) {
             users = foundUsers
         })
-        // console.log(Yusers)
+        console.log(users.length)
         posisyon = await Position.find({group_code: "BRN"})
         
     } else {
