@@ -50,6 +50,11 @@ db.once('open', () => console.log('Connected to Mongo Database'))
 const User = require('./models/user')
 const Position = require('./models/position')
 const Employee = require('./models/employee')
+
+let users = [ ]
+// console.log (users)
+app.use(setUser)
+
 const initializePassport = require('./public/javascripts/passport-config.js')
 
 initializePassport(
@@ -57,9 +62,6 @@ initializePassport(
     email => users.find(user => user.email === email),
     id => users.find(user => user.id === id)
     )
-
-let users = [ ]
-// console.log (users)
 
 app.use(express.json()) 
 app.use(flash())
@@ -70,7 +72,6 @@ app.use(session({
 }))
 app.use(passport.initialize())
 app.use(passport.session())
-app.use(setUser)
 
 app.use('/index', indexRouter)
 // app.use('/coas', coaRouter)
