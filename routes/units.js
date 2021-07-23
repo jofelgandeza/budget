@@ -38,6 +38,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     // console.log(posisyon)
 
     const _user = req.user
+    // const branEmployees = brnEmployees
 
     let foundPOunits = []
     let foundPOs = []
@@ -83,6 +84,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
         // })
 
 //        console.log(fndPositi)
+    const branEmployees = await Employee.find({branch: branchCode})
 
         unitPosition.forEach(fndPosii => {
             const fndPositionEmp = fndPosii.code
@@ -102,14 +104,12 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
        console.log(postUnitHead)
        console.log(postProgOfr)
 
-        console.log(brnEmployees)
+        const branchManager = _.find(branEmployees, {position_code: postManager})
 
-        const branchManager = _.find(brnEmployees, {position_code: postManager})
-
-        const unitOfficers = _.find(brnEmployees, {unit: unitLetter, position_code: postUnitHead})
+        const unitOfficers = _.find(branEmployees, {unit: unitLetter, position_code: postUnitHead})
          const   officerName = unitOfficers.first_name + " " + unitOfficers.middle_name.substr(0,1) + ". " + unitOfficers.last_name
  
-         const programOfficers = _.find(brnEmployees, {unit: unitLetter, position_code: postProgOfr})
+         const programOfficers = _.find(branEmployees, {unit: unitLetter, position_code: postProgOfr})
 
         // const branchManager = await Employee.find({branch: branchCode, position_code: postManager, assign_code: unitCode}, function (err, foundBMs){
         //     foundManager = foundBMs
