@@ -34,5 +34,5 @@
     "dotenv": "^8.2.0",
     "nodemon": "^2.0.12"
   },
-  "description": ""
+  "description": "Budget System"
 }
