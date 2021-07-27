@@ -117,7 +117,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             budgBegBal = _.sumBy(foundCenters, function(o) { return o.budget_BegBal; });
             budgEndBal = oClient + newClients 
             totDisburse = nClientAmt + oClientAmt
-            tbudgEndBal = (oClient + newClients) - (rClient + rClient2)
+            tbudgEndBal = (budgBegBal + newClients) - (rClient + rClient2)
 
             foundCenter = foundCenters.sort()
             doneReadTot = true
@@ -459,15 +459,15 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                     LoanBegBal.forEach(centerBegBal => {
                         if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
                             begLoanTot = centerBegBal.beg_amount
-                            begClientTot = centerBegBal.beg_client_count
-                            bClientCnt = bClientCnt + begClientTot
+                            bClientCnt = centerBegBal.beg_client_count
+                            begClientTot = begClientTot + bClientCnt
                             bClientAmt = bClientAmt + begLoanTot
                         }
                     })
                 }
             })
             let totAmounts = nloanTot + oloanTot 
-            let budgEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
+            let budgEndBal = (begClientTot + nloanTotCount) - resloanTot
 //            let amtDisburse = oloanTot + oloanTot
             
             unitLoanTotals.push({sortkey: forSortPoNum, po: poNum, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClientCnt,

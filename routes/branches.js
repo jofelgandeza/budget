@@ -88,6 +88,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     let oClient = 0
     let oClientAmt = 0
     let rClient = 0
+    let rClient2 = 0
     let resloanTot = 0
     let resignClient = 0
     let budgEndBal = 0
@@ -158,10 +159,11 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
             oClient = _.sumBy(foundCenters, function(o) { return o.oldClient; });
             oClientAmt = _.sumBy(foundCenters, function(o) { return o.oldClientAmt; });
             rClient = _.sumBy(foundCenters, function(o) { return o.resClient; });
+            rClient2 = _.sumBy(foundCenters, function(o) { return o.resClient2; });
             budgBegBal = _.sumBy(foundCenters, function(o) { return o.budget_BegBal; });
             budgEndBal = oClient + newClients 
             totDisburse = nClientAmt + oClientAmt
-            tbudgEndBal = (oClient + newClients) - rClient
+            tbudgEndBal = (budgBegBal + newClients) - (rClient + rClient2)
 
             foundCenter = foundCenters.sort()
 

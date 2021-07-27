@@ -671,7 +671,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(r
     //   alert('Are you sure you want to delete this record?')
         let centerCode = req.body.listName
         const checkedItemId = req.body.checkbox
-        const listName = _.trim(req.body.listName)
+        const listName = req.params.id
         const yuser = req.user
 
     //    console.log(checkedItemId)
@@ -1556,7 +1556,7 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
         let month = ""
 
         let recCounter = 0
-        
+        let foundTargets = []
    
         try {       
 
@@ -1565,7 +1565,8 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
             if (recCounter === 1) {
 
                modiCenter = await Center.findOne({center: listName})  //, function(err, modiCenter) {
-               const foundTargets = modiCenter.Targets
+               foundTargets = modiCenter.Targets
+
                lonTypDet = ""
                lonRemarks = ""
                foundTargets.forEach(cntrTarget => {
@@ -1591,6 +1592,11 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
                    }
                })   
 //              console.log(modiCenter)
+                if (foundTargets.length === 1) {
+                    modiCenter.resClient = 0
+                    modiCenter.resClient2 = 0 
+                }
+
                if (lonTypDet === "Group Loan" || lonTypDet === "Agricultural Loan") {
                     modiCenter.save()
                 }
