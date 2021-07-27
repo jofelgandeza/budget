@@ -9,14 +9,14 @@ const bodyParser = require('body-parser')
 const methodOverride = require('method-override')
 const { model } = require('mongoose')
 
-const indexRouter = require('./routes/index.js')
+// const indexRouter = require('./routes/index.js')
 const adminRouter = require('./routes/admins.js')
 // const coaRouter = require('./routes/coas.js')
 // const sub_ledgerRouter = require('./routes/sub_ledgers.js')
 // const cost_centerRouter = require('./routes/cost_centers.js')
 const budgetRouter = require('./routes/budgets.js')
 const budgetCOGRouter = require('./routes/centers.js')
-const centsRouter = require('./routes/cents.js')
+// const centsRouter = require('./routes/cents.js')
 const branchesRouter = require('./routes/branches.js')
 const unitsRouter = require('./routes/units.js')
 
@@ -73,10 +73,10 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 
-app.use('/index', indexRouter)
+// app.use('/index', indexRouter)
 // app.use('/coas', coaRouter)
 // app.use('/sub_ledgers', sub_ledgerRouter)
-app.use('/cents', centsRouter)
+// app.use('/cents', centsRouter)
 app.use('/budgets', budgetRouter)
 app.use('/centers', budgetCOGRouter)
 app.use('/units', unitsRouter)
@@ -177,7 +177,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
         const Yusers = await User.find({}, function (err, foundUsers) {
             users = foundUsers
         })
-        console.log(users.length)
+        console.log(users)
         posisyon = await Position.find({group_code: "BRN"})
         
     } else {

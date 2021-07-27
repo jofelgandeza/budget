@@ -168,9 +168,9 @@ function setEmailUser() {
     setEmailUnitCode = document.getElementById("unitCode").value
     setEmailPoNumber = document.getElementById("poNumber").value
 
-    alert(setEmailBranchCode + setEmailPoNumber)
+    // alert(setEmailBranchCode + setEmailPoNumber)
 
-    const emailName = setEmailBranchCode + "-" + setEmailUnitCode + setEmailPoNumber + "@kmbi.org.ph"
+    const emailName = setEmailBranchCode.toLowerCase() + "-" + setEmailUnitCode.toLowerCase() + setEmailPoNumber + "@kmbi.org.ph"
 
     document.getElementById("email").value = emailName
 

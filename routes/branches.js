@@ -23,8 +23,9 @@ const { ROLE } = require('../public/javascripts/data.js')
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
 
 // authUser, authRole("BM", "ADMIN"), 
-console.log(ROLE)
+// console.log(ROLE)
 // All Chart of Accounts Route
+
 router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 
     const branchCode = req.params.id
@@ -35,9 +36,6 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
         searchOptions.description = RegExp(req.query.title, 'i')
     }
     try {
-        // const brnEmployees = await Employee.find({branch: branchCode})
-
-        // const center = await Center.find(searchOptions)
 
         branchName = "BRANCHES BUDGET MODULE VIEW"
         res.render('branches/index', {
@@ -58,19 +56,12 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     const branchCode = req.params.id
     const _user = req.user
 
-//     const unitCode = IDcode.substr(4,1)
-//     const branchCode = IDcode.substr(0,3)
-//     const uniCode = IDcode.substr(0,4)
-
-//     console.log(IDcode)
-//     console.log(unitCode)
-//     console.log(uniCode)
+    const fndPositi = posisyon
 
     let foundManager = []
     let foundPOunits = []
     let foundPO = []
     let officerName = ""
-    let fndPositi = []
     let postManager = ""
     let postUnitHead = ""
     let postProgOfr = ""
@@ -105,27 +96,22 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     let doneFoundPO = false
     let doneReadLonTyp = false
    
+    fndPositi.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii.id
+        if (fndPositionEmp === "BRN_MGR") {
+            postManager = fndPositID
+        }
+        if (fndPositionEmp === "UNI_HED") {
+            postUnitHead = fndPositID
+        }
+        if (fndPositionEmp === "PRO_OFR") {
+            postProgOfr = fndPositID
+        }
+    })
+
     try {
 
-        const postEmp = await Position.find({dept_code: "BRN"}, function (err, fndPosi) {
-            fndPositi = fndPosi
-        })
-
-//        console.log(fndPositi)
-
-        fndPositi.forEach(fndPosii => {
-            const fndPositionEmp = fndPosii.code
-            const fndPositID = fndPosii.id
-            if (fndPositionEmp === "BRN_MGR") {
-                postManager = fndPositID
-            }
-            if (fndPositionEmp === "UNI_HED") {
-                postUnitHead = fndPositID
-            }
-            if (fndPositionEmp === "PRO_OFR") {
-                postProgOfr = fndPositID
-            }
-        })
 
         const branchManager = await Employee.find({branch: branchCode, position_code: postManager}, function (err, foundBMs){
             foundManager = foundBMs
@@ -486,31 +472,41 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
    let eUnit
    let ePONum
    const emPostCod = req.body.ayPost
-    const emPosition =  await Position.findById(req.body.ayPost)
-        const ePosition = emPosition.code
-        const eShortTitle = emPosition.short_title
     const nEmpCode = _.trim(req.body.empCode)
-    const nEmail = _.trim(req.body.email)
+    const nEmail = _.trim(req.body.email).toLowerCase()
     const nLName = _.trim(req.body.lName).toUpperCase()
     const nFName = _.trim(req.body.fName).toUpperCase()
     const nMName = _.trim(req.body.mName).toUpperCase()
     const nName =  nLName + ", " + nFName + " " + nMName
     const empID = req.params.id
 
+    console.log(req.body.password)
 
-    if (ePosition === "BRN_MGR" || ePosition === "BRN_ACT" || ePosition === "BRN_AST") {
-        eUnit = "NA"
-        ePONum = "NA"
+    const branchPosition = posisyon
+
+    const fndPosition = branchPosition.find(posit => posit.id === emPostCod)
+
+    const ePosition = fndPosition.code
+
+    console.log(ePosition)
+
+    let eShortTitle
+    if (ePosition === "BRN_MGR") {
+        eShortTitle = "BM"
+        eUnit = "N/A"
+        ePONum = "N/A"
     }
     if (ePosition === "UNI_HED") {
+        eShortTitle = "PUH"
         eUnit = _.trim(req.body.poUnit).toUpperCase()
-        ePONum = "NA"
-    } 
+        ePONum = "N/A"
+    }
     if (ePosition === "PRO_OFR") {
+        eShortTitle = "PO"
         eUnit = _.trim(req.body.poUnit).toUpperCase()
-        ePONum = req.body.poNumber    
-    } 
-    
+        ePONum = req.body.poNumber
+    }
+
     const assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
 
     const brnCode = req.body.brnCode 
@@ -596,7 +592,7 @@ try {
 
         let nUser = new User({
             name: nName,
-            email: req.body.email,
+            email: nEmail,
             password: hashedPassword,
             assCode: assCode,
             role: eShortTitle
