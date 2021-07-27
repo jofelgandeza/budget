@@ -152,6 +152,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
   })
   
   app.delete('/logout', (req, res) => {
+    req.user = []
     req.logOut()
     res.redirect('/login')
   })

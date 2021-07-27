@@ -1,5 +1,5 @@
 // const Position = require('../models/position')
-
+const _ = require('lodash')
 //alert('Reply from main.js')
 //const Cleave = require('cleave')
 
@@ -156,6 +156,25 @@ function getSemester() {
         default:
             document.getElementById("semesterID").value = "Empty"
     }   
+
+}
+
+function setEmailUser() {
+
+    let setEmailBranchCode = ""
+    let setEmailUnitCode = ""
+    let setEmailPoNumber = " "
+    setEmailBranchCode = document.getElementById("brnCode").value
+    setEmailUnitCode = document.getElementById("unitCode").value
+    setEmailPoNumber = document.getElementById("poNumber").value
+
+    alert(setEmailBranchCode + setEmailPoNumber)
+
+    const emailName = setEmailBranchCode + "-" + setEmailUnitCode + setEmailPoNumber + "@kmbi.org.ph"
+
+    document.getElementById("email").value = emailName
+
+
 
 }
 

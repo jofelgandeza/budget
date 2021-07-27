@@ -109,7 +109,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
         const unitOfficers = _.find(branEmployees, {unit: unitLetter, position_code: postUnitHead})
          const   officerName = unitOfficers.first_name + " " + unitOfficers.middle_name.substr(0,1) + ". " + unitOfficers.last_name
  
-         const programOfficers = _.find(branEmployees, {unit: unitLetter, position_code: postProgOfr})
+        //  const programOfficers = _.find(branEmployees, {unit: unitLetter, position_code: postProgOfr})
 
         // const branchManager = await Employee.find({branch: branchCode, position_code: postManager, assign_code: unitCode}, function (err, foundBMs){
         //     foundManager = foundBMs
@@ -125,9 +125,9 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
         // const unitOfficers = await Employee.find({branch: branchCode, assign_code: postUnitHead}, function (err, foundUHs){
         //     foundPOunits = foundUHs
         //     })
-        // const programOfficers = await Employee.find({branch: branchCode, unit: unitLetter, position_code: postProgOfr}, function (err, foundPO){
-        //     foundPOs = foundPO
-        //     })
+        const programOfficers = await Employee.find({branch: branchCode, unit: unitLetter, position_code: postProgOfr}, function (err, foundPO){
+            foundPOs = foundPO
+            })
 
         // console.log(officerName)
         // console.log(foundPOunits)
@@ -301,7 +301,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
         })
         let totBranchAmounts = nloanTot + oloanTot 
-        let budgBranchEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
+        let budgBranchEndBal = (oloanTotCount + nloanTotCount)
 
         brnLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totBranchAmounts, begClientTot: begClientTot,
             begClientAmt: begLoanTot, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgBranchEndBal})
@@ -354,7 +354,7 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     const unitPosisyon = posisyon
 
     let foundPOunits = []
-    let officerNamePO = ""
+    let officerNamePUH = ""
     let foundPOs = []
     let postManagerPO = ""
     let postUnitHeadPO = ""
@@ -387,22 +387,22 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
         }
     })
 
-    const branchManager = _.find(brnEmployees, {position_code: postManagerPO})
-
-    const unitOfficers = _.find(brnEmployees, {unit: unitLetterPO, position_code: postUnitHeadPO})
-     const  officerName = unitOfficers.first_name + " " + unitOfficers.middle_name.substr(0,1) + ". " + unitOfficers.last_name
-
-    // foundPOs = brnEmployees.find({unit: unitLetterPO, position_code: postProgOfrPO})
-  
-    // const founPOs = await brnEmployees.find(brnEmp => (brnEmp.unit === unitLetterPO || brnEmp.position_code === postProgOfrPO))
-  
+    let unitEmployees = []
+    let unitPUH = []
     
     try {
 
+        unitPUH = await Employee.find({assign_code: unitCodePO, position_code: postUnitHeadPO})
+        console.log(unitPUH)
+
+            officerNamePUH = unitPUH.first_name + " " + _.trim(unitPUH.middle_name).substring(0,1) + ". " + unitPUH.last_name
+
+        // foundPOs = _.find(unitEmployees, {unit: unitLetterPO, position_code: postProgOfrPO})
+        //     console.log(foundPOs)
         const programOfficers = await Employee.find({branch: branchCodePO, unit: unitLetterPO, position_code: postProgOfrPO}, function (err, foundPO){
             foundPOs = foundPO
             })
-
+       
         let fndPositionEmp 
         let fndPositID
 
@@ -541,7 +541,7 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             res.render('units/budgetPerPO', {
                 yuser: _userPO,
                 perUnitCode: unitCodePO,
-                officerName: officerNamePO,
+                officerName: officerNamePUH,
                 unitLoanTots: unitLoanTotals
             })
         }             

@@ -10,9 +10,9 @@
     <div class="form-item-column">
         <label>Branch Code</label>
         <% if (resetPW) { %>
-            <input type="text" name="brnCode" value="<%= emp.branch %>" disabled>
+            <input type="text" id="brnCode" name="brnCode" value="<%= emp.branch %>" disabled>
         <% } else { %>
-            <input type="text" name="brnCode" value="<%= emp.branch %>" required>
+            <input type="text" id="brnCode" name="brnCode" value="<%= emp.branch %>" required>
         <% } %>
     </div>
     <div class="form-item-column">
@@ -64,9 +64,9 @@
     <div class="form-item-column">
         <label>Unit</label>
         <% if (resetPW) { %>
-            <input type="text" enable name="poUnit" id="poUnit" value="<%= emp.unit %>" disabled>
+            <input type="text" enable id="unitCode" name="poUnit" id="poUnit" value="<%= emp.unit %>" disabled>
         <% } else { %>
-            <input type="text" enable name="poUnit" id="poUnit" value="<%= emp.unit %>" >
+            <input type="text" enable id="unitCode" name="poUnit" id="poUnit" value="<%= emp.unit %>" >
         <% } %>
     </div>
     <div class="form-item-column">
@@ -92,7 +92,7 @@
         <div class="form-item-columnUSER">
             <label>System's User Name</label>
             <% if (newEmp) { %> 
-                <input type="email" name="email" value="<%= user.email %>" autocomplete="off">
+                <input type="email" id="email" name="email" value="<%= user.email %>" onclick="setEmailUser()" autocomplete="off">
             <% } else { %>
                 <input type="email" name="email" value="<%= user.email %>" autocomplete="off" disabled>
                 <input type="user_id" name="user_id" value="<%= user.id %>" autocomplete="off" hidden>
