@@ -667,7 +667,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(r
   })
 
   // DELETE Beginning Balances...
-  router.post('/delBegBal', authUser, authRole("PO", "ADMIN"), async (req, res) => {
+  router.post('/delBegBal/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
     //   alert('Are you sure you want to delete this record?')
         let centerCode = req.body.listName
         const checkedItemId = req.body.checkbox
@@ -709,6 +709,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(r
 
                     foundVwList.beg_bal = 0
                     foundVwList.beg_bal_amt = 0
+                    foundVwList.beg_bal_int = 0
                     
                     foundVwList.save();
 

@@ -1,4 +1,3 @@
-const _ = require('lodash')
 
 function authUser(req, res, next) {
     if (req.user == null) {

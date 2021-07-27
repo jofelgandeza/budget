@@ -69,69 +69,39 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     let tbudgEndBal = 0
 
     let lnType 
-    // const POdata = await Employee.findOne({assign_code: IDcode})
-    // const POname = POdata.first_name + " " + POdata.middle_name.substr(0,1) + ". " + POdata.last_name
-    // const POposition = POdata.position_code
-
     let doneReadTot = false
     let doneReadSubTot = false
     let doneReadLoanTot = false
-   
+
+    unitPosition.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii._id
+        if (fndPositionEmp === "BRN_MGR") {
+            postManager = fndPositID
+        }
+        if (fndPositionEmp === "UNI_HED") {
+            postUnitHead = fndPositID
+        }
+        if (fndPositionEmp === "PRO_OFR") {
+            postProgOfr = fndPositID
+        }
+    })
+
+   console.log(postManager)
+   console.log(postUnitHead)
+   console.log(postProgOfr)
+
+
     try {
 
-        // const postEmp = await Position.find({dept_code: "BRN"}, function (err, fndPosi) {
-        //     fndPositi = fndPosi
-        // })
+    const branEmployees = await Employee.find({assign_code: unitCode}, function (err, fndUnitHead) {
+        
+        officerName = fndUnitHead.first_name + " " + _.trim(fndUnitHead.middle_name).substr(0,1) + ". " + fndUnitHead.last_name
+    })
 
-//        console.log(fndPositi)
-    const branEmployees = await Employee.find({branch: branchCode})
-
-        unitPosition.forEach(fndPosii => {
-            const fndPositionEmp = fndPosii.code
-            const fndPositID = fndPosii._id
-            if (fndPositionEmp === "BRN_MGR") {
-                postManager = fndPositID
-            }
-            if (fndPositionEmp === "UNI_HED") {
-                postUnitHead = fndPositID
-            }
-            if (fndPositionEmp === "PRO_OFR") {
-                postProgOfr = fndPositID
-            }
-        })
-
-       console.log(postManager)
-       console.log(postUnitHead)
-       console.log(postProgOfr)
-
-        const branchManager = _.find(branEmployees, {position_code: postManager})
-
-        const unitOfficers = _.find(branEmployees, {unit: unitLetter, position_code: postUnitHead})
-         const   officerName = unitOfficers.first_name + " " + unitOfficers.middle_name.substr(0,1) + ". " + unitOfficers.last_name
- 
-        //  const programOfficers = _.find(branEmployees, {unit: unitLetter, position_code: postProgOfr})
-
-        // const branchManager = await Employee.find({branch: branchCode, position_code: postManager, assign_code: unitCode}, function (err, foundBMs){
-        //     foundManager = foundBMs
-        //    })
-
-        //    if (branchManager) {
-        //         branchManager.forEach(manager => {
-        //         officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
-
-        //         })
-        //    }            
-
-        // const unitOfficers = await Employee.find({branch: branchCode, assign_code: postUnitHead}, function (err, foundUHs){
-        //     foundPOunits = foundUHs
-        //     })
         const programOfficers = await Employee.find({branch: branchCode, unit: unitLetter, position_code: postProgOfr}, function (err, foundPO){
             foundPOs = foundPO
             })
-
-        // console.log(officerName)
-        // console.log(foundPOunits)
-        // console.log(foundPOs)
 
         const loanType = await Loan_type.find({})
 
@@ -331,8 +301,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                 perUnitCode: unitCode,
                 officerName: officerName,
                 loanTots: brnLoanTotals,
-                poGrandTot: brnLoanGrandTot,
-                unitLoanTots: unitLoanTotals
+                poGrandTot: brnLoanGrandTot
             })
         }             
 
@@ -751,10 +720,9 @@ router.get('/getPOForEdit/:id/edit', authUser, authRole(ROLE.PUH), async (req, r
 // SAVE EDITed Unit
 
 router.put('/putEditedPo/:id', authUser, authRole(ROLE.PUH), async function(req, res){
-    const param = req.params.id
-    const brnCod = param.substring(0,3)
+    const uUnitCode = req.params.id
+    const brnCod = uUnitCode.substring(0,3)
     const uUnit = req.body.uUnit
-    const uUnitCode = param
     const ln_Typ = req.body.loanTyp
 
     console.log(req.params.id)
