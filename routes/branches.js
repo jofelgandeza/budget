@@ -361,12 +361,13 @@ router.get('/employees/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     let empID = ""
     let empUnit = ""
 
-    const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
-        fndPosition = foundPosit
-    })
-
     let empCanProceed = false
+    
     try {
+        const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
+            fndPosition = foundPosit
+        })
+
         const brnEmployees = await Employee.find({branch: brnCode}, function (err, foundEmployees) {
             const fndEmployees = foundEmployees
 
@@ -408,17 +409,18 @@ router.get('/employees/:id', authUser, authRole(ROLE.BM), async (req, res) => {
                 empCanProceed = true            
             })
 
-                sortedEmp = fondEmploy.sort( function (a,b) {
-                    if ( a.empSortKey < b.empSortKey ){
-                        return -1;
-                      }
-                      if ( a.empSortKey > b.empSortKey ){
-                        return 1;
-                      }
-                       return 0;
-                })        
         })
-        
+
+        sortedEmp = fondEmploy.sort( function (a,b) {
+            if ( a.empSortKey < b.empSortKey ){
+                return -1;
+              }
+              if ( a.empSortKey > b.empSortKey ){
+                return 1;
+              }
+               return 0;
+        })        
+
         if (brnEmployees.length === 0) {
             empCanProceed = true
         }
@@ -440,28 +442,36 @@ router.get('/employees/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
 
 // New EMPLOYEE Route
-router.get('/newEmployee/:id', authUser, authRole(ROLE.BM), (req, res) => {
+router.get('/newEmployee/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     
     const branchCode = req.params.id
     const _user = req.user
 
-    const newEmpPost = Position.find({group_code: "BRN"}, function (err, fndPost) {
-         const pstCode = fndPost
-        console.log(branchCode)
-        const newEmp = new Employee()
-        const newUser = new User()
-        newEmp.branch = branchCode
 
-         res.render('branches/newEmployee', { 
-            emp: newEmp, 
-            user: newUser,
-            posit: fndPost,
-            branchCode: branchCode,
-            yuser: _user,
-            newEmp: true,
-            resetPW: false
-        })
-    })
+    try {
+
+        const newEmpPost = await Position.find({group_code: "BRN"}, function (err, fndPost) {
+            const pstCode = fndPost
+           console.log(branchCode)
+           const newEmp = new Employee()
+           const newUser = new User()
+           newEmp.branch = branchCode
+   
+            res.render('branches/newEmployee', { 
+               emp: newEmp, 
+               user: newUser,
+               posit: fndPost,
+               branchCode: branchCode,
+               yuser: _user,
+               newEmp: true,
+               resetPW: false
+           })
+       })
+   
+    } catch (err) {
+        console.log(err)
+        res.redirect('/')
+    }
 //    console.log(position)
 
 })
