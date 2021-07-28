@@ -51,7 +51,7 @@ const User = require('./models/user')
 const Position = require('./models/position')
 const Employee = require('./models/employee')
 
-let users = [ ]
+let users = []
 // console.log (users)
 app.use(setUser)
 
@@ -152,6 +152,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
   })
   
   app.delete('/logout', (req, res) => {
+    users = []
     req.user = []
     req.logOut()
     res.redirect('/login')
@@ -177,7 +178,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
         const Yusers = await User.find({}, function (err, foundUsers) {
             users = foundUsers
         })
-        console.log(users)
+        // console.log(users)
         posisyon = await Position.find({group_code: "BRN"})
         
     } else {

@@ -771,11 +771,11 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
 // GET Employee User for RESET PASSWORD
 router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.BM), async (req, res) => {
 
-    paramsID = req.params.id
-
-    branCod = req.body.branCode
-    empID = req.params.id
-    empCode = _.trim(paramsID.substr(3,9))
+   const paramsID = req.params.id
+        console.log(paramsID)
+    const branCod = req.body.branCode
+    const empID = req.params.id
+    const empCode = _.trim(paramsID.substr(3,9))
 
     const _user = req.user
     let locals = ""
@@ -796,21 +796,21 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.BM), async (req, 
         })
         
         const emPosit = await Position.findById(possit)
-        const posisyon = emPosit.title
+        const positsyon = emPosit.title
     
             // console.log(employe)
-        const yuser = await User.findOne({assCode: ass_Code}, function (err, foundUser) {
+        const yoser = await User.findOne({assCode: ass_Code}, function (err, foundUser) {
             //            console.log(foundlist)
             fndUser = foundUser
             console.log(fndUser)
         })
 
-        yuser.password = ""
+        yoser.password = ""
             
         res.render("branches/resetPassword", {
             branchCode: brnCod,
-            posit: posisyon,
-            user: yuser,
+            posit: positsyon,
+            user: yoser,
             emp: employe, 
             locals: locals,
             yuser: _user,
@@ -840,11 +840,10 @@ router.put('/putEditedPass/:id', authUser, authRole(ROLE.BM), async function(req
     
         try {
             const hashdPassword = await bcrypt.hash(newPassword, 10)
-            getExistingUser = await User.findById(userID)
+            let getExistingUser = await User.findById(userID)
 
-            getExistingUser.password = hashdPassword
-
-            getExistingUser.save()
+                getExistingUser.password = hashdPassword
+                const savedNewPW = getExistingUser.save()
         
             res.redirect('/branches/employees/'+ branCod)
 
