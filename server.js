@@ -132,6 +132,14 @@ app.get('/', checkAuthenticated, async (req, res) => {
     failureFlash: true
   }))
   
+  app.delete('/logout', (req, res) => {
+    // users = []
+    // req.user = []
+    req.logOut()
+    res.redirect('/login')
+  })
+  
+
   // app.get('/register', checkNotAuthenticated, (req, res) => {
   //   res.render('register.ejs')
   // })
@@ -150,13 +158,6 @@ app.get('/', checkAuthenticated, async (req, res) => {
   //     res.redirect('/register')
   //   }
   // })
-  
-  app.delete('/logout', (req, res) => {
-    users = []
-    req.user = []
-    req.logOut()
-    res.redirect('/login')
-  })
   
   function checkAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
@@ -181,14 +182,15 @@ app.get('/', checkAuthenticated, async (req, res) => {
         // console.log(users)
         posisyon = await Position.find({group_code: "BRN"})
         
-    } else {
-        if (req.user) {
-            const branCode = req.user.assCode
-            const brnCode = branCode.substr(0,3)
-            // brnEmployees = await Employee.find({branch: brnCode})
-            // console.log(req.user)
-        }
-    }
+    } 
+    // else {
+    //     if (req.user) {
+    //         const branCode = req.user.assCode
+    //         const brnCode = branCode.substr(0,3)
+    //         // brnEmployees = await Employee.find({branch: brnCode})
+    //         // console.log(req.user)
+    //     }
+    // }
     next()
   }
 
