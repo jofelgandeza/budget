@@ -40,19 +40,15 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     const _user = req.user
     // const branEmployees = brnEmployees
 
-    let foundPOunits = []
     let foundPOs = []
     let officerName = ""
-    let fndPositi = []
     let postManager = ""
     let postUnitHead = ""
     let postProgOfr = ""
 
-    let poLoanTotals = []
     let unitLoanTotals = []
     let brnLoanTotals = []
     let brnLoanGrandTot = []
-    let centerTargets = []
     let foundCenter = []
     
 
@@ -62,13 +58,11 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     let oClientAmt = 0
     let rClient = 0
     let rClient2 = 0
-    let resignClient = 0
-    let budgEndBal = 0
     let totDisburse = 0
     let budgBegBal = 0
     let tbudgEndBal = 0
+    let totbudgEndBal = 0
 
-    let lnType 
     let doneReadTot = false
     let doneReadSubTot = false
     let doneReadLoanTot = false
@@ -120,7 +114,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             budgBegBal = _.sumBy(center, function(o) { return o.budget_BegBal; });
             budgEndBal = oClient + newClients 
             totDisburse = nClientAmt + oClientAmt
-            tbudgEndBal = (budgBegBal + newClients) - (rClient + rClient2)
+            totbudgEndBal = (budgBegBal + newClients) - (rClient + rClient2)
 
             foundCenter = center.sort()
             doneReadTot = true
@@ -210,6 +204,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             })
             let totAmounts = nloanTot + oloanTot 
             let unitBudgEndBal = (begClientTot + nloanTotCount) - resloanTot
+            tbudgEndBal = tbudgEndBal + unitBudgEndBal
 //            let amtDisburse = oloanTot + oloanTot
             
             unitLoanTotals.push({sortkey: forSortPoNum, po: poNum, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClientCnt,
