@@ -85,7 +85,7 @@ app.use('/admins', adminRouter)
 let locals = {}
 app.locals.yuser = users
 app.locals.posisyon = []
-app.locals.brnEmployees = []
+// app.locals.brnEmployees = []
 app.locals.userRole = ROLE
 
 // console.log(app.locals.yuser)
@@ -132,24 +132,24 @@ app.get('/', checkAuthenticated, async (req, res) => {
     failureFlash: true
   }))
   
-  app.get('/register', checkNotAuthenticated, (req, res) => {
-    res.render('register.ejs')
-  })
+  // app.get('/register', checkNotAuthenticated, (req, res) => {
+  //   res.render('register.ejs')
+  // })
   
-  app.post('/register', checkNotAuthenticated, async (req, res) => {
-    try {
-      const hashedPassword = await bcrypt.hash(req.body.password, 10)
-      users.push({
-        id: Date.now().toString(),
-        name: req.body.name,
-        email: req.body.email,
-        password: hashedPassword
-      })
-      res.redirect('/login')
-    } catch {
-      res.redirect('/register')
-    }
-  })
+  // app.post('/register', checkNotAuthenticated, async (req, res) => {
+  //   try {
+  //     const hashedPassword = await bcrypt.hash(req.body.password, 10)
+  //     users.push({
+  //       id: Date.now().toString(),
+  //       name: req.body.name,
+  //       email: req.body.email,
+  //       password: hashedPassword
+  //     })
+  //     res.redirect('/login')
+  //   } catch {
+  //     res.redirect('/register')
+  //   }
+  // })
   
   app.delete('/logout', (req, res) => {
     users = []
@@ -185,7 +185,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
         if (req.user) {
             const branCode = req.user.assCode
             const brnCode = branCode.substr(0,3)
-            brnEmployees = await Employee.find({branch: brnCode})
+            // brnEmployees = await Employee.find({branch: brnCode})
             // console.log(req.user)
         }
     }

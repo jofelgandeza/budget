@@ -121,7 +121,6 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
            if (branchManager) {
                 branchManager.forEach(manager => {
                     officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
-
                 })
             }            
         const unitOfficers = await Employee.find({branch: branchCode, position_code: postUnitHead}, function (err, foundUHs){
