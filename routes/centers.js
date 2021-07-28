@@ -21,31 +21,6 @@ const monthSelect = ["January","February", "March", "April", "May", "June", "Jul
 const begMonthSelect = ["January","February", "March", "April", "May", "June"];
 
 
-// All CENTERS Route
-// router.get('/', authUser, async (req, res) => {
-
-//     let searchOptions = {}
-//     if (req.query.title  !=null && req.query.title !== '') {
-//         searchOptions.description = RegExp(req.query.title, 'i')
-//     }
-//     try {
-//         const center = await Center.find(searchOptions)
-//         POname = "ALL CENTERS"
-//         res.render('centers/index', {
-//             POname: POname,
-//             centers: center,
-//             searchOptions: req.query,
-//             Swal: Swal
-//         })
-//     } catch (err) {
-//         console.log(err)
-//         res.redirect('/')
-//     }
-// })
-
-//View CENTERS per PO Level - TUG-A1
-
-// console.log(user)
 
 router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
 
@@ -82,22 +57,18 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
     let doneTargetRead = false
     let doneLoanTypeRead = false
 
-//    console.log(POname)
     try {
 
         const loanType = await Loan_type.find({})
 
-//        const updateCtrForView = await Center.find()
 
         const center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber}, function (err, foundCenters) {
-//        const center = await Center.find(searchOptions)
             totDisburse = nClientAmt + oClientAmt
 
             foundCenter = foundCenters
             doneCenterRead = true
     })
    
-  //console.log(foundCenter)
         let totDisburseAmt = 0
     
         loanType.forEach(loan_type => {
@@ -112,7 +83,6 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
             let budgEndBal = 0
 
             lnType = loan_type.loan_type
-//            console.log(typeLoan)
 
             if (isNull(foundCenter)) {
                 doneCenterRead = true
@@ -127,8 +97,6 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
                 if (lnType === _.trim(lnType)) {
                     BudgBegBal = center.budget_BegBal
                 }
-                    // console.log(resignClient)
-                    // console.log(resloanTot)
 
                 centerTargets.forEach(centerLoan => {
                     if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
@@ -160,7 +128,6 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
                 budgEndBal =  (begClientTot +  nloanTotCount) - resloanTot
 
                 totDisburseAmt = totDisburseAmt + totAmounts
-//            let amtDisburse = oloanTot + oloanTot
             
             poLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: begClientTot,
                 ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgEndBal})
@@ -171,12 +138,8 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
             doneLoanTypeRead = true
         })
 
-        // console.log(poLoanGrandTot)
-
         poLoanGrandTot.push({nClient: nClient, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
             rClient: rClient, bClient: bClient, budgEndBal: tbudgEndBal, totDisburse: totDisburseAmt})
-
-//       console.log(poLoanGrandTot)
 
             if (doneCenterRead && doneLoanTypeRead) {
                 res.render('centers/viewTargets', {

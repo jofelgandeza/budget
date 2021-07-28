@@ -88,30 +88,21 @@ app.locals.posisyon = []
 // app.locals.brnEmployees = []
 app.locals.userRole = ROLE
 
-// console.log(app.locals.yuser)
-
 app.get('/', checkAuthenticated, async (req, res) => {
     console.log(req.user)
     if (!isEmpty(req.user)) {
         const asignCode = _.trim(req.user.assCode)
-        // req.user = user
-            // res.redirect('/centers/' + user.assCode)
-        // res.redirect('dashboards/' + user.assCode)
         if (req.user.role === "PO") {
-            res.redirect('/centers/' + req.user.assCode)
-            // next()
+            res.redirect('/centers/' + asignCode)
         }
         if (req.user.role === "PUH") {
             res.redirect('/units/' + asignCode)
-            // next()
         }
         if (req.user.role === "BM") {
-            res.redirect('/branches/' + req.user.assCode)
-            // next()
+            res.redirect('/branches/' + asignCode)
         }
         if (req.user.role === "ADMIN") {
             res.redirect('/admins')
-            // next()
         }
     } else {
         res.redirect('/login') 
