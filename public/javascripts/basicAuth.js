@@ -28,22 +28,7 @@ function authUser(req, res, next) {
           res.status(401)
           return res.send('Not allowed')
         }  
-//          console.log(req.params.id.length)
           next()
-          //  if (role === 'PO' && (req.user.assCode === paramsID) || (req.user.assCode === paramsID.substr(0,6))) {
-          //   next()      
-
-          //  }
-          //  if (role === 'UH' && (req.user.assCode === paramsID) || (req.user.assCode === paramsID.substr(0,5))) {
-          //   next()      
-
-          //  }
-          //  if (role === 'BM' && (req.user.assCode === paramsID) || (req.user.assCode === paramsID.substr(0,3))) {
-          //   next()      
-
-          //  }
-          //  res.status(401)
-          //  return res.send('Not allowed')
     }
   }
   
