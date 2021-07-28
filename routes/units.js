@@ -210,11 +210,11 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                 }
             })
             let totAmounts = nloanTot + oloanTot 
-            let budgEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
+            let unitBudgEndBal = (begClientTot + nloanTotCount) - resloanTot
 //            let amtDisburse = oloanTot + oloanTot
             
             unitLoanTotals.push({sortkey: forSortPoNum, po: poNum, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClientCnt,
-                begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: budgEndBal})
+                begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: unitBudgEndBal})
 
             nUnitLoanTot = nUnitLoanTot + nloanTot
             nUnitLoanTotCount = nUnitLoanTotCount + nloanTotCount
@@ -249,7 +249,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
         let oloanTotCount = 0
         let resloanTot = 0
         let begLoanTot = 0
-        let begClientTot = 0
+        let ubegClientTot = 0
         let bClient = 0
         let bClientCnt = 0
         const lonType = loan_type.loan_type
@@ -263,7 +263,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                 oloanTotCount = oloanTotCount + uLoanTots.onumClient
                 resloanTot = resloanTot + uLoanTots.resiloanTot
                 begLoanTot = begLoanTot + uLoanTots.begClientAmt
-                begClientTot = begClientTot + uLoanTots.begClientTot
+                ubegClientTot = ubegClientTot + uLoanTots.begClientTot
 
                 gtBegBalClient = gtBegBalClient + uLoanTots.begClientTot
                 gtBegBalAmt = gtBegBalAmt + uLoanTots.begClientAmt
@@ -271,19 +271,20 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
         })
         let totBranchAmounts = nloanTot + oloanTot 
-        let budgBranchEndBal = (oloanTotCount + nloanTotCount)
+        let budgBranchEndBal = (ubegClientTot + nloanTotCount) - resloanTot
 
-        brnLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totBranchAmounts, begClientTot: begClientTot,
+        brnLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totBranchAmounts, begClientTot: ubegClientTot,
             begClientAmt: begLoanTot, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgBranchEndBal})
         
         doneReadLoanTot = true
     })
 
+        console.log(tbudgEndBal)
  //   console.log(unitLoanTotals)
 //    console.log(brnLoanTotals)
 
             brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
-                rClient: rClient + rClient2, budgBegBal: budgBegBal, budgEndBal: budgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
+                rClient: rClient + rClient2, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
 
                 sortedPOs = unitLoanTotals.sort( function (a,b) {
                     if ( a.sortkey < b.sortkey ){
@@ -294,6 +295,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                       }
                        return 0;
                 })
+
         if (doneReadTot && doneReadSubTot && doneReadLoanTot) {
             // res.send('Eto oh!')
             res.render('units/budget', {

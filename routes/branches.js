@@ -602,9 +602,9 @@ try {
         res.redirect('/branches/employees/'+ brnCode)
     } 
     else {
-        let psitCode
-        const rePosition = await Position.find({group_code: "BRN"}, function (err, fndPost) {
-             psitCode = fndPost
+        let psitCode = []
+        const rePosition = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
+             psitCode = fnd_Post
         })
         console.log(psitCode)
         let errEmp = []
@@ -836,7 +836,7 @@ router.put('/putEditedPass/:id', authUser, authRole(ROLE.BM), async function(req
     const newPassword = _.trim(req.body.password)
     const userID = req.body.user_id
 
-    let getExistingUser
+    // let getExistingUser
     
         try {
             const hashdPassword = await bcrypt.hash(newPassword, 10)
@@ -844,7 +844,7 @@ router.put('/putEditedPass/:id', authUser, authRole(ROLE.BM), async function(req
 
             getExistingUser.password = hashdPassword
 
-            await getExistingUser.save()
+            getExistingUser.save()
         
             res.redirect('/branches/employees/'+ branCod)
 
