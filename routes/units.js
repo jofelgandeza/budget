@@ -105,25 +105,25 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
         const loanType = await Loan_type.find({})
 
-        const center = await Center.find({branch: branchCode, unit: unitLetter}, function (err, foundCenters) {
+        const center = await Center.find({branch: branchCode, unit: unitLetter}) 
 //        const center = await Center.find(searchOptions)
 
-            newClients = _.sumBy(foundCenters, function(o) { return o.newClient; });
-            nClientAmt = _.sumBy(foundCenters, function(o) { return o.newClientAmt; });
-            oClient = _.sumBy(foundCenters, function(o) { return o.oldClient; });
-            oClientAmt = _.sumBy(foundCenters, function(o) { return o.oldClientAmt; });
-            rClient = _.sumBy(foundCenters, function(o) { return o.resClient; });
-            rClient2 = _.sumBy(foundCenters, function(o) { return o.resClient2; });
-            budgBegBal = _.sumBy(foundCenters, function(o) { return o.budget_BegBal; });
+        if (center.length === 0) {
+            doneReadTot = true
+        
+        } else {
+            newClients = _.sumBy(center, function(o) { return o.newClient; });
+            nClientAmt = _.sumBy(center, function(o) { return o.newClientAmt; });
+            oClient = _.sumBy(center, function(o) { return o.oldClient; });
+            oClientAmt = _.sumBy(center, function(o) { return o.oldClientAmt; });
+            rClient = _.sumBy(center, function(o) { return o.resClient; });
+            rClient2 = _.sumBy(center, function(o) { return o.resClient2; });
+            budgBegBal = _.sumBy(center, function(o) { return o.budget_BegBal; });
             budgEndBal = oClient + newClients 
             totDisburse = nClientAmt + oClientAmt
             tbudgEndBal = (budgBegBal + newClients) - (rClient + rClient2)
 
-            foundCenter = foundCenters.sort()
-            doneReadTot = true
-        })
-
-        if (center.length === 0) {
+            foundCenter = center.sort()
             doneReadTot = true
         }
 

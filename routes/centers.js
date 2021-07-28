@@ -22,7 +22,7 @@ const begMonthSelect = ["January","February", "March", "April", "May", "June"];
 
 
 
-router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
+router.get('/:id', authUser, authRole("PO"), async (req, res) => {
 
     const IDcode = req.params.id
 
@@ -31,6 +31,8 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
     const branchCode = IDcode.substr(0,3)
     const assignCode = IDcode.substr(0,6)
     const yuser = req.user
+
+    console.log(yuser.name)
 
      let poLoanTotals = []
      let poLoanGrandTot = []
@@ -62,12 +64,7 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
         const loanType = await Loan_type.find({})
 
 
-        const center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber}, function (err, foundCenters) {
-            totDisburse = nClientAmt + oClientAmt
-
-            foundCenter = foundCenters
-            doneCenterRead = true
-    })
+        const center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber})
    
         let totDisburseAmt = 0
     
@@ -87,7 +84,7 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
             if (isNull(foundCenter)) {
                 doneCenterRead = true
             }
-            foundCenter.forEach(center => {
+            center.forEach(center => {
                 const lnType = center.loan_code
                 let centerTargets = center.Targets
                 let LoanBegBal = center.Loan_beg_bal
@@ -141,7 +138,7 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
         poLoanGrandTot.push({nClient: nClient, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
             rClient: rClient, bClient: bClient, budgEndBal: tbudgEndBal, totDisburse: totDisburseAmt})
 
-            if (doneCenterRead && doneLoanTypeRead) {
+            // if (doneCenterRead && doneLoanTypeRead) {
                 res.render('centers/viewTargets', {
                     POname: POname,
                     poCode: IDcode,
@@ -150,7 +147,7 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
                     searchOptions: req.query,
                     yuser: yuser   
                 })
-            }
+            // }
         } catch (err) {
             console.log(err)
             res.redirect('/')
@@ -158,7 +155,7 @@ router.get('/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
 })
 
 
-router.get('/viewTarget/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
+router.get('/viewTarget/:id', authUser, authRole("PO"), async (req, res) => {
 
     const IDcode = req.params.id
 
@@ -205,30 +202,27 @@ router.get('/viewTarget/:id', authUser, authRole("PO", "ADMIN"), async (req, res
 
 //        const updateCtrForView = await Center.find()
 
-        const center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber}, function (err, foundCenters) {
-//        const center = await Center.find(searchOptions)
-
-            nClient = _.sumBy(foundCenters, function(o) { return o.newClient; });
-            nClientAmt = _.sumBy(foundCenters, function(o) { return o.newClientAmt; });
-            oClient = _.sumBy(foundCenters, function(o) { return o.oldClient; });
-            oClientAmt = _.sumBy(foundCenters, function(o) { return o.oldClientAmt; });
-            rClient = _.sumBy(foundCenters, function(o) { return o.resClient; });
-            rClient2 = _.sumBy(foundCenters, function(o) { return o.resClient2; });
-            budgBegBal = _.sumBy(foundCenters, function(o) { return o.budget_BegBal; });
-            budgBegBalCli = _.sumBy(foundCenters, function(o) { return o.budget_BegBalCli; });
+        const center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber})
+   
+        if (center.length === 0) {
+            doneCenterRead = true
+        
+        } else {
+            nClient = _.sumBy(center, function(o) { return o.newClient; });
+            nClientAmt = _.sumBy(center, function(o) { return o.newClientAmt; });
+            oClient = _.sumBy(center, function(o) { return o.oldClient; });
+            oClientAmt = _.sumBy(center, function(o) { return o.oldClientAmt; });
+            rClient = _.sumBy(center, function(o) { return o.resClient; });
+            rClient2 = _.sumBy(center, function(o) { return o.resClient2; });
+            budgBegBal = _.sumBy(center, function(o) { return o.budget_BegBal; });
+            budgBegBalCli = _.sumBy(center, function(o) { return o.budget_BegBalCli; });
             // tbudgEndBal = (oClient + nClient) - rClient
             totDisburse = nClientAmt + oClientAmt
 
-            foundCenter = foundCenters
+            foundCenter = center
             doneCenterRead = true
-    })
-   
-    if (isNull(foundCenter)) {
-        doneCenterRead = true
-    }
 
-  //console.log(foundCenter)
-
+        }
     
             if (doneCenterRead) {
                 res.render('centers/index', {
@@ -246,7 +240,7 @@ router.get('/viewTarget/:id', authUser, authRole("PO", "ADMIN"), async (req, res
 })
 
 // Edit Targets
-router.get('/:id/edit', authUser, authRole("PO", "ADMIN"), async (req, res) => {
+router.get('/:id/edit', authUser, authRole("PO"), async (req, res) => {
 
      centerCode = req.params.id
      unit_ID = centerCode.substr(0,6)
@@ -319,7 +313,7 @@ router.get('/:id/edit', authUser, authRole("PO", "ADMIN"), async (req, res) => {
 })
 
 // Set Budget Beginning Balances
-router.get('/setBegBal/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
+router.get('/setBegBal/:id', authUser, authRole("PO"), async (req, res) => {
 
     centerCode = req.params.id
     unit_ID = centerCode.substr(0,6)
@@ -402,7 +396,7 @@ router.get('/setBegBal/:id', authUser, authRole("PO", "ADMIN"), async (req, res)
 
 // PUT /save Beginning Balances per center
 
-router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(req, res){
+router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
     const begLoanType = req.body.loanType
     const bClientCnt = _.toNumber(_.replace(req.body.numClient,',',''))
     const begBalPrinc = _.toNumber(_.replace(req.body.begBalAmt,',',''))
@@ -630,7 +624,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(r
   })
 
   // DELETE Beginning Balances...
-  router.post('/delBegBal/:id', authUser, authRole("PO", "ADMIN"), async (req, res) => {
+  router.post('/delBegBal/:id', authUser, authRole("PO"), async (req, res) => {
     //   alert('Are you sure you want to delete this record?')
         let centerCode = req.body.listName
         const checkedItemId = req.body.checkbox
@@ -709,7 +703,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO", "ADMIN"), async function(r
 // SAVE TARGET
 //Save targets to Targets array field in center collection
 //
-router.put("/:id", authUser, authRole("PO", "ADMIN"), async function(req, res){
+router.put("/:id", authUser, authRole("PO"), async function(req, res){
 
     const loanType = req.body.loanType
     const month = req.body.month
