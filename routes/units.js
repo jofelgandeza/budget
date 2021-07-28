@@ -91,7 +91,6 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
    console.log(postUnitHead)
    console.log(postProgOfr)
 
-
     try {
 
     const branEmployees = await Employee.find({assign_code: unitCode}, function (err, fndUnitHead) {
