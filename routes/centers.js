@@ -473,8 +473,6 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
             console.log(err)
         }
         else {
-                // console.log(foundList)
-
                 const curLoanBeg = foundList.Loan_beg_bal
 
                 if (curLoanBeg.length === 0) {

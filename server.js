@@ -85,6 +85,8 @@ app.use('/admins', adminRouter)
 let locals = {}
 app.locals.yuser = users
 app.locals.posisyon = []
+app.locals.addedNewUser = false
+
 // app.locals.brnEmployees = []
 app.locals.userRole = ROLE
 
@@ -155,14 +157,13 @@ app.get('/', checkAuthenticated, async (req, res) => {
   }
   
   async function setUser(req, res, next) {
-    if (users.length === 0) {
+    // if (users.length === 0 || addedNewUser ) {
         const Yusers = await User.find({}, function (err, foundUsers) {
             users = foundUsers
         })
         // console.log(users)
         posisyon = await Position.find({group_code: "BRN"})
-        
-    } 
+      // } 
     // else {
     //     if (req.user) {
     //         const branCode = req.user.assCode

@@ -518,19 +518,18 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
 
     const assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
 
-    const brnCode = req.body.brnCode 
+    const brnCode = _.trim(req.body.brnCode).toUpperCase()
     const assCode = brnCode + "-" + assignUnit
     const empCod = req.body.empCode
 
 
 let locals
 //console.log(brnCode)
-let canProceed = true
-let UserProceed = true
+let getExistingUser = []
+let canProceed = false
+let UserProceed = false
 
 try {
-
-    let canProceed = false
 
     const branchEmployees = await Employee.find({branch: brnCode})
     console.log(branchEmployees)
@@ -563,19 +562,14 @@ try {
 
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
                 
-        const getExistingUser = await User.findOne({email: nEmail}, function (err, foundUser) {
+        getExistingUser = await User.findOne({email: nEmail})
             // console.log(foundUser)
-           let UserProceed = false
-            if (!err) {
-                if (!foundUser) {
+            if (!getExistingUser) {
                     UserProceed = true 
-                } else {
+            } else {
                     UserProceed = false
                     locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
-                }
-            }
-        })
-    
+            }    
     
     if (canProceed && UserProceed)  {
         if (ePosition === "PRO_OFR") {
@@ -584,6 +578,9 @@ try {
         if (ePosition === "UNI_HED") {
 //           const unAssignCode = await Po.findOneAndUpdate({"po_code": assCode}, {$set:{"emp_code": req.body.empCode}})
         } 
+
+        addedNewUser = true
+        
         let employee = new Employee({
 
             emp_code: nEmpCode,
