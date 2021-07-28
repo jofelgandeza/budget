@@ -538,23 +538,23 @@ console.log(unitCode)
     let empCode = ""
     let empName = ""
     
-    const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
-        fndPosition = foundPosit
-    })
-    const unitPOs = await Po.find({branch: poBranch, unit: poUnitLet}, function (err, fndPO) {
-        if (!fndPO) {
-        
-        } else {
-            foundPOs = fndPO
-        }
-    })
-    const brnEmployees = await Employee.find({branch: poBranch, unit: poUnitLet}, function (err, fndEmployees) {
-        foundEmployee = fndEmployees
-    })
-
+    let poName = ""
+    
     try {
-            let poName = ""
-
+            const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
+                fndPosition = foundPosit
+            })
+            const unitPOs = await Po.find({branch: poBranch, unit: poUnitLet}, function (err, fndPO) {
+                if (!fndPO) {
+                
+                } else {
+                    foundPOs = fndPO
+                }
+            })
+            const brnEmployees = await Employee.find({branch: poBranch, unit: poUnitLet}, function (err, fndEmployees) {
+                foundEmployee = fndEmployees
+            })
+        
             foundPOs.forEach(fndPos =>{
                 id = fndPos._id
                 poCode = fndPos.po_code
@@ -721,29 +721,28 @@ router.get('/getPOForEdit/:id/edit', authUser, authRole(ROLE.PUH), async (req, r
 // SAVE EDITed Unit
 
 router.put('/putEditedPo/:id', authUser, authRole(ROLE.PUH), async function(req, res){
-    const uUnitCode = req.params.id
-    const brnCod = uUnitCode.substring(0,3)
-    const uUnit = req.body.uUnit
+    const poCode = req.params.id
+    const brnCod = poCode.substring(0,3)
+    const poUnitCode = poCode.substring(0,5)
+    const poUnitNum = poCode.substring(4,1)
+    const poNum = poCode.substring(5,1)
     const ln_Typ = req.body.loanTyp
 
     console.log(req.params.id)
 
-    let unit
+    let listPO
         try {
 
-            unit = await Unit.findOne({unit_code: uUnitCode})
+            listPO = await Po.findOne({unit_code: uUnitCode})
 
-            unit.unit_code = uUnitCode
-            unit.unit = uUnit
-            unit.branch = brnCod
-            unit.loan_type = ln_Typ
-            unit.office_loc = req.body.office_loc
-            unit.address = req.body.unitAdd
-            unit.status = "Active"
+            listPO.unit_code = poUnitCode
+            listPO.unit = poUnitNum
+            listPO.branch = brnCod
+            listPO.loan_type = ln_Typ
         
-            await unit.save()
+            await listPO.save()
         
-            res.redirect('/branches/units/'+ brnCod)
+            res.redirect('/units/pos/'+ poUnitCode)
 
         } catch (err) {
             console.log(err)
