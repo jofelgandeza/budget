@@ -675,7 +675,7 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, r
         // console.log(employe)
         const newUser = new User()
 
-        res.render("branches/editEmployee", {
+        res.render('branches/editEmployee', {
             branchCode: brnCod,
             posit: pst_Code,
             user: newUser,
@@ -817,7 +817,7 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.BM), async (req, 
 
         yoser.password = ""
             
-        res.render("branches/resetPassword", {
+        res.render('branches/resetPassword', {
             branchCode: brnCod,
             posit: positsyon,
             user: yoser,
