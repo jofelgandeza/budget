@@ -15,7 +15,7 @@ const { forEach, isNull } = require('lodash')
 const { authUser, authRole } = require('../public/javascripts/basicAuth.js')
 const { canViewProject, canDeleteProject, scopedProjects } = require('../public/javascripts/permissions/project.js')
 const user = require('../models/user')
-
+const User_log = require('../models/user_log')
 
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
 const begMonthSelect = ["January","February", "March", "April", "May", "June"];
@@ -34,7 +34,7 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
 
     console.log(yuser.name)
 
-     let poLoanTotals = []
+    let poLoanTotals = []
      let poLoanGrandTot = []
      let foundCenter = []
 
@@ -690,6 +690,18 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
             })
 
             if (doneUpdateOldClient && doneUpdateOldAmt) {
+
+                const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress)
+                let loggedUser = new User_log({
+                    IP: ip,
+                    login_date: new Date(),
+                    user_name: req.user.name,
+                    assign_code: req.user.assCode,
+                    activity: "Delete Beginning Balance for Center: " + listName,
+                    activity_desc: "Delete Beginning Balance for Center: " + listName
+                   })
+                    const saveLogUser = loggedUser.save()
+
                 res.redirect('/centers/setBegBal/' + centerCode)
             }
 
@@ -1741,7 +1753,18 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
            center = await Center.findOneAndUpdate({center: listName}, {$pull: {Targets :{_id: checkedItemId }}}, function(err, foundList){
 
                if (!err) {
-   
+
+                const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress)
+                let loggedUser = new User_log({
+                    IP: ip,
+                    login_date: new Date(),
+                    user_name: req.user.name,
+                    assign_code: req.user.assCode,
+                    activity: "Deleted Target for Center: " + listName +" - "+ month + ", " + numClient + ", " + totAmount,
+                    activity_desc: "Deleted Target Center: " + listName
+                   })
+                    const saveLogUser = loggedUser.save()
+
                    res.redirect('/centers/' + centerCode + '/edit')
    
                } else {

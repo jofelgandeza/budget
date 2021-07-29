@@ -8,6 +8,7 @@ const expressLayouts = require('express-ejs-layouts')
 const bodyParser = require('body-parser')
 const methodOverride = require('method-override')
 const { model } = require('mongoose')
+const { lookup } = require('geoip-lite')
 
 // const indexRouter = require('./routes/index.js')
 const adminRouter = require('./routes/admins.js')
@@ -50,6 +51,7 @@ db.once('open', () => console.log('Connected to Mongo Database'))
 const User = require('./models/user')
 const Position = require('./models/position')
 const Employee = require('./models/employee')
+const User_log = require('./models/user_log')
 
 let users = []
 // console.log (users)
@@ -92,6 +94,20 @@ app.locals.userRole = ROLE
 
 app.get('/', checkAuthenticated, async (req, res) => {
     console.log(req.user)
+    const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress)
+    console.log(ip) // ip address of the user
+    console.log(lookup(ip)) // location of the user
+
+    let loggedUser = new User_log({
+      IP: ip,
+      login_date: new Date(),
+      user_name: req.user.name,
+      assign_code: req.user.assCode,
+      activity: "Login",
+      activity_desc: "User logged-in.",
+     })
+      const saveLogUser = loggedUser.save()
+
     if (!isEmpty(req.user)) {
         const asignCode = _.trim(req.user.assCode)
         const yuserRole = req.user.role

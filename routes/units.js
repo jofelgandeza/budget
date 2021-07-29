@@ -536,47 +536,42 @@ console.log(unitCode)
     let empName = ""
     
     let poName = ""
+    let doneReadPOs = false
     
     try {
-            const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
-                fndPosition = foundPosit
-            })
-            const unitPOs = await Po.find({branch: poBranch, unit: poUnitLet}, function (err, fndPO) {
+
+        const brnEmployees = await Employee.find({branch: poBranch, unit: poUnitLet})
+
+        const unitPOs = await Po.find({branch: poBranch, unit: poUnitLet}, function (err, fndPO) {
                 if (!fndPO) {
                 
                 } else {
                     foundPOs = fndPO
                 }
             })
-            const brnEmployees = await Employee.find({branch: poBranch, unit: poUnitLet}, function (err, fndEmployees) {
-                foundEmployee = fndEmployees
-            })
         
             foundPOs.forEach(fndPos =>{
-                id = fndPos._id
-                poCode = fndPos.po_code
-                poNum = fndPos.po_number
-                pounitCode = fndPos.unit_code
-                pounitNum = fndPos.unit
-                poBrnch = fndPos.branch
-                poLoanProd = fndPos.loan_type
-                poEmpCod = fndPos.emp_code
-                poCenterNum = fndPos.num_centers
-                poStatus = fndPos.status
-                
+                const id = fndPos._id
+                const poCode = fndPos.po_code
+                const poNum = fndPos.po_number
+                const pounitCode = fndPos.unit_code
+                const pounitNum = fndPos.unit
+                const poBrnch = fndPos.branch
+                const poLoanProd = fndPos.loan_type
+                const poEmpCod = fndPos.emp_code
+                const poCenterNum = fndPos.num_centers
+                const poStatus = fndPos.status
+                let poName = " "
                 if (poEmpCod ===""){
-                    poName = ""
                 } else {
-                    foundEmployee.forEach(fndEmp => {
-                        if (fndEmp.emp_code === poEmpCod) {
-                            poName = fndEmp.first_name + " " + fndEmp.middle_name.substr(0,1) + ". " + fndEmp.last_name
-                        } else {
-                        }
-                    })
-                }
+                      const po_Name = _.find(brnEmployees, {emp_code: poEmpCod})
+                        poName = po_Name.last_name + ", "+ po_Name.first_name + " "+ _.trim(po_Name.middle_name).substr(0,1) + "."
+                 }
                     
                 fondPO.push({poID: id, poCode: poCode, poNum: poNum, UnitCode: unitCode, poUnitLet: poUnitLet, 
                     poName: poName, poStatus: "Active", branch: poBrnch, poLoanProd: poLoanProd})
+                
+                doneReadPOs = true
             })
 
 //                console.log(fondPO)
@@ -590,13 +585,14 @@ console.log(unitCode)
                       }
                        return 0;
                 })
-        
+        if (doneReadPOs) {
             res.render('units/po', {
                 uniCod: unitCode,
                 fondPos: sortedPOs,
                 searchOptions: req.query,
                 yuser: yuser
             })
+        }
     } catch (err) {
         console.log(err)
         res.redirect('/')
