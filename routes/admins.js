@@ -37,7 +37,7 @@ router.post('/saveRegister', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(password, 10)
         
-        const getExistingUser = await User.findOne({name: userName}, function (err, foundUser) {
+        const getExistingUser = await User.findOne({email: eMail}, function (err, foundUser) {
             // console.log(foundUser)
 
             if (!err) {
@@ -49,6 +49,8 @@ router.post('/saveRegister', async (req, res) => {
                 }
             }
         })
+        console.log(canProceed)
+        
         if (canProceed) {
             let nUser  = new User({
 
@@ -61,13 +63,14 @@ router.post('/saveRegister', async (req, res) => {
         
                const saveUser = nUser.save()
             res.redirect('/login')
+
         } else {
-            res.redirect('/register')
+            res.redirect('/admins/register')
         }
 
     } catch (err) {
         console.log(err)
-        res.redirect('/register')
+        res.redirect('/admins//register')
     }
 })  
 
