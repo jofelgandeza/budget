@@ -37,8 +37,8 @@
                         <% loanTots.forEach(loan => {  %>
                             <tr>
                                 <td><%= loan.loan_type %></td>
-                                <% if (loan.begClientTot > 0) { %>
-                                    <td><%= loan.begClientTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                <% if (loan.bClientCnt > 0) { %>
+                                    <td><%= loan.bClientCnt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
                                 <% } else { %>
                                     <td style=>-</td>
                                 <% } %>

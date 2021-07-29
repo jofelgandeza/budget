@@ -413,7 +413,7 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             let oloanTotCount = 0
             let resloanTot = 0
             let begLoanTot = 0
-            let begClientTot = 0
+            let uBegClientTot = 0
             let bClientAmt = 0
             let bClientCnt = 0
             lnType = loan_type.loan_type
@@ -458,17 +458,17 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                         if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
                             begLoanTot = centerBegBal.beg_amount
                             bClientCnt = centerBegBal.beg_client_count
-                            begClientTot = begClientTot + bClientCnt
+                            uBegClientTot = uBegClientTot + bClientCnt
                             bClientAmt = bClientAmt + begLoanTot
                         }
                     })
                 }
             })
             let totAmounts = nloanTot + oloanTot 
-            let budgEndBal = (begClientTot + nloanTotCount) - resloanTot
+            let budgEndBal = (uBegClientTot + nloanTotCount) - resloanTot
 //            let amtDisburse = oloanTot + oloanTot
             
-            unitLoanTotals.push({sortkey: forSortPoNum, po: poNum, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClientCnt,
+            unitLoanTotals.push({sortkey: forSortPoNum, po: poNum, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: uBegClientTot,
                 begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: budgEndBal})
 
             nUnitLoanTot = nUnitLoanTot + nloanTot
@@ -477,7 +477,7 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             oUnitLoanTotCount = oUnitLoanTotCount + oloanTotCount
             resUnitLoanTot = resUnitLoanTot + resloanTot
             begUnitLoanTot = begUnitLoanTot + begLoanTot
-            begUnitClientTot = begUnitClientTot + begClientTot
+            begUnitClientTot = begUnitClientTot + uBegClientTot
     
         })
 

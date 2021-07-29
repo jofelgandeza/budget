@@ -18,10 +18,26 @@
                         <td><%= unit.po%> </td>
                         <td><%= unit.unitHead%> </td>
                         <td><%= unit.loan_type%> </td>
-                        <td><%= unit.begClientTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
-                        <td><%= unit.nnumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
-                        <td><%= unit.onumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
-                        <td><%= unit.resiloanTot%> </td>
+                        <% if (unit.begClientTot > 0) { %>
+                            <td><%= unit.begClientTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
+                        <% if (unit.nnumClient > 0) { %>
+                            <td><%= unit.nnumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
+                        <% if (unit.onumClient > 0) { %>
+                            <td><%= unit.onumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
+                        <% if (unit.resiloanTot > 0) { %>
+                            <td><%= unit.resiloanTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
                         <td>
                             <div class="btn-row">
                                 <a class="btn btn-primary" href='/units/<%= unit.unit %>/edit'>View</a>
