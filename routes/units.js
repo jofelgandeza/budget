@@ -204,7 +204,6 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             })
             let totAmounts = nloanTot + oloanTot 
             let unitBudgEndBal = (begClientTot + nloanTotCount) - resloanTot
-            tbudgEndBal = tbudgEndBal + unitBudgEndBal
             totbudgEndBal = totbudgEndBal + unitBudgEndBal
 
 //            let amtDisburse = oloanTot + oloanTot
@@ -268,6 +267,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
         })
         let totBranchAmounts = nloanTot + oloanTot 
         let budgBranchEndBal = (ubegClientTot + nloanTotCount) - resloanTot
+            tbudgEndBal = tbudgEndBal + budgBranchEndBal
 
         brnLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totBranchAmounts, begClientTot: ubegClientTot,
             begClientAmt: begLoanTot, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgBranchEndBal})
