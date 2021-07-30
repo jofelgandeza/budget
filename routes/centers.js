@@ -635,6 +635,9 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
        let delLoanType = ""
        let delLoanAmt = 0
        let delLoanClient = 0
+       let doneUpdateOldClient = false
+       let doneUpdateOldAmt = false
+       let doneReadCenter = false
 
        try {       
       
@@ -650,17 +653,16 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                } else {
                    console.log(err)
                }
+               doneReadCenter = true
            })
    
             // Updating Loan Beginning Balances to center_budget_dets.. 
-            let doneUpdateOldClient = false
-            let doneUpdateOldAmt = false
             const centerBudgDetFound = await Center_budget_det.findOne({center: listName, loan_type: delLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
                 if (err) {
                     console.log(err)
                 }
                 else {
-                    // console.log(foundVwList)
+                    console.log(foundVwList)
 
                     foundVwList.beg_bal = 0
                     foundVwList.beg_bal_amt = 0
@@ -677,7 +679,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                     console.log(err)
                 }
                 else {
-                    // console.log(foundBegAmtList)
+                    console.log(foundBegAmtList)
 
                     foundBegAmtList.beg_bal = 0
                     foundBegAmtList.beg_bal_amt = 0
@@ -689,7 +691,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                   }
             })
 
-            if (doneUpdateOldClient && doneUpdateOldAmt) {
+            if (doneReadCenter && doneUpdateOldClient && doneUpdateOldAmt) {
 
                 const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress)
                 let loggedUser = new User_log({
