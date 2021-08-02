@@ -1119,19 +1119,6 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                     }
                 }) // end of forEach() loop
                 
-                    // if (hasLoanBegBal) {
-                    //     if (nTargMonth == nMonthBegBal ) {
-                    //         computeResFromBegBal = true
-                    //         resWitBegCount = resWitBegCount + target.numClient
-                    //         targetKeyForUpdet = target.id
-                    //     } else {
-                    //         resWitBegOldCount = resWitBegOldCount + target.numClient
-                    //         targetKeyForUpdet = target.id
-                    //     }
-                    // } else {
-
-                    // }
-
                 if (remarks === "Re-loan") { 
 //                    if (loanType === "Group Loan" || loanType === "Agricultural Loan") {
 
@@ -1168,58 +1155,11 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                             resiClient = rExPrevNewClient - (rExOldClient + numClient)
                         }
 
-                        // if (hasLoanBegBal && curMaturityMonthBeg === withReloanMonth) {
-                        //     resiClient = curLoanTypeCliBegBal - (rExOldClient + numClient)
-                        // }
-
-                        // if (hasLoanBegBal && hasCurReLoan && hasPrevReLoan) {
-                        //     resiClient = (firstSemNewLoan + firstSemReLoan) - (rExOldClient + numClient)
-                        // }
-
-                        // if (!hasLoanBegBal && hasPrevReLoan && !hasPrevNewLoan) {
-                        //     resiClient = firstSemReLoan - (rExPrevOldClient + numClient)
-                        // }
                         if (!hasLoanBegBal && hasPrevReLoan && hasPrevNewLoan) {
                             resiClient = (firstSemNewLoan + rExPrevOldClient) - numClient
                         }                        
 
                     } 
-                //     else {
-
-                //         if (hasLoanBegBal && curMaturityMonthBeg === withReloanMonth) {
-                //             resiClient = curLoanTypeCliBegBal - (oldLoanCount + numClient)
-                //         }
-
-                //         if (hasLoanBegBal && hasCurReLoan && hasPrevReLoan) {
-                //             resiClient = (firstSemNewLoan + firstSemReLoan) - (oldLoanCount + numClient)
-                //         }
-
-                //         if (!hasLoanBegBal && hasPrevReLoan) {
-                //             resiClient = firstSemNewLoan - (newLoanCount + numClient)
-                //         }
-
-                //         if (hasCurNewLoan) {
-                //             rOldClient = rOldClient + rExOldClient
-                //             rOldClientAmt = rOldClientAmt + rExOldClientAmt
-                    
-                //                 if (rOldClient > 0) {
-                //                     resiClient = rNewClient - rOldClient
-                //                 } else {
-                //                     resiClient = rNewClient - numClient
-                //                 }
-                //         }
-                //     }
-                // } else {
-
-                // }
-
-                    // if (hasLoanBegBal) {
-                    //     if (orderMonth == nMonthBegBal) {
-                    //         resiClient = curLoanTypeCliBegBal - resWitBegCount                    
-                    //     } else {
-                    //         resiClient = resWitBegCount - resWitBegOldCount                    
-                    //     }
-                    // }
                     
                     if (!isNull(targetKeyForUpdet)) {
                         curResTarcenter =  Center.findOneAndUpdate({"center": centerCode}, {$set: {"Targets.$[el].resignClient": 0}}, 
@@ -1273,7 +1213,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                 }
 
             }
-
+            foundList.beg_center_month = month
             // saving to center collections and its Target array field
             foundList.Targets.push(item);
             foundList.save();
@@ -1790,10 +1730,6 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
     const yuser = req.user
 
     let foundPOV = []
-    // let foundCenterDet = []
-
-    const vwloanType = await Loan_type.find({})
-    // console.log(vwloanType)
 
     let poSumView = []
     let poTotLoanAmtArray = []
@@ -1901,16 +1837,93 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         let doneReadOLCli = false
         let doneReadResCli = false
 
+        let doneReadClientCount = false
+        let doneReadLoanCount = false
+        let doneReadLoanAmt = false
+
     try {
+
+        const vwloanType = await Loan_type.find({})
 
         const foundCenterDet = await Center_budget_det.find({po_code: viewPOCode})
 
+        const foundCenters = await Center.find({po_code: viewPOCode}, function(err, foundCenters) {
+            const fndCenters = foundCenters
+            let centerCntBegBal = 0
+            let jan_centerCount = 0
+            let feb_centerCount = 0
+            let mar_centerCount = 0
+            let apr_centerCount = 0
+            let may_centerCount = 0
+            let jun_centerCount = 0
+            let jul_centerCount = 0
+            let aug_centerCount = 0
+            let sep_centerCount = 0
+            let oct_centerCount = 0
+            let nov_centerCount = 0
+            let dec_centerCount = 0
+                console.log(fndCenters)
+            fndCenters.forEach( fCenters => {
+                const monthCenterBegBal = _.trim(fCenters.beg_center_month)
+                    console.log(monthCenterBegBal)
+                if (fCenters.status === "For Target") {
+                    switch(monthCenterBegBal) {
+                        case "January":
+                            jan_centerCount = jan_centerCount + 1
+                            break;
+                        case "February":
+                            feb_centerCount = feb_centerCount + 1
+                            break;
+                        case "March":
+                            mar_centerCount = mar_centerCount + 1
+                            break;
+                        case "April":
+                            apr_centerCount = apr_centerCount + 1
+                            break;
+                        case "May":
+                            may_centerCount = may_centerCount + 1
+                            break;
+                        case "June":
+                            jun_centerCount = jun_centerCount + 1
+                            break;
+                        case "July":
+                            jul_centerCount = jul_centerCount + 1
+                            break;
+                        case "August":
+                            aug_centerCount = aug_centerCount + 1
+                            break;
+                        case "September":
+                            sep_centerCount = sep_centerCount + 1
+                            break;
+                        case "October":
+                            oct_centerCount = oct_centerCount + 1
+                            break;
+                        case "November":
+                            nov_centerCount = nov_centerCount + 1
+                            break;
+                        case "December":
+                            dec_centerCount = dec_centerCount + 1
+                            break;
+                        default:
+                            jan_centerCount = 0
+                    }
+                    
+                } else {
+                    centerCntBegBal = centerCntBegBal + 1
+                }
+
+            })
+            poSumView.push({title: "NUMBER OF CENTERS", sortkey: 2, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_centerCount, feb_value: feb_centerCount, mar_value: mar_centerCount,
+                apr_value: apr_centerCount, may_value: may_centerCount, jun_value: jun_centerCount, jul_value: jul_centerCount, aug_value: aug_centerCount,
+                sep_value: sep_centerCount, oct_value: oct_centerCount, nov_value: nov_centerCount, dec_value: dec_centerCount
+            })
+
+        })
         // console.log(foundCenterDet)
 
-        poSumView.push({title: "CENTERS", sortkey: 1, group: 1})
-        poSumView.push({title: "NUMBER OF CENTERS", sortkey: 2, group: 1})
+        poSumView.push({title: "CENTERS", sortkey: 1, group: 1, isTitle: true})
 
-        poSumView.push({title: "CLIENTS", sortkey: 3, group: 2})
+        poSumView.push({title: "CLIENTS", sortkey: 3, group: 2, isTitle: true})
 
         const newClientCntView = await Center_budget_det.find({po_code: viewPOCode, view_code: "NewLoanClient", client_count_included: true }, function (err, fndNewCliCnt) {
             jan_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jan_budg; })
@@ -1929,7 +1942,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             nwTotValueClient = jan_newCliTot + feb_newCliTot + mar_newCliTot + apr_newCliTot + may_newCliTot + jun_newCliTot
                 + jul_newCliTot + aug_newCliTot + sep_newCliTot + oct_newCliTot + nov_newCliTot + dec_newCliTot
             
-                poSumView.push({title: "New Clients", sortkey: 4, group: 2, beg_bal: 0, jan_value : jan_newCliTot, feb_value : feb_newCliTot, mar_value : mar_newCliTot, apr_value : apr_newCliTot,
+                poSumView.push({title: "New Clients", sortkey: 4, group: 2, beg_bal: 0, isTitle: false, jan_value : jan_newCliTot, feb_value : feb_newCliTot, mar_value : mar_newCliTot, apr_value : apr_newCliTot,
                     may_value : may_newCliTot, jun_value : jun_newCliTot, jul_value : jul_newCliTot, aug_value : aug_newCliTot,
                     sep_value : sep_newCliTot, oct_value : oct_newCliTot, nov_value : nov_newCliTot, dec_value : dec_newCliTot 
                 }) 
@@ -2008,24 +2021,25 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             dec_oldCliTot = nov_totNumClients
                 let dec_totNumClients = (dec_oldCliTot + dec_newCliTot) - dec_resCliTot
             
-            poSumView.push({title: "Old Clients", sortkey: 5, group: 2, beg_bal: begBalOldClient, jan_value : jan_oldCliTot, feb_value : feb_oldCliTot, mar_value : mar_oldCliTot, apr_value : apr_oldCliTot,
+            poSumView.push({title: "Old Clients", sortkey: 5, group: 2, isTitle: false, beg_bal: begBalOldClient, jan_value : jan_oldCliTot, feb_value : feb_oldCliTot, mar_value : mar_oldCliTot, apr_value : apr_oldCliTot,
                 may_value : may_oldCliTot, jun_value : jun_oldCliTot, jul_value : jul_oldCliTot, aug_value : aug_oldCliTot,
                 sep_value : sep_oldCliTot, oct_value : oct_oldCliTot, nov_value : nov_oldCliTot, dec_value : dec_oldCliTot 
             }) 
 
-            poSumView.push({title: "Resign Clients", sortkey: 5, group: 2, jan_value : jan_resCliTot, feb_value : feb_resCliTot, mar_value : mar_resCliTot, apr_value : apr_resCliTot,
+            poSumView.push({title: "Resign Clients", sortkey: 5, group: 2, isTitle: false, jan_value : jan_resCliTot, feb_value : feb_resCliTot, mar_value : mar_resCliTot, apr_value : apr_resCliTot,
                 may_value : may_resCliTot, jun_value : jun_resCliTot, jul_value : jul_resCliTot, aug_value : aug_resCliTot,
                 sep_value : sep_resCliTot, oct_value : oct_resCliTot, nov_value : nov_resCliTot, dec_value : dec_resCliTot 
             }) 
             
-            poSumView.push({title: "TOTAL NO. OF CLIENTS", sortkey: 6, group: 2, jan_value : jan_totNumClients, feb_value : feb_totNumClients, mar_value : mar_totNumClients, 
+            poSumView.push({title: "TOTAL NO. OF CLIENTS", sortkey: 6, group: 2, isTitle: false, jan_value : jan_totNumClients, feb_value : feb_totNumClients, mar_value : mar_totNumClients, 
                 apr_value : apr_totNumClients, may_value : may_totNumClients, jun_value : jun_totNumClients, jul_value : jul_totNumClients, aug_value : aug_totNumClients,
                 sep_value : sep_totNumClients, oct_value : oct_totNumClients, nov_value : nov_totNumClients, dec_value : dec_totNumClients
             }) 
+            doneReadClientCount = true
         }
 
         // NUMBER OF LOANS GROUP
-        poSumView.push({title: "NUMBER OF LOANS", sortkey: 7, group: 1})
+        poSumView.push({title: "NUMBER OF LOANS", sortkey: 7, group: 1, isTitle: true})
 
         const newLoanClientView = await Center_budget_det.find({po_code: viewPOCode, view_code: "NewLoanClient"}, function (err, fndNewCli) {
             jan_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jan_budg; })
@@ -2044,7 +2058,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             nwTotValueClient = jan_newCtotValue + feb_newCtotValue + mar_newCtotValue + apr_newCtotValue + may_newCtotValue + jun_newCtotValue
                 + jul_newCtotValue + aug_newCtotValue + sep_newCtotValue + oct_newCtotValue + nov_newCtotValue + dec_newCtotValue
             
-                poSumView.push({title: "Number of New Loan", sortkey: 8, group: 1, beg_bal: 0, jan_value : jan_newCtotValue, feb_value : feb_newCtotValue, mar_value : mar_newCtotValue, apr_value : apr_newCtotValue,
+                poSumView.push({title: "Number of New Loan", sortkey: 8, group: 1, isTitle: false, beg_bal: 0, jan_value : jan_newCtotValue, feb_value : feb_newCtotValue, mar_value : mar_newCtotValue, apr_value : apr_newCtotValue,
                     may_value : may_newCtotValue, jun_value : jun_newCtotValue, jul_value : jul_newCtotValue, aug_value : aug_newCtotValue,
                     sep_value : sep_newCtotValue, oct_value : oct_newCtotValue, nov_value : nov_newCtotValue, dec_value : dec_newCtotValue 
                 }) 
@@ -2070,7 +2084,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             olTotValueClient = jan_oldCtotValue + feb_oldCtotValue + mar_oldCtotValue + apr_oldCtotValue + may_oldCtotValue + jun_oldCtotValue
                         + jul_oldCtotValue + aug_oldCtotValue + sep_oldCtotValue + oct_oldCtotValue + nov_oldCtotValue + dec_oldCtotValue
             
-            poSumView.push({title: "Number of Reloan", sortkey: 9, group: 1, beg_bal: begBalOldClient, jan_value : jan_oldCtotValue, feb_value : feb_oldCtotValue, mar_value : mar_oldCtotValue, apr_value : apr_oldCtotValue,
+            poSumView.push({title: "Number of Reloan", sortkey: 9, group: 1, isTitle: false, beg_bal: begBalOldClient, jan_value : jan_oldCtotValue, feb_value : feb_oldCtotValue, mar_value : mar_oldCtotValue, apr_value : apr_oldCtotValue,
                 may_value : may_oldCtotValue, jun_value : jun_oldCtotValue, jul_value : jul_oldCtotValue, aug_value : aug_oldCtotValue,
                 sep_value : sep_oldCtotValue, oct_value : oct_oldCtotValue, nov_value : nov_oldCtotValue, dec_value : dec_oldCtotValue 
             }) 
@@ -2079,13 +2093,14 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         }) //, function (err, fndPOV) {
 
         if (doneReadNLC && doneReadOLC) {
-            poSumView.push({title: "TOTAL NO. OF LOAN", sortkey: 10, group: 1, jan_value : jan_oldCtotValue + jan_newCtotValue, feb_value : feb_oldCtotValue + feb_newCtotValue, mar_value : mar_oldCtotValue + mar_newCtotValue, 
+            poSumView.push({title: "TOTAL NO. OF LOAN", sortkey: 10, group: 1, isTitle: false, jan_value : jan_oldCtotValue + jan_newCtotValue, feb_value : feb_oldCtotValue + feb_newCtotValue, mar_value : mar_oldCtotValue + mar_newCtotValue, 
             apr_value : apr_oldCtotValue + apr_newCtotValue, may_value : may_oldCtotValue + may_newCtotValue, jun_value : jun_oldCtotValue + jun_newCtotValue, jul_value : jul_oldCtotValue + jul_newCtotValue, aug_value : aug_oldCtotValue + aug_newCtotValue,
                 sep_value : sep_oldCtotValue + sep_newCtotValue, oct_value : oct_oldCtotValue + oct_newCtotValue, nov_value : nov_oldCtotValue + nov_newCtotValue, dec_value : dec_oldCtotValue + dec_newCtotValue
             }) 
+            doneReadLoanCount = true
         }
 
-        poSumView.push({title: "AMOUNT OF LOANS", sortkey: 11, group: 2})
+        poSumView.push({title: "AMOUNT OF LOANS", sortkey: 11, group: 2, isTitle: true})
 
 
         const newLoanAmtView = await Center_budget_det.find({po_code: viewPOCode, view_code: "NewLoanAmt"}, function (err, fndNewAmt) {
@@ -2106,7 +2121,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             nwTotValueAmt = jan_newAtotValue + feb_newAtotValue + mar_newAtotValue + apr_newAtotValue + may_newAtotValue + jun_newAtotValue
                     + jul_newAtotValue + aug_newAtotValue + sep_newAtotValue + oct_newAtotValue + nov_newAtotValue + dec_newAtotValue
 
-            poSumView.push({title: "Amount of New Loan", sortkey: 12, group: 2, jan_value : jan_newAtotValue, feb_value : feb_newAtotValue, mar_value : mar_newAtotValue, apr_value : apr_newAtotValue,
+            poSumView.push({title: "Amount of New Loan", sortkey: 12, group: 2, isTitle: false, jan_value : jan_newAtotValue, feb_value : feb_newAtotValue, mar_value : mar_newAtotValue, apr_value : apr_newAtotValue,
                 may_value : may_newAtotValue, jun_value : jun_newAtotValue, jul_value : jul_newAtotValue, aug_value : aug_newAtotValue,
                 sep_value : sep_newAtotValue, oct_value : oct_newAtotValue, nov_value : nov_newAtotValue, dec_value : dec_newAtotValue 
             }) 
@@ -2132,7 +2147,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             olTotValueAmt = jan_oldAtotValue + feb_oldAtotValue + mar_oldAtotValue + apr_oldAtotValue + may_oldAtotValue + jun_oldAtotValue
                     + jul_oldAtotValue + aug_oldAtotValue + sep_oldAtotValue + oct_oldAtotValue + nov_oldAtotValue + dec_oldAtotValue
 
-                    poSumView.push({title: "Amount of Reloan", sortkey: 13, group: 2, jan_value : jan_oldAtotValue, feb_value : feb_oldAtotValue, mar_value : mar_oldAtotValue, apr_value : apr_oldAtotValue,
+                    poSumView.push({title: "Amount of Reloan", sortkey: 13, group: 2, isTitle: false, jan_value : jan_oldAtotValue, feb_value : feb_oldAtotValue, mar_value : mar_oldAtotValue, apr_value : apr_oldAtotValue,
                         may_value : may_oldAtotValue, jun_value : jun_oldAtotValue, jul_value : jul_oldAtotValue, aug_value : aug_oldAtotValue,
                         sep_value : sep_oldAtotValue, oct_value : oct_oldAtotValue, nov_value : nov_oldAtotValue, dec_value : dec_oldAtotValue 
                     }) 
@@ -2154,16 +2169,15 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 let novTotAmtLoan = nov_oldAtotValue + nov_newAtotValue
                 let decTotAmtLoan = dec_oldAtotValue + dec_newAtotValue
 
-                poSumView.push({title: "TOTAL AMOUNT OF LOAN", sortkey: 14, group: 2, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
+                poSumView.push({title: "TOTAL AMOUNT OF LOAN", sortkey: 14, group: 2, isTitle: false, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
                 apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
                 aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan})
 
-                poSumView.push({title: "LOAN PORTFOLIO", sortkey: 15, group: 1})
+                poSumView.push({title: "LOAN PORTFOLIO", sortkey: 15, group: 1, isTitle: true})
 
-                poSumView.push({title: "MONTHLY DISBURSEMENT (P)", sortkey: 16, group: 1, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
+                poSumView.push({title: "MONTHLY DISBURSEMENT (P)", sortkey: 16, group: 1, isTitle: false, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
                     apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
                     aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan
-                
                 })
 
                 let janRunBalAmt = janTotAmtLoan
@@ -2179,7 +2193,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 let novRunBalAmt = octRunBalAmt + novTotAmtLoan
                 let decRunBalAmt = novRunBalAmt + decTotAmtLoan
 
-                poSumView.push({title: "MONTHLY LOAN PORTFOLIO", sortkey: 18, group: 1, jan_value : janRunBalAmt, feb_value : febRunBalAmt, mar_value : marRunBalAmt, 
+                poSumView.push({title: "MONTHLY LOAN PORTFOLIO", sortkey: 18, group: 1, isTitle: false, jan_value : janRunBalAmt, feb_value : febRunBalAmt, mar_value : marRunBalAmt, 
                     apr_value : aprRunBalAmt, may_value : mayRunBalAmt, jun_value : junRunBalAmt, jul_value : julRunBalAmt, 
                     aug_value : augRunBalAmt, sep_value : sepRunBalAmt, oct_value : octRunBalAmt, nov_value : novRunBalAmt, dec_value : decRunBalAmt
                 
@@ -2198,11 +2212,13 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 let novRunBalPrevMon = octRunBalAmt
                 let decRunBalPrevMon = novRunBalAmt
                 
-                poSumView.push({title: "BAL. FROM PREV. MONTH", sortkey: 17, group: 1, jan_value : janRunBalPrevMon, feb_value : febRunBalPrevMon, mar_value : marRunBalPrevMon, 
+                poSumView.push({title: "BAL. FROM PREV. MONTH", sortkey: 17, group: 1, isTitle: false, jan_value : janRunBalPrevMon, feb_value : febRunBalPrevMon, mar_value : marRunBalPrevMon, 
                     apr_value : aprRunBalPrevMon, may_value : mayRunBalPrevMon, jun_value : junRunBalPrevMon, jul_value : julRunBalPrevMon, 
                     aug_value : augRunBalPrevMon, sep_value : sepRunBalPrevMon, oct_value : octRunBalPrevMon, nov_value : novRunBalPrevMon, dec_value : decRunBalPrevMon
                 
                 })
+
+                doneReadLoanAmt = true
 
             }
     
@@ -2222,11 +2238,11 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 // console.log(viewPOCode)
                 let poVSum = []
 
-                poSumView.push({title: "NEW LOAN CLIENTS", sortkey: 19, group: 2})
-                poSumView.push({title: "NEW LOAN AMOUNTS", sortkey: 20, group: 1})
-                poSumView.push({title: "OLD LOAN CLIENTS", sortkey: 21, group: 2})
-                poSumView.push({title: "OLD LOAN AMOUNTS", sortkey: 22, group: 1})
-                poSumView.push({title: "RESIGN CLIENTS", sortkey: 23, group: 2})
+                poSumView.push({title: "NEW LOAN CLIENTS", sortkey: 19, group: 2, isTitle: true})
+                poSumView.push({title: "NEW LOAN AMOUNTS", sortkey: 20, group: 1, isTitle: true})
+                poSumView.push({title: "OLD LOAN CLIENTS", sortkey: 21, group: 2, isTitle: true})
+                poSumView.push({title: "OLD LOAN AMOUNTS", sortkey: 22, group: 1, isTitle: true})
+                poSumView.push({title: "RESIGN CLIENTS", sortkey: 23, group: 2, isTitle: true})
 
                 // Accessing loan_types
                 vwloanType.forEach(loan_type => {
@@ -2393,7 +2409,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                             + jul_detNewtotCli + aug_detNewtotCli + sep_detNewtotCli + oct_detNewtotCli + nov_detNewtotCli + dec_detNewtotCli
                             
                             if (nloanTotCli > 0) {
-                                poSumView.push({title: typeLoanDet + " - NLC", desc: "newLoanClient", sortkey: 19, group: 2, jan_value : jan_detNewtotCli, feb_value : feb_detNewtotCli, mar_value : mar_detNewtotCli, apr_value : apr_detNewtotCli,
+                                poSumView.push({title: typeLoanDet + " - NLC", desc: "newLoanClient", sortkey: 19, group: 2, isTitle: false, jan_value : jan_detNewtotCli, feb_value : feb_detNewtotCli, mar_value : mar_detNewtotCli, apr_value : apr_detNewtotCli,
                                     may_value : may_detNewtotCli, jun_value : jun_detNewtotCli, jul_value : jul_detNewtotCli, aug_value : aug_detNewtotCli,
                                     sep_value : sep_detNewtotCli, oct_value : oct_detNewtotCli, nov_value : nov_detNewtotCli, dec_value : dec_detNewtotCli 
                                 })         
@@ -2403,7 +2419,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                             + jul_detNewtotAmt + aug_detNewtotAmt + sep_detNewtotAmt + oct_detNewtotAmt + nov_detNewtotAmt + dec_detNewtotAmt
 
                             if (nloanTotAmt > 0) {
-                                poSumView.push({title: typeLoanDet + " - NLA", desc: "newLoanAmt", sortkey: 20, group: 1, jan_value : jan_detNewtotAmt, feb_value : feb_detNewtotAmt, mar_value : mar_detNewtotAmt, apr_value : apr_detNewtotAmt,
+                                poSumView.push({title: typeLoanDet + " - NLA", desc: "newLoanAmt", sortkey: 20, group: 1, isTitle: false, jan_value : jan_detNewtotAmt, feb_value : feb_detNewtotAmt, mar_value : mar_detNewtotAmt, apr_value : apr_detNewtotAmt,
                                     may_value : may_detNewtotAmt, jun_value : jun_detNewtotAmt, jul_value : jul_detNewtotAmt, aug_value : aug_detNewtotAmt,
                                     sep_value : sep_detNewtotAmt, oct_value : oct_detNewtotAmt, nov_value : nov_detNewtotAmt, dec_value : dec_detNewtotAmt 
                                 })         
@@ -2413,7 +2429,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                             + jul_detOldtotCli + aug_detOldtotCli + sep_detOldtotCli + oct_detOldtotCli + nov_detOldtotCli + dec_detOldtotCli
 
                             if (oloanTotCli > 0) {
-                                poSumView.push({title: typeLoanDet + " - OLC", desc: "oldLoanClient", sortkey: 21, group: 2, beg_bal : begBal_OldCli, jan_value : jan_detOldtotCli, feb_value : feb_detOldtotCli, mar_value : mar_detOldtotCli, apr_value : apr_detOldtotCli,
+                                poSumView.push({title: typeLoanDet + " - OLC", desc: "oldLoanClient", sortkey: 21, group: 2, isTitle: false, beg_bal : begBal_OldCli, jan_value : jan_detOldtotCli, feb_value : feb_detOldtotCli, mar_value : mar_detOldtotCli, apr_value : apr_detOldtotCli,
                                     may_value : may_detOldtotCli, jun_value : jun_detOldtotCli, jul_value : jul_detOldtotCli, aug_value : aug_detOldtotCli,
                                     sep_value : sep_detOldtotCli, oct_value : oct_detOldtotCli, nov_value : nov_detOldtotCli, dec_value : dec_detOldtotCli 
                                 })         
@@ -2423,7 +2439,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                             + jul_detOldtotAmt + aug_detOldtotAmt + sep_detOldtotAmt + oct_detOldtotAmt + nov_detOldtotAmt + dec_detOldtotAmt
 
                             if (oloanTotAmt > 0) {
-                                poSumView.push({title: typeLoanDet + " - OLA", desc: "oldLoanAmt", sortkey: 22, group: 1, beg_bal : begBaldetOldtotAmt, jan_value : jan_detOldtotAmt, feb_value : feb_detOldtotAmt, mar_value : mar_detOldtotAmt, apr_value : apr_detOldtotAmt,
+                                poSumView.push({title: typeLoanDet + " - OLA", desc: "oldLoanAmt", sortkey: 22, group: 1, isTitle: false, beg_bal : begBaldetOldtotAmt, jan_value : jan_detOldtotAmt, feb_value : feb_detOldtotAmt, mar_value : mar_detOldtotAmt, apr_value : apr_detOldtotAmt,
                                     may_value : may_detOldtotAmt, jun_value : jun_detOldtotAmt, jul_value : jul_detOldtotAmt, aug_value : aug_detOldtotAmt,
                                     sep_value : sep_detOldtotAmt, oct_value : oct_detOldtotAmt, nov_value : nov_detOldtotAmt, dec_value : dec_detOldtotAmt 
                                 })         
@@ -2433,7 +2449,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                             + jul_detResCli + aug_detResCli + sep_detResCli + oct_detResCli + nov_detResCli + dec_detResCli
         
                             if (rloanTotCli > 0) {
-                                poSumView.push({title: typeLoanDet + " - RES", desc: "ResClientCount", sortkey: 23, jan_value : jan_detResCli, feb_value : feb_detResCli, mar_value : mar_detResCli, apr_value : apr_detResCli,
+                                poSumView.push({title: typeLoanDet + " - RES", desc: "ResClientCount", sortkey: 23, isTitle: false, jan_value : jan_detResCli, feb_value : feb_detResCli, mar_value : mar_detResCli, apr_value : apr_detResCli,
                                     may_value : may_detResCli, jun_value : jun_detResCli, jul_value : jul_detResCli, aug_value : aug_detResCli,
                                     sep_value : sep_detResCli, oct_value : oct_detResCli, nov_value : nov_detResCli, dec_value : dec_detResCli 
                                 })         
@@ -2451,12 +2467,13 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 }
                 return 0;
             })
-
-        res.render('centers/viewTargetsMonthly', {
-            poCode: viewPOCode,
-            poSumView: poSumView,
-            yuser: yuser
-        })
+        if (doneReadClientCount && doneReadLoanCount && doneReadLoanAmt) {
+            res.render('centers/viewTargetsMonthly', {
+                poCode: viewPOCode,
+                poSumView: poSumView,
+                yuser: yuser
+            })
+        }
     } catch (err) {
         console.log(err)
         res.redirect('/centers/center/'+ viewPOCode)

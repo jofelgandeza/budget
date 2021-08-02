@@ -83,6 +83,9 @@ const centerLoan = {
     status: {
         type: String,
     },
+    beg_center_month: {
+        type: String,
+    },
     Info: [centerInfo],
     Targets: [centerTargetSchema],
     center_cnt_begBal: {

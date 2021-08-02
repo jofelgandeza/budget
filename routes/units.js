@@ -899,6 +899,7 @@ router.post('/postNewCenter/:id', authUser, authRole(ROLE.PUH), async (req, res)
     loan_cycle: 0,
     loan_type: cntrLoanType,
     status: cntrStat,
+    beg_center_month: " ",
     Info : cntrInfo,
     Targets: [],
     Loan_beg_bal: [],
