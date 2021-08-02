@@ -1900,7 +1900,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                             break;
                         case "November":
                             nov_centerCount = nov_centerCount + 1
-                            break;
+                            break;git 
                         case "December":
                             dec_centerCount = dec_centerCount + 1
                             break;
@@ -2217,9 +2217,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     aug_value : augRunBalPrevMon, sep_value : sepRunBalPrevMon, oct_value : octRunBalPrevMon, nov_value : novRunBalPrevMon, dec_value : decRunBalPrevMon
                 
                 })
-
                 doneReadLoanAmt = true
-
             }
     
         let jan_totValue = 0  
@@ -2511,22 +2509,4 @@ function setProject(req, res, next) {
   }
 
 module.exports = router
-
-// Swal.fire({
-//     title: 'Are you sure?',
-//     text: "You won't be able to revert this!",
-//     icon: 'warning',
-//     showCancelButton: true,
-//     confirmButtonColor: '#3085d6',
-//     cancelButtonColor: '#d33',
-//     confirmButtonText: 'Yes, delete it!'
-//   }).then((result) => {
-//     if (result.isConfirmed) {
-//       Swal.fire(
-//         'Deleted!',
-//         'Your file has been deleted.',
-//         'success'
-//       )
-//     }
-//   })
 
