@@ -529,14 +529,6 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                 }
                 else {
                     if (isNull(foundVwList)) {
-                        // let newCtrCliBudg = new Center_budget_det({
-                        //     region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                        //     view_type: "PUH", loan_type: begLoanType, client_count_included: true, view_code: "OldLoanClient", beg_bal: bClientCnt, beg_bal_amt: bBalAmt, beg_bal_int: begBalInterest,
-                        //     jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0,
-                        //     may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0,
-                        //     sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
-                        // })
-                        // const nwCtrClient = newCtrCliBudg.save()
                         canSaveOldLoanCli = true
 
                     } else {
