@@ -1913,6 +1913,20 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 }
 
             })
+            
+            jan_centerCount = jan_centerCount + centerCntBegBal
+            feb_centerCount = feb_centerCount + jan_centerCount
+            mar_centerCount = mar_centerCount + feb_centerCount
+            apr_centerCount = apr_centerCount + mar_centerCount
+            may_centerCount = may_centerCount + apr_centerCount
+            jun_centerCount = jun_centerCount + may_centerCount
+            jul_centerCount = jul_centerCount + jun_centerCount
+            aug_centerCount = aug_centerCount + jul_centerCount
+            sep_centerCount = sep_centerCount + aug_centerCount
+            oct_centerCount = oct_centerCount + sep_centerCount
+            nov_centerCount = nov_centerCount + oct_centerCount
+            dec_centerCount = dec_centerCount + nov_centerCount
+
             poSumView.push({title: "NUMBER OF CENTERS", sortkey: 2, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_centerCount, feb_value: feb_centerCount, mar_value: mar_centerCount,
                 apr_value: apr_centerCount, may_value: may_centerCount, jun_value: jun_centerCount, jul_value: jul_centerCount, aug_value: aug_centerCount,
                 sep_value: sep_centerCount, oct_value: oct_centerCount, nov_value: nov_centerCount, dec_value: dec_centerCount
