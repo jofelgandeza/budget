@@ -109,19 +109,18 @@ app.get('/', checkAuthenticated, async (req, res) => {
     if (!isEmpty(req.user)) {
         const asignCode = _.trim(req.user.assCode)
         const yuserRole = req.user.role
-        switch(yuserRole) {
-          case "PO": 
+          if (req.user.role === "PO") { 
             res.redirect('/centers/' + asignCode)
-            break;
-          case "PUH": 
+          }
+          if (req.user.role === "PUH") { 
             res.redirect('/units/' + asignCode)
-            break;
-          case "BM": 
+          }
+          if (req.user.role === "BM") { 
             res.redirect('/branches/' + asignCode)
-            break;
-          default:
+          }
+          if (req.user.role === "ADMIN") { 
             res.redirect('/admins') 
-        }
+          }
 
     } else {
         res.redirect('/login') 
