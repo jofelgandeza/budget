@@ -49,10 +49,10 @@ const db = mongoose.connection
 db.on('error', error => console.error(error))
 db.once('open', () => console.log('Connected to Mongo Database'))
 
-const User = require('./models/user.js')
-const Position = require('./models/position.js')
-const Employee = require('./models/employee.js')
-const User_log = require('./models/user_log.js')
+const User = require('./models/user')
+const Position = require('./models/position')
+const Employee = require('./models/employee')
+const User_log = require('./models/user_log')
 
 let users = []
 // console.log (users)
@@ -139,7 +139,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
   }))
   
   app.delete('/logout', (req, res) => {
-    users = []
+    // users = []
     req.logOut()
     res.redirect('/login')
   })
@@ -160,23 +160,14 @@ app.get('/', checkAuthenticated, async (req, res) => {
   }
   
   async function setUser(req, res, next) {
-    if (users.length === 0) {
+    // users.length === 0
+    // if (req.user == null) { 
         const Yusers = await User.find({}, function (err, foundUsers) {
             users = foundUsers
             // console.log(users)
           })
         posisyon = await Position.find({group_code: "BRN"})
-      }
-        // console.log(posisyon)
-      // } 
-    // else {
-    //     if (req.user) {
-    //         const branCode = req.user.assCode
-    //         const brnCode = branCode.substr(0,3)
-    //         // brnEmployees = await Employee.find({branch: brnCode})
-    //         // console.log(req.user)
-    //     }
-    // }
+      // }
     next()
   }
 

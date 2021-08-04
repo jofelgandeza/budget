@@ -50,10 +50,7 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
      let lnType 
      let POname =" "
      let POposition = " "
-     const POdata = await Employee.findOne({assign_code: assignCode}, function (err, foundedEmp) {
-        POname = foundedEmp.first_name + " " + foundedEmp.middle_name.substr(0,1) + ". " + foundedEmp.last_name
-        POposition = foundedEmp.position_code
-    })
+     let center = []
 
     let doneCenterRead = false
     let doneTargetRead = false
@@ -61,10 +58,14 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
 
     try {
 
-        const loanType = await Loan_type.find({})
+        const POdata = await Employee.findOne({assign_code: assignCode}, function (err, foundedEmp) {
+            POname = foundedEmp.first_name + " " + foundedEmp.middle_name.substr(0,1) + ". " + foundedEmp.last_name
+            POposition = foundedEmp.position_code
+        })
+            const loanType = await Loan_type.find()
 
 
-        const center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber})
+        center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber})
    
         let totDisburseAmt = 0
     
@@ -81,7 +82,7 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
 
             lnType = loan_type.loan_type
 
-            if (isNull(foundCenter)) {
+            if (isNull(center)) {
                 doneCenterRead = true
             }
             center.forEach(center => {
@@ -119,7 +120,7 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
                         bClient = bClient + centerBegBal.beg_client_count
                     }
                 })
-                doneTargetRead = true
+                doneCenterRead = true
             })
             let totAmounts = nloanTot + oloanTot 
                 budgEndBal =  (begClientTot +  nloanTotCount) - resloanTot
@@ -138,7 +139,7 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
         poLoanGrandTot.push({nClient: nClient, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
             rClient: rClient, bClient: bClient, budgEndBal: tbudgEndBal, totDisburse: totDisburseAmt})
 
-            // if (doneCenterRead && doneLoanTypeRead) {
+            if (doneCenterRead && doneLoanTypeRead) {
                 res.render('centers/viewTargets', {
                     POname: POname,
                     poCode: IDcode,
@@ -147,7 +148,7 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
                     searchOptions: req.query,
                     yuser: yuser   
                 })
-            // }
+            }
         } catch (err) {
             console.log(err)
             res.redirect('/')
