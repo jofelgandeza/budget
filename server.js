@@ -88,9 +88,6 @@ app.use('/admins', adminRouter)
 let locals = {}
 app.locals.yuser = users
 app.locals.posisyon = []
-app.locals.addedNewUser = false
-
-// app.locals.brnEmployees = []
 app.locals.userRole = ROLE
 
 app.get('/', checkAuthenticated, async (req, res) => {
@@ -126,18 +123,6 @@ app.get('/', checkAuthenticated, async (req, res) => {
             res.redirect('/admins') 
         }
 
-        // if (req.user.role === "PO") {
-        //     res.redirect('/centers/' + asignCode)
-        // }
-        // if (req.user.role === "PUH") {
-        //     res.redirect('/units/' + asignCode)
-        // }
-        // if (req.user.role === "BM") {
-        //     res.redirect('/branches/' + asignCode)
-        // }
-        // if (req.user.role === "ADMIN") {
-        //     res.redirect('/admins')
-        // }
     } else {
         res.redirect('/login') 
         }
@@ -154,6 +139,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
   }))
   
   app.delete('/logout', (req, res) => {
+    users = []
     req.logOut()
     res.redirect('/login')
   })
@@ -174,12 +160,13 @@ app.get('/', checkAuthenticated, async (req, res) => {
   }
   
   async function setUser(req, res, next) {
-    // if (users.length === 0 || addedNewUser ) {
+    if (users.length === 0) {
         const Yusers = await User.find({}, function (err, foundUsers) {
             users = foundUsers
             // console.log(users)
           })
         posisyon = await Position.find({group_code: "BRN"})
+      }
         // console.log(posisyon)
       // } 
     // else {
