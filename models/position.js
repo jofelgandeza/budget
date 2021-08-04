@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const positionSchema = {
+const positionSchema = new mongoose.Schema({
     code: { 
         type: String,
         required: true
@@ -33,6 +33,6 @@ const positionSchema = {
         type: String,
         required: true
     }
-}
+})
 
 module.exports = mongoose.model('Position', positionSchema)

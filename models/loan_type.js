@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const loan_typeSchema = {
+const loan_typeSchema = new mongoose.Schema({
     loan_code: { 
         type: String,
         required: true
@@ -37,7 +37,6 @@ const loan_typeSchema = {
         type: String,
         required: true
     },
-    
-}
+})
 
 module.exports = mongoose.model('Loan_type', loan_typeSchema)
