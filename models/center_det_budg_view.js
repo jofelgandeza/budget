@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const center_det_budg_viewSchema = {
+const center_det_budg_viewSchema = new mongoose.Schema({
     view_code: { 
         type: String,
         required: true
@@ -21,7 +21,6 @@ const center_det_budg_viewSchema = {
         type: Number,
         required: true
     }
-    
-}
+})
 
 module.exports = mongoose.model('Center_det_budg_view', center_det_budg_viewSchema)

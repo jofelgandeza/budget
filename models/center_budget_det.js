@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+
   const centerBudgDetSchema = new mongoose.Schema({
     region: {
         type: String,

@@ -180,7 +180,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
             // console.log(users)
           })
         posisyon = await Position.find({group_code: "BRN"})
-        console.log(posisyon)
+        // console.log(posisyon)
       // } 
     // else {
     //     if (req.user) {
