@@ -30,6 +30,7 @@ const { ROLE } = require('./public/javascripts/data')
 const { forEach, isNull, isEmpty } = require('lodash')
 const _ = require('lodash')
 
+
 app.set('view engine', 'ejs')
 app.set('views', __dirname + '/views')
 app.set('layout', 'layouts/layout')
@@ -42,8 +43,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 
 const mongoose = require('mongoose')
 mongoose.connect(process.env.DATABASE_URL, {
-    useNewUrlParser: true, useUnifiedTopology: true})
-
+    useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false })
 const db = mongoose.connection
 db.on('error', error => console.error(error))
 db.once('open', () => console.log('Connected to Mongo Database'))
@@ -54,7 +54,7 @@ const Employee = require('./models/employee')
 const User_log = require('./models/user_log')
 
 let users = []
-
+// console.log (users)
 app.use(setUser)
 
 const initializePassport = require('./public/javascripts/passport-config.js')
@@ -125,6 +125,18 @@ app.get('/', checkAuthenticated, async (req, res) => {
             res.redirect('/admins') 
         }
 
+        // if (req.user.role === "PO") {
+        //     res.redirect('/centers/' + asignCode)
+        // }
+        // if (req.user.role === "PUH") {
+        //     res.redirect('/units/' + asignCode)
+        // }
+        // if (req.user.role === "BM") {
+        //     res.redirect('/branches/' + asignCode)
+        // }
+        // if (req.user.role === "ADMIN") {
+        //     res.redirect('/admins')
+        // }
     } else {
         res.redirect('/login') 
         }
@@ -167,6 +179,16 @@ app.get('/', checkAuthenticated, async (req, res) => {
             console.log(users)
           })
         posisyon = await Position.find({group_code: "BRN"})
+        // console.log(posisyon)
+      // } 
+    // else {
+    //     if (req.user) {
+    //         const branCode = req.user.assCode
+    //         const brnCode = branCode.substr(0,3)
+    //         // brnEmployees = await Employee.find({branch: brnCode})
+    //         // console.log(req.user)
+    //     }
+    // }
     next()
   }
 
