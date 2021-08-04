@@ -92,19 +92,19 @@ app.locals.userRole = ROLE
 
 app.get('/', checkAuthenticated, async (req, res) => {
     console.log(req.user)
-    const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress)
-    console.log(ip) // ip address of the user
-    console.log(lookup(ip)) // location of the user
+    // const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress)
+    // console.log(ip) // ip address of the user
+    // console.log(lookup(ip)) // location of the user
 
-    let loggedUser = new User_log({
-      IP: ip,
-      login_date: new Date(),
-      user_name: req.user.name,
-      assign_code: req.user.assCode,
-      activity: "Login",
-      activity_desc: "User logged-in.",
-     })
-      const saveLogUser = loggedUser.save()
+    // let loggedUser = new User_log({
+    //   IP: ip,
+    //   login_date: new Date(),
+    //   user_name: req.user.name,
+    //   assign_code: req.user.assCode,
+    //   activity: "Login",
+    //   activity_desc: "User logged-in.",
+    //  })
+    //   const saveLogUser = loggedUser.save()
 
     if (!isEmpty(req.user)) {
         const asignCode = _.trim(req.user.assCode)
