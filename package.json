@@ -16,6 +16,7 @@
     "url": "https://github.com/jofelgandeza/budget/issues"
   },
   "homepage": "https://github.com/jofelgandeza/budget#readme",
+  "engines": { "node" : "16.6.0" },
   "dependencies": {
     "-": "0.0.1",
     "bcrypt": "^5.0.1",
