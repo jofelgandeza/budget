@@ -51,6 +51,8 @@ const User_log = require('./models/user_log')
 let users = [ ]
 // console.log (users)
 app.use(setUser)
+app.use(express.json()) 
+app.use(flash())
 
 const initializePassport = require('./public/javascripts/passport-config.js')
 
@@ -60,8 +62,6 @@ initializePassport(
     id => users.find(user => user.id === id)
     )
 
-app.use(express.json()) 
-app.use(flash())
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -134,10 +134,10 @@ app.get('/', checkAuthenticated, async (req, res) => {
   }
   
   async function setUser(req, res, next) {
-
+    if (req.user == null) {
       users = await User.find()
       posisyon = await Position.find({group_code: "BRN"})
-
+    }
       next()
   }
 
