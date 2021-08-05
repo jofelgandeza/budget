@@ -10,14 +10,9 @@ const methodOverride = require('method-override')
 const { model } = require('mongoose')
 const { lookup } = require('geoip-lite')
 
-// const indexRouter = require('./routes/index.js')
 const adminRouter = require('./routes/admins.js')
-// const coaRouter = require('./routes/coas.js')
-// const sub_ledgerRouter = require('./routes/sub_ledgers.js')
-// const cost_centerRouter = require('./routes/cost_centers.js')
 const budgetRouter = require('./routes/budgets.js')
 const budgetCOGRouter = require('./routes/centers.js')
-// const centsRouter = require('./routes/cents.js')
 const branchesRouter = require('./routes/branches.js')
 const unitsRouter = require('./routes/units.js')
 
@@ -27,7 +22,6 @@ const session = require('express-session')
 const bcrypt = require('bcrypt')
 const { authUser, authRole } = require('./public/javascripts/basicAuth')
 const { ROLE } = require('./public/javascripts/data')
-const { forEach, isNull, isEmpty } = require('lodash')
 const _ = require('lodash')
 
 
@@ -76,16 +70,13 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 
-// app.use('/index', indexRouter)
-// app.use('/coas', coaRouter)
-// app.use('/sub_ledgers', sub_ledgerRouter)
-// app.use('/cents', centsRouter)
 app.use('/budgets', budgetRouter)
 app.use('/centers', budgetCOGRouter)
 app.use('/units', unitsRouter)
 app.use('/branches', branchesRouter)
 app.use('/admins', adminRouter)
-let locals = {}
+
+// let locals = {}
 app.locals.yuser = users
 app.locals.posisyon = []
 app.locals.userRole = ROLE
@@ -124,7 +115,6 @@ app.get('/', checkAuthenticated, async (req, res) => {
   }))
   
   app.delete('/logout', (req, res) => {
-    // users = []
     req.logOut()
     res.redirect('/login')
   })
@@ -145,15 +135,11 @@ app.get('/', checkAuthenticated, async (req, res) => {
   }
   
   async function setUser(req, res, next) {
-    // users.length === 0
-    // if (req.user == null) { 
-        const Yusers = await User.find({}, function (err, foundUsers) {
-            users = foundUsers
-            // console.log(users)
-          })
-        posisyon = await Position.find({group_code: "BRN"})
-      // }
-    next()
+
+      users = await User.find()
+      posisyon = await Position.find({group_code: "BRN"})
+
+      next()
   }
 
 
