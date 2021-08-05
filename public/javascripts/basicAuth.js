@@ -1,5 +1,6 @@
 
 function authUser(req, res, next) {
+    console.log('Log From authUser' + req.user.name)
     if (req.user == null) {
       res.status(403)
       return res.send('You need to sign in')

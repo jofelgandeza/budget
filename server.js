@@ -48,7 +48,7 @@ const Position = require('./models/position')
 const Employee = require('./models/employee')
 const User_log = require('./models/user_log')
 
-let users = []
+let users = [ ]
 // console.log (users)
 app.use(setUser)
 
@@ -140,6 +140,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
 
       next()
   }
+
 
 app.listen(process.env.PORT || 3000)
 
