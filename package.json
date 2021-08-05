@@ -2,6 +2,7 @@
   "name": "budget",
   "version": "1.0.0",
   "description": "Budget System",
+  "engines": { "node" : "14.16.0" },
   "scripts": {
     "start": "node server.js",
     "devStart": "nodemon server.js"
@@ -16,7 +17,6 @@
     "url": "https://github.com/jofelgandeza/budget/issues"
   },
   "homepage": "https://github.com/jofelgandeza/budget#readme",
-  "engines": { "node" : "14.16.0" },
   "dependencies": {
     "-": "0.0.1",
     "bcrypt": "^5.0.1",
