@@ -51,6 +51,8 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
      let POname =" "
      let POposition = " "
      let center = []
+     let POData = []
+     let loanType = []
 
     let doneCenterRead = false
     let doneTargetRead = false
@@ -58,11 +60,12 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
 
     try {
 
-        const POdata = await Employee.findOne({assign_code: assignCode}, function (err, foundedEmp) {
+        POdata = await Employee.findOne({assign_code: assignCode}, function (err, foundedEmp) {
             POname = foundedEmp.first_name + " " + foundedEmp.middle_name.substr(0,1) + ". " + foundedEmp.last_name
             POposition = foundedEmp.position_code
         })
-            const loanType = await Loan_type.find()
+        
+        loanType = await Loan_type.find()
 
 
         center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber})
