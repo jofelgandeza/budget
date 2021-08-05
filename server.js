@@ -86,10 +86,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
     if (req.user == null) {
       res.redirect('/login') 
     } else {
-
-        const asignCode = _.trim(req.user.assCode)
-        const yuserRole = req.user.role
-        
+        const asignCode = _.trim(req.user.assCode)        
           if (req.user.role === "PO") { 
               res.redirect('/centers/' + asignCode)
           } else if (req.user.role === "PUH" ) { 
