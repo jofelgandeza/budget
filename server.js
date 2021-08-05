@@ -83,26 +83,25 @@ app.locals.userRole = ROLE
 
 app.get('/', checkAuthenticated, async (req, res) => {
     console.log(req.user)
-    if (req.user !== null) {
+    if (req.user == null) {
+      res.redirect('/login') 
+    } else {
+
         const asignCode = _.trim(req.user.assCode)
         const yuserRole = req.user.role
+        
           if (req.user.role === "PO") { 
-            res.redirect('/centers/' + asignCode)
-          }
-          if (req.user.role === "PUH") { 
-            res.redirect('/units/' + asignCode)
-          }
-          if (req.user.role === "BM") { 
+              res.redirect('/centers/' + asignCode)
+          } else if (req.user.role === "PUH" ) { 
+              res.redirect('/units/' + asignCode)
+          } else if (req.user.role === "BM") { 
             res.redirect('/branches/' + asignCode)
           }
-          if (req.user.role === "ADMIN") { 
+          else if (req.user.role === "ADMIN") { 
             res.redirect('/admins') 
           }
-
-    } else {
-        res.redirect('/login') 
-        }
-})
+    } 
+  })
   
   app.get('/login', checkNotAuthenticated, (req, res) => {
     res.render('login.ejs')
@@ -141,7 +140,6 @@ app.get('/', checkAuthenticated, async (req, res) => {
 
       next()
   }
-
 
 app.listen(process.env.PORT || 3000)
 
