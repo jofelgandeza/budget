@@ -48,9 +48,13 @@ const Position = require('./models/position')
 const Employee = require('./models/employee')
 const User_log = require('./models/user_log')
 
-let users = [ ]
+// let users = [ ]
 // console.log (users)
+app.locals.users = [ ]
+
 app.use(setUser)
+
+
 app.use(express.json()) 
 app.use(flash())
 
@@ -77,7 +81,7 @@ app.use('/branches', branchesRouter)
 app.use('/admins', adminRouter)
 
 // let locals = {}
-app.locals.yuser = users
+app.locals.yuser = app.locals.users
 app.locals.posisyon = []
 app.locals.userRole = ROLE
 
