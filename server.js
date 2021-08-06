@@ -54,7 +54,7 @@ app.use(setUser)
 app.use(express.json()) 
 app.use(flash())
 
-const initializePassport = require('./public/javascripts/passport-config.js')
+const initializePassport = require('./public/passport-config.js')
 
 initializePassport(
     passport,
