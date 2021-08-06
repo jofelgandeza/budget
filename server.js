@@ -54,9 +54,14 @@ app.locals.users = [ ]
 
 app.use(setUser)
 
-
 app.use(express.json()) 
 app.use(flash())
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false
+}))
 
 const initializePassport = require('./public/passport-config.js')
 
@@ -66,11 +71,6 @@ initializePassport(
     id => users.find(user => user.id === id)
     )
 
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false
-}))
 app.use(passport.initialize())
 app.use(passport.session())
 
