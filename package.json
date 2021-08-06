@@ -33,6 +33,7 @@
     "method-override": "^3.0.0",
     "mongoose": "^5.11.12",
     "node": "^16.5.0",
+    "node.js": "0.0.1-security",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "sweetalert2": "^10.14.0"

@@ -32,8 +32,8 @@ app.use(expressLayouts)
 app.use(methodOverride('_method'))
 
 app.use(express.static('public'))
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 const mongoose = require('mongoose')
 mongoose.connect(process.env.DATABASE_URL, {
@@ -53,6 +53,9 @@ const User_log = require('./models/user_log')
 app.locals.users = [ ]
 
 app.use(setUser)
+app.locals.yuser = app.locals.users
+app.locals.posisyon = []
+app.locals.userRole = ROLE
 
 app.use(express.json()) 
 app.use(flash())
@@ -81,10 +84,6 @@ app.use('/branches', branchesRouter)
 app.use('/admins', adminRouter)
 
 // let locals = {}
-app.locals.yuser = app.locals.users
-app.locals.posisyon = []
-app.locals.userRole = ROLE
-
 app.get('/', checkAuthenticated, async (req, res) => {
     console.log(req.user)
     if (req.user == null) {
