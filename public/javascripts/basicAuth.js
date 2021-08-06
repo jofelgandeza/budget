@@ -1,10 +1,11 @@
 
 function authUser(req, res, next) {
-    if (req.user == null) {
+  const auUser = req.user
+  console.log('Log From authUser -->' + auUser)
+  if (auUser == null) {
       res.status(403)
       return res.send('You need to sign in')
     }
-    console.log('Log From authUser -->' + req.user)
   
     next()
   }

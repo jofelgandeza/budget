@@ -88,14 +88,14 @@ app.get('/', checkAuthenticated, async (req, res) => {
     } else {
         const asignCode = _.trim(req.user.assCode)        
           if (req.user.role === "PO") { 
-              res.redirect('/centers/' + asignCode)
+              res.redirect("/centers/" + asignCode)
           } else if (req.user.role === "PUH" ) { 
-              res.redirect('/units/' + asignCode)
+              res.redirect("/units/" + asignCode)
           } else if (req.user.role === "BM") { 
-            res.redirect('/branches/' + asignCode)
+            res.redirect("/branches/" + asignCode)
           }
           else if (req.user.role === "ADMIN") { 
-            res.redirect('/admins') 
+            res.redirect("/admins") 
           }
     } 
   })
