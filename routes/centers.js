@@ -1169,11 +1169,12 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                         })                                
                     }
 
-
             }
             
             // Saving RESIGN Client Count to center_budget_dets collection
-
+            if (resClient < 0) {
+                resiClient = 0
+            }
 //            console.log(resiClient)
             item = {
                 loan_type: loanType,
@@ -1258,6 +1259,8 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                     orderMonth = 0
             }   
 
+            let centerResBudgDet = []
+
             if (centerView1Code === "OldLoanClient" && canSaveResign) {
                         
                 let newCntrCliResBudg = new Center_budget_det({
@@ -1272,7 +1275,6 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                 res.redirect('/centers/' + centerCode + '/edit')
 
             } else {
-                let centerResBudgDet = []
 
                 centerResBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanType, view_code: "ResClientCount"})
 
@@ -1463,7 +1465,9 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
 
         let recCounter = 0
         let foundTargets = []
-   
+        lonTypDet = ""
+        lonRemarks = ""
+
         try {       
 
             recCounter =  recCounter + 1
@@ -1473,8 +1477,6 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
                modiCenter = await Center.findOne({center: listName})  //, function(err, modiCenter) {
                foundTargets = modiCenter.Targets
 
-               lonTypDet = ""
-               lonRemarks = ""
                foundTargets.forEach(cntrTarget => {
                     const walaLang = cntrTarget.month
                    if (_.trim(cntrTarget._id) === checkedItemId) {
@@ -1508,91 +1510,91 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
                 }
 
               
-           if (lonRemarks === "New Loan") {
-               centerView1Code = "NewLoanClient"
-               centerView2Code = "NewLoanAmt"
-           } else {
-               centerView1Code = "OldLoanClient"
-               centerView2Code = "OldLoanAmt"
-           }
-   
-           let janLoanBudg = 0
-           let febLoanBudg = 0
-           let marLoanBudg = 0
-           let aprLoanBudg = 0
-           let mayLoanBudg = 0
-           let junLoanBudg = 0
-           let julLoanBudg = 0
-           let augLoanBudg = 0
-           let sepLoanBudg = 0 
-           let octLoanBudg = 0
-           let novLoanBudg = 0
-           let decLoanBudg = 0
-           let janLoanCliBudg = 0
-           let febLoanCliBudg = 0
-           let marLoanCliBudg = 0
-           let aprLoanCliBudg = 0
-           let mayLoanCliBudg = 0
-           let junLoanCliBudg = 0
-           let julLoanCliBudg = 0
-           let augLoanCliBudg = 0
-           let sepLoanCliBudg = 0
-           let octLoanCliBudg = 0
-           let novLoanCliBudg = 0
-           let decLoanCliBudg = 0
-       
-           switch(month) {
-               case "January": 
-                   janLoanCliBudg = numClient
-                   janLoanBudg = totAmount
-                   break;
-               case "February": 
-                   febLoanCliBudg = numClient
-                   febLoanBudg = totAmount
-                   break;
-               case "March": 
-                   marLoanCliBudg = numClient
-                   marLoanBudg = totAmount
-                   break;
-               case "April": 
-                   aprLoanCliBudg = numClient
-                   aprLoanBudg = totAmount
-                   break;
-               case "May": 
-                   mayLoanCliBudg = numClient
-                   mayLoanBudg = totAmount
-                   break;
-               case "June": 
-                   junLoanCliBudg = numClient
-                   junLoanBudg = totAmount
-                   break;
-               case "July": 
-                   julLoanCliBudg = numClient
-                   julLoanBudg = totAmount
-                   break;
-               case "August": 
-                   augLoanCliBudg = numClient
-                   augLoanBudg = totAmount
-                   break;
-               case "September": 
-                   sepLoanCliBudg = numClient
-                   sepLoanBudg = totAmount
-                   break;
-               case "October": 
-                   octLoanCliBudg = numClient
-                   octLoanBudg = totAmount
-                   break;
-               case "November": 
-                   novLoanCliBudg = numClient
-                   novLoanBudg = totAmount
-                   break;
-               case "December": 
-                   decLoanCliBudg = numClient
-                   decLoanBudg = totAmount
-                   break;
-               default:
-                   orderMonth = 0
-           }   
+            if (lonRemarks === "New Loan") {
+                centerView1Code = "NewLoanClient"
+                centerView2Code = "NewLoanAmt"
+            } else {
+                centerView1Code = "OldLoanClient"
+                centerView2Code = "OldLoanAmt"
+            }
+    
+            let janLoanBudg = 0
+            let febLoanBudg = 0
+            let marLoanBudg = 0
+            let aprLoanBudg = 0
+            let mayLoanBudg = 0
+            let junLoanBudg = 0
+            let julLoanBudg = 0
+            let augLoanBudg = 0
+            let sepLoanBudg = 0 
+            let octLoanBudg = 0
+            let novLoanBudg = 0
+            let decLoanBudg = 0
+            let janLoanCliBudg = 0
+            let febLoanCliBudg = 0
+            let marLoanCliBudg = 0
+            let aprLoanCliBudg = 0
+            let mayLoanCliBudg = 0
+            let junLoanCliBudg = 0
+            let julLoanCliBudg = 0
+            let augLoanCliBudg = 0
+            let sepLoanCliBudg = 0
+            let octLoanCliBudg = 0
+            let novLoanCliBudg = 0
+            let decLoanCliBudg = 0
+        
+            switch(month) {
+                case "January": 
+                    janLoanCliBudg = numClient
+                    janLoanBudg = totAmount
+                    break;
+                case "February": 
+                    febLoanCliBudg = numClient
+                    febLoanBudg = totAmount
+                    break;
+                case "March": 
+                    marLoanCliBudg = numClient
+                    marLoanBudg = totAmount
+                    break;
+                case "April": 
+                    aprLoanCliBudg = numClient
+                    aprLoanBudg = totAmount
+                    break;
+                case "May": 
+                    mayLoanCliBudg = numClient
+                    mayLoanBudg = totAmount
+                    break;
+                case "June": 
+                    junLoanCliBudg = numClient
+                    junLoanBudg = totAmount
+                    break;
+                case "July": 
+                    julLoanCliBudg = numClient
+                    julLoanBudg = totAmount
+                    break;
+                case "August": 
+                    augLoanCliBudg = numClient
+                    augLoanBudg = totAmount
+                    break;
+                case "September": 
+                    sepLoanCliBudg = numClient
+                    sepLoanBudg = totAmount
+                    break;
+                case "October": 
+                    octLoanCliBudg = numClient
+                    octLoanBudg = totAmount
+                    break;
+                case "November": 
+                    novLoanCliBudg = numClient
+                    novLoanBudg = totAmount
+                    break;
+                case "December": 
+                    decLoanCliBudg = numClient
+                    decLoanBudg = totAmount
+                    break;
+                default:
+                    orderMonth = 0
+            }   
        
 //    console.log(listName)
 //    console.log(litlitekLnTyp)
@@ -1689,7 +1691,58 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
                }           
                modifyCenter2Det.save()
             }
-           center = await Center.findOneAndUpdate({center: listName}, {$pull: {Targets :{_id: checkedItemId }}}, function(err, foundList){
+
+            if (lonRemarks === "Re-loan") {
+
+                modifyCenter3Det = await Center_budget_det.findOne({center: listName, loan_type: lonTypDet, view_code: "ResClientCount"}) //, function(err, modifyCenter2Det) {
+                    if (isNull(modifyCenter3Det)) {
+    
+                    } else {
+                    switch(month) {
+                        case "January": 
+                            modifyCenter3Det.jan_budg = modifyCenter3Det.jan_budg - janLoanCliBudg
+                            break;
+                        case "February": 
+                            modifyCenter3Det.feb_budg = modifyCenter3Det.feb_budg - febLoanCliBudg
+                            break;
+                        case "March": 
+                            modifyCenter3Det.mar_budg = modifyCenter3Det.mar_budg - marLoanCliBudg
+                            break;
+                        case "April": 
+                            modifyCenter3Det.apr_budg = modifyCenter3Det.apr_budg - aprLoanCliBudg
+                            break;
+                        case "May": 
+                            modifyCenter3Det.may_budg = modifyCenter3Det.may_budg - mayLoanCliBudg
+                            break;
+                        case "June": 
+                            modifyCenter3Det.jun_budg = modifyCenter3Det.jun_budg - junLoanCliBudg
+                            break;
+                        case "July": 
+                            modifyCenter3Det.jul_budg = modifyCenter3Det.jul_budg - julLoanCliBudg
+                            break;
+                        case "August": 
+                            modifyCenter3Det.aug_budg = modifyCenter3Det.aug_budg - augLoanCliBudg
+                            break;
+                        case "September": 
+                            modifyCenter3Det.sep_budg = modifyCenter3Det.sep_budg - sepLoanCliBudg
+                            break;
+                        case "October": 
+                            modifyCenter3Det.oct_budg = modifyCenter3Det.oct_budg - octLoanCliBudg
+                            break;
+                        case "November": 
+                            modifyCenter3Det.nov_budg = modifyCenter3Det.nov_budg - novLoanCliBudg
+                            break;
+                        case "December": 
+                            modifyCenter3Det.dec_budg = modifyCenter3Det.dec_budg - decLoanCliBudg
+                            break;
+                        default:
+                            orderMonth = 0
+                    }           
+                    modifyCenter3Det.save()
+                }
+            }
+
+            center = await Center.findOneAndUpdate({center: listName}, {$pull: {Targets :{_id: checkedItemId }}}, function(err, foundList){
 
                if (!err) {
 
