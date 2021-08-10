@@ -652,40 +652,41 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                doneReadCenter = true
            })
    
-            // Updating Loan Beginning Balances to center_budget_dets.. 
-            const centerBudgDetFound = await Center_budget_det.findOne({center: listName, loan_type: delLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
-                if (err) {
-                    console.log(err)
-                }
-                else {
-                    console.log(foundVwList)
+           if (doneReadCenter) {
+                // Updating Loan Beginning Balances to center_budget_dets.. 
+                const centerBudgDetFound = await Center_budget_det.findOne({center: listName, loan_type: delLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
+                    if (err) {
+                        console.log(err)
+                    }
+                    else {
+                        console.log(foundVwList)
 
-                    foundVwList.beg_bal = 0
-                    foundVwList.beg_bal_amt = 0
-                    foundVwList.beg_bal_int = 0
-                    
-                    foundVwList.save();
+                        foundVwList.beg_bal = 0
+                        foundVwList.beg_bal_amt = 0
+                        foundVwList.beg_bal_int = 0
+                        
+                        foundVwList.save();
 
-                    doneUpdateOldClient = true
-                }
-            })
+                    }
+                        doneUpdateOldClient = true
+                })
 
-            const center2BudgDetFound = await Center_budget_det.findOne({center: listName, loan_type: delLoanType, view_code: "OldLoanAmt"}, function(err, foundBegAmtList){ 
-                if (err) {
-                    console.log(err)
-                }
-                else {
-                    console.log(foundBegAmtList)
+                const center2BudgDetFound = await Center_budget_det.findOne({center: listName, loan_type: delLoanType, view_code: "OldLoanAmt"}, function(err, foundBegAmtList){ 
+                    if (err) {
+                        console.log(err)
+                    }
+                    else {
+                        console.log(foundBegAmtList)
 
-                    foundBegAmtList.beg_bal = 0
-                    foundBegAmtList.beg_bal_amt = 0
-                    foundBegAmtList.beg_bal_int = 0
-                    
-                    foundBegAmtList.save();
-
+                        foundBegAmtList.beg_bal = 0
+                        foundBegAmtList.beg_bal_amt = 0
+                        foundBegAmtList.beg_bal_int = 0
+                        
+                        foundBegAmtList.save();
+                    }
                     doneUpdateOldAmt = true
-                  }
-            })
+                })
+            }
 
             if (doneReadCenter && doneUpdateOldClient && doneUpdateOldAmt) {
 
@@ -2094,7 +2095,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             olTotValueClient = jan_oldCtotValue + feb_oldCtotValue + mar_oldCtotValue + apr_oldCtotValue + may_oldCtotValue + jun_oldCtotValue
                         + jul_oldCtotValue + aug_oldCtotValue + sep_oldCtotValue + oct_oldCtotValue + nov_oldCtotValue + dec_oldCtotValue
             
-            poSumView.push({title: "Number of Reloan", sortkey: 9, group: 1, isTitle: false, beg_bal: begBalOldClient, jan_value : jan_oldCtotValue, feb_value : feb_oldCtotValue, mar_value : mar_oldCtotValue, apr_value : apr_oldCtotValue,
+            poSumView.push({title: "Number of Reloan", sortkey: 9, group: 1, isTitle: false, beg_bal: 0, jan_value : jan_oldCtotValue, feb_value : feb_oldCtotValue, mar_value : mar_oldCtotValue, apr_value : apr_oldCtotValue,
                 may_value : may_oldCtotValue, jun_value : jun_oldCtotValue, jul_value : jul_oldCtotValue, aug_value : aug_oldCtotValue,
                 sep_value : sep_oldCtotValue, oct_value : oct_oldCtotValue, nov_value : nov_oldCtotValue, dec_value : dec_oldCtotValue 
             }) 
