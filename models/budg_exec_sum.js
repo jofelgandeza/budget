@@ -16,6 +16,10 @@ const mongoose = require('mongoose')
         type: String,
         required: true
     },
+    po: {
+        type: String,
+        required: true
+    },
     view_code: {
         type: String,
         required: true
@@ -29,6 +33,14 @@ const mongoose = require('mongoose')
         required: false
     },
     beg_bal_int: {
+        type: Number,
+        required: false
+    },
+    sort_key: {
+        type: Number,
+        required: false
+    },
+    display_group: {
         type: Number,
         required: false
     },

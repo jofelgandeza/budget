@@ -43,8 +43,8 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
     }
     try {
 
-        branchName = "BRANCHES BUDGET MODULE VIEW"
-        res.render('branches/index', {
+        branchName = "AREA BUDGET MODULE VIEW"
+        res.render('areas/index', {
             branchCode: branchCode,
             searchOptions: req.query,
             yuser: _user,
@@ -57,15 +57,15 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 })
 
 // View BRANCH per UNIT  - TUG-A
-router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     
-    const branchCode = req.params.id
+    const areaCode = req.params.id
     const _user = req.user
 
     const fndPositi = posisyon
 
-    let foundManager = []
-    let foundPOunits = []
+    let foundAreaMgr = []
+    let foundAMBranches = []
     let foundPO = []
     let officerName = ""
     let postManager = ""
@@ -118,9 +118,8 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
     try {
 
-
-        const branchManager = await Employee.find({branch: branchCode, position_code: postManager}, function (err, foundBMs){
-            foundManager = foundBMs
+        const branchManager = await Employee.find({area: areaCode, position_code: postManager}, function (err, foundBMs){
+            foundAreaMgr = foundBMs
 
            })
         
@@ -129,20 +128,20 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
                     officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
                 })
             }            
-        const unitOfficers = await Employee.find({branch: branchCode, position_code: postUnitHead}, function (err, foundUHs){
-            foundPOunits = foundUHs
+        const branMgrs = await Employee.find({area: areaCode, position_code: postUnitHead}, function (err, foundUHs){
+            foundAMBranches = foundUHs
             })
-        const programOfficers = await Employee.find({branch: branchCode, position_code: postProgOfr}, function (err, foundPO){
+        const programOfficers = await Employee.find({area: areaCode, position_code: postProgOfr}, function (err, foundPO){
             foundPOs = foundPO
             })
 
         // console.log(officerName)
-        // console.log(foundPOunits)
+        // console.log(foundAMBranches)
         // console.log(foundPOs)
 
         const loanType = await Loan_type.find({})
 
-        const center = await Center.find({branch: branchCode}, function (err, foundCenters) {
+        const center = await Center.find({area: areaCode}, function (err, foundCenters) {
 //        const center = await Center.find(searchOptions)
 
             newClients = _.sumBy(foundCenters, function(o) { return o.newClient; });
@@ -164,7 +163,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
         } else {
             doneReadCenter = true   
         }
-    foundPOunits.forEach(uh => {
+    foundAMBranches.forEach(uh => {
 
         let unCode = _.trim(uh.unit)
         let uniCode = unCode
@@ -325,10 +324,10 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
             console.log(totDisburse)
 
-//            console.log(foundPOunits)
+//            console.log(foundAMBranches)
         if ( doneReadCenter && doneFoundPO && doneReadLonTyp) {
-            res.render('branches/budget', {
-                listTitle: branchCode,
+            res.render('areas/budget', {
+                listTitle: areaCode,
                 officerName: officerName,
                 loanTots: brnLoanTotals,
                 poGrandTot: brnLoanGrandTot,
@@ -1067,8 +1066,6 @@ router.put('/putEditedUnit/:id', authUser, authRole(ROLE.BM), async function(req
             unit.unit_code = uUnitCode
             unit.unit = uUnit.toUpperCase()
             unit.branch = brnCod
-            unit.area = "TEST"
-            unit.region = "TEST"
             unit.loan_type = ln_Typ
             unit.office_loc = req.body.office_loc
             unit.address = req.body.unitAdd
@@ -1117,16 +1114,16 @@ router.get('/unit/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     console.log(uniCode)
    
     let foundCenter = []
-    let foundPOunits = []
+    let foundAMBranches = []
     let foundPO = []
     let officerName = ""
       
        try {
            const employee = await Employee.find({branch: branchCode, unit: unitCode}, function (err, foundPOs){
-               foundPOunits = foundPOs
+               foundAMBranches = foundPOs
            })
    
-           console.log(foundPOunits)
+           console.log(foundAMBranches)
    
            const center = await Center.find({branch: branchCode, unit: unitCode}, function (err, foundCenters) {
    
@@ -1151,9 +1148,9 @@ router.get('/unit/:id', authUser, authRole(ROLE.BM), async (req, res) => {
    //                locals: locals
    //        })            
            })
-           //console.log (foundPOunits)
+           //console.log (foundAMBranches)
            let poNumber
-           foundPOunits.forEach(po_data => {
+           foundAMBranches.forEach(po_data => {
                
                POnumber = po_data.po_number
                const POname = po_data.first_name + " " + po_data.middle_name.substr(0,1) + ". " + po_data.last_name

@@ -1,0 +1,12 @@
+
+<h2 class="page-header">SET NEW CENTERS Entry - <%= poCode %> </h2>
+<form action='/units/postNewCenters/<%= poCode %>' method="POST">
+            <%- include('../partials/errorMessage') %>    
+            <%- include('_setCenters_form_fields') %>
+<div class="btn-row">
+    <div></div>
+    <div></div>
+        <button class="btn btn-primary" type="submit">Create</button>
+        <a class="btn btn-primary" href='/units/setPOCenters/<%= poCode %>'>Cancel</a>
+</div>
+</form>

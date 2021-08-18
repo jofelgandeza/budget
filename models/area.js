@@ -1,40 +1,15 @@
 const mongoose = require('mongoose')
 
-const centerTargetSchema = {
-    loan_type: String,
-    month: String,
-    semester: String,
-    numClient: Number,
-    amount: Number,
-    totAmount: Number,
-    remarks: String,
-    monthOrder: Number,
-    dispView: Number,
-    resignClient: Number
-  };
-
-  const unitsSchema = new mongoose.Schema({
-    unit_code: {
-        type: String,
-        required: true
-    },
-    unit: {
-        type: String,
-        required: true
-    },
-    branch: {
-        type: String,
-        required: true
-    },
+  const areasSchema = new mongoose.Schema({
     area: {
         type: String,
         required: true
     },
-    region: {
+    area_desc: {
         type: String,
         required: true
     },
-    loan_type: {
+    region: {
         type: String,
         required: true
     },
@@ -50,7 +25,11 @@ const centerTargetSchema = {
         type: String,
         required: true
     },
-    num_centers: {
+    num_branches: {
+        type: Number,
+        required: false
+    },
+    num_units: {
         type: Number,
         required: false
     },
@@ -58,11 +37,23 @@ const centerTargetSchema = {
         type: Number,
         required: false
     },
-    num_centers_budg: {
+    num_centers: {
+        type: Number,
+        required: false
+    },
+    num_branches_budg: {
+        type: Number,
+        required: false
+    },
+    num_units_budg: {
         type: Number,
         required: false
     },
     num_pos_budg: {
+        type: Number,
+        required: false
+    },
+    num_centers_budg: {
         type: Number,
         required: false
     },
@@ -72,4 +63,4 @@ const centerTargetSchema = {
     },
   });
   
-module.exports = mongoose.model('Unit', unitsSchema)
+module.exports = mongoose.model('Area', areasSchema)

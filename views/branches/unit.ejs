@@ -3,6 +3,13 @@
        <h4> BRANCH UNITS MAINTENANCE</h4>
         <table class="content-table">
             <tr>
+                <% if (fondUnits.length > 0) { %>
+                <% } else { %>
+                    <a class="btn btn-primary" href='/branches/setNewPOs/<%= branchCode %>'>SET NEW CENTERS</a>
+                <% } %>
+
+            </tr>
+            <tr>
                 <th> UNIT</th>
                 <th> UNIT HEAD</th>
                 <th> LOAN PRODUCT</th>

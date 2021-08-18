@@ -4,6 +4,12 @@
        <h4> UNIT PO MAINTENANCE - <%= uniCod %></h4>
         <table class="content-table">
             <tr>
+                <% if (fondPos.length > 0) { %>
+                <% } else { %>
+                    <a class="btn btn-primary" href='/units/setNewPOs/<%= uniCod %>'>SET NEW PO's</a>
+                <% } %>
+            </tr>
+            <tr>
                 <th> PO NO.</th>
                 <th> ASSIGNED PO</th>
                 <th> LOAN PRODUCT</th>

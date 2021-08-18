@@ -1,28 +1,11 @@
 const mongoose = require('mongoose')
 
-const centerTargetSchema = {
-    loan_type: String,
-    month: String,
-    semester: String,
-    numClient: Number,
-    amount: Number,
-    totAmount: Number,
-    remarks: String,
-    monthOrder: Number,
-    dispView: Number,
-    resignClient: Number
-  };
-
-  const unitsSchema = new mongoose.Schema({
-    unit_code: {
-        type: String,
-        required: true
-    },
-    unit: {
-        type: String,
-        required: true
-    },
+  const branchesSchema = new mongoose.Schema({
     branch: {
+        type: String,
+        required: true
+    },
+    branch_desc: {
         type: String,
         required: true
     },
@@ -31,10 +14,6 @@ const centerTargetSchema = {
         required: true
     },
     region: {
-        type: String,
-        required: true
-    },
-    loan_type: {
         type: String,
         required: true
     },
@@ -50,7 +29,7 @@ const centerTargetSchema = {
         type: String,
         required: true
     },
-    num_centers: {
+    num_units: {
         type: Number,
         required: false
     },
@@ -58,11 +37,19 @@ const centerTargetSchema = {
         type: Number,
         required: false
     },
-    num_centers_budg: {
+    num_centers: {
+        type: Number,
+        required: false
+    },
+    num_units_budg: {
         type: Number,
         required: false
     },
     num_pos_budg: {
+        type: Number,
+        required: false
+    },
+    num_centers_budg: {
         type: Number,
         required: false
     },
@@ -72,4 +59,4 @@ const centerTargetSchema = {
     },
   });
   
-module.exports = mongoose.model('Unit', unitsSchema)
+module.exports = mongoose.model('Branch', branchesSchema)

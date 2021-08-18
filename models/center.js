@@ -40,6 +40,10 @@ const centerLoan = {
 }
 
   const centersSchema = new mongoose.Schema({
+    region: {
+        type: String,
+        required: true
+    },
     area: {
         type: String,
         required: true

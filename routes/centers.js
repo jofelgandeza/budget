@@ -8,6 +8,7 @@ const Employee = require('../models/employee')
 const Loan_type = require('../models/loan_type')
 const Center_budget_det = require('../models/center_budget_det')
 const Center_det_budg_view = require('../models/center_det_budg_view')
+const Budg_exec_sum = require('../models/budg_exec_sum')
 const _ = require('lodash')
 const Cleave = require('../public/javascripts/cleave.js')
 const sortArray = require('../public/javascripts/sortArray.js')
@@ -16,10 +17,12 @@ const { authUser, authRole } = require('../public/javascripts/basicAuth.js')
 const { canViewProject, canDeleteProject, scopedProjects } = require('../public/javascripts/permissions/project.js')
 const user = require('../models/user')
 const User_log = require('../models/user_log')
+const excel = require('exceljs')
 
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
 const begMonthSelect = ["January","February", "March", "April", "May", "June"];
 
+let poSumView = []
 
 
 router.get('/:id', authUser, authRole("PO"), async (req, res) => {
@@ -1803,7 +1806,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
     let foundPOV = []
 
-    let poSumView = []
+    poSumView = []
     let poTotLoanAmtArray = []
 
     let nwTotValueClient = 0
@@ -1900,27 +1903,6 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         let oct_oldATotValue = 0
         let nov_oldATotValue = 0
         let dec_oldATotValue = 0
-        let doneReadNLC = false
-        let doneReadOLC = false
-        let doneReadNLA = false
-        let doneReadOLA = false
-
-        let doneReadNLCli = false
-        let doneReadOLCli = false
-        let doneReadResCli = false
-
-        let doneReadClientCount = false
-        let doneReadLoanCount = false
-        let doneReadLoanAmt = false
-
-    try {
-
-        const vwloanType = await Loan_type.find({})
-
-        const foundCenterDet = await Center_budget_det.find({po_code: viewPOCode})
-
-        const foundCenters = await Center.find({po_code: viewPOCode}, function(err, foundCenters) {
-            const fndCenters = foundCenters
             let centerCntBegBal = 0
             let jan_centerCount = 0
             let feb_centerCount = 0
@@ -1934,6 +1916,76 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             let oct_centerCount = 0
             let nov_centerCount = 0
             let dec_centerCount = 0
+
+        let doneReadNLC = false
+        let doneReadOLC = false
+        let doneReadNLA = false
+        let doneReadOLA = false
+
+        let doneReadNLCli = false
+        let doneReadOLCli = false
+        let doneReadResCli = false
+
+        let doneReadClientCount = false
+        let doneReadLoanCount = false
+        let doneReadLoanAmt = false
+        let doneReadNumCenters = false
+        
+        let fondPONumCenters = []
+        let fondNewClients = []
+        let fondOldClients = []
+        let fondResClients = []
+        let fondTotClients = []
+        let fondNewLoanCli = []
+        let fondReLoanCli = []
+        let fondNewLoanAmt = []
+        let fondReLoanAmt = []
+        let fondMonthlyDisburse = []
+        let fondBalFromPrevMo = []
+
+    try {
+
+        const vwloanType = await Loan_type.find({})
+
+        const foundCenterDet = await Center_budget_det.find({po_code: viewPOCode})
+
+        // Gets NumberOfCenters from Budg_exec_sum
+        const fndPONumCenters = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumberOfCenters"}, function (err, fndTotLonAmt) {
+            fondPONumCenters = fndTotLonAmt
+        })
+        const fndNewClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NewClients"}, function (err, fndTotLonAmt) {
+            fondNewClients = fndTotLonAmt
+        })
+        const fndOldClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "OldClients"}, function (err, fndTotLonAmt) {
+            fondOldClients = fndTotLonAmt
+        })
+        const fndResClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "ResignClients"}, function (err, fndTotLonAmt) {
+            fondResClients = fndTotLonAmt
+        })
+        const fndTotClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "TotalClients"}, function (err, fndTotLonAmt) {
+            fondTotClients = fndTotLonAmt
+        })
+        const fndNewLoanCli = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumNewLoanCli"}, function (err, fndTotLonAmt) {
+            fondNewLoanCli = fndTotLonAmt
+        })
+        const fndReLoanCli = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumReLoanCli"}, function (err, fndTotLonAmt) {
+            fondReLoanCli = fndTotLonAmt
+        })
+        const fndNewLoanAmt = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NewLoanAmount"}, function (err, fndTotLonAmt) {
+            fondNewLoanAmt = fndTotLonAmt
+        })
+        const fndReLoanAmt = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "ReLoanAmount"}, function (err, fndTotLonAmt) {
+            fondReLoanAmt = fndTotLonAmt
+        })
+        const fndRMonDisburse = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "MonthlyDisbAmt"}, function (err, fndTotLonAmt) {
+            fondMonthlyDisburse = fndTotLonAmt
+        })
+        const fndBalFromPrevMo = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "BalFromPrevMon"}, function (err, fndTotLonAmt) {
+            fondBalFromPrevMo = fndTotLonAmt
+        })
+        
+        const foundCenters = await Center.find({po_code: viewPOCode}, function(err, foundCenters) {
+            const fndCenters = foundCenters
                 console.log(fndCenters)
             fndCenters.forEach( fCenters => {
                 const monthCenterBegBal = _.trim(fCenters.beg_center_month)
@@ -2003,9 +2055,35 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 apr_value: apr_centerCount, may_value: may_centerCount, jun_value: jun_centerCount, jul_value: jul_centerCount, aug_value: aug_centerCount,
                 sep_value: sep_centerCount, oct_value: oct_centerCount, nov_value: nov_centerCount, dec_value: dec_centerCount
             })
+            doneReadNumCenters = true
 
         })
         // console.log(foundCenterDet)
+        if (doneReadNumCenters) {
+            if (isNull(fondPONumCenters)) { 
+                let newPONumCenters = new Budg_exec_sum({
+                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of Centers", view_code: "NumberOfCenters", sort_key: 2, display_group: 1, beg_bal: centerCntBegBal, jan_budg : jan_centerCount, 
+                    feb_budg : feb_centerCount, mar_budg : mar_centerCount, apr_budg : apr_centerCount, may_budg : may_centerCount, jun_budg : jun_centerCount, jul_budg : jul_centerCount, 
+                    aug_budg : aug_centerCount, sep_budg : sep_centerCount, oct_budg : oct_centerCount, nov_budg : nov_centerCount, dec_budg : dec_centerCount                                        
+                })
+                newPONumCenters.save()
+            } else {
+                fondPONumCenters.jan_budg = jan_centerCount
+                fondPONumCenters.feb_budg = feb_centerCount
+                fondPONumCenters.mar_budg = mar_centerCount
+                fondPONumCenters.apr_budg = apr_centerCount
+                fondPONumCenters.may_budg = may_centerCount
+                fondPONumCenters.jun_budg = jun_centerCount
+                fondPONumCenters.jul_budg = jul_centerCount
+                fondPONumCenters.aug_budg = aug_centerCount
+                fondPONumCenters.sep_budg = sep_centerCount
+                fondPONumCenters.oct_budg = oct_centerCount
+                fondPONumCenters.nov_budg = nov_centerCount
+                fondPONumCenters.dec_budg = dec_centerCount
+
+                fondPONumCenters.save()            
+            }
+        }
 
         poSumView.push({title: "CENTERS", sortkey: 1, group: 1, isTitle: true})
 
@@ -2033,8 +2111,35 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     sep_value : sep_newCliTot, oct_value : oct_newCliTot, nov_value : nov_newCliTot, dec_value : dec_newCliTot 
                 }) 
                 doneReadNLCli = true
-        }) //, function (err, fndPOV) {
 
+            }) //, function (err, fndPOV) {
+
+            if (doneReadNLCli) {
+                if (isNull(fondNewClients)) { 
+                    let newNewClients = new Budg_exec_sum({
+                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "New Clients", view_code: "NewClients", sort_key: 4, display_group: 2, beg_bal: 0, jan_budg : jan_newCliTot, 
+                        feb_budg : feb_newCliTot, mar_budg : mar_newCliTot, apr_budg : apr_newCliTot, may_budg : may_newCliTot, jun_budg : jun_newCliTot, jul_budg : jul_newCliTot, 
+                        aug_budg : aug_newCliTot, sep_budg : sep_newCliTot, oct_budg : oct_newCliTot, nov_budg : nov_newCliTot, dec_budg : dec_newCliTot                                        
+                    })
+                    newNewClients.save()
+                } else {
+                    fondNewClients.jan_budg = jan_newCliTot
+                    fondNewClients.feb_budg = feb_newCliTot
+                    fondNewClients.mar_budg = mar_newCliTot
+                    fondNewClients.apr_budg = apr_newCliTot
+                    fondNewClients.may_budg = may_newCliTot
+                    fondNewClients.jun_budg = jun_newCliTot
+                    fondNewClients.jul_budg = jul_newCliTot
+                    fondNewClients.aug_budg = aug_newCliTot
+                    fondNewClients.sep_budg = sep_newCliTot
+                    fondNewClients.oct_budg = oct_newCliTot
+                    fondNewClients.nov_budg = nov_newCliTot
+                    fondNewClients.dec_budg = dec_newCliTot
+        
+                    fondNewClients.save()            
+                }
+
+            }
         const oldClientCntView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanClient", client_count_included: true}, function (err, fndOldCliCnt) {
 
             begBalOldClient = _.sumBy(fndOldCliCnt, function(o) { return o.beg_bal; })
@@ -2121,6 +2226,79 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 apr_value : apr_totNumClients, may_value : may_totNumClients, jun_value : jun_totNumClients, jul_value : jul_totNumClients, aug_value : aug_totNumClients,
                 sep_value : sep_totNumClients, oct_value : oct_totNumClients, nov_value : nov_totNumClients, dec_value : dec_totNumClients
             }) 
+
+            if (isNull(fondOldClients)) { 
+                let newNewClients = new Budg_exec_sum({
+                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Old Clients", view_code: "OldClients", sort_key: 6, display_group: 2, beg_bal: 0, jan_budg : jan_oldCliTot, 
+                    feb_budg : feb_oldCliTot, mar_budg : mar_oldCliTot, apr_budg : apr_oldCliTot, may_budg : may_oldCliTot, jun_budg : jun_oldCliTot, jul_budg : jul_oldCliTot, 
+                    aug_budg : aug_oldCliTot, sep_budg : sep_oldCliTot, oct_budg : oct_oldCliTot, nov_budg : nov_oldCliTot, dec_budg : dec_oldCliTot                                        
+                })
+                newNewClients.save()
+            } else {
+                fondOldClients.jan_budg = jan_oldCliTot
+                fondOldClients.feb_budg = feb_oldCliTot
+                fondOldClients.mar_budg = mar_oldCliTot
+                fondOldClients.apr_budg = apr_oldCliTot
+                fondOldClients.may_budg = may_oldCliTot
+                fondOldClients.jun_budg = jun_oldCliTot
+                fondOldClients.jul_budg = jul_oldCliTot
+                fondOldClients.aug_budg = aug_oldCliTot
+                fondOldClients.sep_budg = sep_oldCliTot
+                fondOldClients.oct_budg = oct_oldCliTot
+                fondOldClients.nov_budg = nov_oldCliTot
+                fondOldClients.dec_budg = dec_oldCliTot
+    
+                fondOldClients.save()            
+            }
+
+            if (isNull(fondResClients)) { 
+                let newNewClients = new Budg_exec_sum({
+                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Resign Clients", view_code: "ResignClients", sort_key: 5, display_group: 2, beg_bal: 0, jan_budg : jan_resCliTot, 
+                    feb_budg : feb_resCliTot, mar_budg : mar_resCliTot, apr_budg : apr_resCliTot, may_budg : may_resCliTot, jun_budg : jun_resCliTot, jul_budg : jul_resCliTot, 
+                    aug_budg : aug_resCliTot, sep_budg : sep_resCliTot, oct_budg : oct_resCliTot, nov_budg : nov_resCliTot, dec_budg : dec_resCliTot                                        
+                })
+                newNewClients.save()
+            } else {
+                fondResClients.jan_budg = jan_resCliTot
+                fondResClients.feb_budg = feb_resCliTot
+                fondResClients.mar_budg = mar_resCliTot
+                fondResClients.apr_budg = apr_resCliTot
+                fondResClients.may_budg = may_resCliTot
+                fondResClients.jun_budg = jun_resCliTot
+                fondResClients.jul_budg = jul_resCliTot
+                fondResClients.aug_budg = aug_resCliTot
+                fondResClients.sep_budg = sep_resCliTot
+                fondResClients.oct_budg = oct_resCliTot
+                fondResClients.nov_budg = nov_resCliTot
+                fondResClients.dec_budg = dec_resCliTot
+    
+                fondResClients.save()            
+            }
+
+            if (isNull(fondTotClients)) { 
+                let newNewClients = new Budg_exec_sum({
+                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "TOTAL NO. OF CLIENTS", view_code: "TotalClients", sort_key: 6, display_group: 2, beg_bal: 0, jan_budg : jan_totNumClients, 
+                    feb_budg : feb_totNumClients, mar_budg : mar_totNumClients, apr_budg : apr_totNumClients, may_budg : may_totNumClients, jun_budg : jun_totNumClients, jul_budg : jul_totNumClients, 
+                    aug_budg : aug_totNumClients, sep_budg : sep_totNumClients, oct_budg : oct_totNumClients, nov_budg : nov_totNumClients, dec_budg : dec_totNumClients                                        
+                })
+                newNewClients.save()
+            } else {
+                fondTotClients.jan_budg = jan_totNumClients
+                fondTotClients.feb_budg = feb_totNumClients
+                fondTotClients.mar_budg = mar_totNumClients
+                fondTotClients.apr_budg = apr_totNumClients
+                fondTotClients.may_budg = may_totNumClients
+                fondTotClients.jun_budg = jun_totNumClients
+                fondTotClients.jul_budg = jul_totNumClients
+                fondTotClients.aug_budg = aug_totNumClients
+                fondTotClients.sep_budg = sep_totNumClients
+                fondTotClients.oct_budg = oct_totNumClients
+                fondTotClients.nov_budg = nov_totNumClients
+                fondTotClients.dec_budg = dec_totNumClients
+    
+                fondTotClients.save()            
+            }
+
             doneReadClientCount = true
         }
 
@@ -2151,6 +2329,32 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             doneReadNLC = true
         }) //, function (err, fndPOV) {
 
+        if (doneReadNLC) {
+            if (isNull(fondNewLoanCli)) { 
+                let newNewClients = new Budg_exec_sum({
+                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of New Loan", view_code: "NumNewLoanCli", sort_key: 8, display_group: 1, beg_bal: 0, jan_budg : jan_newCtotValue, 
+                    feb_budg : feb_newCtotValue, mar_budg : mar_newCtotValue, apr_budg : apr_newCtotValue, may_budg : may_newCtotValue, jun_budg : jun_newCtotValue, jul_budg : jul_newCtotValue, 
+                    aug_budg : aug_newCtotValue, sep_budg : sep_newCtotValue, oct_budg : oct_newCtotValue, nov_budg : nov_newCtotValue, dec_budg : dec_newCtotValue                                        
+                })
+                newNewClients.save()
+            } else {
+                fondNewLoanCli.jan_budg = jan_newCtotValue
+                fondNewLoanCli.feb_budg = feb_newCtotValue
+                fondNewLoanCli.mar_budg = mar_newCtotValue
+                fondNewLoanCli.apr_budg = apr_newCtotValue
+                fondNewLoanCli.may_budg = may_newCtotValue
+                fondNewLoanCli.jun_budg = jun_newCtotValue
+                fondNewLoanCli.jul_budg = jul_newCtotValue
+                fondNewLoanCli.aug_budg = aug_newCtotValue
+                fondNewLoanCli.sep_budg = sep_newCtotValue
+                fondNewLoanCli.oct_budg = oct_newCtotValue
+                fondNewLoanCli.nov_budg = nov_newCtotValue
+                fondNewLoanCli.dec_budg = dec_newCtotValue
+    
+                fondNewLoanCli.save()            
+            }
+        }   
+
         const oldLoanClientView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanClient"}, function (err, fndOldCli) {
 
             begBalOldClient = _.sumBy(fndOldCli, function(o) { return o.beg_bal; })
@@ -2178,7 +2382,45 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
         }) //, function (err, fndPOV) {
 
-        if (doneReadNLC && doneReadOLC) {
+        if (doneReadOLC) {
+            if (isNull(fondReLoanCli)) { 
+                let newNewClients = new Budg_exec_sum({
+                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of Reloan", view_code: "NumReLoanCli", sort_key: 9, display_group: 1, beg_bal: 0, jan_budg : jan_oldCtotValue, 
+                    feb_budg : feb_oldCtotValue, mar_budg : mar_oldCtotValue, apr_budg : apr_oldCtotValue, may_budg : may_oldCtotValue, jun_budg : jun_oldCtotValue, jul_budg : jul_oldCtotValue, 
+                    aug_budg : aug_oldCtotValue, sep_budg : sep_oldCtotValue, oct_budg : oct_oldCtotValue, nov_budg : nov_oldCtotValue, dec_budg : dec_oldCtotValue                                        
+                })
+                newNewClients.save()
+            } else {
+                fondReLoanCli.jan_budg = jan_oldCtotValue
+                fondReLoanCli.feb_budg = feb_oldCtotValue
+                fondReLoanCli.mar_budg = mar_oldCtotValue
+                fondReLoanCli.apr_budg = apr_oldCtotValue
+                fondReLoanCli.may_budg = may_oldCtotValue
+                fondReLoanCli.jun_budg = jun_oldCtotValue
+                fondReLoanCli.jul_budg = jul_oldCtotValue
+                fondReLoanCli.aug_budg = aug_oldCtotValue
+                fondReLoanCli.sep_budg = sep_oldCtotValue
+                fondReLoanCli.oct_budg = oct_oldCtotValue
+                fondReLoanCli.nov_budg = nov_oldCtotValue
+                fondReLoanCli.dec_budg = dec_oldCtotValue
+    
+                fondReLoanCli.save()            
+            }
+        }
+        let jan_totNoOfLoan = jan_oldCtotValue + jan_newCtotValue
+        let feb_totNoOfLoan = feb_oldCtotValue + feb_newCtotValue
+        let mar_totNoOfLoan = mar_oldCtotValue + mar_newCtotValue
+        let apr_totNoOfLoan = apr_oldCtotValue + apr_newCtotValue
+        let may_totNoOfLoan = may_oldCtotValue + may_newCtotValue
+        let jun_totNoOfLoan = jun_oldCtotValue + jun_newCtotValue
+        let jul_totNoOfLoan = jul_oldCtotValue + jul_newCtotValue
+        let aug_totNoOfLoan = aug_oldCtotValue + aug_newCtotValue
+        let sep_totNoOfLoan = sep_oldCtotValue + sep_newCtotValue
+        let oct_totNoOfLoan = oct_oldCtotValue + oct_newCtotValue
+        let nov_totNoOfLoan = nov_oldCtotValue + nov_newCtotValue
+        let dec_totNoOfLoan = dec_oldCtotValue + dec_newCtotValue
+
+    if (doneReadNLC && doneReadOLC) {
             poSumView.push({title: "TOTAL NO. OF LOAN", sortkey: 10, group: 1, isTitle: false, jan_value : jan_oldCtotValue + jan_newCtotValue, feb_value : feb_oldCtotValue + feb_newCtotValue, mar_value : mar_oldCtotValue + mar_newCtotValue, 
             apr_value : apr_oldCtotValue + apr_newCtotValue, may_value : may_oldCtotValue + may_newCtotValue, jun_value : jun_oldCtotValue + jun_newCtotValue, jul_value : jul_oldCtotValue + jul_newCtotValue, aug_value : aug_oldCtotValue + aug_newCtotValue,
                 sep_value : sep_oldCtotValue + sep_newCtotValue, oct_value : oct_oldCtotValue + oct_newCtotValue, nov_value : nov_oldCtotValue + nov_newCtotValue, dec_value : dec_oldCtotValue + dec_newCtotValue
@@ -2214,6 +2456,33 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             doneReadNLA = true
 
         }) //, function (err, fndPOV) {
+        
+        if (doneReadNLA) {
+            if (isNull(fondNewLoanAmt)) { 
+                let newNewClients = new Budg_exec_sum({
+                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Amount of New Loan", view_code: "NewLoanAmount", sort_key: 12, display_group: 2, beg_bal: 0, jan_budg : jan_newAtotValue, 
+                    feb_budg : feb_newAtotValue, mar_budg : mar_newAtotValue, apr_budg : apr_newAtotValue, may_budg : may_newAtotValue, jun_budg : jun_newAtotValue, jul_budg : jul_newAtotValue, 
+                    aug_budg : aug_newAtotValue, sep_budg : sep_newAtotValue, oct_budg : oct_newAtotValue, nov_budg : nov_newAtotValue, dec_budg : dec_newAtotValue                                        
+                })
+                newNewClients.save()
+            } else {
+                fondNewLoanAmt.jan_budg = jan_newAtotValue
+                fondNewLoanAmt.feb_budg = feb_newAtotValue
+                fondNewLoanAmt.mar_budg = mar_newAtotValue
+                fondNewLoanAmt.apr_budg = apr_newAtotValue
+                fondNewLoanAmt.may_budg = may_newAtotValue
+                fondNewLoanAmt.jun_budg = jun_newAtotValue
+                fondNewLoanAmt.jul_budg = jul_newAtotValue
+                fondNewLoanAmt.aug_budg = aug_newAtotValue
+                fondNewLoanAmt.sep_budg = sep_newAtotValue
+                fondNewLoanAmt.oct_budg = oct_newAtotValue
+                fondNewLoanAmt.nov_budg = nov_newAtotValue
+                fondNewLoanAmt.dec_budg = dec_newAtotValue
+    
+                fondNewLoanAmt.save()            
+            }
+       
+        }
 
         const oldLoanAmtView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanAmt"}, function (err, fndOldAmt) {
 
@@ -2241,6 +2510,147 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
         }) //, function (err, fndPOV) {
 
+            if (doneReadOLA) {
+                if (isNull(fondReLoanAmt)) { 
+                    let newNewClients = new Budg_exec_sum({
+                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Amount of Reloan", view_code: "ReLoanAmount", sort_key: 13, display_group: 2, beg_bal: 0, jan_budg : jan_oldAtotValue, 
+                        feb_budg : feb_oldAtotValue, mar_budg : mar_oldAtotValue, apr_budg : apr_oldAtotValue, may_budg : may_oldAtotValue, jun_budg : jun_oldAtotValue, jul_budg : jul_oldAtotValue, 
+                        aug_budg : aug_oldAtotValue, sep_budg : sep_oldAtotValue, oct_budg : oct_oldAtotValue, nov_budg : nov_oldAtotValue, dec_budg : dec_oldAtotValue                                        
+                    })
+                    newNewClients.save()
+                } else {
+                    fondReLoanAmt.jan_budg = jan_oldAtotValue
+                    fondReLoanAmt.feb_budg = feb_oldAtotValue
+                    fondReLoanAmt.mar_budg = mar_oldAtotValue
+                    fondReLoanAmt.apr_budg = apr_oldAtotValue
+                    fondReLoanAmt.may_budg = may_oldAtotValue
+                    fondReLoanAmt.jun_budg = jun_oldAtotValue
+                    fondReLoanAmt.jul_budg = jul_oldAtotValue
+                    fondReLoanAmt.aug_budg = aug_oldAtotValue
+                    fondReLoanAmt.sep_budg = sep_oldAtotValue
+                    fondReLoanAmt.oct_budg = oct_oldAtotValue
+                    fondReLoanAmt.nov_budg = nov_oldAtotValue
+                    fondReLoanAmt.dec_budg = dec_oldAtotValue
+        
+                    fondReLoanAmt.save()            
+                }
+           
+            }
+    
+            let jan_totColAmt = 0 
+            let feb_totColAmt = 0 
+            let mar_totColAmt = 0 
+            let apr_totColAmt = 0 
+            let may_totColAmt = 0 
+            let jun_totColAmt = 0 
+            let jul_totColAmt = 0 
+            let aug_totColAmt = 0 
+            let sep_totColAmt = 0 
+            let oct_totColAmt = 0 
+            let nov_totColAmt = 0 
+            let dec_totColAmt = 0 
+    
+            let janTotAmtLoan = 0
+            let febTotAmtLoan = 0
+            let marTotAmtLoan = 0
+            let aprTotAmtLoan = 0
+            let mayTotAmtLoan = 0
+            let junTotAmtLoan = 0
+            let julTotAmtLoan = 0
+            let augTotAmtLoan = 0
+            let sepTotAmtLoan = 0
+            let octTotAmtLoan = 0
+            let novTotAmtLoan = 0
+            let decTotAmtLoan = 0
+    
+                let jan_totIntAmt = 0 
+                let feb_totIntAmt = 0
+                let mar_totIntAmt = 0
+                let apr_totIntAmt = 0
+                let may_totIntAmt = 0
+                let jun_totIntAmt = 0
+                let jul_totIntAmt = 0
+                let aug_totIntAmt = 0
+                let sep_totIntAmt = 0
+                let oct_totIntAmt = 0
+                let nov_totIntAmt = 0
+                let dec_totIntAmt = 0
+            let jan_totInitCBUAmt = 0 
+            let feb_totInitCBUAmt = 0
+            let mar_totInitCBUAmt = 0
+            let apr_totInitCBUAmt = 0
+            let may_totInitCBUAmt = 0
+            let jun_totInitCBUAmt = 0
+            let jul_totInitCBUAmt = 0
+            let aug_totInitCBUAmt = 0
+            let sep_totInitCBUAmt = 0
+            let oct_totInitCBUAmt = 0
+            let nov_totInitCBUAmt = 0
+            let dec_totInitCBUAmt = 0
+                let jan_totWklyCBUAmt = 0 
+                let feb_totWklyCBUAmt = 0
+                let mar_totWklyCBUAmt = 0
+                let apr_totWklyCBUAmt = 0
+                let may_totWklyCBUAmt = 0
+                let jun_totWklyCBUAmt = 0
+                let jul_totWklyCBUAmt = 0
+                let aug_totWklyCBUAmt = 0
+                let sep_totWklyCBUAmt = 0
+                let oct_totWklyCBUAmt = 0
+                let nov_totWklyCBUAmt = 0
+                let dec_totWklyCBUAmt = 0
+            let jan_totCBUInt = 0 
+            let feb_totCBUInt = 0
+            let mar_totCBUInt = 0
+            let apr_totCBUInt = 0
+            let may_totCBUInt = 0
+            let jun_totCBUInt = 0
+            let jul_totCBUInt = 0
+            let aug_totCBUInt = 0
+            let sep_totCBUInt = 0
+            let oct_totCBUInt = 0
+            let nov_totCBUInt = 0
+            let dec_totCBUInt = 0
+                let jan_cbuBalFromPrevMo = 0 
+                let feb_cbuBalFromPrevMo = 0
+                let mar_cbuBalFromPrevMo = 0
+                let apr_cbuBalFromPrevMo = 0
+                let may_cbuBalFromPrevMo = 0
+                let jun_cbuBalFromPrevMo = 0
+                let jul_cbuBalFromPrevMo = 0
+                let aug_cbuBalFromPrevMo = 0
+                let sep_cbuBalFromPrevMo = 0
+                let oct_cbuBalFromPrevMo = 0
+                let nov_cbuBalFromPrevMo = 0
+                let dec_cbuBalFromPrevMo = 0
+            let jan_cbuWithDrawal = 0 
+            let feb_cbuWithDrawal = 0
+            let mar_cbuWithDrawal = 0
+            let apr_cbuWithDrawal = 0
+            let may_cbuWithDrawal = 0
+            let jun_cbuWithDrawal = 0
+            let jul_cbuWithDrawal = 0
+            let aug_cbuWithDrawal = 0
+            let sep_cbuWithDrawal = 0
+            let oct_cbuWithDrawal = 0
+            let nov_cbuWithDrawal = 0
+            let dec_cbuWithDrawal = 0
+                let jan_totMonthCBU = 0 
+                let feb_totMonthCBU = 0
+                let mar_totMonthCBU = 0
+                let apr_totMonthCBU = 0
+                let may_totMonthCBU = 0
+                let jun_totMonthCBU = 0
+                let jul_totMonthCBU = 0
+                let aug_totMonthCBU = 0
+                let sep_totMonthCBU = 0
+                let oct_totMonthCBU = 0
+                let nov_totMonthCBU = 0
+                let dec_totMonthCBU = 0
+    
+            let runTotWklyCBUAmt = 0 
+            let doneReadForCBU = false
+    
             if (doneReadNLA && doneReadOLA) {
                 let janTotAmtLoan = jan_oldAtotValue + jan_newAtotValue
                 let febTotAmtLoan = feb_oldAtotValue + feb_newAtotValue
@@ -2258,6 +2668,456 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 poSumView.push({title: "TOTAL AMOUNT OF LOAN", sortkey: 14, group: 2, isTitle: false, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
                 apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
                 aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan})
+            // COMPUTATION OF PRINCIPAL AND INTEREST AMOUNTS
+
+            let jan_loanReleaseAmt = 0 
+            let feb_loanReleaseAmt = 0
+            let mar_loanReleaseAmt = 0
+            let apr_loanReleaseAmt = 0
+            let may_loanReleaseAmt = 0
+            let jun_loanReleaseAmt = 0
+            let jul_loanReleaseAmt = 0
+            let aug_loanReleaseAmt = 0
+            let sep_loanReleaseAmt = 0
+            let oct_loanReleaseAmt = 0
+            let nov_loanReleaseAmt = 0
+            let dec_loanReleaseAmt = 0
+
+            let rowGranTotloanInt = 0
+            let loanAmount = 0
+
+            const interestPerMo = .2
+            const initCBUrate = .05
+            const wklyCBUrate = 50 * 4
+            const withdrawalCBUrate = 1515
+            const balFromPrevMonCBU = 0
+            const begBalmonthContriCBU = 0
+
+                for (var i = 0; i < monthSelect.length; i++) {
+    
+                    let monthToSave = monthSelect[i]
+
+                    let jan_CollectAmt = 0 
+                    let feb_CollectAmt = 0 
+                    let mar_CollectAmt = 0 
+                    let apr_CollectAmt = 0 
+                    let may_CollectAmt = 0 
+                    let jun_CollectAmt = 0 
+                    let jul_CollectAmt = 0 
+                    let aug_CollectAmt = 0 
+                    let sep_CollectAmt = 0 
+                    let oct_CollectAmt = 0 
+                    let nov_CollectAmt = 0 
+                    let dec_CollectAmt = 0 
+                        let jan_InterestAmt = 0 
+                        let feb_InterestAmt = 0
+                        let mar_InterestAmt = 0
+                        let apr_InterestAmt = 0
+                        let may_InterestAmt = 0
+                        let jun_InterestAmt = 0
+                        let jul_InterestAmt = 0
+                        let aug_InterestAmt = 0
+                        let sep_InterestAmt = 0
+                        let oct_InterestAmt = 0
+                        let nov_InterestAmt = 0
+                        let dec_InterestAmt = 0
+                    let rowTotCollectAmt = 0
+                    let rowTotInterest = 0
+                    let loanAmount = 0
+
+
+                    switch(monthToSave) {
+                        case "January":
+                            loanAmount = janTotAmtLoan
+                            jan_loanReleaseAmt = janTotAmtLoan
+                                jan_totInitCBUAmt = jan_newAtotValue * initCBUrate  //Initial Capital Build-Up
+                          
+                                jan_totWklyCBUAmt = jan_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                jan_totCBUInt = _.round((begBalmonthContriCBU + jan_totInitCBUAmt + jan_totWklyCBUAmt) * .01 / 6)
+                                jan_cbuBalFromPrevMo = begBalmonthContriCBU
+                                jan_cbuWithDrawal = jan_resCliTot * withdrawalCBUrate
+                                jan_totMonthCBU = jan_totInitCBUAmt + jan_totWklyCBUAmt + jan_totCBUInt + jan_cbuBalFromPrevMo + jan_cbuWithDrawal 
+
+                                jan_InterestAmt = 0
+                                    jan_CollectAmt = 0
+                                        jan_totIntAmt = 0 
+                                        jan_totColAmt = 0 
+                                feb_InterestAmt = _.round((jan_loanReleaseAmt * interestPerMo) * .29)
+                                    feb_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - feb_InterestAmt)
+                                        feb_totIntAmt = feb_totIntAmt + feb_InterestAmt
+                                        feb_totColAmt = feb_totColAmt + feb_CollectAmt
+                                mar_InterestAmt = _.round((jan_loanReleaseAmt * interestPerMo) * .24)
+                                    mar_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - mar_InterestAmt)
+                                        mar_totIntAmt = mar_totIntAmt + mar_InterestAmt
+                                        mar_totColAmt = mar_totColAmt + mar_CollectAmt
+                                apr_InterestAmt = _.round((jan_loanReleaseAmt * interestPerMo) * .2)
+                                    apr_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - apr_InterestAmt)
+                                        apr_totIntAmt = apr_totIntAmt + apr_InterestAmt
+                                        apr_totColAmt = apr_totColAmt + apr_CollectAmt
+                                may_InterestAmt = _.round((jan_loanReleaseAmt * interestPerMo) * .15)
+                                    may_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - may_InterestAmt)
+                                        may_totIntAmt = may_totIntAmt + may_InterestAmt
+                                        may_totColAmt = may_totColAmt + may_CollectAmt
+                                jun_InterestAmt = _.round((jan_loanReleaseAmt * interestPerMo) * .09)
+                                    jun_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - jun_InterestAmt)
+                                        jun_totIntAmt = jun_totIntAmt + jun_InterestAmt
+                                        jun_totColAmt = jun_totColAmt + jun_CollectAmt
+                                jul_InterestAmt = _.round((jan_loanReleaseAmt * interestPerMo) * .03)
+                                    jul_CollectAmt = _.round((jan_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
+                                        jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
+                                        jul_totColAmt = jul_totColAmt + jul_CollectAmt
+                            break;
+                        case "February":
+                            loanAmount = febTotAmtLoan
+                            feb_loanReleaseAmt = febTotAmtLoan
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + jan_totNoOfLoan 
+
+                                feb_totInitCBUAmt = feb_newAtotValue * initCBUrate
+                                feb_totWklyCBUAmt = feb_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                feb_totCBUInt = _.round((jan_totMonthCBU + feb_totInitCBUAmt + feb_totWklyCBUAmt) * .01 / 6)
+                                feb_cbuBalFromPrevMo = jan_totMonthCBU
+                                feb_cbuWithDrawal = feb_resCliTot * withdrawalCBUrate
+                                feb_totMonthCBU = feb_totInitCBUAmt + feb_totWklyCBUAmt + feb_totCBUInt + feb_cbuBalFromPrevMo + feb_cbuWithDrawal 
+
+                                feb_InterestAmt = 0
+                                    feb_CollectAmt = 0
+                                mar_InterestAmt = _.round((feb_loanReleaseAmt * interestPerMo) * .29)
+                                    mar_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - mar_InterestAmt)
+                                        mar_totIntAmt = mar_totIntAmt + mar_InterestAmt
+                                        mar_totColAmt = mar_totColAmt + mar_CollectAmt
+                                apr_InterestAmt = _.round((feb_loanReleaseAmt * interestPerMo) * .24)
+                                    apr_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - apr_InterestAmt)
+                                        apr_totIntAmt = apr_totIntAmt + apr_InterestAmt
+                                        apr_totColAmt = apr_totColAmt + apr_CollectAmt
+                                may_InterestAmt = _.round((feb_loanReleaseAmt * interestPerMo) * .2)
+                                    may_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - may_InterestAmt)
+                                        may_totIntAmt = may_totIntAmt + may_InterestAmt
+                                        may_totColAmt = may_totColAmt + may_CollectAmt
+                                jun_InterestAmt = _.round((feb_loanReleaseAmt * interestPerMo) * .15)
+                                    jun_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - jun_InterestAmt)
+                                        jun_totIntAmt = jun_totIntAmt + jun_InterestAmt
+                                        jun_totColAmt = jun_totColAmt + jun_CollectAmt
+                                jul_InterestAmt = _.round((feb_loanReleaseAmt * interestPerMo) * .09)
+                                    jul_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
+                                        jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
+                                        jul_totColAmt = jul_totColAmt + jul_CollectAmt
+                                aug_InterestAmt = _.round((feb_loanReleaseAmt * interestPerMo) * .03)
+                                    aug_CollectAmt = _.round((feb_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
+                                        aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
+                                        aug_totColAmt = aug_totColAmt + aug_CollectAmt
+                                break;
+                        case "March":
+                            loanAmount = marTotAmtLoan
+                            mar_loanReleaseAmt = marTotAmtLoan
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + feb_totNoOfLoan 
+                                mar_totInitCBUAmt = mar_newAtotValue * initCBUrate  
+                                mar_totWklyCBUAmt = mar_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                mar_totCBUInt = _.round((feb_totMonthCBU + mar_totInitCBUAmt + mar_totWklyCBUAmt) * .01 / 6)
+                                mar_cbuBalFromPrevMo = feb_totMonthCBU
+                                mar_cbuWithDrawal = mar_resCliTot * withdrawalCBUrate
+                                mar_totMonthCBU = mar_totInitCBUAmt + mar_totWklyCBUAmt + mar_totCBUInt + mar_cbuBalFromPrevMo + mar_cbuWithDrawal 
+
+                                mar_InterestAmt = 0
+                                    mar_CollectAmt = 0
+                                apr_InterestAmt = _.round((mar_loanReleaseAmt * interestPerMo) * .29)
+                                    apr_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - apr_InterestAmt)
+                                        apr_totIntAmt = apr_totIntAmt + apr_InterestAmt
+                                        apr_totColAmt = apr_totColAmt + apr_CollectAmt
+                                may_InterestAmt = _.round((mar_loanReleaseAmt * interestPerMo) * .24)
+                                    may_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - may_InterestAmt)
+                                        may_totIntAmt = may_totIntAmt + may_InterestAmt
+                                        may_totColAmt = may_totColAmt + may_CollectAmt
+                                jun_InterestAmt = _.round((mar_loanReleaseAmt * interestPerMo) * .2)
+                                    jun_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - jun_InterestAmt)
+                                        jun_totIntAmt = jun_totIntAmt + jun_InterestAmt
+                                        jun_totColAmt = jun_totColAmt + jun_CollectAmt
+                                jul_InterestAmt = _.round((mar_loanReleaseAmt * interestPerMo) * .15)
+                                    jul_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
+                                        jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
+                                        jul_totColAmt = jul_totColAmt + jul_CollectAmt
+                                aug_InterestAmt = _.round((mar_loanReleaseAmt * interestPerMo) * .09)
+                                    aug_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
+                                        aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
+                                        aug_totColAmt = aug_totColAmt + aug_CollectAmt
+                                sep_InterestAmt = _.round((mar_loanReleaseAmt * interestPerMo) * .03)
+                                    sep_CollectAmt = _.round((mar_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
+                                        sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
+                                        sep_totColAmt = sep_totColAmt + sep_CollectAmt
+                                break;
+                        case "April":
+                            loanAmount = aprTotAmtLoan
+                            apr_loanReleaseAmt = aprTotAmtLoan
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + mar_totNoOfLoan 
+                                apr_totInitCBUAmt = apr_newAtotValue * initCBUrate  
+                                apr_totWklyCBUAmt = apr_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                apr_totCBUInt = _.round((mar_totMonthCBU + apr_totInitCBUAmt + apr_totWklyCBUAmt) * .01 / 6)
+                                apr_cbuBalFromPrevMo = mar_totMonthCBU
+                                apr_cbuWithDrawal = apr_resCliTot * withdrawalCBUrate
+                                apr_totMonthCBU = apr_totInitCBUAmt + apr_totWklyCBUAmt + apr_totCBUInt + apr_cbuBalFromPrevMo + apr_cbuWithDrawal 
+
+                                apr_InterestAmt = 0
+                                    apr_CollectAmt = 0
+                                may_InterestAmt = _.round((apr_loanReleaseAmt * interestPerMo) * .29)
+                                    may_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - may_InterestAmt)
+                                        may_totIntAmt = may_totIntAmt + may_InterestAmt
+                                        may_totColAmt = may_totColAmt + may_CollectAmt
+                                jun_InterestAmt = _.round((apr_loanReleaseAmt * interestPerMo) * .24)
+                                    jun_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - jun_InterestAmt)
+                                        jun_totIntAmt = jun_totIntAmt + jun_InterestAmt
+                                        jun_totColAmt = jun_totColAmt + jun_CollectAmt
+                                jul_InterestAmt = _.round((apr_loanReleaseAmt * interestPerMo) * .2)
+                                    jul_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
+                                        jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
+                                        jul_totColAmt = jul_totColAmt + jul_CollectAmt
+                                aug_InterestAmt = _.round((apr_loanReleaseAmt * interestPerMo) * .15)
+                                    aug_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
+                                        aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
+                                        aug_totColAmt = aug_totColAmt + aug_CollectAmt
+                                sep_InterestAmt = _.round((apr_loanReleaseAmt * interestPerMo) * .09)
+                                    sep_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
+                                        sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
+                                        sep_totColAmt = sep_totColAmt + sep_CollectAmt
+                                oct_InterestAmt = _.round((apr_loanReleaseAmt * interestPerMo) * .03)
+                                    oct_CollectAmt = _.round((apr_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
+                                        oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
+                                        oct_totColAmt = oct_totColAmt + oct_CollectAmt
+                                break;
+                        case "May":
+                            loanAmount = mayTotAmtLoan
+                            may_loanReleaseAmt = mayTotAmtLoan
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + apr_totNoOfLoan 
+                                may_totInitCBUAmt = may_newAtotValue * initCBUrate  
+                                may_totWklyCBUAmt = may_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                may_totCBUInt = _.round((apr_totMonthCBU + may_totInitCBUAmt + may_totWklyCBUAmt) * .01 / 6)
+                                may_cbuBalFromPrevMo = apr_totMonthCBU
+                                may_cbuWithDrawal = may_resCliTot * withdrawalCBUrate
+                                may_totMonthCBU = may_totInitCBUAmt + may_totWklyCBUAmt + may_totCBUInt + may_cbuBalFromPrevMo + may_cbuWithDrawal 
+
+                                may_InterestAmt = 0
+                                    may_CollectAmt = 0
+                                jun_InterestAmt = _.round((may_loanReleaseAmt * interestPerMo) * .29)
+                                    jun_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - jun_InterestAmt)
+                                        jun_totIntAmt = jun_totIntAmt + jun_InterestAmt
+                                        jun_totColAmt = jun_totColAmt + jun_CollectAmt
+                                jul_InterestAmt = _.round((may_loanReleaseAmt * interestPerMo) * .24)
+                                    jul_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
+                                        jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
+                                        jul_totColAmt = jul_totColAmt + jul_CollectAmt
+                                aug_InterestAmt = _.round((may_loanReleaseAmt * interestPerMo) * .2)
+                                    aug_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
+                                        aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
+                                        aug_totColAmt = aug_totColAmt + aug_CollectAmt
+                                sep_InterestAmt = _.round((may_loanReleaseAmt * interestPerMo) * .15)
+                                    sep_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
+                                        sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
+                                        sep_totColAmt = sep_totColAmt + sep_CollectAmt
+                                oct_InterestAmt = _.round((may_loanReleaseAmt * interestPerMo) * .09)
+                                    oct_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
+                                        oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
+                                        oct_totColAmt = oct_totColAmt + oct_CollectAmt
+                                nov_InterestAmt = _.round((may_loanReleaseAmt * interestPerMo) * .03)                        
+                                    nov_CollectAmt = _.round((may_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
+                                        nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
+                                        nov_totColAmt = nov_totColAmt + nov_CollectAmt
+                                break;
+                        case "June":
+                            loanAmount = junTotAmtLoan
+                            jun_loanReleaseAmt = junTotAmtLoan
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + may_totNoOfLoan 
+                                jun_totInitCBUAmt = jun_newAtotValue * initCBUrate  
+                                jun_totWklyCBUAmt = jun_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                jun_totCBUInt = _.round((may_totMonthCBU + jun_totInitCBUAmt + jun_totWklyCBUAmt) * .01 / 6)
+                                jun_cbuBalFromPrevMo = may_totMonthCBU
+                                jun_cbuWithDrawal = jun_resCliTot * withdrawalCBUrate
+                                jun_totMonthCBU = jun_totInitCBUAmt + jun_totWklyCBUAmt + jun_totCBUInt + jun_cbuBalFromPrevMo + jun_cbuWithDrawal 
+
+                                jun_InterestAmt = 0
+                                    may_CollectAmt = 0
+                                july_InterestAmt = _.round((jun_loanReleaseAmt * interestPerMo) * .29)
+                                    jul_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - jul_InterestAmt)
+                                        jul_totIntAmt = jul_totIntAmt + jul_InterestAmt
+                                        jul_totColAmt = jul_totColAmt + jul_CollectAmt
+                                aug_InterestAmt = _.round((jun_loanReleaseAmt * interestPerMo) * .24)
+                                    aug_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
+                                        aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
+                                        aug_totColAmt = aug_totColAmt + aug_CollectAmt
+                                sep_InterestAmt = _.round((jun_loanReleaseAmt * interestPerMo) * .2)
+                                    sep_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
+                                        sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
+                                        sep_totColAmt = sep_totColAmt + sep_CollectAmt
+                                oct_InterestAmt = _.round((jun_loanReleaseAmt * interestPerMo) * .15)
+                                    oct_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
+                                        oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
+                                        oct_totColAmt = oct_totColAmt + oct_CollectAmt
+                                nov_InterestAmt = _.round((jun_loanReleaseAmt * interestPerMo) * .09)
+                                    nov_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
+                                        nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
+                                        nov_totColAmt = nov_totColAmt + nov_CollectAmt
+                                dec_InterestAmt = _.round((jun_loanReleaseAmt * interestPerMo) * .03)
+                                    dec_CollectAmt = _.round((jun_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
+                                        dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
+                                        dec_totColAmt = dec_totColAmt + dec_CollectAmt
+                                break;
+                        case "July":
+                            loanAmount = julTotAmtLoan
+                            jul_loanReleaseAmt = julTotAmtLoan
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + jun_totNoOfLoan 
+                                jul_totInitCBUAmt = jul_newAtotValue * initCBUrate  
+                                jul_totWklyCBUAmt = jul_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                jul_totCBUInt = _.round((jun_totMonthCBU + jul_totInitCBUAmt + jul_totWklyCBUAmt) * .01 / 6)
+                                jul_cbuBalFromPrevMo = jun_totMonthCBU
+                                jul_cbuWithDrawal = jul_resCliTot * withdrawalCBUrate
+                                jul_totMonthCBU = jul_totInitCBUAmt + jul_totWklyCBUAmt + jul_totCBUInt + jul_cbuBalFromPrevMo + jul_cbuWithDrawal 
+
+                                jul_InterestAmt = 0
+                                    jul_CollectAmt = 0
+                                aug_InterestAmt = _.round((jul_loanReleaseAmt * interestPerMo) * .29)
+                                    aug_CollectAmt = _.round((jul_loanReleaseAmt * 1.2 / 6) - aug_InterestAmt)
+                                        aug_totIntAmt = aug_totIntAmt + aug_InterestAmt
+                                        aug_totColAmt = aug_totColAmt + aug_CollectAmt
+                                sep_InterestAmt = _.round((jul_loanReleaseAmt * interestPerMo) * .24)
+                                    sep_CollectAmt = _.round((jul_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
+                                        sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
+                                        sep_totColAmt = sep_totColAmt + sep_CollectAmt
+                                oct_InterestAmt = _.round((jul_loanReleaseAmt * interestPerMo) * .2)
+                                    oct_CollectAmt = _.round((jul_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
+                                        oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
+                                        oct_totColAmt = oct_totColAmt + oct_CollectAmt
+                                nov_InterestAmt = _.round((jul_loanReleaseAmt * interestPerMo) * .15)
+                                    nov_CollectAmt = _.round((jul_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
+                                        nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
+                                        nov_totColAmt = nov_totColAmt + nov_CollectAmt
+                                dec_InterestAmt = _.round((jul_loanReleaseAmt * interestPerMo) * .09)
+                                    dec_CollectAmt = _.round((jul_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
+                                        dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
+                                        dec_totColAmt = dec_totColAmt + dec_CollectAmt
+                                break;
+                        case "August":
+                            loanAmount = augTotAmtLoan
+                            aug_loanReleaseAmt = augTotAmtLoan
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + jul_totNoOfLoan 
+                                aug_totInitCBUAmt = aug_newAtotValue * initCBUrate  
+                                aug_totWklyCBUAmt = aug_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                aug_totCBUInt = _.round((jul_totMonthCBU + aug_totInitCBUAmt + aug_totWklyCBUAmt) * .01 / 6)
+                                aug_cbuBalFromPrevMo = jul_totMonthCBU
+                                aug_cbuWithDrawal = aug_resCliTot * withdrawalCBUrate
+                                aug_totMonthCBU = aug_totInitCBUAmt + aug_totWklyCBUAmt + aug_totCBUInt + aug_cbuBalFromPrevMo + aug_cbuWithDrawal 
+
+                                aug_InterestAmt = 0
+                                    aug_CollectAmt = 0
+                                sep_InterestAmt = _.round((aug_loanReleaseAmt * interestPerMo) * .29)
+                                     sep_CollectAmt = _.round((aug_loanReleaseAmt * 1.2 / 6) - sep_InterestAmt)
+                                        sep_totIntAmt = sep_totIntAmt + sep_InterestAmt
+                                        sep_totColAmt = sep_totColAmt + sep_CollectAmt
+                                 oct_InterestAmt = _.round((aug_loanReleaseAmt * interestPerMo) * .24)
+                                    oct_CollectAmt = _.round((aug_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
+                                        oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
+                                        oct_totColAmt = oct_totColAmt + oct_CollectAmt
+                                nov_InterestAmt = _.round((aug_loanReleaseAmt * interestPerMo) * .2)
+                                    nov_CollectAmt = _.round((aug_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
+                                        nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
+                                        nov_totColAmt = nov_totColAmt + nov_CollectAmt
+                                dec_InterestAmt = _.round((aug_loanReleaseAmt * interestPerMo) * .15)
+                                    dec_CollectAmt = _.round((aug_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
+                                        dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
+                                        dec_totColAmt = dec_totColAmt + dec_CollectAmt
+                            break;
+                        case "September":
+                            loanAmount = sepTotAmtLoan
+                            sep_loanReleaseAmt = sepTotAmtLoan
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + aug_totNoOfLoan 
+                                sep_totInitCBUAmt = sep_newAtotValue * initCBUrate  
+                                sep_totWklyCBUAmt = sep_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                sep_totCBUInt = _.round((aug_totMonthCBU + sep_totInitCBUAmt + sep_totWklyCBUAmt) * .01 / 6)
+                                sep_cbuBalFromPrevMo = aug_totMonthCBU
+                                sep_cbuWithDrawal = sep_resCliTot * withdrawalCBUrate
+                                sep_totMonthCBU = sep_totInitCBUAmt + sep_totWklyCBUAmt + sep_totCBUInt + sep_cbuBalFromPrevMo + sep_cbuWithDrawal 
+
+                                sep_InterestAmt = 0
+                                    sep_CollectAmt = 0
+                                oct_InterestAmt = _.round((sep_loanReleaseAmt * interestPerMo) * .29)
+                                    oct_CollectAmt = _.round((sep_loanReleaseAmt * 1.2 / 6) - oct_InterestAmt)
+                                        oct_totIntAmt = oct_totIntAmt + oct_InterestAmt
+                                        oct_totColAmt = oct_totColAmt + oct_CollectAmt
+                                nov_InterestAmt = _.round((sep_loanReleaseAmt * interestPerMo) * .24)
+                                    nov_CollectAmt = _.round((sep_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
+                                        nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
+                                        nov_totColAmt = nov_totColAmt + nov_CollectAmt
+                                dec_InterestAmt = (_.round(sep_loanReleaseAmt * interestPerMo) * .2)
+                                    dec_CollectAmt = _.round((sep_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
+                                        dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
+                                        dec_totColAmt = dec_totColAmt + dec_CollectAmt
+                            break;
+                        case "October":
+                            loanAmount = octTotAmtLoan
+                            oct_loanReleaseAmt = octTotAmtLoan
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + sep_totNoOfLoan 
+                                oct_totInitCBUAmt = oct_newAtotValue * initCBUrate  
+                                oct_totWklyCBUAmt = oct_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                oct_totCBUInt = _.round((sep_totMonthCBU + oct_totInitCBUAmt + oct_totWklyCBUAmt) * .01 / 6)
+                                oct_cbuBalFromPrevMo = sep_totMonthCBU
+                                oct_cbuWithDrawal = oct_resCliTot * withdrawalCBUrate
+                                oct_totMonthCBU = oct_totInitCBUAmt + oct_totWklyCBUAmt + oct_totCBUInt + oct_cbuBalFromPrevMo + oct_cbuWithDrawal 
+
+                                oct_InterestAmt = 0
+                                    oct_CollectAmt = 0
+                                nov_InterestAmt = _.round((oct_loanReleaseAmt * interestPerMo) * .29)
+                                    nov_CollectAmt = _.round((oct_loanReleaseAmt * 1.2 / 6) - nov_InterestAmt)
+                                        nov_totIntAmt = nov_totIntAmt + nov_InterestAmt
+                                        nov_totColAmt = nov_totColAmt + nov_CollectAmt
+                            dec_InterestAmt = _.round((oct_loanReleaseAmt * interestPerMo) * .24)
+                                    dec_CollectAmt = _.round((oct_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
+                                        dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
+                                        dec_totColAmt = dec_totColAmt + dec_CollectAmt
+                            break;
+                        case "November":
+                            loanAmount = novTotAmtLoan
+                            nov_loanReleaseAmt = novTotAmtLoan
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + dec_totNoOfLoan 
+                                nov_totInitCBUAmt = nov_newAtotValue * initCBUrate  
+                                nov_totWklyCBUAmt = nov_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                nov_totCBUInt = _.round((oct_totMonthCBU + nov_totInitCBUAmt + nov_totWklyCBUAmt) * .01 / 6)
+                                nov_cbuBalFromPrevMo = oct_totMonthCBU
+                                nov_cbuWithDrawal = nov_resCliTot * withdrawalCBUrate
+                                nov_totMonthCBU = nov_totInitCBUAmt + nov_totWklyCBUAmt + nov_totCBUInt + nov_cbuBalFromPrevMo + nov_cbuWithDrawal 
+
+                                nov_InterestAmt = 0
+                                    nov_CollectAmt = 0
+                                dec_InterestAmt = _.round((nov_loanReleaseAmt * interestPerMo) * .29)
+                                    dec_CollectAmt = _.round((nov_loanReleaseAmt * 1.2 / 6) - dec_InterestAmt)
+                                        dec_totIntAmt = dec_totIntAmt + dec_InterestAmt
+                                        dec_totColAmt = dec_totColAmt + dec_CollectAmt
+                            break;
+                        case "December":
+                            loanAmount = decTotAmtLoan
+                            dec_loanReleaseAmt = decTotAmtLoan
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + dec_totNoOfLoan 
+                                dec_totInitCBUAmt = dec_newAtotValue * initCBUrate  
+                                dec_totWklyCBUAmt = dec_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                dec_totCBUInt = _.round((nov_totMonthCBU + dec_totInitCBUAmt + dec_totWklyCBUAmt) * .01 / 6)
+                                dec_cbuBalFromPrevMo = nov_totMonthCBU
+                                dec_cbuWithDrawal = dec_resCliTot * withdrawalCBUrate
+                                dec_totMonthCBU = dec_totInitCBUAmt + dec_totWklyCBUAmt + dec_totCBUInt + dec_cbuBalFromPrevMo + dec_cbuWithDrawal 
+
+                                dec_InterestAmt = 0
+                                break;
+                        default:
+                            month = ""
+                            break;
+                    }
+                    rowTotCollectAmt = jan_CollectAmt + feb_CollectAmt + mar_CollectAmt + apr_CollectAmt + may_CollectAmt + jun_CollectAmt
+                        + jul_CollectAmt + aug_CollectAmt + sep_CollectAmt + oct_CollectAmt + nov_CollectAmt + dec_CollectAmt
+
+                    rowTotInterest = jan_InterestAmt + feb_InterestAmt + mar_InterestAmt + apr_InterestAmt + may_InterestAmt + jun_InterestAmt + 
+                        jul_InterestAmt + aug_InterestAmt + sep_InterestAmt + oct_InterestAmt + nov_InterestAmt + dec_InterestAmt
+                }
+
+                poSumView.push({title: "MONTHLY COLLECTION", sortkey: 18, group: 1, jan_value : jan_totColAmt, feb_value : feb_totColAmt, mar_value : mar_totColAmt, 
+                    apr_value : apr_totColAmt, may_value : may_totColAmt, jun_value : jun_totColAmt, jul_value : jul_totColAmt, 
+                    aug_value : aug_totColAmt, sep_value : sep_totColAmt, oct_value : oct_totColAmt, nov_value : nov_totColAmt, dec_value : dec_totColAmt
+                
+                })
+    
 
                 poSumView.push({title: "LOAN PORTFOLIO", sortkey: 15, group: 1, isTitle: true})
 
@@ -2265,20 +3125,71 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
                     aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan
                 })
+                
+                    if (isNull(fondMonthlyDisburse)) { 
+                        let newNewClients = new Budg_exec_sum({
+                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "MONTHLY DISBURSEMENT (P)", view_code: "MonthlyDisbAmt", sort_key: 16, display_group: 1, beg_bal: 0, jan_budg : janTotAmtLoan, 
+                            feb_budg : febTotAmtLoan, mar_budg : marTotAmtLoan, apr_budg : aprTotAmtLoan, may_budg : mayTotAmtLoan, jun_budg : junTotAmtLoan, jul_budg : julTotAmtLoan, 
+                            aug_budg : augTotAmtLoan, sep_budg : sepTotAmtLoan, oct_budg : octTotAmtLoan, nov_budg : novTotAmtLoan, dec_budg : decTotAmtLoan                                        
+                        })
+                        newNewClients.save()
+                    } else {
+                        fondMonthlyDisburse.jan_budg = janTotAmtLoan
+                        fondMonthlyDisburse.feb_budg = febTotAmtLoan
+                        fondMonthlyDisburse.mar_budg = marTotAmtLoan
+                        fondMonthlyDisburse.apr_budg = aprTotAmtLoan
+                        fondMonthlyDisburse.may_budg = mayTotAmtLoan
+                        fondMonthlyDisburse.jun_budg = junTotAmtLoan
+                        fondMonthlyDisburse.jul_budg = julTotAmtLoan
+                        fondMonthlyDisburse.aug_budg = augTotAmtLoan
+                        fondMonthlyDisburse.sep_budg = sepTotAmtLoan
+                        fondMonthlyDisburse.oct_budg = octTotAmtLoan
+                        fondMonthlyDisburse.nov_budg = novTotAmtLoan
+                        fondMonthlyDisburse.dec_budg = decTotAmtLoan
+            
+                        fondMonthlyDisburse.save()            
+                    }
+               
+                //CAPITAL BUILD UP VIEW ITEMS
+                poSumView.push({title: "Initial Capital Build-Up", sortkey: 20, group: 2, jan_value : jan_totInitCBUAmt, feb_value : feb_totInitCBUAmt, mar_value : mar_totInitCBUAmt, 
+                    apr_value : apr_totInitCBUAmt, may_value : may_totInitCBUAmt, jun_value : jun_totInitCBUAmt, jul_value : jul_totInitCBUAmt, 
+                    aug_value : aug_totInitCBUAmt, sep_value : sep_totInitCBUAmt, oct_value : oct_totInitCBUAmt, nov_value : nov_totInitCBUAmt, dec_value : dec_totInitCBUAmt
+                
+                })
+                poSumView.push({title: "Monthly Contribution", sortkey: 21, group: 2, jan_value : jan_totWklyCBUAmt, feb_value : feb_totWklyCBUAmt, mar_value : mar_totWklyCBUAmt, 
+                    apr_value : apr_totWklyCBUAmt, may_value : may_totWklyCBUAmt, jun_value : jun_totWklyCBUAmt, jul_value : jul_totWklyCBUAmt, 
+                    aug_value : aug_totWklyCBUAmt, sep_value : sep_totWklyCBUAmt, oct_value : oct_totWklyCBUAmt, nov_value : nov_totWklyCBUAmt, dec_value : dec_totWklyCBUAmt
+                })
+                poSumView.push({title: "CBU Interest", sortkey: 22, group: 2, jan_value : jan_totCBUInt, feb_value : feb_totCBUInt, mar_value : mar_totCBUInt, 
+                    apr_value : apr_totCBUInt, may_value : may_totCBUInt, jun_value : jun_totCBUInt, jul_value : jul_totCBUInt, 
+                    aug_value : aug_totCBUInt, sep_value : sep_totCBUInt, oct_value : oct_totCBUInt, nov_value : nov_totCBUInt, dec_value : dec_totCBUInt
+                })
+                poSumView.push({title: "Bal. from Prev. Month", sortkey: 23, group: 2, jan_value : jan_cbuBalFromPrevMo, feb_value : feb_cbuBalFromPrevMo, mar_value : mar_cbuBalFromPrevMo, 
+                    apr_value : apr_cbuBalFromPrevMo, may_value : may_cbuBalFromPrevMo, jun_value : jun_cbuBalFromPrevMo, jul_value : jul_cbuBalFromPrevMo, 
+                    aug_value : aug_cbuBalFromPrevMo, sep_value : sep_cbuBalFromPrevMo, oct_value : oct_cbuBalFromPrevMo, nov_value : nov_cbuBalFromPrevMo, dec_value : dec_cbuBalFromPrevMo
+                })
+                poSumView.push({title: "  "+ "Less: Withdrawals", sortkey: 24, group: 2, jan_value : jan_cbuWithDrawal, feb_value : feb_cbuWithDrawal, mar_value : mar_cbuWithDrawal, 
+                    apr_value : apr_cbuWithDrawal, may_value : may_cbuWithDrawal, jun_value : jun_cbuWithDrawal, jul_value : jul_cbuWithDrawal, 
+                    aug_value : aug_cbuWithDrawal, sep_value : sep_cbuWithDrawal, oct_value : oct_cbuWithDrawal, nov_value : nov_cbuWithDrawal, dec_value : dec_cbuWithDrawal
+                })
+                poSumView.push({title: "TOTAL Monthly CBU", sortkey: 25, group: 2, jan_value : jan_totMonthCBU, feb_value : feb_totMonthCBU, mar_value : mar_totMonthCBU, 
+                    apr_value : apr_totMonthCBU, may_value : may_totMonthCBU, jun_value : jun_totMonthCBU, jul_value : jul_totMonthCBU, 
+                    aug_value : aug_totMonthCBU, sep_value : sep_totMonthCBU, oct_value : oct_totMonthCBU, nov_value : nov_totMonthCBU, dec_value : dec_totMonthCBU
+                })
 
-                let janRunBalAmt = janTotAmtLoan
-                let febRunBalAmt = janRunBalAmt + febTotAmtLoan
-                let marRunBalAmt = febRunBalAmt + marTotAmtLoan
-                let aprRunBalAmt = marRunBalAmt + aprTotAmtLoan
-                let mayRunBalAmt = aprRunBalAmt + mayTotAmtLoan
-                let junRunBalAmt = mayRunBalAmt + junTotAmtLoan
-                let julRunBalAmt = junRunBalAmt + julTotAmtLoan
-                let augRunBalAmt = julRunBalAmt + augTotAmtLoan
-                let sepRunBalAmt = augRunBalAmt + sepTotAmtLoan
-                let octRunBalAmt = sepRunBalAmt + octTotAmtLoan
-                let novRunBalAmt = octRunBalAmt + novTotAmtLoan
-                let decRunBalAmt = novRunBalAmt + decTotAmtLoan
-
+                let janRunBalAmt = janTotAmtLoan - jan_totColAmt
+                let febRunBalAmt = (janRunBalAmt + febTotAmtLoan) - feb_totColAmt
+                let marRunBalAmt = (febRunBalAmt + marTotAmtLoan) - mar_totColAmt
+                let aprRunBalAmt = (marRunBalAmt + aprTotAmtLoan) - apr_totColAmt
+                let mayRunBalAmt = (aprRunBalAmt + mayTotAmtLoan) - may_totColAmt
+                let junRunBalAmt = (mayRunBalAmt + junTotAmtLoan) - jun_totColAmt
+                let julRunBalAmt = (junRunBalAmt + julTotAmtLoan) - jul_totColAmt
+                let augRunBalAmt = (julRunBalAmt + augTotAmtLoan) - aug_totColAmt
+                let sepRunBalAmt = (augRunBalAmt + sepTotAmtLoan) - sep_totColAmt
+                let octRunBalAmt = (sepRunBalAmt + octTotAmtLoan) - oct_totColAmt
+                let novRunBalAmt = (octRunBalAmt + novTotAmtLoan) - nov_totColAmt
+                let decRunBalAmt = (novRunBalAmt + decTotAmtLoan) - dec_totColAmt
+    
                 poSumView.push({title: "MONTHLY LOAN PORTFOLIO", sortkey: 18, group: 1, isTitle: false, jan_value : janRunBalAmt, feb_value : febRunBalAmt, mar_value : marRunBalAmt, 
                     apr_value : aprRunBalAmt, may_value : mayRunBalAmt, jun_value : junRunBalAmt, jul_value : julRunBalAmt, 
                     aug_value : augRunBalAmt, sep_value : sepRunBalAmt, oct_value : octRunBalAmt, nov_value : novRunBalAmt, dec_value : decRunBalAmt
@@ -2303,244 +3214,36 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     aug_value : augRunBalPrevMon, sep_value : sepRunBalPrevMon, oct_value : octRunBalPrevMon, nov_value : novRunBalPrevMon, dec_value : decRunBalPrevMon
                 
                 })
+
+                
+                
+                if (isNull(fondBalFromPrevMo)) { 
+                    let newNewClients = new Budg_exec_sum({
+                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "BAL. FROM PREV. MONTH", view_code: "BalFromPrevMon", sort_key: 17, display_group: 1, beg_bal: 0, jan_budg : janRunBalPrevMon, 
+                        feb_budg : febRunBalPrevMon, mar_budg : marRunBalPrevMon, apr_budg : aprRunBalPrevMon, may_budg : mayRunBalPrevMon, jun_budg : junRunBalPrevMon, jul_budg : julRunBalPrevMon, 
+                        aug_budg : augRunBalPrevMon, sep_budg : sepRunBalPrevMon, oct_budg : octRunBalPrevMon, nov_budg : novRunBalPrevMon, dec_budg : decRunBalPrevMon                                        
+                    })
+                    newNewClients.save()
+                } else {
+                    fondBalFromPrevMo.jan_budg = janRunBalPrevMon
+                    fondBalFromPrevMo.feb_budg = febRunBalPrevMon
+                    fondBalFromPrevMo.mar_budg = marRunBalPrevMon
+                    fondBalFromPrevMo.apr_budg = aprRunBalPrevMon
+                    fondBalFromPrevMo.may_budg = mayRunBalPrevMon
+                    fondBalFromPrevMo.jun_budg = junRunBalPrevMon
+                    fondBalFromPrevMo.jul_budg = julRunBalPrevMon
+                    fondBalFromPrevMo.aug_budg = augRunBalPrevMon
+                    fondBalFromPrevMo.sep_budg = sepRunBalPrevMon
+                    fondBalFromPrevMo.oct_budg = octRunBalPrevMon
+                    fondBalFromPrevMo.nov_budg = novRunBalPrevMon
+                    fondBalFromPrevMo.dec_budg = decRunBalPrevMon
+        
+                    fondBalFromPrevMo.save()            
+                }
+            
                 doneReadLoanAmt = true
             }
     
-        let jan_totValue = 0  
-                let feb_totValue = 0
-                let mar_totValue = 0
-                let apr_totValue = 0
-                let may_totValue = 0
-                let jun_totValue = 0
-                let jul_totValue = 0
-                let aug_totValue = 0
-                let sep_totValue = 0
-                let oct_totValue = 0
-                let nov_totValue = 0
-                let dec_totValue = 0
-
-                // console.log(viewPOCode)
-                let poVSum = []
-
-                poSumView.push({title: "NEW LOAN CLIENTS", sortkey: 19, group: 2, isTitle: true})
-                poSumView.push({title: "NEW LOAN AMOUNTS", sortkey: 20, group: 1, isTitle: true})
-                poSumView.push({title: "OLD LOAN CLIENTS", sortkey: 21, group: 2, isTitle: true})
-                poSumView.push({title: "OLD LOAN AMOUNTS", sortkey: 22, group: 1, isTitle: true})
-                poSumView.push({title: "RESIGN CLIENTS", sortkey: 23, group: 2, isTitle: true})
-
-                // Accessing loan_types
-                vwloanType.forEach(loan_type => {
-                    const typeLoanDet = loan_type.title
-                    const vwlnType = loan_type.loan_type
-
-                    let nloanTotAmt = 0
-                    let nloanTotCli = 0
-                    let oloanTotAmt = 0
-                    let oloanTotCli = 0
-                    let rloanTotCli = 0
-
-//                    const  lnTypeBegBal = 
-
-                    let jan_detNewtotCli = 0 
-                    let feb_detNewtotCli = 0
-                    let mar_detNewtotCli = 0
-                    let apr_detNewtotCli = 0
-                    let may_detNewtotCli = 0
-                    let jun_detNewtotCli = 0
-                    let jul_detNewtotCli = 0
-                    let aug_detNewtotCli = 0
-                    let sep_detNewtotCli = 0
-                    let oct_detNewtotCli = 0
-                    let nov_detNewtotCli = 0
-                    let dec_detNewtotCli = 0
-                        let begBal_OldCli = 0 
-                        let jan_detOldtotCli = 0 
-                        let feb_detOldtotCli = 0
-                        let mar_detOldtotCli = 0
-                        let apr_detOldtotCli = 0
-                        let may_detOldtotCli = 0
-                        let jun_detOldtotCli = 0
-                        let jul_detOldtotCli = 0
-                        let aug_detOldtotCli = 0
-                        let sep_detOldtotCli = 0
-                        let oct_detOldtotCli = 0
-                        let nov_detOldtotCli = 0
-                        let dec_detOldtotCli = 0
-                    let jan_detNewtotAmt = 0 
-                    let feb_detNewtotAmt = 0
-                    let mar_detNewtotAmt = 0
-                    let apr_detNewtotAmt = 0
-                    let may_detNewtotAmt = 0
-                    let jun_detNewtotAmt = 0
-                    let jul_detNewtotAmt = 0
-                    let aug_detNewtotAmt = 0
-                    let sep_detNewtotAmt = 0
-                    let oct_detNewtotAmt = 0
-                    let nov_detNewtotAmt = 0
-                    let dec_detNewtotAmt = 0
-                        let begBaldetOldtotAmt = 0 
-                        let jan_detOldtotAmt = 0 
-                        let feb_detOldtotAmt = 0
-                        let mar_detOldtotAmt = 0
-                        let apr_detOldtotAmt = 0
-                        let may_detOldtotAmt = 0
-                        let jun_detOldtotAmt = 0
-                        let jul_detOldtotAmt = 0
-                        let aug_detOldtotAmt = 0
-                        let sep_detOldtotAmt = 0
-                        let oct_detOldtotAmt = 0
-                        let nov_detOldtotAmt = 0
-                        let dec_detOldtotAmt = 0
-                    let jan_detResCli = 0 
-                    let feb_detResCli = 0
-                    let mar_detResCli = 0
-                    let apr_detResCli = 0
-                    let may_detResCli = 0
-                    let jun_detResCli = 0
-                    let jul_detResCli = 0
-                    let aug_detResCli = 0
-                    let sep_detResCli = 0
-                    let oct_detResCli = 0
-                    let nov_detResCli = 0
-                    let dec_detResCli = 0
-
-        //            console.log(typeLoan)
-        
-                    foundCenterDet.forEach(centerDet => {
-                        const fvwlnType = centerDet.loan_type
-                        const monthDet = centerDet.view_code
-                        if (fvwlnType === typeLoanDet) {
-                            switch(monthDet) {
-                                case "NewLoanClient": orderMonth = 11 
-                                    jan_detNewtotCli = jan_detNewtotCli + centerDet.jan_budg 
-                                    feb_detNewtotCli = feb_detNewtotCli + centerDet.feb_budg 
-                                    mar_detNewtotCli = mar_detNewtotCli + centerDet.mar_budg 
-                                    apr_detNewtotCli = apr_detNewtotCli + centerDet.apr_budg 
-                                    may_detNewtotCli = may_detNewtotCli + centerDet.may_budg 
-                                    jun_detNewtotCli = jun_detNewtotCli + centerDet.jun_budg 
-                                    jul_detNewtotCli = jul_detNewtotCli + centerDet.jul_budg 
-                                    aug_detNewtotCli = aug_detNewtotCli + centerDet.aug_budg 
-                                    sep_detNewtotCli = sep_detNewtotCli + centerDet.sep_budg 
-                                    oct_detNewtotCli = oct_detNewtotCli + centerDet.oct_budg 
-                                    nov_detNewtotCli = nov_detNewtotCli + centerDet.nov_budg 
-                                    dec_detNewtotCli = dec_detNewtotCli + centerDet.dec_budg 
-                                    break;
-                                case "OldLoanClient": orderMonth = 12
-                                    begBal_OldCli = begBal_OldCli + centerDet.beg_bal
-                                    jan_detOldtotCli = jan_detOldtotCli + centerDet.jan_budg 
-                                    feb_detOldtotCli = feb_detOldtotCli + centerDet.feb_budg 
-                                    mar_detOldtotCli = mar_detOldtotCli + centerDet.mar_budg 
-                                    apr_detOldtotCli = apr_detOldtotCli + centerDet.apr_budg 
-                                    may_detOldtotCli = may_detOldtotCli + centerDet.may_budg 
-                                    jun_detOldtotCli = jun_detOldtotCli + centerDet.jun_budg 
-                                    jul_detOldtotCli = jul_detOldtotCli + centerDet.jul_budg 
-                                    aug_detOldtotCli = aug_detOldtotCli + centerDet.aug_budg 
-                                    sep_detOldtotCli = sep_detOldtotCli + centerDet.sep_budg 
-                                    oct_detOldtotCli = oct_detOldtotCli + centerDet.oct_budg 
-                                    nov_detOldtotCli = nov_detOldtotCli + centerDet.nov_budg 
-                                    dec_detOldtotCli = dec_detOldtotCli + centerDet.dec_budg 
-                                    break;
-                                case "NewLoanAmt": orderMonth = 13
-                                    jan_detNewtotAmt = jan_detNewtotAmt + centerDet.jan_budg 
-                                    feb_detNewtotAmt = feb_detNewtotAmt + centerDet.feb_budg 
-                                    mar_detNewtotAmt = mar_detNewtotAmt + centerDet.mar_budg 
-                                    apr_detNewtotAmt = apr_detNewtotAmt + centerDet.apr_budg 
-                                    may_detNewtotAmt = may_detNewtotAmt + centerDet.may_budg 
-                                    jun_detNewtotAmt = jun_detNewtotAmt + centerDet.jun_budg 
-                                    jul_detNewtotAmt = jul_detNewtotAmt + centerDet.jul_budg 
-                                    aug_detNewtotAmt = aug_detNewtotAmt + centerDet.aug_budg 
-                                    sep_detNewtotAmt = sep_detNewtotAmt + centerDet.sep_budg 
-                                    oct_detNewtotAmt = oct_detNewtotAmt + centerDet.oct_budg 
-                                    nov_detNewtotAmt = nov_detNewtotAmt + centerDet.nov_budg 
-                                    dec_detNewtotAmt = dec_detNewtotAmt + centerDet.dec_budg 
-                                    break;
-                                case "OldLoanAmt": orderMonth = 14
-                                    begBaldetOldtotAmt = begBaldetOldtotAmt + centerDet.beg_bal
-                                    jan_detOldtotAmt = jan_detOldtotAmt + centerDet.jan_budg 
-                                    feb_detOldtotAmt = feb_detOldtotAmt + centerDet.feb_budg 
-                                    mar_detOldtotAmt = mar_detOldtotAmt + centerDet.mar_budg 
-                                    apr_detOldtotAmt = apr_detOldtotAmt + centerDet.apr_budg 
-                                    may_detOldtotAmt = may_detOldtotAmt + centerDet.may_budg 
-                                    jun_detOldtotAmt = jun_detOldtotAmt + centerDet.jun_budg 
-                                    jul_detOldtotAmt = jul_detOldtotAmt + centerDet.jul_budg 
-                                    aug_detOldtotAmt = aug_detOldtotAmt + centerDet.aug_budg 
-                                    sep_detOldtotAmt = sep_detOldtotAmt + centerDet.sep_budg 
-                                    oct_detOldtotAmt = oct_detOldtotAmt + centerDet.oct_budg 
-                                    nov_detOldtotAmt = nov_detOldtotAmt + centerDet.nov_budg 
-                                    dec_detOldtotAmt = dec_detOldtotAmt + centerDet.dec_budg 
-                                    break;
-                                    case "ResClientCount": orderMonth = 14
-                                    jan_detResCli = jan_detResCli + centerDet.jan_budg 
-                                    feb_detResCli = feb_detResCli + centerDet.feb_budg 
-                                    mar_detResCli = mar_detResCli + centerDet.mar_budg 
-                                    apr_detResCli = apr_detResCli + centerDet.apr_budg 
-                                    may_detResCli = may_detResCli + centerDet.may_budg 
-                                    jun_detResCli = jun_detResCli + centerDet.jun_budg 
-                                    jul_detResCli = jul_detResCli + centerDet.jul_budg 
-                                    aug_detResCli = aug_detResCli + centerDet.aug_budg 
-                                    sep_detResCli = sep_detResCli + centerDet.sep_budg 
-                                    oct_detResCli = oct_detResCli + centerDet.oct_budg 
-                                    nov_detResCli = nov_detResCli + centerDet.nov_budg 
-                                    dec_detResCli = dec_detResCli + centerDet.dec_budg 
-                                    break;
-                                default:
-                                    orderMonth = 0
-                            }   
-                        }
-                    })
-
-                        nloanTotCli = jan_detNewtotCli + feb_detNewtotCli + mar_detNewtotCli + apr_detNewtotCli + may_detNewtotCli + jun_detNewtotCli
-                            + jul_detNewtotCli + aug_detNewtotCli + sep_detNewtotCli + oct_detNewtotCli + nov_detNewtotCli + dec_detNewtotCli
-                            
-                            if (nloanTotCli > 0) {
-                                poSumView.push({title: typeLoanDet + " - NLC", desc: "newLoanClient", sortkey: 19, group: 2, isTitle: false, jan_value : jan_detNewtotCli, feb_value : feb_detNewtotCli, mar_value : mar_detNewtotCli, apr_value : apr_detNewtotCli,
-                                    may_value : may_detNewtotCli, jun_value : jun_detNewtotCli, jul_value : jul_detNewtotCli, aug_value : aug_detNewtotCli,
-                                    sep_value : sep_detNewtotCli, oct_value : oct_detNewtotCli, nov_value : nov_detNewtotCli, dec_value : dec_detNewtotCli 
-                                })         
-                            }
-                
-                        nloanTotAmt = jan_detNewtotAmt + feb_detNewtotAmt + mar_detNewtotAmt + apr_detNewtotAmt + may_detNewtotAmt + jun_detNewtotAmt
-                            + jul_detNewtotAmt + aug_detNewtotAmt + sep_detNewtotAmt + oct_detNewtotAmt + nov_detNewtotAmt + dec_detNewtotAmt
-
-                            if (nloanTotAmt > 0) {
-                                poSumView.push({title: typeLoanDet + " - NLA", desc: "newLoanAmt", sortkey: 20, group: 1, isTitle: false, jan_value : jan_detNewtotAmt, feb_value : feb_detNewtotAmt, mar_value : mar_detNewtotAmt, apr_value : apr_detNewtotAmt,
-                                    may_value : may_detNewtotAmt, jun_value : jun_detNewtotAmt, jul_value : jul_detNewtotAmt, aug_value : aug_detNewtotAmt,
-                                    sep_value : sep_detNewtotAmt, oct_value : oct_detNewtotAmt, nov_value : nov_detNewtotAmt, dec_value : dec_detNewtotAmt 
-                                })         
-                            }
-
-                        oloanTotCli = jan_detOldtotCli + feb_detOldtotCli + mar_detOldtotCli + apr_detOldtotCli + may_detOldtotCli + jun_detOldtotCli
-                            + jul_detOldtotCli + aug_detOldtotCli + sep_detOldtotCli + oct_detOldtotCli + nov_detOldtotCli + dec_detOldtotCli
-
-                            if (oloanTotCli > 0) {
-                                poSumView.push({title: typeLoanDet + " - OLC", desc: "oldLoanClient", sortkey: 21, group: 2, isTitle: false, beg_bal : begBal_OldCli, jan_value : jan_detOldtotCli, feb_value : feb_detOldtotCli, mar_value : mar_detOldtotCli, apr_value : apr_detOldtotCli,
-                                    may_value : may_detOldtotCli, jun_value : jun_detOldtotCli, jul_value : jul_detOldtotCli, aug_value : aug_detOldtotCli,
-                                    sep_value : sep_detOldtotCli, oct_value : oct_detOldtotCli, nov_value : nov_detOldtotCli, dec_value : dec_detOldtotCli 
-                                })         
-                            }
-
-                        oloanTotAmt = jan_detOldtotAmt + feb_detOldtotAmt + mar_detOldtotAmt + apr_detOldtotAmt + may_detOldtotAmt + jun_detOldtotAmt
-                            + jul_detOldtotAmt + aug_detOldtotAmt + sep_detOldtotAmt + oct_detOldtotAmt + nov_detOldtotAmt + dec_detOldtotAmt
-
-                            if (oloanTotAmt > 0) {
-                                poSumView.push({title: typeLoanDet + " - OLA", desc: "oldLoanAmt", sortkey: 22, group: 1, isTitle: false, beg_bal : begBaldetOldtotAmt, jan_value : jan_detOldtotAmt, feb_value : feb_detOldtotAmt, mar_value : mar_detOldtotAmt, apr_value : apr_detOldtotAmt,
-                                    may_value : may_detOldtotAmt, jun_value : jun_detOldtotAmt, jul_value : jul_detOldtotAmt, aug_value : aug_detOldtotAmt,
-                                    sep_value : sep_detOldtotAmt, oct_value : oct_detOldtotAmt, nov_value : nov_detOldtotAmt, dec_value : dec_detOldtotAmt 
-                                })         
-                            }
-
-                        rloanTotCli = jan_detResCli + feb_detResCli + mar_detResCli + apr_detResCli + may_detResCli + jun_detResCli
-                            + jul_detResCli + aug_detResCli + sep_detResCli + oct_detResCli + nov_detResCli + dec_detResCli
-        
-                            if (rloanTotCli > 0) {
-                                poSumView.push({title: typeLoanDet + " - RES", desc: "ResClientCount", sortkey: 23, isTitle: false, jan_value : jan_detResCli, feb_value : feb_detResCli, mar_value : mar_detResCli, apr_value : apr_detResCli,
-                                    may_value : may_detResCli, jun_value : jun_detResCli, jul_value : jul_detResCli, aug_value : aug_detResCli,
-                                    sep_value : sep_detResCli, oct_value : oct_detResCli, nov_value : nov_detResCli, dec_value : dec_detResCli 
-                                })         
-                            }
-                    })         
-
-        //   console.log(poSumView)
 
            poSumView.sort( function (a,b) {
                 if ( a.sortkey < b.sortkey ){
@@ -2563,6 +3266,68 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         res.redirect('/centers/center/'+ viewPOCode)
     }
 })
+
+router.get('/exportToExcel/:id', authUser, authRole("PO"), (req,res) => {
+
+    // let dataForExcel = []
+    // dataForExcel = poSumView
+
+    const dataForExcel = poSumView.map(unitExecSum => {
+        return [unitExecSum.title, unitExecSum.beg_bal, unitExecSum.jan_value, unitExecSum.feb_value, unitExecSum.mar_value,
+            unitExecSum.apr_value, unitExecSum.may_value, unitExecSum.jun_value, unitExecSum.jul_value, unitExecSum.aug_value,
+            unitExecSum.sep_value, unitExecSum.oct_value, unitExecSum.nov_value, unitExecSum.dec_value]
+    });
+
+    console.log(dataForExcel)
+
+    let workbook = new excel.Workbook();
+    let worksheet = workbook.addWorksheet("PO_Exec_Sum");
+
+    worksheet.columns = [
+      { header: "DESCRIPTION", key: "title", width: 20 },
+      { header: "BEG. BALANCE", key: "beg_bal", width: 20 },
+      { header: "JANUARY", key: "jan_value", width: 12, style: { numFmt: '#,##0' } },
+      { header: "FEBRUARY", key: "feb_value", width: 12, style: { numFmt: '#,##0' } },
+      { header: "MARCH", key: "mar_value", width: 12, style: { numFmt: '#,##0' } },
+      { header: "APRIL", key: "apr_value", width: 12, style: { numFmt: '#,##0' } },
+      { header: "MAY", key: "may_value", width: 12, style: { numFmt: '#,##0' } },
+      { header: "JUNE", key: "jun_value", width: 12, style: { numFmt: '#,##0' } },
+      { header: "JULY", key: "jul_value", width: 12, style: { numFmt: '#,##0' } },
+      { header: "AUGUST", key: "aug_value", width: 12, style: { numFmt: '#,##0' } },
+      { header: "SEPTEMBER", key: "sep_value", width: 12, style: { numFmt: '#,##0' } },
+      { header: "OCTOBER", key: "oct_value", width: 12, style: { numFmt: '#,##0' } },
+      { header: "NOVEMBER", key: "nov_value", width: 12, style: { numFmt: '#,##0' } },
+      { header: "DECEMBER", key: "dec_value", width: 12, style: { numFmt: '#,##0' } },
+    ];
+
+    // Add Array Rows
+    worksheet.addRows(dataForExcel)
+
+    worksheet.getRow(1).font = { size: 14, bold: true}
+    worksheet.getRow(2).font = { size: 12, bold: true}
+    worksheet.getRow(4).font = { size: 12, bold: true}
+    worksheet.getRow(9).font = { size: 12, bold: true}
+    worksheet.getRow(13).font = { size: 12, bold: true}
+    worksheet.getRow(17).font = { size: 12, bold: true}
+    worksheet.getRow(22).font = { size: 12, bold: true}
+    worksheet.getRow(29).font = { size: 12, bold: true}
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=" + "PO_exec_Sum.xlsx"
+    );
+
+    workbook.xlsx.write(res).then(function () {
+      res.status(200).end()
+    })
+
+})
+
+
 
 function setProject(req, res, next) {
     const projectId = parseInt(req.params.projectId)
@@ -2596,3 +3361,238 @@ function setProject(req, res, next) {
 
 module.exports = router
 
+// let jan_totValue = 0  
+// let feb_totValue = 0
+// let mar_totValue = 0
+// let apr_totValue = 0
+// let may_totValue = 0
+// let jun_totValue = 0
+// let jul_totValue = 0
+// let aug_totValue = 0
+// let sep_totValue = 0
+// let oct_totValue = 0
+// let nov_totValue = 0
+// let dec_totValue = 0
+
+// // console.log(viewPOCode)
+// let poVSum = []
+
+//                 poSumView.push({title: "NEW LOAN CLIENTS", sortkey: 19, group: 2, isTitle: true})
+//                 poSumView.push({title: "NEW LOAN AMOUNTS", sortkey: 20, group: 1, isTitle: true})
+//                 poSumView.push({title: "OLD LOAN CLIENTS", sortkey: 21, group: 2, isTitle: true})
+//                 poSumView.push({title: "OLD LOAN AMOUNTS", sortkey: 22, group: 1, isTitle: true})
+//                 poSumView.push({title: "RESIGN CLIENTS", sortkey: 23, group: 2, isTitle: true})
+
+//                 // Accessing loan_types .. Displaying figures in a per Loan Type..
+//                 vwloanType.forEach(loan_type => {
+//                     const typeLoanDet = loan_type.title
+//                     const vwlnType = loan_type.loan_type
+
+//                     let nloanTotAmt = 0
+//                     let nloanTotCli = 0
+//                     let oloanTotAmt = 0
+//                     let oloanTotCli = 0
+//                     let rloanTotCli = 0
+
+// //                    const  lnTypeBegBal = 
+
+//                     let jan_detNewtotCli = 0 
+//                     let feb_detNewtotCli = 0
+//                     let mar_detNewtotCli = 0
+//                     let apr_detNewtotCli = 0
+//                     let may_detNewtotCli = 0
+//                     let jun_detNewtotCli = 0
+//                     let jul_detNewtotCli = 0
+//                     let aug_detNewtotCli = 0
+//                     let sep_detNewtotCli = 0
+//                     let oct_detNewtotCli = 0
+//                     let nov_detNewtotCli = 0
+//                     let dec_detNewtotCli = 0
+//                         let begBal_OldCli = 0 
+//                         let jan_detOldtotCli = 0 
+//                         let feb_detOldtotCli = 0
+//                         let mar_detOldtotCli = 0
+//                         let apr_detOldtotCli = 0
+//                         let may_detOldtotCli = 0
+//                         let jun_detOldtotCli = 0
+//                         let jul_detOldtotCli = 0
+//                         let aug_detOldtotCli = 0
+//                         let sep_detOldtotCli = 0
+//                         let oct_detOldtotCli = 0
+//                         let nov_detOldtotCli = 0
+//                         let dec_detOldtotCli = 0
+//                     let jan_detNewtotAmt = 0 
+//                     let feb_detNewtotAmt = 0
+//                     let mar_detNewtotAmt = 0
+//                     let apr_detNewtotAmt = 0
+//                     let may_detNewtotAmt = 0
+//                     let jun_detNewtotAmt = 0
+//                     let jul_detNewtotAmt = 0
+//                     let aug_detNewtotAmt = 0
+//                     let sep_detNewtotAmt = 0
+//                     let oct_detNewtotAmt = 0
+//                     let nov_detNewtotAmt = 0
+//                     let dec_detNewtotAmt = 0
+//                         let begBaldetOldtotAmt = 0 
+//                         let jan_detOldtotAmt = 0 
+//                         let feb_detOldtotAmt = 0
+//                         let mar_detOldtotAmt = 0
+//                         let apr_detOldtotAmt = 0
+//                         let may_detOldtotAmt = 0
+//                         let jun_detOldtotAmt = 0
+//                         let jul_detOldtotAmt = 0
+//                         let aug_detOldtotAmt = 0
+//                         let sep_detOldtotAmt = 0
+//                         let oct_detOldtotAmt = 0
+//                         let nov_detOldtotAmt = 0
+//                         let dec_detOldtotAmt = 0
+//                     let jan_detResCli = 0 
+//                     let feb_detResCli = 0
+//                     let mar_detResCli = 0
+//                     let apr_detResCli = 0
+//                     let may_detResCli = 0
+//                     let jun_detResCli = 0
+//                     let jul_detResCli = 0
+//                     let aug_detResCli = 0
+//                     let sep_detResCli = 0
+//                     let oct_detResCli = 0
+//                     let nov_detResCli = 0
+//                     let dec_detResCli = 0
+
+//         //            console.log(typeLoan)
+
+//                     foundCenterDet.forEach(centerDet => {
+//                         const fvwlnType = centerDet.loan_type
+//                         const monthDet = centerDet.view_code
+//                         if (fvwlnType === typeLoanDet) {
+//                             switch(monthDet) {
+//                                 case "NewLoanClient": orderMonth = 11 
+//                                     jan_detNewtotCli = jan_detNewtotCli + centerDet.jan_budg 
+//                                     feb_detNewtotCli = feb_detNewtotCli + centerDet.feb_budg 
+//                                     mar_detNewtotCli = mar_detNewtotCli + centerDet.mar_budg 
+//                                     apr_detNewtotCli = apr_detNewtotCli + centerDet.apr_budg 
+//                                     may_detNewtotCli = may_detNewtotCli + centerDet.may_budg 
+//                                     jun_detNewtotCli = jun_detNewtotCli + centerDet.jun_budg 
+//                                     jul_detNewtotCli = jul_detNewtotCli + centerDet.jul_budg 
+//                                     aug_detNewtotCli = aug_detNewtotCli + centerDet.aug_budg 
+//                                     sep_detNewtotCli = sep_detNewtotCli + centerDet.sep_budg 
+//                                     oct_detNewtotCli = oct_detNewtotCli + centerDet.oct_budg 
+//                                     nov_detNewtotCli = nov_detNewtotCli + centerDet.nov_budg 
+//                                     dec_detNewtotCli = dec_detNewtotCli + centerDet.dec_budg 
+//                                     break;
+//                                 case "OldLoanClient": orderMonth = 12
+//                                     begBal_OldCli = begBal_OldCli + centerDet.beg_bal
+//                                     jan_detOldtotCli = jan_detOldtotCli + centerDet.jan_budg 
+//                                     feb_detOldtotCli = feb_detOldtotCli + centerDet.feb_budg 
+//                                     mar_detOldtotCli = mar_detOldtotCli + centerDet.mar_budg 
+//                                     apr_detOldtotCli = apr_detOldtotCli + centerDet.apr_budg 
+//                                     may_detOldtotCli = may_detOldtotCli + centerDet.may_budg 
+//                                     jun_detOldtotCli = jun_detOldtotCli + centerDet.jun_budg 
+//                                     jul_detOldtotCli = jul_detOldtotCli + centerDet.jul_budg 
+//                                     aug_detOldtotCli = aug_detOldtotCli + centerDet.aug_budg 
+//                                     sep_detOldtotCli = sep_detOldtotCli + centerDet.sep_budg 
+//                                     oct_detOldtotCli = oct_detOldtotCli + centerDet.oct_budg 
+//                                     nov_detOldtotCli = nov_detOldtotCli + centerDet.nov_budg 
+//                                     dec_detOldtotCli = dec_detOldtotCli + centerDet.dec_budg 
+//                                     break;
+//                                 case "NewLoanAmt": orderMonth = 13
+//                                     jan_detNewtotAmt = jan_detNewtotAmt + centerDet.jan_budg 
+//                                     feb_detNewtotAmt = feb_detNewtotAmt + centerDet.feb_budg 
+//                                     mar_detNewtotAmt = mar_detNewtotAmt + centerDet.mar_budg 
+//                                     apr_detNewtotAmt = apr_detNewtotAmt + centerDet.apr_budg 
+//                                     may_detNewtotAmt = may_detNewtotAmt + centerDet.may_budg 
+//                                     jun_detNewtotAmt = jun_detNewtotAmt + centerDet.jun_budg 
+//                                     jul_detNewtotAmt = jul_detNewtotAmt + centerDet.jul_budg 
+//                                     aug_detNewtotAmt = aug_detNewtotAmt + centerDet.aug_budg 
+//                                     sep_detNewtotAmt = sep_detNewtotAmt + centerDet.sep_budg 
+//                                     oct_detNewtotAmt = oct_detNewtotAmt + centerDet.oct_budg 
+//                                     nov_detNewtotAmt = nov_detNewtotAmt + centerDet.nov_budg 
+//                                     dec_detNewtotAmt = dec_detNewtotAmt + centerDet.dec_budg 
+//                                     break;
+//                                 case "OldLoanAmt": orderMonth = 14
+//                                     begBaldetOldtotAmt = begBaldetOldtotAmt + centerDet.beg_bal
+//                                     jan_detOldtotAmt = jan_detOldtotAmt + centerDet.jan_budg 
+//                                     feb_detOldtotAmt = feb_detOldtotAmt + centerDet.feb_budg 
+//                                     mar_detOldtotAmt = mar_detOldtotAmt + centerDet.mar_budg 
+//                                     apr_detOldtotAmt = apr_detOldtotAmt + centerDet.apr_budg 
+//                                     may_detOldtotAmt = may_detOldtotAmt + centerDet.may_budg 
+//                                     jun_detOldtotAmt = jun_detOldtotAmt + centerDet.jun_budg 
+//                                     jul_detOldtotAmt = jul_detOldtotAmt + centerDet.jul_budg 
+//                                     aug_detOldtotAmt = aug_detOldtotAmt + centerDet.aug_budg 
+//                                     sep_detOldtotAmt = sep_detOldtotAmt + centerDet.sep_budg 
+//                                     oct_detOldtotAmt = oct_detOldtotAmt + centerDet.oct_budg 
+//                                     nov_detOldtotAmt = nov_detOldtotAmt + centerDet.nov_budg 
+//                                     dec_detOldtotAmt = dec_detOldtotAmt + centerDet.dec_budg 
+//                                     break;
+//                                     case "ResClientCount": orderMonth = 14
+//                                     jan_detResCli = jan_detResCli + centerDet.jan_budg 
+//                                     feb_detResCli = feb_detResCli + centerDet.feb_budg 
+//                                     mar_detResCli = mar_detResCli + centerDet.mar_budg 
+//                                     apr_detResCli = apr_detResCli + centerDet.apr_budg 
+//                                     may_detResCli = may_detResCli + centerDet.may_budg 
+//                                     jun_detResCli = jun_detResCli + centerDet.jun_budg 
+//                                     jul_detResCli = jul_detResCli + centerDet.jul_budg 
+//                                     aug_detResCli = aug_detResCli + centerDet.aug_budg 
+//                                     sep_detResCli = sep_detResCli + centerDet.sep_budg 
+//                                     oct_detResCli = oct_detResCli + centerDet.oct_budg 
+//                                     nov_detResCli = nov_detResCli + centerDet.nov_budg 
+//                                     dec_detResCli = dec_detResCli + centerDet.dec_budg 
+//                                     break;
+//                                 default:
+//                                     orderMonth = 0
+//                             }   
+//                         }
+//                     })
+
+//                         nloanTotCli = jan_detNewtotCli + feb_detNewtotCli + mar_detNewtotCli + apr_detNewtotCli + may_detNewtotCli + jun_detNewtotCli
+//                             + jul_detNewtotCli + aug_detNewtotCli + sep_detNewtotCli + oct_detNewtotCli + nov_detNewtotCli + dec_detNewtotCli
+            
+//                             if (nloanTotCli > 0) {
+//                                 poSumView.push({title: typeLoanDet + " - NLC", desc: "newLoanClient", sortkey: 19, group: 2, isTitle: false, jan_value : jan_detNewtotCli, feb_value : feb_detNewtotCli, mar_value : mar_detNewtotCli, apr_value : apr_detNewtotCli,
+//                                     may_value : may_detNewtotCli, jun_value : jun_detNewtotCli, jul_value : jul_detNewtotCli, aug_value : aug_detNewtotCli,
+//                                     sep_value : sep_detNewtotCli, oct_value : oct_detNewtotCli, nov_value : nov_detNewtotCli, dec_value : dec_detNewtotCli 
+//                                 })         
+//                             }
+
+//                         nloanTotAmt = jan_detNewtotAmt + feb_detNewtotAmt + mar_detNewtotAmt + apr_detNewtotAmt + may_detNewtotAmt + jun_detNewtotAmt
+//                             + jul_detNewtotAmt + aug_detNewtotAmt + sep_detNewtotAmt + oct_detNewtotAmt + nov_detNewtotAmt + dec_detNewtotAmt
+
+//                             if (nloanTotAmt > 0) {
+//                                 poSumView.push({title: typeLoanDet + " - NLA", desc: "newLoanAmt", sortkey: 20, group: 1, isTitle: false, jan_value : jan_detNewtotAmt, feb_value : feb_detNewtotAmt, mar_value : mar_detNewtotAmt, apr_value : apr_detNewtotAmt,
+//                                     may_value : may_detNewtotAmt, jun_value : jun_detNewtotAmt, jul_value : jul_detNewtotAmt, aug_value : aug_detNewtotAmt,
+//                                     sep_value : sep_detNewtotAmt, oct_value : oct_detNewtotAmt, nov_value : nov_detNewtotAmt, dec_value : dec_detNewtotAmt 
+//                                 })         
+//                             }
+
+//                         oloanTotCli = jan_detOldtotCli + feb_detOldtotCli + mar_detOldtotCli + apr_detOldtotCli + may_detOldtotCli + jun_detOldtotCli
+//                             + jul_detOldtotCli + aug_detOldtotCli + sep_detOldtotCli + oct_detOldtotCli + nov_detOldtotCli + dec_detOldtotCli
+
+//                             if (oloanTotCli > 0) {
+//                                 poSumView.push({title: typeLoanDet + " - OLC", desc: "oldLoanClient", sortkey: 21, group: 2, isTitle: false, beg_bal : begBal_OldCli, jan_value : jan_detOldtotCli, feb_value : feb_detOldtotCli, mar_value : mar_detOldtotCli, apr_value : apr_detOldtotCli,
+//                                     may_value : may_detOldtotCli, jun_value : jun_detOldtotCli, jul_value : jul_detOldtotCli, aug_value : aug_detOldtotCli,
+//                                     sep_value : sep_detOldtotCli, oct_value : oct_detOldtotCli, nov_value : nov_detOldtotCli, dec_value : dec_detOldtotCli 
+//                                 })         
+//                             }
+
+//                         oloanTotAmt = jan_detOldtotAmt + feb_detOldtotAmt + mar_detOldtotAmt + apr_detOldtotAmt + may_detOldtotAmt + jun_detOldtotAmt
+//                             + jul_detOldtotAmt + aug_detOldtotAmt + sep_detOldtotAmt + oct_detOldtotAmt + nov_detOldtotAmt + dec_detOldtotAmt
+
+//                             if (oloanTotAmt > 0) {
+//                                 poSumView.push({title: typeLoanDet + " - OLA", desc: "oldLoanAmt", sortkey: 22, group: 1, isTitle: false, beg_bal : begBaldetOldtotAmt, jan_value : jan_detOldtotAmt, feb_value : feb_detOldtotAmt, mar_value : mar_detOldtotAmt, apr_value : apr_detOldtotAmt,
+//                                     may_value : may_detOldtotAmt, jun_value : jun_detOldtotAmt, jul_value : jul_detOldtotAmt, aug_value : aug_detOldtotAmt,
+//                                     sep_value : sep_detOldtotAmt, oct_value : oct_detOldtotAmt, nov_value : nov_detOldtotAmt, dec_value : dec_detOldtotAmt 
+//                                 })         
+//                             }
+
+//                         rloanTotCli = jan_detResCli + feb_detResCli + mar_detResCli + apr_detResCli + may_detResCli + jun_detResCli
+//                             + jul_detResCli + aug_detResCli + sep_detResCli + oct_detResCli + nov_detResCli + dec_detResCli
+
+//                             if (rloanTotCli > 0) {
+//                                 poSumView.push({title: typeLoanDet + " - RES", desc: "ResClientCount", sortkey: 23, isTitle: false, jan_value : jan_detResCli, feb_value : feb_detResCli, mar_value : mar_detResCli, apr_value : apr_detResCli,
+//                                     may_value : may_detResCli, jun_value : jun_detResCli, jul_value : jul_detResCli, aug_value : aug_detResCli,
+//                                     sep_value : sep_detResCli, oct_value : oct_detResCli, nov_value : nov_detResCli, dec_value : dec_detResCli 
+//                                 })         
+//                             }
+//                     })         
+
+//   console.log(poSumView)

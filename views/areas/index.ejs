@@ -1,0 +1,88 @@
+	<section class="s1">
+		<div class="main-container">
+
+            <div class="intro-wrapper">
+				<div class="nav-wrapper">
+
+					<!-- Link around dots-wrapper added after tutorial video -->
+					<a href="index.html">
+						<div>  
+                            AM Name: <%= officerName%>
+						</div>
+					</a>
+					
+
+					<ul id="navigation">
+						<li><a href="index.html#contact">As of Date Today</Date></a></li>
+
+					</ul>
+				</div>
+
+				<div class="left-column">
+                    <table class="content-table-brnView">
+                        <tr>
+                            <th>BUDGET</th>
+                            <th colspan="7"></th>
+                        </tr>
+                        <tr>
+                            <th>LOAN TYPES</th>
+                            <th>BEGINNING BALANCE</th>
+                            <th>RE-LOAN CLIENTS</th>
+                            <th>RESIGN CLIENTS</th>
+                            <th>NEW CLIENTS</th>
+                            <th>ENDING BALANCE</th>
+                            <th></th>
+                            <th>DISBURSEMENT AMOUNT</th>
+                        </tr>
+                        <% loanTots.forEach(loan => {  %>
+                            <tr>
+                                <td><%= loan.loan_type %></td>
+                                <td><%= loan.begClientTot %></td>
+                                <td><%= loan.onumClient %></td>
+                                <td><%= loan.resloanTot %></td>
+                                <td><%= loan.nnumClient %></td>
+                                <td><%= loan.budgEndBal %></td>
+                                <td></td>
+                                <td><%= loan.amtDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                            </tr>
+                        <% }) %>
+                        <tr class="td-bold">
+                            <td>TOTAL</td>
+                            <% poGrandTot.forEach( gTot => { %>
+                                <td> <%= gTot.budBegBalClient %></td>
+                                <td> <%= gTot.oClient %></td>
+                                <td> <%= gTot.rClient %></td>
+                                <td> <%= gTot.nClient %></td>
+                                <td> <%= gTot.budgEndBal %></td>
+                                <td></td>
+                                <td> <%= gTot.totalDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+
+                            <% }) %>
+                        </tr>
+                    </table>
+				</div>
+
+				<div class="right-column">
+
+					<div id="preview-shadow">
+						<div id="preview">
+							<div id="corner-tl" class="corner"></div>
+							<div id="corner-tr" class="corner"></div>
+                            <ul id="navigation">
+                                <lh>BUDGET VIEWS</lh>
+                                <li><a href='/units/viewUnitProjCol/<%=perUnitCode%>'>Proj. Collection</a></li>
+                                <li><a href='/units/viewUnitProjInc/<%=perUnitCode%>'>Projected Income </a></li>
+                                <li><a href='/units/viewUnitTargetMon/<%=perUnitCode%>'>Executive Summary</a></li>
+                            </ul>
+                            <div id="corner-br" class="corner"></div>
+							<div id="corner-bl" class="corner"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+    </section>
+    <div>
+        <h5>
+        </h5>
+    </div>

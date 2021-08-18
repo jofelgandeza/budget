@@ -1,0 +1,20 @@
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Number of PO's</label>
+        <input type="number" name="numPOs" value="<%= numPOs %>" autocomplete="off" min="1" max="15">
+    </div>
+    <div class="form-item-column">
+    </div>
+    <div class="form-item-column">
+        <label>Loan Type</label>
+        <select name="poLoan" id="poLon" >
+            <option select value="">Select here...</option>
+            <% lonType.forEach(lnTyp => { %>
+                    <option value="<%= lnTyp.title %>"> <%= lnTyp.title %></option>
+            <% }) %> 
+        </select>
+    </div>
+    <div class="form-item-column">
+        <input type="hidden" id="brnCode" name="branCode" value="<%= uniCod %>">
+    </div>
+</div>
