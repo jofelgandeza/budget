@@ -2206,46 +2206,46 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             }) 
 
 
-            const fndOldClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "OldClients"}, function (err, fndTotLonAmt) {
-                fondOldClients = fndTotLonAmt
+            // const fndOldClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "OldClients"}, function (err, fndTotOldCli) {
+            //     fondOldClients = fndTotOldCli
                 
-                let janOldCliTot = jan_oldClientTot
-                let febOldCliTot = feb_oldClientTot
-                let marOldCliTot = mar_oldClientTot
-                let aprOldCliTot = apr_oldClientTot
-                let mayOldCliTot = may_oldClientTot
-                let junOldCliTot = jun_oldClientTot
-                let julOldCliTot = jul_oldClientTot
-                let augOldCliTot = aug_oldClientTot
-                let sepOldCliTot = sep_oldClientTot
-                let octOldCliTot = oct_oldClientTot
-                let novOldCliTot = nov_oldClientTot
-                let decOldCliTot = dec_oldClientTot
+            //     let janOldCliTot = jan_oldClientTot
+            //     let febOldCliTot = feb_oldClientTot
+            //     let marOldCliTot = mar_oldClientTot
+            //     let aprOldCliTot = apr_oldClientTot
+            //     let mayOldCliTot = may_oldClientTot
+            //     let junOldCliTot = jun_oldClientTot
+            //     let julOldCliTot = jul_oldClientTot
+            //     let augOldCliTot = aug_oldClientTot
+            //     let sepOldCliTot = sep_oldClientTot
+            //     let octOldCliTot = oct_oldClientTot
+            //     let novOldCliTot = nov_oldClientTot
+            //     let decOldCliTot = dec_oldClientTot
             
-                if (isNull(fondOldClients)) { 
-                    let newOldClients = new Budg_exec_sum({
-                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Old Clients", view_code: "OldClients", sort_key: 6, display_group: 2, beg_bal: 0, jan_budg : janOldCliTot, 
-                        feb_budg : febOldCliTot, mar_budg : marOldCliTot, apr_budg : aprOldCliTot, may_budg : mayOldCliTot, jun_budg : junOldCliTot, jul_budg : julOldCliTot, 
-                        aug_budg : augOldCliTot, sep_budg : sepOldCliTot, oct_budg : octOldCliTot, nov_budg : novOldCliTot, dec_budg : decOldCliTot                                        
-                    })
-                    newOldClients.save()
-                } else {
-                    fondOldClients.jan_budg = jan_oldClientTot
-                    fondOldClients.feb_budg = feb_oldClientTot
-                    fondOldClients.mar_budg = mar_oldClientTot
-                    fondOldClients.apr_budg = apr_oldClientTot
-                    fondOldClients.may_budg = may_oldClientTot
-                    fondOldClients.jun_budg = jun_oldClientTot
-                    fondOldClients.jul_budg = jul_oldClientTot
-                    fondOldClients.aug_budg = aug_oldClientTot
-                    fondOldClients.sep_budg = sep_oldClientTot
-                    fondOldClients.oct_budg = oct_oldClientTot
-                    fondOldClients.nov_budg = nov_oldClientTot
-                    fondOldClients.dec_budg = dec_oldClientTot
+            //     if (isNull(fondOldClients)) { 
+            //         let newOldClients = new Budg_exec_sum({
+            //             region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Old Clients", view_code: "OldClients", sort_key: 6, display_group: 2, beg_bal: 0, jan_budg : janOldCliTot, 
+            //             feb_budg : febOldCliTot, mar_budg : marOldCliTot, apr_budg : aprOldCliTot, may_budg : mayOldCliTot, jun_budg : junOldCliTot, jul_budg : julOldCliTot, 
+            //             aug_budg : augOldCliTot, sep_budg : sepOldCliTot, oct_budg : octOldCliTot, nov_budg : novOldCliTot, dec_budg : decOldCliTot                                        
+            //         })
+            //         newOldClients.save()
+            //     } else {
+            //         fondOldClients.jan_budg = jan_oldClientTot
+            //         fondOldClients.feb_budg = feb_oldClientTot
+            //         fondOldClients.mar_budg = mar_oldClientTot
+            //         fondOldClients.apr_budg = apr_oldClientTot
+            //         fondOldClients.may_budg = may_oldClientTot
+            //         fondOldClients.jun_budg = jun_oldClientTot
+            //         fondOldClients.jul_budg = jul_oldClientTot
+            //         fondOldClients.aug_budg = aug_oldClientTot
+            //         fondOldClients.sep_budg = sep_oldClientTot
+            //         fondOldClients.oct_budg = oct_oldClientTot
+            //         fondOldClients.nov_budg = nov_oldClientTot
+            //         fondOldClients.dec_budg = dec_oldClientTot
         
-                    fondOldClients.save()            
-                }
-            })
+            //         fondOldClients.save()            
+            //     }
+            // })
 
             const fndResClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "ResignClients"}, function (err, fndTotLonAmt) {
                 fondResClients = fndTotLonAmt
