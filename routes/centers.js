@@ -1828,18 +1828,18 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         let nov_newCliTot = 0
         let dec_newCliTot = 0
 
-        let jan_oldCliTot = 0  
-        let feb_oldCliTot = 0
-        let mar_oldCliTot = 0
-        let apr_oldCliTot = 0
-        let may_oldCliTot = 0
-        let jun_oldCliTot = 0
-        let jul_oldCliTot = 0
-        let aug_oldCliTot = 0
-        let sep_oldCliTot = 0
-        let oct_oldCliTot = 0
-        let nov_oldCliTot = 0
-        let dec_oldCliTot = 0
+        let jan_oldClientTot = 0  
+        let feb_oldClientTot = 0
+        let mar_oldClientTot = 0
+        let apr_oldClientTot = 0
+        let may_oldClientTot = 0
+        let jun_oldClientTot = 0
+        let jul_oldClientTot = 0
+        let aug_oldClientTot = 0
+        let sep_oldClientTot = 0
+        let oct_oldClientTot = 0
+        let nov_oldClientTot = 0
+        let dec_oldClientTot = 0
 
         let jan_resCliTot = 0  
         let feb_resCliTot = 0
@@ -2121,21 +2121,21 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         const oldClientCntView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanClient", client_count_included: true}, function (err, fndOldCliCnt) {
 
             begBalOldClient = _.sumBy(fndOldCliCnt, function(o) { return o.beg_bal; })
-            jan_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.jan_budg; })
-            feb_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.feb_budg; })
-            mar_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.mar_budg; })
-            apr_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.apr_budg; })
-            may_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.may_budg; })
-            jun_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.jun_budg; })
-            jul_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.jul_budg; })
-            aug_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.aug_budg; })
-            sep_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.sep_budg; })
-            oct_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.oct_budg; })
-            nov_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.nov_budg; })
-            dec_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.dec_budg; })
+            jan_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.jan_budg; })
+            feb_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.feb_budg; })
+            mar_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.mar_budg; })
+            apr_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.apr_budg; })
+            may_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.may_budg; })
+            jun_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.jun_budg; })
+            jul_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.jul_budg; })
+            aug_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.aug_budg; })
+            sep_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.sep_budg; })
+            oct_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.oct_budg; })
+            nov_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.nov_budg; })
+            dec_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.dec_budg; })
 
-            olTotValueClient = jan_oldCliTot + feb_oldCliTot + mar_oldCliTot + apr_oldCliTot + may_oldCliTot + jun_oldCliTot
-                        + jul_oldCliTot + aug_oldCliTot + sep_oldCliTot + oct_oldCliTot + nov_oldCliTot + dec_oldCliTot
+            olTotValueClient = jan_oldClientTot + feb_oldClientTot + mar_oldClientTot + apr_oldClientTot + may_oldClientTot + jun_oldClientTot
+                        + jul_oldClientTot + aug_oldClientTot + sep_oldClientTot + oct_oldClientTot + nov_oldClientTot + dec_oldClientTot
             
             doneReadOLCli = true
 
@@ -2165,30 +2165,30 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         
         if (doneReadNLCli && doneReadOLCli && doneReadResCli) {
 
-            jan_oldCliTot = begBalOldClient 
-                let jan_totNumClients = (jan_oldCliTot + jan_newCliTot) - jan_resCliTot
-            feb_oldCliTot = jan_totNumClients
-                let feb_totNumClients = (feb_oldCliTot + feb_newCliTot) - feb_resCliTot    
-            mar_oldCliTot = feb_totNumClients
-                let mar_totNumClients = (mar_oldCliTot + mar_newCliTot) - mar_resCliTot
-            apr_oldCliTot = mar_totNumClients
-                let apr_totNumClients = (apr_oldCliTot + apr_newCliTot) - apr_resCliTot
-            may_oldCliTot = apr_totNumClients
-                let may_totNumClients = (may_oldCliTot + may_newCliTot) - may_resCliTot
-            jun_oldCliTot = may_totNumClients
-                let jun_totNumClients = (jun_oldCliTot + jun_newCliTot) - jun_resCliTot
-            jul_oldCliTot = jun_totNumClients
-                let jul_totNumClients = (jul_oldCliTot + jul_newCliTot) - jul_resCliTot
-            aug_oldCliTot = jul_totNumClients
-                let aug_totNumClients = (aug_oldCliTot + aug_newCliTot) - aug_resCliTot
-            sep_oldCliTot = aug_totNumClients
-                let sep_totNumClients = (sep_oldCliTot + sep_newCliTot) - sep_resCliTot
-            oct_oldCliTot = sep_totNumClients
-                let oct_totNumClients = (oct_oldCliTot + oct_newCliTot) - oct_resCliTot
-            nov_oldCliTot = oct_totNumClients
-                let nov_totNumClients = (nov_oldCliTot + nov_newCliTot) - nov_resCliTot
-            dec_oldCliTot = nov_totNumClients
-                let dec_totNumClients = (dec_oldCliTot + dec_newCliTot) - dec_resCliTot
+            jan_oldClientTot = begBalOldClient 
+                let jan_totNumClients = (jan_oldClientTot + jan_newCliTot) - jan_resCliTot
+            feb_oldClientTot = jan_totNumClients
+                let feb_totNumClients = (feb_oldClientTot + feb_newCliTot) - feb_resCliTot    
+            mar_oldClientTot = feb_totNumClients
+                let mar_totNumClients = (mar_oldClientTot + mar_newCliTot) - mar_resCliTot
+            apr_oldClientTot = mar_totNumClients
+                let apr_totNumClients = (apr_oldClientTot + apr_newCliTot) - apr_resCliTot
+            may_oldClientTot = apr_totNumClients
+                let may_totNumClients = (may_oldClientTot + may_newCliTot) - may_resCliTot
+            jun_oldClientTot = may_totNumClients
+                let jun_totNumClients = (jun_oldClientTot + jun_newCliTot) - jun_resCliTot
+            jul_oldClientTot = jun_totNumClients
+                let jul_totNumClients = (jul_oldClientTot + jul_newCliTot) - jul_resCliTot
+            aug_oldClientTot = jul_totNumClients
+                let aug_totNumClients = (aug_oldClientTot + aug_newCliTot) - aug_resCliTot
+            sep_oldClientTot = aug_totNumClients
+                let sep_totNumClients = (sep_oldClientTot + sep_newCliTot) - sep_resCliTot
+            oct_oldClientTot = sep_totNumClients
+                let oct_totNumClients = (oct_oldClientTot + oct_newCliTot) - oct_resCliTot
+            nov_oldClientTot = oct_totNumClients
+                let nov_totNumClients = (nov_oldClientTot + nov_newCliTot) - nov_resCliTot
+            dec_oldClientTot = nov_totNumClients
+                let dec_totNumClients = (dec_oldClientTot + dec_newCliTot) - dec_resCliTot
             
             poSumView.push({title: "Resign Clients", sortkey: 5, group: 2, isTitle: false, jan_value : jan_resCliTot, feb_value : feb_resCliTot, mar_value : mar_resCliTot, apr_value : apr_resCliTot,
                 may_value : may_resCliTot, jun_value : jun_resCliTot, jul_value : jul_resCliTot, aug_value : aug_resCliTot,
@@ -2200,9 +2200,9 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 sep_value : sep_totNumClients, oct_value : oct_totNumClients, nov_value : nov_totNumClients, dec_value : dec_totNumClients
             }) 
 
-            poSumView.push({title: "Old Clients", sortkey: 5, group: 2, isTitle: false, beg_bal: begBalOldClient, jan_value : jan_oldCliTot, feb_value : feb_oldCliTot, mar_value : mar_oldCliTot, apr_value : apr_oldCliTot,
-                may_value : may_oldCliTot, jun_value : jun_oldCliTot, jul_value : jul_oldCliTot, aug_value : aug_oldCliTot,
-                sep_value : sep_oldCliTot, oct_value : oct_oldCliTot, nov_value : nov_oldCliTot, dec_value : dec_oldCliTot 
+            poSumView.push({title: "Old Clients", sortkey: 5, group: 2, isTitle: false, beg_bal: begBalOldClient, jan_value : jan_oldClientTot, feb_value : feb_oldClientTot, mar_value : mar_oldClientTot, apr_value : apr_oldClientTot,
+                may_value : may_oldClientTot, jun_value : jun_oldClientTot, jul_value : jul_oldClientTot, aug_value : aug_oldClientTot,
+                sep_value : sep_oldClientTot, oct_value : oct_oldClientTot, nov_value : nov_oldClientTot, dec_value : dec_oldClientTot 
             }) 
 
 
@@ -2211,24 +2211,24 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
     
                 if (isNull(fondOldClients)) { 
                     let newOldClients = new Budg_exec_sum({
-                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Old Clients", view_code: "OldClients", sort_key: 6, display_group: 2, beg_bal: 0, jan_budg : jan_oldCliTot, 
-                        feb_budg : feb_oldCliTot, mar_budg : mar_oldCliTot, apr_budg : apr_oldCliTot, may_budg : may_oldCliTot, jun_budg : jun_oldCliTot, jul_budg : jul_oldCliTot, 
-                        aug_budg : aug_oldCliTot, sep_budg : sep_oldCliTot, oct_budg : oct_oldCliTot, nov_budg : nov_oldCliTot, dec_budg : dec_oldCliTot                                        
+                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Old Clients", view_code: "OldClients", sort_key: 6, display_group: 2, beg_bal: 0, jan_budg : jan_oldClientTot, 
+                        feb_budg : feb_oldClientTot, mar_budg : mar_oldClientTot, apr_budg : apr_oldClientTot, may_budg : may_oldClientTot, jun_budg : jun_oldClientTot, jul_budg : jul_oldClientTot, 
+                        aug_budg : aug_oldClientTot, sep_budg : sep_oldClientTot, oct_budg : oct_oldClientTot, nov_budg : nov_oldClientTot, dec_budg : dec_oldClientTot                                        
                     })
                     newOldClients.save()
                 } else {
-                    fondOldClients.jan_budg = jan_oldCliTot
-                    fondOldClients.feb_budg = feb_oldCliTot
-                    fondOldClients.mar_budg = mar_oldCliTot
-                    fondOldClients.apr_budg = apr_oldCliTot
-                    fondOldClients.may_budg = may_oldCliTot
-                    fondOldClients.jun_budg = jun_oldCliTot
-                    fondOldClients.jul_budg = jul_oldCliTot
-                    fondOldClients.aug_budg = aug_oldCliTot
-                    fondOldClients.sep_budg = sep_oldCliTot
-                    fondOldClients.oct_budg = oct_oldCliTot
-                    fondOldClients.nov_budg = nov_oldCliTot
-                    fondOldClients.dec_budg = dec_oldCliTot
+                    fondOldClients.jan_budg = jan_oldClientTot
+                    fondOldClients.feb_budg = feb_oldClientTot
+                    fondOldClients.mar_budg = mar_oldClientTot
+                    fondOldClients.apr_budg = apr_oldClientTot
+                    fondOldClients.may_budg = may_oldClientTot
+                    fondOldClients.jun_budg = jun_oldClientTot
+                    fondOldClients.jul_budg = jul_oldClientTot
+                    fondOldClients.aug_budg = aug_oldClientTot
+                    fondOldClients.sep_budg = sep_oldClientTot
+                    fondOldClients.oct_budg = oct_oldClientTot
+                    fondOldClients.nov_budg = nov_oldClientTot
+                    fondOldClients.dec_budg = dec_oldClientTot
         
                     fondOldClients.save()            
                 }
