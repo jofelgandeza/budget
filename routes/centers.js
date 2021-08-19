@@ -1935,7 +1935,6 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         let fondNewClients = []
         let fondOldClients = []
         let fondResClients = []
-        let fondTotClients = []
         let fondNewLoanCli = []
         let fondReLoanCli = []
         let fondNewLoanAmt = []
@@ -1950,39 +1949,6 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         const foundCenterDet = await Center_budget_det.find({po_code: viewPOCode})
 
         // Gets NumberOfCenters from Budg_exec_sum
-        const fndPONumCenters = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumberOfCenters"}, function (err, fndTotLonAmt) {
-            fondPONumCenters = fndTotLonAmt
-        })
-        const fndNewClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NewClients"}, function (err, fndTotLonAmt) {
-            fondNewClients = fndTotLonAmt
-        })
-        const fndOldClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "OldClients"}, function (err, fndTotLonAmt) {
-            fondOldClients = fndTotLonAmt
-        })
-        const fndResClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "ResignClients"}, function (err, fndTotLonAmt) {
-            fondResClients = fndTotLonAmt
-        })
-        const fndTotClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "TotalClients"}, function (err, fndTotLonAmt) {
-            fondTotClients = fndTotLonAmt
-        })
-        const fndNewLoanCli = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumNewLoanCli"}, function (err, fndTotLonAmt) {
-            fondNewLoanCli = fndTotLonAmt
-        })
-        const fndReLoanCli = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumReLoanCli"}, function (err, fndTotLonAmt) {
-            fondReLoanCli = fndTotLonAmt
-        })
-        const fndNewLoanAmt = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NewLoanAmount"}, function (err, fndTotLonAmt) {
-            fondNewLoanAmt = fndTotLonAmt
-        })
-        const fndReLoanAmt = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "ReLoanAmount"}, function (err, fndTotLonAmt) {
-            fondReLoanAmt = fndTotLonAmt
-        })
-        const fndRMonDisburse = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "MonthlyDisbAmt"}, function (err, fndTotLonAmt) {
-            fondMonthlyDisburse = fndTotLonAmt
-        })
-        const fndBalFromPrevMo = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "BalFromPrevMon"}, function (err, fndTotLonAmt) {
-            fondBalFromPrevMo = fndTotLonAmt
-        })
         
         const foundCenters = await Center.find({po_code: viewPOCode}, function(err, foundCenters) {
             const fndCenters = foundCenters
@@ -2061,30 +2027,35 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
         // console.log(foundCenterDet)
         if (doneReadNumCenters) {
-            if (isNull(fondPONumCenters)) { 
-                let newPONumCenters = new Budg_exec_sum({
-                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of Centers", view_code: "NumberOfCenters", sort_key: 2, display_group: 1, beg_bal: centerCntBegBal, jan_budg : jan_centerCount, 
-                    feb_budg : feb_centerCount, mar_budg : mar_centerCount, apr_budg : apr_centerCount, may_budg : may_centerCount, jun_budg : jun_centerCount, jul_budg : jul_centerCount, 
-                    aug_budg : aug_centerCount, sep_budg : sep_centerCount, oct_budg : oct_centerCount, nov_budg : nov_centerCount, dec_budg : dec_centerCount                                        
-                })
-                newPONumCenters.save()
-            } else {
-                fondPONumCenters.jan_budg = jan_centerCount
-                fondPONumCenters.feb_budg = feb_centerCount
-                fondPONumCenters.mar_budg = mar_centerCount
-                fondPONumCenters.apr_budg = apr_centerCount
-                fondPONumCenters.may_budg = may_centerCount
-                fondPONumCenters.jun_budg = jun_centerCount
-                fondPONumCenters.jul_budg = jul_centerCount
-                fondPONumCenters.aug_budg = aug_centerCount
-                fondPONumCenters.sep_budg = sep_centerCount
-                fondPONumCenters.oct_budg = oct_centerCount
-                fondPONumCenters.nov_budg = nov_centerCount
-                fondPONumCenters.dec_budg = dec_centerCount
+            const fndPONumCenters = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumberOfCenters"}, function (err, fndTotLonAmt) {
+                fondPONumCenters = fndTotLonAmt
 
-                fondPONumCenters.save()            
+                if (isNull(fondPONumCenters)) { 
+                    let newPONumCenters = new Budg_exec_sum({
+                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of Centers", view_code: "NumberOfCenters", sort_key: 2, display_group: 1, beg_bal: centerCntBegBal, jan_budg : jan_centerCount, 
+                        feb_budg : feb_centerCount, mar_budg : mar_centerCount, apr_budg : apr_centerCount, may_budg : may_centerCount, jun_budg : jun_centerCount, jul_budg : jul_centerCount, 
+                        aug_budg : aug_centerCount, sep_budg : sep_centerCount, oct_budg : oct_centerCount, nov_budg : nov_centerCount, dec_budg : dec_centerCount                                        
+                    })
+                    newPONumCenters.save()
+
+                } else {
+                    fondPONumCenters.jan_budg = jan_centerCount
+                    fondPONumCenters.feb_budg = feb_centerCount
+                    fondPONumCenters.mar_budg = mar_centerCount
+                    fondPONumCenters.apr_budg = apr_centerCount
+                    fondPONumCenters.may_budg = may_centerCount
+                    fondPONumCenters.jun_budg = jun_centerCount
+                    fondPONumCenters.jul_budg = jul_centerCount
+                    fondPONumCenters.aug_budg = aug_centerCount
+                    fondPONumCenters.sep_budg = sep_centerCount
+                    fondPONumCenters.oct_budg = oct_centerCount
+                    fondPONumCenters.nov_budg = nov_centerCount
+                    fondPONumCenters.dec_budg = dec_centerCount
+
+                    fondPONumCenters.save()            
             }
-        }
+        })
+    }
 
         poSumView.push({title: "CENTERS", sortkey: 1, group: 1, isTitle: true})
 
@@ -2116,29 +2087,33 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             }) //, function (err, fndPOV) {
 
             if (doneReadNLCli) {
-                if (isNull(fondNewClients)) { 
-                    let newNewClients = new Budg_exec_sum({
-                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "New Clients", view_code: "NewClients", sort_key: 4, display_group: 2, beg_bal: 0, jan_budg : jan_newCliTot, 
-                        feb_budg : feb_newCliTot, mar_budg : mar_newCliTot, apr_budg : apr_newCliTot, may_budg : may_newCliTot, jun_budg : jun_newCliTot, jul_budg : jul_newCliTot, 
-                        aug_budg : aug_newCliTot, sep_budg : sep_newCliTot, oct_budg : oct_newCliTot, nov_budg : nov_newCliTot, dec_budg : dec_newCliTot                                        
-                    })
-                    newNewClients.save()
-                } else {
-                    fondNewClients.jan_budg = jan_newCliTot
-                    fondNewClients.feb_budg = feb_newCliTot
-                    fondNewClients.mar_budg = mar_newCliTot
-                    fondNewClients.apr_budg = apr_newCliTot
-                    fondNewClients.may_budg = may_newCliTot
-                    fondNewClients.jun_budg = jun_newCliTot
-                    fondNewClients.jul_budg = jul_newCliTot
-                    fondNewClients.aug_budg = aug_newCliTot
-                    fondNewClients.sep_budg = sep_newCliTot
-                    fondNewClients.oct_budg = oct_newCliTot
-                    fondNewClients.nov_budg = nov_newCliTot
-                    fondNewClients.dec_budg = dec_newCliTot
+                const fndNewClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NewClients"}, function (err, fndTotLonAmt) {
+                    fondNewClients = fndTotLonAmt
         
-                    fondNewClients.save()            
-                }
+                    if (isNull(fondNewClients)) { 
+                        let newNewClients = new Budg_exec_sum({
+                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "New Clients", view_code: "NewClients", sort_key: 4, display_group: 2, beg_bal: 0, jan_budg : jan_newCliTot, 
+                            feb_budg : feb_newCliTot, mar_budg : mar_newCliTot, apr_budg : apr_newCliTot, may_budg : may_newCliTot, jun_budg : jun_newCliTot, jul_budg : jul_newCliTot, 
+                            aug_budg : aug_newCliTot, sep_budg : sep_newCliTot, oct_budg : oct_newCliTot, nov_budg : nov_newCliTot, dec_budg : dec_newCliTot                                        
+                        })
+                        newNewClients.save()
+                    } else {
+                        fondNewClients.jan_budg = jan_newCliTot
+                        fondNewClients.feb_budg = feb_newCliTot
+                        fondNewClients.mar_budg = mar_newCliTot
+                        fondNewClients.apr_budg = apr_newCliTot
+                        fondNewClients.may_budg = may_newCliTot
+                        fondNewClients.jun_budg = jun_newCliTot
+                        fondNewClients.jul_budg = jul_newCliTot
+                        fondNewClients.aug_budg = aug_newCliTot
+                        fondNewClients.sep_budg = sep_newCliTot
+                        fondNewClients.oct_budg = oct_newCliTot
+                        fondNewClients.nov_budg = nov_newCliTot
+                        fondNewClients.dec_budg = dec_newCliTot
+            
+                        fondNewClients.save()            
+                    }
+                })
 
             }
         const oldClientCntView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanClient", client_count_included: true}, function (err, fndOldCliCnt) {
@@ -2228,79 +2203,62 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 sep_value : sep_oldCliTot, oct_value : oct_oldCliTot, nov_value : nov_oldCliTot, dec_value : dec_oldCliTot 
             }) 
 
-            
-            if (isNull(fondOldClients)) { 
-                let newOldClients = new Budg_exec_sum({
-                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Old Clients", view_code: "OldClients", sort_key: 6, display_group: 2, beg_bal: 0, jan_budg : jan_oldCliTot, 
-                    feb_budg : feb_oldCliTot, mar_budg : mar_oldCliTot, apr_budg : apr_oldCliTot, may_budg : may_oldCliTot, jun_budg : jun_oldCliTot, jul_budg : jul_oldCliTot, 
-                    aug_budg : aug_oldCliTot, sep_budg : sep_oldCliTot, oct_budg : oct_oldCliTot, nov_budg : nov_oldCliTot, dec_budg : dec_oldCliTot                                        
-                })
-                newOldClients.save()
-            } else {
-                fondOldClients.jan_budg = jan_oldCliTot
-                fondOldClients.feb_budg = feb_oldCliTot
-                fondOldClients.mar_budg = mar_oldCliTot
-                fondOldClients.apr_budg = apr_oldCliTot
-                fondOldClients.may_budg = may_oldCliTot
-                fondOldClients.jun_budg = jun_oldCliTot
-                fondOldClients.jul_budg = jul_oldCliTot
-                fondOldClients.aug_budg = aug_oldCliTot
-                fondOldClients.sep_budg = sep_oldCliTot
-                fondOldClients.oct_budg = oct_oldCliTot
-                fondOldClients.nov_budg = nov_oldCliTot
-                fondOldClients.dec_budg = dec_oldCliTot
-    
-                fondOldClients.save()            
-            }
 
-            if (isNull(fondResClients)) { 
-                let newNewClients = new Budg_exec_sum({
-                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Resign Clients", view_code: "ResignClients", sort_key: 5, display_group: 2, beg_bal: 0, jan_budg : jan_resCliTot, 
-                    feb_budg : feb_resCliTot, mar_budg : mar_resCliTot, apr_budg : apr_resCliTot, may_budg : may_resCliTot, jun_budg : jun_resCliTot, jul_budg : jul_resCliTot, 
-                    aug_budg : aug_resCliTot, sep_budg : sep_resCliTot, oct_budg : oct_resCliTot, nov_budg : nov_resCliTot, dec_budg : dec_resCliTot                                        
-                })
-                newNewClients.save()
-            } else {
-                fondResClients.jan_budg = jan_resCliTot
-                fondResClients.feb_budg = feb_resCliTot
-                fondResClients.mar_budg = mar_resCliTot
-                fondResClients.apr_budg = apr_resCliTot
-                fondResClients.may_budg = may_resCliTot
-                fondResClients.jun_budg = jun_resCliTot
-                fondResClients.jul_budg = jul_resCliTot
-                fondResClients.aug_budg = aug_resCliTot
-                fondResClients.sep_budg = sep_resCliTot
-                fondResClients.oct_budg = oct_resCliTot
-                fondResClients.nov_budg = nov_resCliTot
-                fondResClients.dec_budg = dec_resCliTot
+            const fndOldClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "OldClients"}, function (err, fndTotLonAmt) {
+                fondOldClients = fndTotLonAmt
     
-                fondResClients.save()            
-            }
+                if (isNull(fondOldClients)) { 
+                    let newOldClients = new Budg_exec_sum({
+                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Old Clients", view_code: "OldClients", sort_key: 6, display_group: 2, beg_bal: 0, jan_budg : jan_oldCliTot, 
+                        feb_budg : feb_oldCliTot, mar_budg : mar_oldCliTot, apr_budg : apr_oldCliTot, may_budg : may_oldCliTot, jun_budg : jun_oldCliTot, jul_budg : jul_oldCliTot, 
+                        aug_budg : aug_oldCliTot, sep_budg : sep_oldCliTot, oct_budg : oct_oldCliTot, nov_budg : nov_oldCliTot, dec_budg : dec_oldCliTot                                        
+                    })
+                    newOldClients.save()
+                } else {
+                    fondOldClients.jan_budg = jan_oldCliTot
+                    fondOldClients.feb_budg = feb_oldCliTot
+                    fondOldClients.mar_budg = mar_oldCliTot
+                    fondOldClients.apr_budg = apr_oldCliTot
+                    fondOldClients.may_budg = may_oldCliTot
+                    fondOldClients.jun_budg = jun_oldCliTot
+                    fondOldClients.jul_budg = jul_oldCliTot
+                    fondOldClients.aug_budg = aug_oldCliTot
+                    fondOldClients.sep_budg = sep_oldCliTot
+                    fondOldClients.oct_budg = oct_oldCliTot
+                    fondOldClients.nov_budg = nov_oldCliTot
+                    fondOldClients.dec_budg = dec_oldCliTot
+        
+                    fondOldClients.save()            
+                }
+            })
 
-            if (isNull(fondTotClients)) { 
-                let newNewClients = new Budg_exec_sum({
-                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "TOTAL NO. OF CLIENTS", view_code: "TotalClients", sort_key: 6, display_group: 2, beg_bal: 0, jan_budg : jan_totNumClients, 
-                    feb_budg : feb_totNumClients, mar_budg : mar_totNumClients, apr_budg : apr_totNumClients, may_budg : may_totNumClients, jun_budg : jun_totNumClients, jul_budg : jul_totNumClients, 
-                    aug_budg : aug_totNumClients, sep_budg : sep_totNumClients, oct_budg : oct_totNumClients, nov_budg : nov_totNumClients, dec_budg : dec_totNumClients                                        
-                })
-                newNewClients.save()
-            } else {
-                fondTotClients.jan_budg = jan_totNumClients
-                fondTotClients.feb_budg = feb_totNumClients
-                fondTotClients.mar_budg = mar_totNumClients
-                fondTotClients.apr_budg = apr_totNumClients
-                fondTotClients.may_budg = may_totNumClients
-                fondTotClients.jun_budg = jun_totNumClients
-                fondTotClients.jul_budg = jul_totNumClients
-                fondTotClients.aug_budg = aug_totNumClients
-                fondTotClients.sep_budg = sep_totNumClients
-                fondTotClients.oct_budg = oct_totNumClients
-                fondTotClients.nov_budg = nov_totNumClients
-                fondTotClients.dec_budg = dec_totNumClients
+            const fndResClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "ResignClients"}, function (err, fndTotLonAmt) {
+                fondResClients = fndTotLonAmt
+                if (isNull(fondResClients)) { 
+                    let newNewClients = new Budg_exec_sum({
+                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Resign Clients", view_code: "ResignClients", sort_key: 5, display_group: 2, beg_bal: 0, jan_budg : jan_resCliTot, 
+                        feb_budg : feb_resCliTot, mar_budg : mar_resCliTot, apr_budg : apr_resCliTot, may_budg : may_resCliTot, jun_budg : jun_resCliTot, jul_budg : jul_resCliTot, 
+                        aug_budg : aug_resCliTot, sep_budg : sep_resCliTot, oct_budg : oct_resCliTot, nov_budg : nov_resCliTot, dec_budg : dec_resCliTot                                        
+                    })
+                    newNewClients.save()
+                } else {
+                    fondResClients.jan_budg = jan_resCliTot
+                    fondResClients.feb_budg = feb_resCliTot
+                    fondResClients.mar_budg = mar_resCliTot
+                    fondResClients.apr_budg = apr_resCliTot
+                    fondResClients.may_budg = may_resCliTot
+                    fondResClients.jun_budg = jun_resCliTot
+                    fondResClients.jul_budg = jul_resCliTot
+                    fondResClients.aug_budg = aug_resCliTot
+                    fondResClients.sep_budg = sep_resCliTot
+                    fondResClients.oct_budg = oct_resCliTot
+                    fondResClients.nov_budg = nov_resCliTot
+                    fondResClients.dec_budg = dec_resCliTot
+        
+                    fondResClients.save()            
+                }
+            })
     
-                fondTotClients.save()            
-            }
-
             doneReadClientCount = true
         }
 
@@ -2332,29 +2290,33 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         }) //, function (err, fndPOV) {
 
         if (doneReadNLC) {
-            if (isNull(fondNewLoanCli)) { 
-                let newNewClients = new Budg_exec_sum({
-                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of New Loan", view_code: "NumNewLoanCli", sort_key: 8, display_group: 1, beg_bal: 0, jan_budg : jan_newCtotValue, 
-                    feb_budg : feb_newCtotValue, mar_budg : mar_newCtotValue, apr_budg : apr_newCtotValue, may_budg : may_newCtotValue, jun_budg : jun_newCtotValue, jul_budg : jul_newCtotValue, 
-                    aug_budg : aug_newCtotValue, sep_budg : sep_newCtotValue, oct_budg : oct_newCtotValue, nov_budg : nov_newCtotValue, dec_budg : dec_newCtotValue                                        
-                })
-                newNewClients.save()
-            } else {
-                fondNewLoanCli.jan_budg = jan_newCtotValue
-                fondNewLoanCli.feb_budg = feb_newCtotValue
-                fondNewLoanCli.mar_budg = mar_newCtotValue
-                fondNewLoanCli.apr_budg = apr_newCtotValue
-                fondNewLoanCli.may_budg = may_newCtotValue
-                fondNewLoanCli.jun_budg = jun_newCtotValue
-                fondNewLoanCli.jul_budg = jul_newCtotValue
-                fondNewLoanCli.aug_budg = aug_newCtotValue
-                fondNewLoanCli.sep_budg = sep_newCtotValue
-                fondNewLoanCli.oct_budg = oct_newCtotValue
-                fondNewLoanCli.nov_budg = nov_newCtotValue
-                fondNewLoanCli.dec_budg = dec_newCtotValue
-    
-                fondNewLoanCli.save()            
-            }
+            const fndNewLoanCli = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumNewLoanCli"}, function (err, fndTotLonAmt) {
+                fondNewLoanCli = fndTotLonAmt
+
+                if (isNull(fondNewLoanCli)) { 
+                    let newNewClients = new Budg_exec_sum({
+                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of New Loan", view_code: "NumNewLoanCli", sort_key: 8, display_group: 1, beg_bal: 0, jan_budg : jan_newCtotValue, 
+                        feb_budg : feb_newCtotValue, mar_budg : mar_newCtotValue, apr_budg : apr_newCtotValue, may_budg : may_newCtotValue, jun_budg : jun_newCtotValue, jul_budg : jul_newCtotValue, 
+                        aug_budg : aug_newCtotValue, sep_budg : sep_newCtotValue, oct_budg : oct_newCtotValue, nov_budg : nov_newCtotValue, dec_budg : dec_newCtotValue                                        
+                    })
+                    newNewClients.save()
+                } else {
+                    fondNewLoanCli.jan_budg = jan_newCtotValue
+                    fondNewLoanCli.feb_budg = feb_newCtotValue
+                    fondNewLoanCli.mar_budg = mar_newCtotValue
+                    fondNewLoanCli.apr_budg = apr_newCtotValue
+                    fondNewLoanCli.may_budg = may_newCtotValue
+                    fondNewLoanCli.jun_budg = jun_newCtotValue
+                    fondNewLoanCli.jul_budg = jul_newCtotValue
+                    fondNewLoanCli.aug_budg = aug_newCtotValue
+                    fondNewLoanCli.sep_budg = sep_newCtotValue
+                    fondNewLoanCli.oct_budg = oct_newCtotValue
+                    fondNewLoanCli.nov_budg = nov_newCtotValue
+                    fondNewLoanCli.dec_budg = dec_newCtotValue
+        
+                    fondNewLoanCli.save()            
+                }
+            })
         }   
 
         const oldLoanClientView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanClient"}, function (err, fndOldCli) {
@@ -2385,29 +2347,34 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         }) //, function (err, fndPOV) {
 
         if (doneReadOLC) {
-            if (isNull(fondReLoanCli)) { 
-                let newNewClients = new Budg_exec_sum({
-                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of Reloan", view_code: "NumReLoanCli", sort_key: 9, display_group: 1, beg_bal: 0, jan_budg : jan_oldCtotValue, 
-                    feb_budg : feb_oldCtotValue, mar_budg : mar_oldCtotValue, apr_budg : apr_oldCtotValue, may_budg : may_oldCtotValue, jun_budg : jun_oldCtotValue, jul_budg : jul_oldCtotValue, 
-                    aug_budg : aug_oldCtotValue, sep_budg : sep_oldCtotValue, oct_budg : oct_oldCtotValue, nov_budg : nov_oldCtotValue, dec_budg : dec_oldCtotValue                                        
-                })
-                newNewClients.save()
-            } else {
-                fondReLoanCli.jan_budg = jan_oldCtotValue
-                fondReLoanCli.feb_budg = feb_oldCtotValue
-                fondReLoanCli.mar_budg = mar_oldCtotValue
-                fondReLoanCli.apr_budg = apr_oldCtotValue
-                fondReLoanCli.may_budg = may_oldCtotValue
-                fondReLoanCli.jun_budg = jun_oldCtotValue
-                fondReLoanCli.jul_budg = jul_oldCtotValue
-                fondReLoanCli.aug_budg = aug_oldCtotValue
-                fondReLoanCli.sep_budg = sep_oldCtotValue
-                fondReLoanCli.oct_budg = oct_oldCtotValue
-                fondReLoanCli.nov_budg = nov_oldCtotValue
-                fondReLoanCli.dec_budg = dec_oldCtotValue
+
+            const fndReLoanCli = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumReLoanCli"}, function (err, fndTotLonAmt) {
+                fondReLoanCli = fndTotLonAmt
+                if (isNull(fondReLoanCli)) { 
+                    let newNewClients = new Budg_exec_sum({
+                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of Reloan", view_code: "NumReLoanCli", sort_key: 9, display_group: 1, beg_bal: 0, jan_budg : jan_oldCtotValue, 
+                        feb_budg : feb_oldCtotValue, mar_budg : mar_oldCtotValue, apr_budg : apr_oldCtotValue, may_budg : may_oldCtotValue, jun_budg : jun_oldCtotValue, jul_budg : jul_oldCtotValue, 
+                        aug_budg : aug_oldCtotValue, sep_budg : sep_oldCtotValue, oct_budg : oct_oldCtotValue, nov_budg : nov_oldCtotValue, dec_budg : dec_oldCtotValue                                        
+                    })
+                    newNewClients.save()
+                } else {
+                    fondReLoanCli.jan_budg = jan_oldCtotValue
+                    fondReLoanCli.feb_budg = feb_oldCtotValue
+                    fondReLoanCli.mar_budg = mar_oldCtotValue
+                    fondReLoanCli.apr_budg = apr_oldCtotValue
+                    fondReLoanCli.may_budg = may_oldCtotValue
+                    fondReLoanCli.jun_budg = jun_oldCtotValue
+                    fondReLoanCli.jul_budg = jul_oldCtotValue
+                    fondReLoanCli.aug_budg = aug_oldCtotValue
+                    fondReLoanCli.sep_budg = sep_oldCtotValue
+                    fondReLoanCli.oct_budg = oct_oldCtotValue
+                    fondReLoanCli.nov_budg = nov_oldCtotValue
+                    fondReLoanCli.dec_budg = dec_oldCtotValue
+        
+                    fondReLoanCli.save()            
+                }
+            })
     
-                fondReLoanCli.save()            
-            }
         }
         let jan_totNoOfLoan = jan_oldCtotValue + jan_newCtotValue
         let feb_totNoOfLoan = feb_oldCtotValue + feb_newCtotValue
@@ -2460,30 +2427,32 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         }) //, function (err, fndPOV) {
         
         if (doneReadNLA) {
-            if (isNull(fondNewLoanAmt)) { 
-                let newNewClients = new Budg_exec_sum({
-                    region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Amount of New Loan", view_code: "NewLoanAmount", sort_key: 12, display_group: 2, beg_bal: 0, jan_budg : jan_newAtotValue, 
-                    feb_budg : feb_newAtotValue, mar_budg : mar_newAtotValue, apr_budg : apr_newAtotValue, may_budg : may_newAtotValue, jun_budg : jun_newAtotValue, jul_budg : jul_newAtotValue, 
-                    aug_budg : aug_newAtotValue, sep_budg : sep_newAtotValue, oct_budg : oct_newAtotValue, nov_budg : nov_newAtotValue, dec_budg : dec_newAtotValue                                        
-                })
-                newNewClients.save()
-            } else {
-                fondNewLoanAmt.jan_budg = jan_newAtotValue
-                fondNewLoanAmt.feb_budg = feb_newAtotValue
-                fondNewLoanAmt.mar_budg = mar_newAtotValue
-                fondNewLoanAmt.apr_budg = apr_newAtotValue
-                fondNewLoanAmt.may_budg = may_newAtotValue
-                fondNewLoanAmt.jun_budg = jun_newAtotValue
-                fondNewLoanAmt.jul_budg = jul_newAtotValue
-                fondNewLoanAmt.aug_budg = aug_newAtotValue
-                fondNewLoanAmt.sep_budg = sep_newAtotValue
-                fondNewLoanAmt.oct_budg = oct_newAtotValue
-                fondNewLoanAmt.nov_budg = nov_newAtotValue
-                fondNewLoanAmt.dec_budg = dec_newAtotValue
-    
-                fondNewLoanAmt.save()            
-            }
-       
+            const fndNewLoanAmt = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NewLoanAmount"}, function (err, fndTotLonAmt) {
+                fondNewLoanAmt = fndTotLonAmt
+                if (isNull(fondNewLoanAmt)) { 
+                    let newNewClients = new Budg_exec_sum({
+                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Amount of New Loan", view_code: "NewLoanAmount", sort_key: 12, display_group: 2, beg_bal: 0, jan_budg : jan_newAtotValue, 
+                        feb_budg : feb_newAtotValue, mar_budg : mar_newAtotValue, apr_budg : apr_newAtotValue, may_budg : may_newAtotValue, jun_budg : jun_newAtotValue, jul_budg : jul_newAtotValue, 
+                        aug_budg : aug_newAtotValue, sep_budg : sep_newAtotValue, oct_budg : oct_newAtotValue, nov_budg : nov_newAtotValue, dec_budg : dec_newAtotValue                                        
+                    })
+                    newNewClients.save()
+                } else {
+                    fondNewLoanAmt.jan_budg = jan_newAtotValue
+                    fondNewLoanAmt.feb_budg = feb_newAtotValue
+                    fondNewLoanAmt.mar_budg = mar_newAtotValue
+                    fondNewLoanAmt.apr_budg = apr_newAtotValue
+                    fondNewLoanAmt.may_budg = may_newAtotValue
+                    fondNewLoanAmt.jun_budg = jun_newAtotValue
+                    fondNewLoanAmt.jul_budg = jul_newAtotValue
+                    fondNewLoanAmt.aug_budg = aug_newAtotValue
+                    fondNewLoanAmt.sep_budg = sep_newAtotValue
+                    fondNewLoanAmt.oct_budg = oct_newAtotValue
+                    fondNewLoanAmt.nov_budg = nov_newAtotValue
+                    fondNewLoanAmt.dec_budg = dec_newAtotValue
+        
+                    fondNewLoanAmt.save()            
+                }
+            })       
         }
 
         const oldLoanAmtView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanAmt"}, function (err, fndOldAmt) {
@@ -2513,29 +2482,33 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         }) //, function (err, fndPOV) {
 
             if (doneReadOLA) {
-                if (isNull(fondReLoanAmt)) { 
-                    let newNewClients = new Budg_exec_sum({
-                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Amount of Reloan", view_code: "ReLoanAmount", sort_key: 13, display_group: 2, beg_bal: 0, jan_budg : jan_oldAtotValue, 
-                        feb_budg : feb_oldAtotValue, mar_budg : mar_oldAtotValue, apr_budg : apr_oldAtotValue, may_budg : may_oldAtotValue, jun_budg : jun_oldAtotValue, jul_budg : jul_oldAtotValue, 
-                        aug_budg : aug_oldAtotValue, sep_budg : sep_oldAtotValue, oct_budg : oct_oldAtotValue, nov_budg : nov_oldAtotValue, dec_budg : dec_oldAtotValue                                        
-                    })
-                    newNewClients.save()
-                } else {
-                    fondReLoanAmt.jan_budg = jan_oldAtotValue
-                    fondReLoanAmt.feb_budg = feb_oldAtotValue
-                    fondReLoanAmt.mar_budg = mar_oldAtotValue
-                    fondReLoanAmt.apr_budg = apr_oldAtotValue
-                    fondReLoanAmt.may_budg = may_oldAtotValue
-                    fondReLoanAmt.jun_budg = jun_oldAtotValue
-                    fondReLoanAmt.jul_budg = jul_oldAtotValue
-                    fondReLoanAmt.aug_budg = aug_oldAtotValue
-                    fondReLoanAmt.sep_budg = sep_oldAtotValue
-                    fondReLoanAmt.oct_budg = oct_oldAtotValue
-                    fondReLoanAmt.nov_budg = nov_oldAtotValue
-                    fondReLoanAmt.dec_budg = dec_oldAtotValue
+                const fndReLoanAmt = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "ReLoanAmount"}, function (err, fndTotLonAmt) {
+                    fondReLoanAmt = fndTotLonAmt
         
-                    fondReLoanAmt.save()            
-                }
+                    if (isNull(fondReLoanAmt)) { 
+                        let newNewClients = new Budg_exec_sum({
+                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Amount of Reloan", view_code: "ReLoanAmount", sort_key: 13, display_group: 2, beg_bal: 0, jan_budg : jan_oldAtotValue, 
+                            feb_budg : feb_oldAtotValue, mar_budg : mar_oldAtotValue, apr_budg : apr_oldAtotValue, may_budg : may_oldAtotValue, jun_budg : jun_oldAtotValue, jul_budg : jul_oldAtotValue, 
+                            aug_budg : aug_oldAtotValue, sep_budg : sep_oldAtotValue, oct_budg : oct_oldAtotValue, nov_budg : nov_oldAtotValue, dec_budg : dec_oldAtotValue                                        
+                        })
+                        newNewClients.save()
+                    } else {
+                        fondReLoanAmt.jan_budg = jan_oldAtotValue
+                        fondReLoanAmt.feb_budg = feb_oldAtotValue
+                        fondReLoanAmt.mar_budg = mar_oldAtotValue
+                        fondReLoanAmt.apr_budg = apr_oldAtotValue
+                        fondReLoanAmt.may_budg = may_oldAtotValue
+                        fondReLoanAmt.jun_budg = jun_oldAtotValue
+                        fondReLoanAmt.jul_budg = jul_oldAtotValue
+                        fondReLoanAmt.aug_budg = aug_oldAtotValue
+                        fondReLoanAmt.sep_budg = sep_oldAtotValue
+                        fondReLoanAmt.oct_budg = oct_oldAtotValue
+                        fondReLoanAmt.nov_budg = nov_oldAtotValue
+                        fondReLoanAmt.dec_budg = dec_oldAtotValue
+            
+                        fondReLoanAmt.save()            
+                    }
+                })
            
             }
     
@@ -3128,6 +3101,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan
                 })
                 
+                const fndRMonDisburse = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "MonthlyDisbAmt"}, function (err, fndTotLonAmt) {
+                    fondMonthlyDisburse = fndTotLonAmt
                     if (isNull(fondMonthlyDisburse)) { 
                         let newNewClients = new Budg_exec_sum({
                             region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "MONTHLY DISBURSEMENT (P)", view_code: "MonthlyDisbAmt", sort_key: 16, display_group: 1, beg_bal: 0, jan_budg : janTotAmtLoan, 
@@ -3151,6 +3126,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             
                         fondMonthlyDisburse.save()            
                     }
+                })
+        
                
                 //CAPITAL BUILD UP VIEW ITEMS
                 poSumView.push({title: "Initial Capital Build-Up", sortkey: 20, group: 2, jan_value : jan_totInitCBUAmt, feb_value : feb_totInitCBUAmt, mar_value : mar_totInitCBUAmt, 
@@ -3217,32 +3194,33 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 
                 })
 
-                
-                
-                if (isNull(fondBalFromPrevMo)) { 
-                    let newNewClients = new Budg_exec_sum({
-                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "BAL. FROM PREV. MONTH", view_code: "BalFromPrevMon", sort_key: 17, display_group: 1, beg_bal: 0, jan_budg : janRunBalPrevMon, 
-                        feb_budg : febRunBalPrevMon, mar_budg : marRunBalPrevMon, apr_budg : aprRunBalPrevMon, may_budg : mayRunBalPrevMon, jun_budg : junRunBalPrevMon, jul_budg : julRunBalPrevMon, 
-                        aug_budg : augRunBalPrevMon, sep_budg : sepRunBalPrevMon, oct_budg : octRunBalPrevMon, nov_budg : novRunBalPrevMon, dec_budg : decRunBalPrevMon                                        
-                    })
-                    newNewClients.save()
-                } else {
-                    fondBalFromPrevMo.jan_budg = janRunBalPrevMon
-                    fondBalFromPrevMo.feb_budg = febRunBalPrevMon
-                    fondBalFromPrevMo.mar_budg = marRunBalPrevMon
-                    fondBalFromPrevMo.apr_budg = aprRunBalPrevMon
-                    fondBalFromPrevMo.may_budg = mayRunBalPrevMon
-                    fondBalFromPrevMo.jun_budg = junRunBalPrevMon
-                    fondBalFromPrevMo.jul_budg = julRunBalPrevMon
-                    fondBalFromPrevMo.aug_budg = augRunBalPrevMon
-                    fondBalFromPrevMo.sep_budg = sepRunBalPrevMon
-                    fondBalFromPrevMo.oct_budg = octRunBalPrevMon
-                    fondBalFromPrevMo.nov_budg = novRunBalPrevMon
-                    fondBalFromPrevMo.dec_budg = decRunBalPrevMon
-        
-                    fondBalFromPrevMo.save()            
-                }
+                const fndBalFromPrevMo = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "BalFromPrevMon"}, function (err, fndTotLonAmt) {
+                    fondBalFromPrevMo = fndTotLonAmt
+                    if (isNull(fondBalFromPrevMo)) { 
+                        let newNewClients = new Budg_exec_sum({
+                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "BAL. FROM PREV. MONTH", view_code: "BalFromPrevMon", sort_key: 17, display_group: 1, beg_bal: 0, jan_budg : janRunBalPrevMon, 
+                            feb_budg : febRunBalPrevMon, mar_budg : marRunBalPrevMon, apr_budg : aprRunBalPrevMon, may_budg : mayRunBalPrevMon, jun_budg : junRunBalPrevMon, jul_budg : julRunBalPrevMon, 
+                            aug_budg : augRunBalPrevMon, sep_budg : sepRunBalPrevMon, oct_budg : octRunBalPrevMon, nov_budg : novRunBalPrevMon, dec_budg : decRunBalPrevMon                                        
+                        })
+                        newNewClients.save()
+                    } else {
+                        fondBalFromPrevMo.jan_budg = janRunBalPrevMon
+                        fondBalFromPrevMo.feb_budg = febRunBalPrevMon
+                        fondBalFromPrevMo.mar_budg = marRunBalPrevMon
+                        fondBalFromPrevMo.apr_budg = aprRunBalPrevMon
+                        fondBalFromPrevMo.may_budg = mayRunBalPrevMon
+                        fondBalFromPrevMo.jun_budg = junRunBalPrevMon
+                        fondBalFromPrevMo.jul_budg = julRunBalPrevMon
+                        fondBalFromPrevMo.aug_budg = augRunBalPrevMon
+                        fondBalFromPrevMo.sep_budg = sepRunBalPrevMon
+                        fondBalFromPrevMo.oct_budg = octRunBalPrevMon
+                        fondBalFromPrevMo.nov_budg = novRunBalPrevMon
+                        fondBalFromPrevMo.dec_budg = decRunBalPrevMon
             
+                        fondBalFromPrevMo.save()            
+                    }
+                })
+                                                
                 doneReadLoanAmt = true
             }
     
