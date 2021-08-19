@@ -2058,6 +2058,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             doneReadNumCenters = true
 
         })
+
         // console.log(foundCenterDet)
         if (doneReadNumCenters) {
             if (isNull(fondPONumCenters)) { 
@@ -2212,11 +2213,6 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             dec_oldCliTot = nov_totNumClients
                 let dec_totNumClients = (dec_oldCliTot + dec_newCliTot) - dec_resCliTot
             
-            poSumView.push({title: "Old Clients", sortkey: 5, group: 2, isTitle: false, beg_bal: begBalOldClient, jan_value : jan_oldCliTot, feb_value : feb_oldCliTot, mar_value : mar_oldCliTot, apr_value : apr_oldCliTot,
-                may_value : may_oldCliTot, jun_value : jun_oldCliTot, jul_value : jul_oldCliTot, aug_value : aug_oldCliTot,
-                sep_value : sep_oldCliTot, oct_value : oct_oldCliTot, nov_value : nov_oldCliTot, dec_value : dec_oldCliTot 
-            }) 
-
             poSumView.push({title: "Resign Clients", sortkey: 5, group: 2, isTitle: false, jan_value : jan_resCliTot, feb_value : feb_resCliTot, mar_value : mar_resCliTot, apr_value : apr_resCliTot,
                 may_value : may_resCliTot, jun_value : jun_resCliTot, jul_value : jul_resCliTot, aug_value : aug_resCliTot,
                 sep_value : sep_resCliTot, oct_value : oct_resCliTot, nov_value : nov_resCliTot, dec_value : dec_resCliTot 
@@ -2227,13 +2223,19 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 sep_value : sep_totNumClients, oct_value : oct_totNumClients, nov_value : nov_totNumClients, dec_value : dec_totNumClients
             }) 
 
+            poSumView.push({title: "Old Clients", sortkey: 5, group: 2, isTitle: false, beg_bal: begBalOldClient, jan_value : jan_oldCliTot, feb_value : feb_oldCliTot, mar_value : mar_oldCliTot, apr_value : apr_oldCliTot,
+                may_value : may_oldCliTot, jun_value : jun_oldCliTot, jul_value : jul_oldCliTot, aug_value : aug_oldCliTot,
+                sep_value : sep_oldCliTot, oct_value : oct_oldCliTot, nov_value : nov_oldCliTot, dec_value : dec_oldCliTot 
+            }) 
+
+            
             if (isNull(fondOldClients)) { 
-                let newNewClients = new Budg_exec_sum({
+                let newOldClients = new Budg_exec_sum({
                     region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Old Clients", view_code: "OldClients", sort_key: 6, display_group: 2, beg_bal: 0, jan_budg : jan_oldCliTot, 
                     feb_budg : feb_oldCliTot, mar_budg : mar_oldCliTot, apr_budg : apr_oldCliTot, may_budg : may_oldCliTot, jun_budg : jun_oldCliTot, jul_budg : jul_oldCliTot, 
                     aug_budg : aug_oldCliTot, sep_budg : sep_oldCliTot, oct_budg : oct_oldCliTot, nov_budg : nov_oldCliTot, dec_budg : dec_oldCliTot                                        
                 })
-                newNewClients.save()
+                newOldClients.save()
             } else {
                 fondOldClients.jan_budg = jan_oldCliTot
                 fondOldClients.feb_budg = feb_oldCliTot
