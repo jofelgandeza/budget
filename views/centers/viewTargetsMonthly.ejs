@@ -15,6 +15,7 @@
     <label>OCT</label>
     <label>NOV</label>
     <label>DEC</label>
+    <label>TOTAL</label>
 </div>
     <% poSumView.forEach(poView => { %>
         <div class="<%= poView.group == 1 ? "inputAmountContainer1" : "inputAmountContainer2" %>">
@@ -85,6 +86,11 @@
                     <label><%= poView.dec_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
                 <% } else { %>
                     <label><%= poView.dec_value > 0 ? poView.dec_value : "-"  %></label>
+                <% } %>
+                <% if (poView.tot_value > 1000) { %>
+                    <label><%= poView.tot_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <label><%= poView.tot_value > 0 ? poView.tot_value : "-"  %></label>
                 <% } %>
             <% } %>
         </div>

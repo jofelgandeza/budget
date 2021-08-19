@@ -92,6 +92,10 @@ const mongoose = require('mongoose')
         type: Number,
         required: false
     },
+    tot_budg: {
+        type: Number,
+        required: false
+    },
     active_clients: {
         type: Number,
     },
