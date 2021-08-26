@@ -1,0 +1,16 @@
+<h2 class="page-header">Edit Area</h2>
+<form action="/regions/putEditedArea/<%= regionCode + regID %>?_method=PUT" method="POST">
+    <%- include('_area_form_fields') %>
+    <div class="form-row">
+        <div class="form-item-column">
+            <button class="btn btn-primary" type="submit">Update</button>
+        </div>
+        <div class="form-item-column">
+            <a class="btn btn-primary" href="/regions/areas/<%= regionCode %>%>">Cancel</a>
+        </div>
+        <div class="form-item-column">
+    
+        </div>
+
+    </div>
+</form>

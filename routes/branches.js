@@ -8,6 +8,7 @@ const Employee = require('../models/employee')
 const Position = require('../models/position')
 const Loan_type = require('../models/loan_type')
 const Center_budget_det = require('../models/center_budget_det')
+const Branch = require('../models/branch')
 const Unit = require('../models/unit')
 const Po = require('../models/po')
 const User = require('../models/user')
@@ -493,7 +494,7 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
     const nFName = _.trim(req.body.fName).toUpperCase()
     const nMName = _.trim(req.body.mName).toUpperCase()
     const nName =  nLName + ", " + nFName + " " + nMName
-    const empID = req.params.id
+    const branCod = req.params.id
 
     console.log(req.body.password)
 
@@ -582,7 +583,7 @@ try {
             const poAssignCode = await Po.findOneAndUpdate({"po_code": assCode}, {$set:{"emp_code": req.body.empCode}})
         } 
         if (ePosition === "UNI_HED") {
-//           const unAssignCode = await Po.findOneAndUpdate({"po_code": assCode}, {$set:{"emp_code": req.body.empCode}})
+          const unAssignCode = await Unit.findOneAndUpdate({"unit_code": assCode}, {$set:{"emp_code": req.body.empCode}})
         } 
 
         addedNewUser = true
@@ -597,17 +598,23 @@ try {
             assign_code: assCode,
             po_number: ePONum,
             branch: req.body.brnCode,
+            area: _user.area,
+            region: _user.region,
             unit: eUnit
         })
         
         const newCoa = employee.save()
 
         let nUser = new User({
-            name: nName,
             email: nEmail,
             password: hashedPassword,
+            name: nName,
+            emp_code: nEmpCode,
             assCode: assCode,
-            role: eShortTitle
+            role: eShortTitle,
+            region: _user.region,
+            area: _user.area,
+            branch: brnCode
         })
         const saveUser = nUser.save()
 
@@ -702,7 +709,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
 
     paramsID = req.params.id
         console.log(paramsID)
-
+    const _user = req.user
     branCod = paramsID.substr(0,3)
     // empID = req.params.id
     empID = _.trim(paramsID.substr(3,45))
@@ -761,13 +768,19 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
             employee.po_number = ePONum
             employee.branch = brnCode
             employee.unit = eUnit
+            employee.area = _user.area
+            employee.region = _user.region
         
             await employee.save()
         
             if (empPost === "PRO_OFR") {
                 const poAssignCode = await Po.findOneAndUpdate({"po_code": eAssCode}, {$set:{"emp_code": eCode}})
             } 
-    
+            if (ePosition === "UNI_HED") {
+                const unAssignCode = await Unit.findOneAndUpdate({"unit_code": eAssCode}, {$set:{"emp_code": eCode}})
+            } 
+            const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": eCode, "region": req.user.region, "area": req.user.area }})
+          
             res.redirect('/branches/employees/'+ brnCode)
 
         } catch (err) {

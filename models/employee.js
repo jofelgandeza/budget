@@ -34,6 +34,14 @@ const employeeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    area: {
+        type: String,
+        required: true
+    },
+    region: {
+        type: String,
+        required: true
+    },
     unit: {
         type: String,
         required: true

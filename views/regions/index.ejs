@@ -1,3 +1,5 @@
+
+
 	<section class="s1">
 		<div class="main-container">
 
@@ -7,13 +9,13 @@
 					<!-- Link around dots-wrapper added after tutorial video -->
 					<a href="index.html">
 						<div>  
-                            RD Name: <%= officerName%>
+                           <h4> <%= regionCode %>-<%= regionDesc %></h4>
 						</div>
 					</a>
 					
 
 					<ul id="navigation">
-						<li><a href="index.html#contact">As of Date Today</Date></a></li>
+						<li><a href="index.html#contact">As of today, <%= dateToday.toLocaleDateString() %> </a></li>
 
 					</ul>
 				</div>
@@ -21,43 +23,95 @@
 				<div class="left-column">
                     <table class="content-table-brnView">
                         <tr>
+                            <th>PARTICULARS</th>
+                            <th></th>
                             <th>BUDGET</th>
-                            <th colspan="7"></th>
+                            <th>ACTUAL</th>
+                            <th>%AGE</th>
+                            <th>VARIANCE</th>
                         </tr>
                         <tr>
-                            <th>LOAN TYPES</th>
-                            <th>BEGINNING BALANCE</th>
-                            <th>RE-LOAN CLIENTS</th>
-                            <th>RESIGN CLIENTS</th>
-                            <th>NEW CLIENTS</th>
-                            <th>ENDING BALANCE</th>
-                            <th></th>
-                            <th>DISBURSEMENT AMOUNT</th>
+                            <td class="td-bold">TOTAL DISBURSEMENT</td>
                         </tr>
-                        <% loanTots.forEach(loan => {  %>
-                            <tr>
-                                <td><%= loan.loan_type %></td>
-                                <td><%= loan.begClientTot %></td>
-                                <td><%= loan.onumClient %></td>
-                                <td><%= loan.resloanTot %></td>
-                                <td><%= loan.nnumClient %></td>
-                                <td><%= loan.budgEndBal %></td>
-                                <td></td>
-                                <td><%= loan.amtDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
-                            </tr>
-                        <% }) %>
                         <tr class="td-bold">
-                            <td>TOTAL</td>
-                            <% poGrandTot.forEach( gTot => { %>
-                                <td> <%= gTot.budBegBalClient %></td>
-                                <td> <%= gTot.oClient %></td>
-                                <td> <%= gTot.rClient %></td>
-                                <td> <%= gTot.nClient %></td>
-                                <td> <%= gTot.budgEndBal %></td>
-                                <td></td>
-                                <td> <%= gTot.totalDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
-
-                            <% }) %>
+                            <td>  AMOUNT OF LOAN</td>
+                            <td></td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>Group Loan</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                        </tr>
+                        <tr>
+                            <td span="2"></td>
+                            <td>Agri Loan</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                        </tr>
+                        <tr>
+                            <td span="2"></td>
+                            <td>Individual Loan</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                        </tr>
+                        <tr>
+                            <td span="2"></td>
+                            <td>Emergency Loan</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                        </tr>
+                        <tr class="td-bold">
+                            <td> NUMBER OF CLIENTS</td>
+                            <td></td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>Group Loan</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                        </tr>
+                        <tr>
+                            <td span="2"></td>
+                            <td>Agri Loan</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                        </tr>
+                        <tr>
+                            <td span="2"></td>
+                            <td>Individual Loan</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                        </tr>
+                        <tr>
+                            <td span="2"></td>
+                            <td>Emergency Loan</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
+                            <td> -</td>
                         </tr>
                     </table>
 				</div>
@@ -69,10 +123,10 @@
 							<div id="corner-tl" class="corner"></div>
 							<div id="corner-tr" class="corner"></div>
                             <ul id="navigation">
-                                <lh>BUDGET VIEWS</lh>
-                                <li><a href='/regions/viewUnitProjCol/<%=perUnitCode%>'>Proj. Collection</a></li>
-                                <li><a href='/regions/viewUnitProjInc/<%=perUnitCode%>'>Projected Income </a></li>
-                                <li><a href='/regions/viewUnitTargetMon/<%=perUnitCode%>'>Executive Summary</a></li>
+                                <lh>SETTINGS</lh>
+                                <li><a href='/regions/employees/<%= regionCode %>'>AREA MANAGERS</a></li>
+                                <li><a href='/regions/areas/<%= regionCode %>'>AREAS</a></li>
+                                <li><a href='/regions/budget'>BUDGETS</a></li>
                             </ul>
                             <div id="corner-br" class="corner"></div>
 							<div id="corner-bl" class="corner"></div>
@@ -81,8 +135,4 @@
 				</div>
 			</div>
 		</div>
-    </section>
-    <div>
-        <h5>
-        </h5>
-    </div>
+	</section>

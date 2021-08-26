@@ -25,6 +25,15 @@ function authUser(req, res, next) {
         if (req.user.role === "BM") {
           paramsID = params_ID.substr(0,3)
         }          
+        if (req.user.role === "AM") {
+          paramsID = params_ID.substr(0,3)
+        }          
+        if (req.user.role === "RD") {
+          paramsID = params_ID.substr(0,3)
+        }          
+        if (req.user.role === "DED") {
+          paramsID = params_ID.substr(0,3)
+        }          
         // console.log(paramsID + ", " + req.user.assCode)
         if (req.user.role !== role || req.user.assCode !== paramsID) {
           res.status(401)

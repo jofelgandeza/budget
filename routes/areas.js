@@ -8,8 +8,9 @@ const Employee = require('../models/employee')
 const Position = require('../models/position')
 const Loan_type = require('../models/loan_type')
 const Center_budget_det = require('../models/center_budget_det')
-const Unit = require('../models/unit')
-const Po = require('../models/po')
+const Branch = require('../models/branch')
+const Area = require('../models/area')
+const Region = require('../models/region')
 const User = require('../models/user')
 const Budg_exec_sum = require('../models/budg_exec_sum')
 
@@ -23,6 +24,7 @@ const { authUser, authRole } = require('../public/javascripts/basicAuth.js')
 const { canViewProject, canDeleteProject, scopedProjects } = require('../public/javascripts/permissions/project.js')
 const user = require('../models/user')
 const { ROLE } = require('../public/javascripts/data.js')
+const region = require('../models/region')
 
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
 
@@ -32,9 +34,9 @@ let poSumView = []
 // console.log(ROLE)
 // All Chart of Accounts Route
 
-router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
+router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
 
-    const branchCode = req.params.id
+    const areaCode = req.params.id
     const _user = req.user
     let searchOptions = {}
 
@@ -45,7 +47,7 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 
         branchName = "AREA BUDGET MODULE VIEW"
         res.render('areas/index', {
-            branchCode: branchCode,
+            areaCode: areaCode,
             searchOptions: req.query,
             yuser: _user,
             dateToday: new Date()
@@ -56,7 +58,7 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
     }
 })
 
-// View BRANCH per UNIT  - TUG-A
+// View Branch per Branch  - NLE
 router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     
     const areaCode = req.params.id
@@ -64,7 +66,9 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
 
     const fndPositi = posisyon
 
-    let foundAreaMgr = []
+    const branchMgrID = "604f06bf7ca02f8a731fa8a6"
+
+    let foundBranchMgr = []
     let foundAMBranches = []
     let foundPO = []
     let officerName = ""
@@ -72,13 +76,11 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let postUnitHead = ""
     let postProgOfr = ""
 
-    let poLoanTotals = []
     let unitLoanTotals = []
     let brnLoanTotals = []
     let brnLoanGrandTot = []
-    let centerTargets = []
     let foundCenter = []
-    
+    let loanType = []
 
     let newClients = 0
     let nClientAmt = 0
@@ -86,8 +88,6 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let oClientAmt = 0
     let rClient = 0
     let rClient2 = 0
-    let resloanTot = 0
-    let resignClient = 0
     let budgEndBal = 0
     let totDisburse = 0
     let budgBegBal = 0
@@ -118,28 +118,21 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
 
     try {
 
-        const branchManager = await Employee.find({area: areaCode, position_code: postManager}, function (err, foundBMs){
-            foundAreaMgr = foundBMs
+        const areaManager = await Employee.find({area: areaCode, position_code: branchMgrID}, function (err, foundBMs){
+            foundBranchMgr = foundBMs
 
            })
         
-           if (branchManager) {
-                branchManager.forEach(manager => {
+           if (areaManager) {
+                areaManager.forEach(manager => {
                     officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
                 })
             }            
-        const branMgrs = await Employee.find({area: areaCode, position_code: postUnitHead}, function (err, foundUHs){
+        const branMgrs = await Employee.find({area: areaCode, position_code: postManager}, function (err, foundUHs){
             foundAMBranches = foundUHs
             })
-        const programOfficers = await Employee.find({area: areaCode, position_code: postProgOfr}, function (err, foundPO){
-            foundPOs = foundPO
-            })
 
-        // console.log(officerName)
-        // console.log(foundAMBranches)
-        // console.log(foundPOs)
-
-        const loanType = await Loan_type.find({})
+         loanType = await Loan_type.find({})
 
         const center = await Center.find({area: areaCode}, function (err, foundCenters) {
 //        const center = await Center.find(searchOptions)
@@ -163,6 +156,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
         } else {
             doneReadCenter = true   
         }
+
     foundAMBranches.forEach(uh => {
 
         let unCode = _.trim(uh.unit)
@@ -257,7 +251,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
             
         })
 
-        typeLoan = "UNIT TOTALS"
+        typeLoan = "BRANCH TOTALS"
         let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
         let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
 
@@ -267,7 +261,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
             doneFoundPO = true
     })
 
-    if (foundPO) {
+    if (foundAMBranches.length === 0) {
 
     } else {
         doneFoundPO = true   
@@ -344,20 +338,21 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     }
 })
 
-//View EMPLOYEES per BRANCH Level - TUG
+//View EMPLOYEES per AREA Level - TUG
 
-router.get('/employees/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+router.get('/employees/:id', authUser, authRole(ROLE.AM), async (req, res) => {
 
-    const brnCode = req.params.id
+    const areaCode = req.params.id
     const _user = req.user
-
+    
+    const branchMgrID = "604f06bf7ca02f8a731fa8a6"
 
     let fondEmploy = []
     let sortedEmp = []
     let fndPosition = {}
     let empCode = ""
     let empName = ""
-    let empPostCode = ""
+    let empPostCode = "AREA_MGR"
     let empPost = ""
     let empSortKey = ""
     let empPst
@@ -368,15 +363,13 @@ router.get('/employees/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     let empCanProceed = false
     
     try {
-        const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
-            fndPosition = foundPosit
-        })
+        const branches = await Branch.find({area: areaCode})
 
-        const brnEmployees = await Employee.find({branch: brnCode}, function (err, foundEmployees) {
+        const brnEmployees = await Employee.find({position_code: branchMgrID, area: areaCode}, function (err, foundEmployees) {
             const fndEmployees = foundEmployees
 
 //            const empStatus = fndEmployees.status
-            
+//  - Branch ID
             fndEmployees.forEach(foundEmp =>{
                 empPst = foundEmp.position_code
                 empID = foundEmp._id
@@ -384,42 +377,25 @@ router.get('/employees/:id', authUser, authRole(ROLE.BM), async (req, res) => {
                 empCode = foundEmp.emp_code
                 empUnit = foundEmp.unit
                 empUnitPOnum = foundEmp.unit + foundEmp.po_number
+                empAss = foundEmp.assign_code
+                branchCode = foundEmp.branch
                 let exist = false
 //                console.log(empID)
                 // console.log(empPst)
 
-                brnPosition.forEach(branchPost => {
-                    const empPosit = branchPost._id
+                const empAssign = _.find(branches, {branch: empAss})
 
-                    if (_.trim(empPosit) === _.trim(empPst) ) {
-                        empPostCode = empPosit
-                        if (branchPost.code === "BRN_MGR" || branchPost.code === "BRN_ACT" || branchPost.code === "BRN_AST") {
-                            empPost = branchPost.title 
-                        }
-                        if (branchPost.code === "UNI_HED") {
-                            empPost = branchPost.title + " - " + empUnit
-                        }
-                        if (branchPost.code === "PRO_OFR") {
-                            empPost = branchPost.title + " - " + empUnitPOnum
-                        }
-                        
-                        empSortKey = branchPost.sort_key.toString() + empUnitPOnum + empName
-                        exist = true
-                    }
-                })
-                if (exist) {
-                    fondEmploy.push({empID: empID, branchC: brnCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empPost, empSortKey: empSortKey})
-                }    
+                    fondEmploy.push({empID: empID, area: areaCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empAssign.branch_desc})
                 empCanProceed = true            
             })
 
         })
 
         sortedEmp = fondEmploy.sort( function (a,b) {
-            if ( a.empSortKey < b.empSortKey ){
+            if ( a.empName < b.empName ){
                 return -1;
               }
-              if ( a.empSortKey > b.empSortKey ){
+              if ( a.empName > b.empName ){
                 return 1;
               }
                return 0;
@@ -430,10 +406,9 @@ router.get('/employees/:id', authUser, authRole(ROLE.BM), async (req, res) => {
         }
 
     if (empCanProceed)
-        res.render('branches/employee', {
-            branchCode: brnCode,
+        res.render('areas/employee', {
+            areaCode: areaCode,
             fndEmploy: sortedEmp,
-            fndPosition: fndPosition,
             searchOptions: req.query,
             yuser: _user
         })
@@ -446,26 +421,28 @@ router.get('/employees/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
 
 // New EMPLOYEE Route
-router.get('/newEmployee/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+router.get('/newEmployee/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     
-    const branchCode = req.params.id
+    const areaCode = req.params.id
     const _user = req.user
-
+    let foundBranch = []
 
     try {
 
-        const newEmpPost = await Position.find({group_code: "BRN"}, function (err, fndPost) {
-            const pstCode = fndPost
-           console.log(branchCode)
+        // let foundBranch = await Branch.find({area: areaCode, emp_code: ""})
+
+        const newEmpPost = await Branch.find({area: areaCode, emp_code: ""}, function (err, fndPost) {
+            foundBranch = fndPost
+           console.log(areaCode)
            const newEmp = new Employee()
            const newUser = new User()
-           newEmp.branch = branchCode
    
-            res.render('branches/newEmployee', { 
+            res.render('areas/newEmployee', { 
                emp: newEmp, 
                user: newUser,
-               posit: fndPost,
-               branchCode: branchCode,
+               areaCode: areaCode,
+               branchAsignDesc: "",
+               foundBranch: foundBranch,
                yuser: _user,
                newEmp: true,
                resetPW: false
@@ -481,69 +458,41 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.BM), async (req, res) => 
 })
 
 // POST or Save new Employee
-router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+router.post('/postNewEmp/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     const _user = req.user
    let eUnit
    let ePONum
-   const emPostCod = req.body.ayPost
+   const empBranCod = req.body.branch
     const nEmpCode = _.trim(req.body.empCode)
     const nEmail = _.trim(req.body.email).toLowerCase()
     const nLName = _.trim(req.body.lName).toUpperCase()
     const nFName = _.trim(req.body.fName).toUpperCase()
     const nMName = _.trim(req.body.mName).toUpperCase()
     const nName =  nLName + ", " + nFName + " " + nMName
-    const empID = req.params.id
+    const areaCod = req.params.id
 
-    console.log(req.body.password)
-
-    const branchPosition = posisyon
-
-    const fndPosition = branchPosition.find(posit => posit.id === emPostCod)
-
-    const ePosition = fndPosition.code
-
-    console.log(ePosition)
-
-    let eShortTitle
-    if (ePosition === "BRN_MGR") {
-        eShortTitle = "BM"
-        eUnit = "N/A"
-        ePONum = "N/A"
-    }
-    if (ePosition === "UNI_HED") {
-        eShortTitle = "PUH"
-        eUnit = _.trim(req.body.poUnit).toUpperCase()
-        ePONum = "N/A"
-    }
-    if (ePosition === "PRO_OFR") {
-        eShortTitle = "PO"
-        eUnit = _.trim(req.body.poUnit).toUpperCase()
-        ePONum = req.body.poNumber
-    }
-
-    const assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
-
-    const brnCode = _.trim(req.body.brnCode).toUpperCase()
-    const assCode = brnCode + "-" + assignUnit
-    const empCod = req.body.empCode
-
+    const branchMgrID = "604f06bf7ca02f8a731fa8a6"
 
 let locals
 //console.log(brnCode)
 let getExistingUser = []
 let canProceed = false
 let UserProceed = false
+let branchRegion = ""
 
 try {
 
-    const branchEmployees = await Employee.find({branch: brnCode})
+    const getRegCode = await Area.findOne({area: areaCod})
+        branchRegion = getRegCode.region
+
+    const branchEmployees = await Employee.find({position: branchMgrID})
     console.log(branchEmployees)
 
     const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
 
     const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
 
-    const sameAssign = _.find(branchEmployees, {assign_code: assCode})
+    const sameAssign = _.find(branchEmployees, {assign_code: empBranCod})
     console.log(sameAssign)
 
     if (branchEmployees) {
@@ -551,7 +500,7 @@ try {
             locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
             canProceed = false
         } else if (sameAssign) {
-            locals = {errorMessage: 'Assign Code: ' + assCode + ' already exists!'}
+            locals = {errorMessage: 'Assign Code: ' + empBranCod + ' already exists!'}
             canProceed = false
 
           } else if (sameCode) {
@@ -577,12 +526,7 @@ try {
             }    
     
     if (canProceed && UserProceed)  {
-        if (ePosition === "PRO_OFR") {
-            const poAssignCode = await Po.findOneAndUpdate({"po_code": assCode}, {$set:{"emp_code": req.body.empCode}})
-        } 
-        if (ePosition === "UNI_HED") {
-//           const unAssignCode = await Po.findOneAndUpdate({"po_code": assCode}, {$set:{"emp_code": req.body.empCode}})
-        } 
+            const poAssignCode = await Branch.findOneAndUpdate({"branch": empBranCod}, {$set:{"emp_code": nEmpCode}})
 
         addedNewUser = true
         
@@ -592,45 +536,51 @@ try {
             last_name: nLName,
             first_name: nFName,
             middle_name: nMName,
-            position_code: emPostCod,
-            assign_code: assCode,
-            po_number: ePONum,
-            branch: req.body.brnCode,
-            unit: eUnit
+            position_code: branchMgrID,
+            assign_code: empBranCod,
+            branch: empBranCod,
+            area: areaCod,
+            region: branchRegion,
+            unit: "N/A",
+            po_number: "N/A"
         })
         
         const newCoa = employee.save()
 
         let nUser = new User({
-            name: nName,
             email: nEmail,
             password: hashedPassword,
-            assCode: assCode,
-            role: eShortTitle
+            name: nName,
+            emp_code: nEmpCode,
+            assCode: empBranCod,
+            role: 'BM',
+            region: _user.region,
+            area: req.params.id,
+            branch: empBranCod
         })
         const saveUser = nUser.save()
 
-        res.redirect('/branches/employees/'+ brnCode)
+        res.redirect('/areas/employees/'+ areaCod)
     } 
     else {
-        let psitCode = []
-        const rePosition = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
-             psitCode = fnd_Post
+        let areaBranches = []
+        const rePosition = await Area.find({area: areaCod}, function (err, fnd_Post) {
+            areaBranches = fnd_Post
         })
-        console.log(psitCode)
+
         let errEmp = []
         let errUser = []
 
             errUser.push({email: nEmail, password: req.body.password})
 
-            errEmp.push({emp_code: nEmpCode, branch: brnCode, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: emPostCod, unit: eUnit, po_number: ePONum})
+            errEmp.push({emp_code: nEmpCode, branch: empBranCod, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: branchMgrID})
             console.log(errEmp)
 
-            res.render('branches/newEmployee', { 
+            res.render('areas/newEmployee', { 
                 emp: errEmp, 
                 user: errUser,
-                posit: psitCode,
-                branchCode: brnCode,
+                foundBranch: areaBranches,
+                areaCode: areaCod,
                 yuser: _user,
                 newEmp: true,
                 resetPW: false,
@@ -642,43 +592,43 @@ try {
 } catch (err) {
     console.log(err)
    let locals = {errorMessage: 'Something WENT went wrong.'}
-    res.redirect('/branches/employees/'+ brnCode)
+    res.redirect('/areas/employees/'+ areaCod)
 }
 })
 
 // Get an Employee for EDIT
-router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, res) => {
+router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.AM), async (req, res) => {
 
-    paramsID = req.params.id
-        console.log(paramsID)
+    const parame = req.params.id // areaCode + emp_code
+    const areaCode = parame.substr(0,3)
+    const empCode = _.trim(parame.substr(3,10))
 
-    branCod = req.body.branCode
-    empID = req.params.id
-    empCode = _.trim(paramsID.substr(3,9))
-        console.log(empCode)
+    areaCod = req.body.area
+
+    console.log(empCode)
     const _user = req.user
     let locals = ""
-    let possit
     let foundEmploy = []
-    const emPosit = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
-         pst_Code = fnd_Post
-    })
+    let areaBranches = []
      
    try {
         let brnCod
+        const emArea = await Branch.find({area: areaCode}, function (err, fnd_Post) {
+            areaBranches = fnd_Post
+        })
+        console.log(areaBranches)
+
         const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
 //            console.log(foundlist)
             foundEmploy = foundEmp
             brnCod = foundEmp.branch
-            possit = _.trim(foundEmploy.position_code)
-           console.log(possit)
         })
         // console.log(employe)
         const newUser = new User()
 
-        res.render('branches/editEmployee', {
-            branchCode: brnCod,
-            posit: pst_Code,
+        res.render('areas/editEmployee', {
+            areaCode: areaCode,
+            foundBranch: areaBranches,
             user: newUser,
             emp: employe, 
             locals: locals,
@@ -691,62 +641,32 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, r
 
    } catch (err) {
        console.log(err)
-       res.redirect('employees/'+ branCod)
+       res.redirect('/areas/employees/'+ areaCode)
    }
 })
 
 // SAVE EDITed Employee
 
-router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req, res){
+router.put('/putEditedEmp/:id', authUser, authRole(ROLE.AM), async function(req, res){
 
-    paramsID = req.params.id
+    const paramsID = req.params.id
         console.log(paramsID)
 
-    branCod = paramsID.substr(0,3)
-    // empID = req.params.id
-    empID = _.trim(paramsID.substr(3,45))
+    const areaCod = paramsID.substr(0,3)
+    const empID = _.trim(paramsID.substr(3,45))
 
-    const assignUnit = _.trim(req.body.poUnit) + _.trim(req.body.poNumber)
-    const brnCode = req.body.brnCode 
-    const assCode = brnCode + "-" + assignUnit
-    const emPost =  req.body.ayPost
+    const assCode = req.body.branch
+    const brnCod = req.body.branch
 
-    const eAssCode = assCode
-    
-    let ePONum = "NA"
-    let eUnit = "NA"
-    
-        const emPosition =  await Position.findById(req.body.ayPost)
-            const ePosition = emPosition.code
-            const eShortTitle = emPosition.short_title
+    const eAssCode = assCode    
 
-            const eCode = _.trim(req.body.empCode)
-            const eLName = _.trim(req.body.lName).toUpperCase()
-            const eFName = _.trim(req.body.fName).toUpperCase()
-            const eMName = _.trim(req.body.mName).toUpperCase()
-            const nName =  eLName + ", " + eFName + " " + eMName
+    const eCode = _.trim(req.body.empCode)
+    const eLName = _.trim(req.body.lName).toUpperCase()
+    const eFName = _.trim(req.body.fName).toUpperCase()
+    const eMName = _.trim(req.body.mName).toUpperCase()
+    const nName =  eLName + ", " + eFName + " " + eMName
         
-        
-            if (ePosition === "BRN_MGR" || ePosition === "BRN_ACT" || ePosition === "BRN_AST") {
-                eUnit = "NA"
-                ePONum = "NA"
-            }
-            if (ePosition === "UNI_HED") {
-                eUnit = req.body.poUnit
-                ePONum = "NA"
-            } 
-            if (ePosition === "PRO_OFR") {
-                eUnit = req.body.poUnit
-                ePONum = req.body.poNumber    
-            } 
-    
-            console.log(req.params.id)
-    let employee
-    let empPost
         try {
-            const mPost = await Position.findOne({_id: emPost}, function (err, fndEmPost) {
-                empPost = fndEmPost.code
-            } )
 
             employee = await Employee.findById(empID)
             console.log(employee)
@@ -755,24 +675,23 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
             employee.last_name = eLName
             employee.first_name = eFName
             employee.middle_name = eMName
-            employee.position_code = emPost
             employee.assign_code = eAssCode
-            employee.po_number = ePONum
-            employee.branch = brnCode
-            employee.unit = eUnit
+            employee.area = areaCod
         
             await employee.save()
         
-            if (empPost === "PRO_OFR") {
-                const poAssignCode = await Po.findOneAndUpdate({"po_code": eAssCode}, {$set:{"emp_code": eCode}})
-            } 
-    
-            res.redirect('/branches/employees/'+ brnCode)
+                const poAssignCode = await Branch.findOneAndUpdate({"branch": brnCod}, {$set:{"emp_code": eCode}})
+
+                const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": eCode, "region": req.user.region, "area": areaCod }})
+
+                // const userAssignCode = await User.findOneAndUpdate({"area": areaCod}, {$set:{"name": nName}})
+
+                res.redirect('/areas/employees/'+ areaCod)
 
         } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.redirect('/branches/employees/'+ brnCode, {
+            res.redirect('/areas/employees/'+ areaCod, {
             locals: locals
             })
         }
@@ -780,37 +699,45 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
 })
 
 // GET Employee User for RESET PASSWORD
-router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.BM), async (req, res) => {
+router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.AM), async (req, res) => {
+
+    const parame = req.params.id // areaCode + emp_code
+    const areaCode = parame.substr(0,3)
+    const empCode = _.trim(parame.substr(3,10))
+
 
    const paramsID = req.params.id
         console.log(paramsID)
     const branCod = req.body.branCode
     const empID = req.params.id
-    const empCode = _.trim(paramsID.substr(3,9))
 
     const _user = req.user
     let locals = ""
-    let possit = ""
+    let branAsignCode = ""
+    let branAsignDesc = ""
     let foundEmploy = []
+    let areaBranches = []
     
     let ass_Code = ""
 
    try {
-        let brnCod
+
         const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
 //            console.log(foundlist)
             foundEmploy = foundEmp
             brnCod = foundEmp.branch
             possit = _.trim(foundEmploy.position_code)
            console.log(possit)
-           ass_Code = foundEmploy.assign_code
+           branAsignCode = foundEmploy.assign_code
         })
         
-        const emPosit = await Position.findById(possit)
-        const positsyon = emPosit.title
+        const emPosit = await Branch.findOne({branch: branAsignCode}, function (err, fndBranch) {
+            branAsignDesc = fndBranch.branch_desc
+            areaBranches = fndBranch
+        })
     
             // console.log(employe)
-        const yoser = await User.findOne({assCode: ass_Code}, function (err, foundUser) {
+        const yoser = await User.findOne({assCode: branAsignCode}, function (err, foundUser) {
             //            console.log(foundlist)
             fndUser = foundUser
             console.log(fndUser)
@@ -818,9 +745,10 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.BM), async (req, 
 
         yoser.password = ""
             
-        res.render('branches/resetPassword', {
-            branchCode: brnCod,
-            posit: positsyon,
+        res.render('areas/resetPassword', {
+            areaCode: areaCode,
+            branchAsignDesc: branAsignDesc,
+            foundBranch: areaBranches,
             user: yoser,
             emp: employe, 
             locals: locals,
@@ -833,17 +761,17 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.BM), async (req, 
 
    } catch (err) {
        console.log(err)
-       res.redirect('employees/'+ branCod)
+       res.redirect('employees/'+ areaCode)
    }
 })
 
-router.put('/putEditedPass/:id', authUser, authRole(ROLE.BM), async function(req, res){
+router.put('/putEditedPass/:id', authUser, authRole(ROLE.AM), async function(req, res){
 
-    const paramsID = req.params.id
+    const paramsID = req.params.id // areaCode + areaCode
 
-    const branCod = paramsID.substr(0,3)
+    const areaCod = paramsID.substr(0,3)
     // empID = req.params.id
-    const empID = _.trim(paramsID.substr(3,45))
+    const branCod = _.trim(paramsID.substr(3,10))
     const newPassword = _.trim(req.body.password)
     const userID = req.body.user_id
 
@@ -851,249 +779,312 @@ router.put('/putEditedPass/:id', authUser, authRole(ROLE.BM), async function(req
     
         try {
             const hashdPassword = await bcrypt.hash(newPassword, 10)
-            let getExistingUser = await User.findById(userID)
+            let getExistingUser = await User.findOne({assCode: branCod})
 
                 getExistingUser.password = hashdPassword
                 const savedNewPW = getExistingUser.save()
         
-            res.redirect('/branches/employees/'+ branCod)
+            res.redirect('/areas/employees/'+ areaCod)
 
         } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.render('/branches/employee/'+ branCod, {
+            res.render('/areas/employees/'+ areaCod, {
             locals: locals
             })
         }
   
 })
 
-// Get UNITS for Maintenance
-router.get('/units/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+// GET Branches PER area
+router.get('/setAreaBranchs/:id', authUser, authRole(ROLE.AM), async (req, res) => {
 
-    const brnCode = req.params.id
-    const _user = req.user
+    const areaCod = req.params.id
 
-    let foundEmployee = []
-    let sortedEmp = []
-    let fndUnit = []
-    let empCode = ""
-    let empName = ""
-    let doneReadUnit = false
+    const poNumber = IDcode.substr(5,1)
+    const unit_Code = IDcode.substr(0,5)
+    const unitCode = IDcode.substr(4,1)
+    const branchCode = IDcode.substr(0,3)
+    const yuser = req.user
 
-    // const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
-    //     fndPosition = foundPosit
-    // })
-    // const brnEmployees = await Employee.find({branch: brnCode}, function (err, fndEmployees) {
-    //     foundEmployee = fndEmployees
-    // })
+    console.log(IDcode)
+
+    let foundBranch = []
+    let fndCenter = []
+    let doneReadCtr = false
 
     try {
-        const brnUnits = await Unit.find({branch: brnCode}, function (err, foundUnits) {
-//            const fndEmployees = foundEmployees
-//            const empStatus = fndEmployees.status
-            
-            foundUnits.forEach(fndUnits =>{
-                id = fndUnits._id
-                unitCode = fndUnits.unit_code
-                unitUnit = fndUnits.unit
-                unitLoanProd = fndUnits.loan_type
-                unitOffLoc = fndUnits.office_loc
-                unitAdd = fndUnits.address
-                unitHead = fndUnits.emp_code
-                unitPoNum = fndUnits.num_pos
-                unitCenterNum = fndUnits.num_centers
-                unitStatus = fndUnits.status
 
-                foundEmployee.forEach(fndEmp => {
-                    empName = fndEmp.first_name + " " + fndEmp.middle_name.substr(0,1) + ". " + fndEmp.last_name
-                })
-                fndUnit.push({id: id, unitCode: unitCode, unitUnit: unitUnit, unitHead: unitHead, unitLoanProd: unitLoanProd, unitOffLoc: unitOffLoc})
-                doneReadUnit = true
+        // const loanType = await Loan_type.find({})
+
+        const regBranchs = await Area.find({area: areaCod}, function (err, foundBranchs) {
+            foundBranch = foundBranchs
+            doneReadCtr = true
+        })
+
+        if (regBranchs.length === 0) {
+            doneReadCtr = true
+        }
+        
+        if (doneReadCtr) {
+            res.render('areas/branch', {
+                areaCode: areaCod,
+                Branchs: foundBranch,
+                yuser: yuser
+            })
+        }
+    } catch (err) {
+        console.log(err)
+        res.redirect('/areas/branch')
+    }
+})
+
+//
+router.get('/setNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) => {
+
+    const yuser = req.user
+
+    let foundBranchs = []
+    
+    let numBranchs = 0
+    let doneReadPOs = false
+    
+    try {
+        
+        foundBranchs = await Area.find({})
+
+            res.render('areas/setNewBranches', {
+                fondBranchs: foundBranchs,
+                numBranchs: numBranchs,
+                uniCod: unitCode,
+                lonType: loanType,
+                searchOptions: req.query,
+                yuser: yuser
+            })
+    } catch (err) {
+        console.log(err)
+        res.redirect('/areas/'+unitCode)
+    }
+})
+
+// Get BRANCHES for Maintenance
+router.get('/branches/:id', authUser, authRole(ROLE.AM), async (req, res) => {
+
+    const areaCode = req.params.id
+    const _user = req.user
+
+    let foundBranch = []
+    let sortedEmp = []
+    let fndBranch = []
+    let fndBranchs = []
+    let sortedBranchs = []
+    let doneReadarea = false
+
+    let empName = []
+
+    try {
+
+        const fnd_branch = await Branch.find({area: areaCode}, function (err, fnd_Branchs) {
+            fndBranch = fnd_Branchs
+        })
+        
+        let fndEmployee = await Employee.find({area: areaCode})
+        
+    //            const fndEmployees = foundEmployees
+    //            const empStatus = fndEmployees.status
+        if (fndBranch.length === 0) {
+            doneReadarea = true
+        } else {
+            fndBranch.forEach(fndBranchs =>{
+                id = fndBranchs._id
+                branchCode = fndBranchs.branch
+                branchDesc = fndBranchs.branch_desc
+                branchEmp = fndBranchs.emp_code
+
+                // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
+                empName = _.filter(fndEmployee, {'emp_code': branchEmp})
+
+                if (empName.length === 0) {
+                } else {
+                    employeeName = empName.first_name + " " + _.trim(empName.middle_name).substr(0,1) + ". " + empName.last_name
+                }
+                foundBranch.push({id: id, areaCode: areaCode, branchCode: branchCode, branchDesc: branchDesc, emp_code: branchEmp, empName: empName})
+
+                doneReadarea = true
             })
 
-                console.log(fndUnit)
+                console.log(foundBranch)
             
-                sortedUnits= fndUnit.sort( function (a,b) {
-                    if ( a.unitCode < b.unitCode ){
+                sortedBranchs= foundBranch.sort( function (a,b) {
+                    if ( a.branchCode < b.branchCode ){
                         return -1;
-                      }
-                      if ( a.unitCode > b.unitCode ){
+                    }
+                    if ( a.branchCode > b.branchCode ){
                         return 1;
-                      }
-                       return 0;
+                    }
+                    return 0;
                 })
-            if (doneReadUnit || fndUnit.length === 0) {
-                res.render('branches/unit', {
-                branchCode: brnCode,
-                fondUnits: sortedUnits,
-                searchOptions: req.query,
-                yuser: _user
-                })
-            }
-    })
+        }
+
+        if (doneReadarea) {
+            res.render('areas/branch', {
+            areaCode: areaCode,
+            fondBranchs: sortedBranchs,
+            searchOptions: req.query,
+            yuser: _user
+            })
+        }
+
     } catch (err) {
         console.log(err)
         res.redirect('/')
     }
 })
 
-// GET NEW UNIT
-router.get('/newUnit/:id', authUser, authRole(ROLE.BM), async (req, res) => {
-    
-    const branchCode = req.params.id
-    const _user = req.user
+//GET Branch
+router.get('/newBranch/:id', authUser, authRole(ROLE.AM), async (req, res) => {
+    const areaCod = req.params.id
 
-    const loanType = await Loan_type.find({})
-
-         res.render('branches/newUnit', { 
-            unit: new Unit(), 
-            lonType: loanType,
-            branchCode: branchCode,
-            yuser: _user
-        })
-    // })
-//    console.log(position)
-
+    res.render('areas/newBranch', {
+        areaCode: areaCod,
+        branch: new Branch()
+    })
 })
 
-// POST or Save new Unit
-router.post('/postNewUnit/:id', authUser, authRole(ROLE.BM), async (req, res) => {
-    
-    const param = req.params.id
-    const brnCod = _.trim(req.params.id)
-    const uUnit = _.trim(req.body.uUnit).toUpperCase()
-    const uUnitCode = _.trim(brnCod + '-' + uUnit)
- 
-    let canProceed = true
+router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) => {
+
+    const areaCod = req.params.id
     let locals
+    let canProceed = false
+    const _user = req.user
+    const branch_code = _.trim(req.body.branchCode).toUpperCase()
+    const branch_desc = _.trim(req.body.branchDesc).toUpperCase()
+    const branch_add = _.trim(req.body.branchAdd).toUpperCase()
+
+    let branchareaCode = ""
+    let fndBranch = [ ]
+    let getBrnRegCod = []
+    try {
+        
+        const getExisBranch = await Branch.findOne({branch: branch_code, area: areaCod}, function (err, foundBranch) {
+            fndBranch = foundBranch
+            if (isNull(fndBranch)) {
+                let nBranch  = new Branch({
+
+                    branch: branch_code,
+                    branch_desc: branch_desc,
+                    emp_code: "",
+                    office_loc: "",
+                    address: branch_add,
+                    num_units: 0,
+                    num_pos: 0,
+                    num_centers: 0,
+                    num_units_budg: 0,
+                    num_pos_budg: 0,
+                    num_centers_budg: 0,
+                    area: areaCod,
+                    region: _user.region,
+                    status: "Active"
+                })
+            
+                const saveUser = nBranch.save()
     
- 
- try {
-    const unit = await Unit.findOne({unit_code: uUnitCode}, function (err, fndUnit) {
-    })
+                res.redirect('/areas/branches/' + areaCod)
+            } else {
+                canProceed = false
+                locals = {errorMessage: "Branch Code already exists!"}
 
-    if (unit === null) {
-        canProceed = true
-    } else {
-        canProceed = false
+                res.redirect('/areas/branches/' + areaCod)
+            }
+        })
+
+    } catch (err) {
+        console.log(err)
+        res.redirect('/areas/branches/' + req.user.assCode)
     }
+})  
 
-    if (canProceed) {
-        let unit = new Unit({
-            region: "NLO",
-            area: "NEL",
-            unit_code: uUnitCode,
-            unit: uUnit,
-            branch: brnCod,
-            loan_type: req.body.loanTyp,
-            office_loc: req.body.office_loc,
-            address: req.body.unitAdd,
-            status: "New"
-       })
-       const newUnit = await unit.save()
-       res.redirect('/branches/units/'+ brnCode)
-     
-    } else {
-        locals = {errorMessage: 'UNIT already exists!'}
+ // Get a Branch for EDIT
+ router.get('/getBranchForEdit/:id/edit', authUser, authRole(ROLE.AM), async (req, res) => {
 
-        const loanType = await Loan_type.find({})
+    const parame = req.params.id // 'Area ' + region.id
 
-        res.render('branches/newUnit', { 
-           unit: new Unit(), 
-           lonType: loanType,
-           branchCode: brnCod,
-           locals: locals
-         })
-    }
+    const areaCod = _.trim(parame.substr(0,3))
+    const param = _.trim(parame.substr(3,50))
 
-
- } catch (err) {
-     console.log(err)
-    let locals = {errorMessage: 'Something WENT went wrong.'}
-     res.redirect('/branches/units/'+ brnCod)
- }
- })
- 
- // Get a UNIT for EDIT
-router.get('/getUnitForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, res) => {
-    const param = req.params.id
-    const brnCod = param.substring(0,3)
     const uUnit = req.body.uUnit
-    const uUnitCode = param
     const _user = req.user
 
-    let fondUnit = []
+    let fondBranch = []
+    let branchID = ""
 
     try {
 
-        const loanType = await Loan_type.find({})
+        const regForEdit = await Branch.findById(param)  
+        branchID = regForEdit.id
 
-        const units = await Unit.findOne({unit_code: uUnitCode}, function (err, fndUnit) {
-            fondUnit = fndUnit
-        })
+        fondBranch = regForEdit
+        console.log(fondBranch)
 
-        res.render('branches/editUnit', { 
-           unit: fondUnit, 
-           lonType: loanType,
-           branchCode: brnCod,
+        res.render('areas/editBranch', { 
+            branchID: branchID,
+           branch: fondBranch, 
+           areaCode: areaCod,
            yuser : _user
        })
 
     } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.redirect('/branches/units/'+ brnCod)
+            res.redirect('/areas/branches/'+ areaCod)
     }
 })
 
-// SAVE EDITed Unit
+// SAVE EDITed Branch
 
-router.put('/putEditedUnit/:id', authUser, authRole(ROLE.BM), async function(req, res){
-    const param = req.params.id
-    const brnCod = param.substring(0,3)
-    const uUnit = req.body.uUnit
-    const uUnitCode = param
-    const ln_Typ = req.body.loanTyp
+router.put('/putEditedBranch/:id', authUser, authRole(ROLE.AM), async function(req, res){
+
+    const parame = req.params.id // areaCode + branch.id
+    const paramsID = parame.substr(0,3)
+    const param = _.trim(parame.substr(3,25))
+    const branch_code = _.trim(req.body.branchCode).toUpperCase()
+    const branch_desc = _.trim(req.body.branchDesc).toUpperCase()
 
     console.log(req.params.id)
 
-    let unit
+    let branch
         try {
 
-            unit = await Unit.findOne({unit_code: uUnitCode})
+            branch = await Branch.findById(param)
 
-            unit.unit_code = uUnitCode
-            unit.unit = uUnit.toUpperCase()
-            unit.branch = brnCod
-            unit.loan_type = ln_Typ
-            unit.office_loc = req.body.office_loc
-            unit.address = req.body.unitAdd
-            unit.status = "Active"
+            branch.branch = branch_code,
+            branch.branch_desc = branch_desc
         
-            await unit.save()
+            await branch.save()
         
-            res.redirect('/branches/units/'+ brnCod)
+            res.redirect('/areas/branches/'+ paramsID)
 
         } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.redirect('/branches/units/'+ brnCod, {
+            res.redirect('/areas/branches/'+ paramsID, {
             locals: locals
             })
         }
   
 })
 
-router.delete('/deleteUnit/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+//
+router.delete('/deleteBranch/:id', authUser, authRole(ROLE.AM), async (req, res) => {
 
-    let unUnit
+    
+    let regBranch
 
     try {
-        unUnit = await Unit.findById(req.params.id)
-        delBranCode = unUnit.branch
-        await unUnit.remove()  
-        res.redirect('/branches/units/'+delBranCode)
+        regBranch = await Branch.findById(req.params.id)
+        delAreaCode = regBranch.region
+        await regBranch.remove()  
+        res.redirect('/areas/areas/'+delAreaCode)
     } catch (err) {
         console.log(err)
     }

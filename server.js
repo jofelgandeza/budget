@@ -12,9 +12,12 @@ const { lookup } = require('geoip-lite')
 
 const adminRouter = require('./routes/admins.js')
 const budgetRouter = require('./routes/budgets.js')
-const budgetCOGRouter = require('./routes/centers.js')
 const branchesRouter = require('./routes/branches.js')
+const regionsRouter = require('./routes/regions.js')
+const areasRouter = require('./routes/areas.js')
 const unitsRouter = require('./routes/units.js')
+const budgetCOGRouter = require('./routes/centers.js')
+const dedsRouter = require('./routes/deds.js')
 
 const passport = require('passport')
 const flash = require('express-flash')
@@ -81,6 +84,9 @@ app.use('/budgets', budgetRouter)
 app.use('/centers', budgetCOGRouter)
 app.use('/units', unitsRouter)
 app.use('/branches', branchesRouter)
+app.use('/areas', areasRouter)
+app.use('/regions', regionsRouter)
+app.use('/deds', dedsRouter)
 app.use('/admins', adminRouter)
 
 // let locals = {}
@@ -96,10 +102,16 @@ app.get('/', checkAuthenticated, async (req, res) => {
               res.redirect("/units/" + asignCode)
           } else if (req.user.role === "BM") { 
             res.redirect("/branches/" + asignCode)
+          } else if (req.user.role === "AM") { 
+            res.redirect("/areas/" + asignCode)
+          } else if (req.user.role === "RD") { 
+            res.redirect("/regions/" + asignCode)
+          } else if (req.user.role === "DED") { 
+            res.redirect("/deds")
           }
           else if (req.user.role === "ADMIN") { 
-            res.redirect("/admins") 
-          }
+              res.redirect("/admins") 
+            }
     } 
   })
   

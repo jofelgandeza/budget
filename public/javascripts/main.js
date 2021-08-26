@@ -173,9 +173,42 @@ function setEmailUser() {
     const emailName = setEmailBranchCode.toLowerCase() + "-" + setEmailUnitCode.toLowerCase() + setEmailPoNumber + "@kmbi.org.ph"
 
     document.getElementById("email").value = emailName
+}
 
+function setOffEmailUser() {
 
+    let setEmailRegion = ""
+    setEmailRegion = document.getElementById("region").value
 
+    // alert(setEmailBranchCode + setEmailPoNumber)
+
+    const emailName = setEmailRegion.toLowerCase() + "@kmbi.org.ph"
+
+    document.getElementById("email").value = emailName
+}
+
+function setAreaEmailUser() {
+
+    let setEmailArea = ""
+    setEmailArea = document.getElementById("area").value
+
+    // alert(setEmailBranchCode + setEmailPoNumber)
+
+    const emailName = setEmailArea.toLowerCase() + "@kmbi.org.ph"
+
+    document.getElementById("email").value = emailName
+}
+
+function setBranchEmailUser() {
+
+    let setEmailBranch = ""
+    setEmailBranch = document.getElementById("branch").value
+
+    // alert(setEmailBranchCode + setEmailPoNumber)
+
+    const emailName = setEmailBranch.toLowerCase() + "@kmbi.org.ph"
+
+    document.getElementById("email").value = emailName
 }
 
 function setPositValue() {

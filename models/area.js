@@ -19,11 +19,11 @@ const mongoose = require('mongoose')
     },
     office_loc: {
         type: String,
-        required: true
+        required: false
     },
     address: {
         type: String,
-        required: true
+        required: false
     },
     num_branches: {
         type: Number,

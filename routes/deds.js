@@ -11,7 +11,6 @@ const _ = require('lodash')
 
 const User = require('../models/user')
 const Region = require('../models/region')
-const Area = require('../models/area')
 const Employee = require('../models/employee')
 
 const { authUser, authRole } = require('../public/javascripts/basicAuth.js')
@@ -20,99 +19,75 @@ const { ROLE } = require('../public/javascripts/data.js')
 // let LoggedUser = {}
 // app.use(setSysUser)
 
-router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
-
-    const regionCode = req.params.id
+router.get('/', async (req, res) => {
+    // res.send('Admin Page')
     const _user = req.user
-    let searchOptions = {}
-    let fndRegion = []
-
-    if (req.query.title  !=null && req.query.title !== '') {
-        searchOptions.description = RegExp(req.query.title, 'i')
-    }
-    try {
-
-        const foundRegion = await Region.findOne({region: regionCode})
-        fndRegion = foundRegion
-        console.log(fndRegion)
-
-        branchName = "REGION BUDGET MODULE VIEW"
-        res.render('regions/index', {
-            regionCode: regionCode,
-            regionDesc: fndRegion.region_desc,
-            searchOptions: req.query,
-            yuser: _user,
-            dateToday: new Date()
-        })
-    } catch (err) {
-        console.log(err)
-        res.redirect('/')
-    }
+    const logUser = req.user
+    res.render('deds/index', {
+        dateToday: new Date(),
+        ded: "DED",
+        yuser : logUser
+    })
 })
 
-// GET AREA for Maintenance
-router.get('/areas/:id', authUser, authRole(ROLE.RD), async (req, res) => {
+router.get('/region/:id', async (req, res) => {
 
-    const regionCode = req.params.id
+    const ded = req.params.id
     const _user = req.user
 
-    let foundArea = []
+    let foundRegion = []
     let sortedEmp = []
-    let fndArea = []
-    let fndAreas = []
-    let sortedAreas = []
+    let fndRegion = []
+    let fndRegions = []
     let doneReadRegion = false
 
     let empName = []
 
     try {
 
-        const fnd_area = await Area.find({region: regionCode}, function (err, fnd_Areas) {
-            fndArea = fnd_Areas
-        })
+        fndRegion = await Region.find()
         
-        let fndEmployee = await Employee.find({region: regionCode})
+        let fndEmployee = await Employee.find()
         
     //            const fndEmployees = foundEmployees
     //            const empStatus = fndEmployees.status
-        if (fndArea.length === 0) {
-            doneReadRegion = true
+        if (isNull(fndRegion)) {
         } else {
-            fndArea.forEach(fndAreas =>{
-                id = fndAreas._id
-                areaCode = fndAreas.area
-                areaDesc = fndAreas.area_desc
-                areaEmp = fndAreas.emp_code
+            fndRegion.forEach(fndRegions =>{
+                id = fndRegions._id
+                regionCode = fndRegions.region
+                regionDesc = fndRegions.region_desc
+                regionEmp = fndRegions.emp_code
 
                 // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
-                empName = _.filter(fndEmployee, {'emp_code': areaEmp})
+                empName = _.filter(fndEmployee, {'emp_code': regionEmp})
 
                 if (empName.length === 0) {
                 } else {
                     employeeName = empName.first_name + " " + _.trim(empName.middle_name).substr(0,1) + ". " + empName.last_name
                 }
-                foundArea.push({id: id, regionCode: regionCode, areaCode: areaCode, areaDesc: areaDesc, areaEmp: areaEmp, empName: empName})
+                foundRegion.push({id: id, regionCode: regionCode, regionDesc: regionDesc, regionEmp: regionEmp, empName: empName})
 
                 doneReadRegion = true
             })
 
-                console.log(foundArea)
+                console.log(foundRegion)
             
-                sortedAreas= foundArea.sort( function (a,b) {
-                    if ( a.areaCode < b.areaCode ){
+                sortedRegions= foundRegion.sort( function (a,b) {
+                    if ( a.regionCode < b.regionCode ){
                         return -1;
                     }
-                    if ( a.areaCode > b.areaCode ){
+                    if ( a.regionCode > b.regionCode ){
                         return 1;
                     }
                     return 0;
                 })
         }
 
-        if (doneReadRegion) {
-            res.render('regions/area', {
-            regionCode: regionCode,
-            fondAreas: sortedAreas,
+        if (doneReadRegion || fndRegion.length === 0) {
+            res.render('deds/region', {
+            ded: 'DED',
+            fondRegions: sortedRegions,
             searchOptions: req.query,
             yuser: _user
             })
@@ -125,7 +100,7 @@ router.get('/areas/:id', authUser, authRole(ROLE.RD), async (req, res) => {
 })
 
 // GET AREAS PER REGION
-router.get('/setRegionAreas/:id', authUser, authRole(ROLE.RD), async (req, res) => {
+router.get('/setdedRegions/:id', async (req, res) => {
 
     const regionCod = req.params.id
 
@@ -148,42 +123,36 @@ router.get('/setRegionAreas/:id', authUser, authRole(ROLE.RD), async (req, res) 
         const regAreas = await Region.find({region: regionCod}, function (err, foundAreas) {
             foundArea = foundAreas
             doneReadCtr = true
-        })
 
-        if (regAreas.length === 0) {
-            doneReadCtr = true
-        }
-        
-        if (doneReadCtr) {
-            res.render('regions/area', {
+            res.render('deds/area', {
                 regionCode: regionCod,
-                Areas: foundArea,
+                regions: foundArea,
                 yuser: yuser
             })
-        }
+        })
     } catch (err) {
         console.log(err)
-        res.redirect('/regions/region')
+        res.redirect('/deds/region')
     }
 })
 
 //
-router.get('/setNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) => {
+router.get('/setNewRegions', async (req, res) => {
 
     const yuser = req.user
 
-    let foundAreas = []
+    let foundRegions = []
     
-    let numAreas = 0
+    let numRegions = 0
     let doneReadPOs = false
     
     try {
         
-        foundAreas = await Region.find({})
+        foundRegions = await Region.find({})
 
-            res.render('regions/setNewAreas', {
-                fondAreas: foundAreas,
-                numAreas: numAreas,
+            res.render('units/setNewRegions', {
+                fondRegions: foundRegions,
+                numRegions: numRegions,
                 uniCod: unitCode,
                 lonType: loanType,
                 searchOptions: req.query,
@@ -191,54 +160,52 @@ router.get('/setNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) => {
             })
     } catch (err) {
         console.log(err)
-        res.redirect('/regions/'+unitCode)
+        res.redirect('/deds/'+ "DED")
     }
 })
 
-//GET AREAS
-router.get('/newArea/:id', authUser, authRole(ROLE.RD), async (req, res) => {
-    const regionCod = req.params.id
+router.get('/newRegion', async (req, res) => {
+    // res.send('User Registration Page!')
 
-    res.render('regions/newArea', {
-        regionCode: regionCod,
-        area: new Area()
+    res.render('deds/newRegion', {
+        ded: 'DED',
+        region: new Region()
     })
 })
 
-router.post('/postNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) => {
+router.post('/postNewRegion/:id', async (req, res) => {
 
-    const regionCod = req.params.id
     let locals
     let canProceed = false
-    const area_code = _.trim(req.body.areaCode).toUpperCase()
-    const area_desc = _.trim(req.body.areaDesc).toUpperCase()
-
-    let fndArea = [ ]
+    const ded = req.params.id
+    const region_code = _.trim(req.body.regionCode).toUpperCase()
+    const region_desc = _.trim(req.body.regionDesc).toUpperCase()
+    let fndRegion = [ ]
     try {
         
-        const getExisArea = await Area.findOne({area: area_code}, function (err, foundArea) {
-            fndArea = foundArea
+        const getExisRegion = await Region.findOne({region: region_code}, function (err, foundRegion) {
+            fndRegion = foundRegion
         })
 
-        console.log(fndArea)
+        console.log(fndRegion)
 
-        if (isNull(fndArea)) {
+        if (isNull(fndRegion)) {
             canProceed = true 
         } else {
             canProceed = false
-            locals = {errorMessage: "Area Code already exists!"}
+            locals = {errorMessage: "Region Code already exists!"}
         }
 
         console.log(canProceed)
         
         if (canProceed) {
-            let nArea  = new Area({
+            let nRegion  = new Region({
 
-                area: area_code,
-                area_desc: area_desc,
+                region: region_code,
+                region_desc: region_desc,
                 emp_code: "",
                 office_loc: "",
-                address: "None",
+                address: "",
                 num_areas: 0,
                 num_branches: 0,
                 num_units: 0,
@@ -249,88 +216,85 @@ router.post('/postNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) =>
                 num_units_budg: 0,
                 num_pos_budg: 0,
                 num_centers_budg: 0,
-                region: regionCod,
                 status: "Active"
             })
         
-            const saveUser = nArea.save()
+            const saveUser = nRegion.save()
 
-            res.redirect('/regions/areas/' + regionCod)
+            res.redirect('/deds/region/' + ded)
 
         } else {
-            res.redirect('/regions/areas/' + regionCod)
+            res.redirect('/deds/region/' + ded)
         }
 
     } catch (err) {
         console.log(err)
-        res.redirect('/regions/' + req.user.assCode)
+        res.redirect('/deds/register/')
     }
 })  
 
- // Get a AREA for EDIT
- router.get('/getAreaForEdit/:id/edit', authUser, authRole(ROLE.RD), async (req, res) => {
+ // Get a REGION for EDIT
+ router.get('/getRegionForEdit/:id/edit', authUser, authRole(ROLE.DED), async (req, res) => {
 
-    const parame = req.params.id // 'Region ' + region.id
+    const parame = req.params.id // 'DED' + region.id
 
-    const regionCod = _.trim(parame.substr(0,3))
-    const param = _.trim(parame.substr(3,50))
+    const param = _.trim(parame.substr(3,25))
 
     const uUnit = req.body.uUnit
     const _user = req.user
 
-    let fondArea = []
+    let fondRegion = []
     let regID = ""
 
     try {
 
-        const regForEdit = await Area.findById(param)  
+        const regForEdit = await Region.findById(param)  
         regID = regForEdit.id
+        fondRegion = regForEdit
+        console.log(fondRegion)
 
-        fondArea = regForEdit
-        console.log(fondArea)
-
-        res.render('regions/editArea', { 
+        res.render('deds/editRegion', { 
             regID: regID,
-           area: fondArea, 
-           regionCode: regionCod,
+           region: fondRegion, 
+           ded: "DED",
            yuser : _user
        })
 
     } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.redirect('/regions/area/'+ param)
+            res.redirect('/deds/region/'+ 'DED')
     }
 })
 
 // SAVE EDITed Region
 
-router.put('/putEditedArea/:id', authUser, authRole(ROLE.RD), async function(req, res){
+router.put('/putEditedRegion/:id', authUser, authRole(ROLE.DED), async function(req, res){
 
-    const parame = req.params.id // regionCode + region.id
-    const paramsID = parame.substr(0,3)
+    const parame = req.params.id // 'DED' + region.id
+
     const param = _.trim(parame.substr(3,25))
-    const area_code = _.trim(req.body.areaCode).toUpperCase()
-    const area_desc = _.trim(req.body.areaDesc).toUpperCase()
+    const region_code = _.trim(req.body.regionCode).toUpperCase()
+    const region_desc = _.trim(req.body.regionDesc).toUpperCase()
 
     console.log(req.params.id)
 
-    let area
+    let region
         try {
 
-            area = await Area.findById(param)
+            region = await Region.findById(param)
 
-            area.area = area_code,
-            area.area_desc = area_desc
+            region.region = region_code,
+            region.region_desc = region_desc
         
-            await area.save()
+            await region.save()
         
-            res.redirect('/regions/areas/'+ paramsID)
+            res.redirect('/deds/region/'+ 'DED')
 
         } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.redirect('/regions/areas/'+ paramsID, {
+            res.redirect('/deds/region/'+ 'DED', {
             locals: locals
             })
         }
@@ -338,16 +302,15 @@ router.put('/putEditedArea/:id', authUser, authRole(ROLE.RD), async function(req
 })
 
 //
-router.delete('/deleteArea/:id', authUser, authRole(ROLE.RD), async (req, res) => {
+router.delete('/deleteRegion/:id', authUser, authRole(ROLE.DED), async (req, res) => {
 
-    
-    let regArea
+    let regRegion
 
     try {
-        regArea = await Area.findById(req.params.id)
-        delRegionCode = regArea.region
-        await regArea.remove()  
-        res.redirect('/regions/areas/'+delRegionCode)
+        regRegion = await Region.findById(req.params.id)
+        delBranCode = unUnit.branch
+        await unUnit.remove()  
+        res.redirect('/branches/units/'+delBranCode)
     } catch (err) {
         console.log(err)
     }
@@ -355,12 +318,12 @@ router.delete('/deleteArea/:id', authUser, authRole(ROLE.RD), async (req, res) =
 
 //View EMPLOYEES per BRANCH Level - TUG
 
-router.get('/employees/:id', authUser, authRole(ROLE.RD), async (req, res) => {
+router.get('/employees/:id', authUser, authRole(ROLE.DED), async (req, res) => {
 
-    const regionCode = req.params.id
+    const areaCode = req.params.id
     const _user = req.user
     
-    const areaMgrID = "611d088fdb81bf7f61039615"
+    const regDirID = "611d094bdb81bf7f61039616"
 
     let fondEmploy = []
     let sortedEmp = []
@@ -377,15 +340,12 @@ router.get('/employees/:id', authUser, authRole(ROLE.RD), async (req, res) => {
 
     let empCanProceed = false
     let fndEmployees = []
-    let Areas = []
     
     try {
 
-        const fnd_area = await Area.find({region: regionCode}, function (err, fndAreas) {
-            Areas = fndAreas
-        })
+        const regions = await Region.find()
 
-        const brnEmployees = await Employee.find({position_code: areaMgrID, region: regionCode}, function (err, foundEmployees) {
+        const brnEmployees = await Employee.find({position_code: regDirID}, function (err, foundEmployees) {
             const fndEmployees = foundEmployees
 
 //            const empStatus = fndEmployees.status
@@ -398,38 +358,31 @@ router.get('/employees/:id', authUser, authRole(ROLE.RD), async (req, res) => {
                 empUnit = foundEmp.unit
                 empUnitPOnum = foundEmp.unit + foundEmp.po_number
                 empAss = foundEmp.assign_code
-                areaCode = foundEmp.area
                 let exist = false
 
-                const empAssign = _.find(Areas, {area: empAss})
+                const empAssign = _.find(regions, {region: empAss})
                 
-                fondEmploy.push({empID: empID, area: areaCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empAssign.area_desc})
+                fondEmploy.push({empID: empID, area: areaCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empAssign.region_desc})
                 
+                empCanProceed = true            
             })
-            empCanProceed = true            
 
-        })
-
-        sortedEmp = fondEmploy.sort( function (a,b) {
-            if ( a.empName < b.empName ){
-                return -1;
-              }
-              if ( a.empName > b.empName ){
-                return 1;
-              }
-               return 0;
-        })        
-
-        // if (fndEmployees.length === 0) {
-        //     empCanProceed = true
-        // }
-
-    if (empCanProceed)
-        res.render('regions/employee', {
-            regionCode: regionCode,
-            fndEmploy: sortedEmp,
-            searchOptions: req.query,
-            yuser: _user
+            sortedEmp = fondEmploy.sort( function (a,b) {
+                if ( a.empName < b.empName ){
+                    return -1;
+                  }
+                  if ( a.empName > b.empName ){
+                    return 1;
+                  }
+                   return 0;
+            })        
+    
+            res.render('deds/employee', {
+                ded: "DED",
+                fndEmploy: sortedEmp,
+                searchOptions: req.query,
+                yuser: _user
+            })
         })
 
 } catch (err) {
@@ -440,29 +393,28 @@ router.get('/employees/:id', authUser, authRole(ROLE.RD), async (req, res) => {
 
 
 // New EMPLOYEE Route
-router.get('/newEmployee/:id', authUser, authRole(ROLE.RD), async (req, res) => {
+router.get('/newEmployee/:id', authUser, authRole(ROLE.DED), async (req, res) => {
     
-    const regionCode = req.params.id
+    const areaCode = req.params.id
     const _user = req.user
 
     // regionPosiID = "611d094bdb81bf7f61039616"
-    let foundArea = []
-    let fndAreas = []
+    let foundRegion = []
+    let fndRegions = []
 
     try {
 
-        foundArea = await Area.find({emp_code: ""})
+        foundRegion = await Region.find({emp_code: ""})
 
-           console.log(foundArea)
+           console.log(foundRegion)
            const newEmp = new Employee()
            const newUser = new User()
    
-            res.render('regions/newEmployee', { 
+            res.render('deds/newEmployee', { 
                emp: newEmp, 
                user: newUser,
-               regionCode: regionCode,
-               areaAsignDesc: "",
-               foundArea: foundArea,
+               ded: "DED",
+               foundRegion: foundRegion,
                yuser: _user,
                newEmp: true,
                resetPW: false
@@ -477,19 +429,18 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.RD), async (req, res) => 
 })
 
 // POST or Save new Employee
-router.post('/postNewEmp/:id', authUser, authRole(ROLE.RD), async (req, res) => {
+router.post('/postNewEmp/:id', authUser, authRole(ROLE.DED), async (req, res) => {
     const _user = req.user
    let eUnit
    let ePONum
-   const empAreaCod = req.body.area
+   const empRegCod = req.body.region
     const nEmpCode = _.trim(req.body.empCode)
     const nEmail = _.trim(req.body.email).toLowerCase()
     const nLName = _.trim(req.body.lName).toUpperCase()
     const nFName = _.trim(req.body.fName).toUpperCase()
     const nMName = _.trim(req.body.mName).toUpperCase()
     const nName =  nLName + ", " + nFName + " " + nMName
-
-    const areaMgrID = "611d088fdb81bf7f61039615"
+    const empID = req.params.id
 
     const regionPosiID = "611d094bdb81bf7f61039616"
 
@@ -504,14 +455,14 @@ let UserProceed = false
 
 try {
 
-    const branchEmployees = await Employee.find({position: areaMgrID})
+    const branchEmployees = await Employee.find({position: regionPosiID})
     console.log(branchEmployees)
 
     const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
 
     const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
 
-    const sameAssign = _.find(branchEmployees, {assign_code: empAreaCod})
+    const sameAssign = _.find(branchEmployees, {assign_code: empRegCod})
     console.log(sameAssign)
 
     if (branchEmployees.length === 0) {
@@ -519,7 +470,7 @@ try {
             locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
             canProceed = false
         } else if (sameAssign) {
-            locals = {errorMessage: 'Assign Code: ' + empAreaCod + ' already exists!'}
+            locals = {errorMessage: 'Assign Code: ' + empRegCod + ' already exists!'}
             canProceed = false
 
           } else if (sameCode) {
@@ -546,7 +497,7 @@ try {
     
     if (canProceed && UserProceed)  {
         // if (ePosition === "REG_DIR") {
-            const poAssignCode = await Area.findOneAndUpdate({"area": empAreaCod}, {$set:{"emp_code": req.body.empCode}})
+            const poAssignCode = await Region.findOneAndUpdate({"region": empRegCod}, {$set:{"emp_code": req.body.empCode}})
         // } 
 
         addedNewUser = true
@@ -557,13 +508,13 @@ try {
             last_name: nLName,
             first_name: nFName,
             middle_name: nMName,
-            position_code: areaMgrID,
-            assign_code: empAreaCod,
+            position_code: regionPosiID,
+            assign_code: empRegCod,
             po_number: 'N/A',
             unit: 'N/A',
             branch: 'N/A',
-            area: empAreaCod,
-            region: req.params.id
+            area: 'N/A',
+            region: empRegCod
         })
         
         const newCoa = employee.save()
@@ -573,21 +524,21 @@ try {
             password: hashedPassword,
             name: nName,
             emp_code: nEmpCode,
-            assCode: empAreaCod,
-            role: 'AM',
-            region: req.params.id,
-            area: empAreaCod,
+            assCode: empRegCod,
+            role: 'RD',
+            region: empRegCod,
+            area: "",
         })
         const saveUser = nUser.save()
 
-        res.redirect('/regions/employees/'+ req.params.id)
+        res.redirect('/deds/employees/'+ 'DED')
     } 
     else {
-        let regionAreas = []
-        const rePosition = await Region.find({region: req.params.id}, function (err, fnd_Post) {
-            regionAreas = fnd_Post
+        let psitCode = []
+        const rePosition = await Region.find({group_code: "BRN"}, function (err, fnd_Post) {
+             psitCode = fnd_Post
         })
-
+        console.log(psitCode)
         let errEmp = []
         let errUser = []
 
@@ -596,11 +547,11 @@ try {
             errEmp.push({emp_code: nEmpCode, branch: brnCode, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: emPostCod, unit: eUnit, po_number: ePONum})
             console.log(errEmp)
 
-            res.render('regions/newEmployee', { 
+            res.render('deds/newEmployee', { 
                 emp: errEmp, 
                 user: errUser,
-                regionCode: req.params.id,
-                foundArea: regionAreas,
+                ded: "DED",
+                foundRegion: foundRegion,
                  yuser: _user,
                 newEmp: true,
                 resetPW: false,
@@ -612,43 +563,44 @@ try {
 } catch (err) {
     console.log(err)
    let locals = {errorMessage: 'Something WENT went wrong.'}
-    res.redirect('/regions/employees/'+ req.params.id)
+    res.redirect('/deds/employees/'+ 'DED')
 }
 })
 
 // Get an Employee for EDIT
-router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.RD), async (req, res) => {
+router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.DED), async (req, res) => {
 
-    const parame = req.params.id // regionCode + region.id
-    const regionCode = parame.substr(0,3)
+
+    const parame = req.params.id // ded + region.id
+    const ded = parame.substr(0,3)
     const empCode = _.trim(parame.substr(3,10))
 
-    areaCod = req.body.area
+    // areaCod = req.body.area
 
     console.log(empCode)
     const _user = req.user
     let locals = ""
     let foundEmploy = []
-    let regionAreas = []
+    let dedRegions = []
      
    try {
         let brnCod
-        const emRegion = await Area.find({region: regionCode}, function (err, fnd_Post) {
-            regionAreas = fnd_Post
+        const emRegion = await Region.find({}, function (err, fnd_Post) {
+            dedRegions = fnd_Post
         })
-        console.log(regionAreas)
+        console.log(dedRegions)
 
         const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
 //            console.log(foundlist)
             foundEmploy = foundEmp
-            brnCod = foundEmp.branch
+            brnCod = foundEmp.region
         })
         // console.log(employe)
         const newUser = new User()
 
-        res.render('regions/editEmployee', {
-            regionCode: regionCode,
-            foundArea: regionAreas,
+        res.render('deds/editEmployee', {
+            ded: ded,
+            foundRegion: dedRegions,
             user: newUser,
             emp: employe, 
             locals: locals,
@@ -661,22 +613,22 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.RD), async (req, r
 
    } catch (err) {
        console.log(err)
-       res.redirect('employees/'+ regionCode)
+       res.redirect('deds/employees/'+ ded)
    }
 })
 
 // SAVE EDITed Employee
 
-router.put('/putEditedEmp/:id', authUser, authRole(ROLE.RD), async function(req, res){
+router.put('/putEditedEmp/:id', authUser, authRole(ROLE.DED), async function(req, res){
 
-    const paramsID = req.params.id
+    const paramsID = req.params.id // ded + emp.ID
         console.log(paramsID)
 
-    const regionCod = paramsID.substr(0,3)
+    const ded = paramsID.substr(0,3)
     const empID = _.trim(paramsID.substr(3,45))
 
-    const assCode = req.body.area
-    const areaCod = req.body.area
+    const assCode = req.body.region
+    const regionCod = req.body.region
 
     const eAssCode = assCode
     
@@ -696,20 +648,20 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.RD), async function(req,
             employee.first_name = eFName
             employee.middle_name = eMName
             employee.assign_code = eAssCode
-            employee.area = eAssCode
+            employee.region = eAssCode
         
             await employee.save()
         
-                const poAssignCode = await Area.findOneAndUpdate({"area": areaCod}, {$set:{"emp_code": eCode}})
+                const poAssignCode = await Region.findOneAndUpdate({"region": regionCod}, {$set:{"emp_code": eCode}})
 
-                const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": eCode, "region": regionCod, "area": areaCod }})
+                const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": eCode, "region": regionCod}})
 
-                res.redirect('/regions/employees/'+ regionCod)
+                res.redirect('/deds/employees/'+ ded)
 
         } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.redirect('/regions/employees/'+ regionCod, {
+            res.redirect('/deds/employees/'+ ded, {
             locals: locals
             })
         }
@@ -717,10 +669,10 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.RD), async function(req,
 })
 
 // GET Employee User for RESET PASSWORD
-router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.RD), async (req, res) => {
+router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.DED), async (req, res) => {
 
-    const parame = req.params.id // regionCode + emp_code
-    const regionCode = parame.substr(0,3)
+    const parame = req.params.id // ded + emp_code
+    const ded = parame.substr(0,3)
     const empCode = _.trim(parame.substr(3,10))
 
 
@@ -731,31 +683,30 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.RD), async (req, 
 
     const _user = req.user
     let locals = ""
-    let areaAsignCode = ""
+    let regionAsignCode = ""
     let areaAsignDesc = ""
     let foundEmploy = []
-    let regionAreas = []
+    let dedRegions = []
     
     let ass_Code = ""
 
    try {
-
         const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
 //            console.log(foundlist)
             foundEmploy = foundEmp
             brnCod = foundEmp.branch
             possit = _.trim(foundEmploy.position_code)
            console.log(possit)
-           areaAsignCode = foundEmploy.assign_code
+           regionAsignCode = foundEmploy.assign_code
         })
         
-        const emPosit = await Area.findOne({area: areaAsignCode}, function (err, fndArea) {
+        const region = await Region.findOne({region: regionAsignCode}, function (err, fndArea) {
             areaAsignDesc = fndArea.area_desc
-            regionAreas = fndArea
+            dedRegions = fndArea
         })
     
             // console.log(employe)
-        const yoser = await User.findOne({assCode: areaAsignCode}, function (err, foundUser) {
+        const yoser = await User.findOne({assCode: regionAsignCode}, function (err, foundUser) {
             //            console.log(foundlist)
             fndUser = foundUser
             console.log(fndUser)
@@ -763,10 +714,9 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.RD), async (req, 
 
         yoser.password = ""
             
-        res.render('regions/resetPassword', {
-            regionCode: regionCode,
-            areaAsignDesc: areaAsignDesc,
-            foundArea: regionAreas,
+        res.render('deds/resetPassword', {
+            ded: "DED",
+            region: region,
             user: yoser,
             emp: employe, 
             locals: locals,
@@ -779,17 +729,18 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.RD), async (req, 
 
    } catch (err) {
        console.log(err)
-       res.redirect('employees/'+ branCod)
+       res.redirect('deds/'+ 'DED')
    }
 })
 
-router.put('/putEditedPass/:id', authUser, authRole(ROLE.RD), async function(req, res){
+router.put('/putEditedPass/:id', authUser, authRole(ROLE.DED), async function(req, res){
 
-    const paramsID = req.params.id // regionCode + areaCode
+    const paramsID = req.params.id // 'DED' + emp.id
 
-    const regionCod = paramsID.substr(0,3)
+    const regionCod = _.trim(paramsID.substr(3,3))
     // empID = req.params.id
-    const areaCod = _.trim(paramsID.substr(3,10))
+    const ded = _.trim(paramsID.substr(0,3))
+    // const regionCod = _.trim(paramsID.substr(3,10))
     const newPassword = _.trim(req.body.password)
     const userID = req.body.user_id
 
@@ -797,19 +748,17 @@ router.put('/putEditedPass/:id', authUser, authRole(ROLE.RD), async function(req
     
         try {
             const hashdPassword = await bcrypt.hash(newPassword, 10)
-            let getExistingUser = await User.findOne({assCode: areaCod})
+            let getExistingUser = await User.findOne({assCode: regionCod})
 
                 getExistingUser.password = hashdPassword
                 const savedNewPW = getExistingUser.save()
         
-            res.redirect('/regions/employees/'+ regionCod)
+            res.redirect('/deds/employees/'+ ded)
 
         } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.render('/regions/employee/'+ regionCod, {
-            locals: locals
-            })
+            res.redirect('/deds/employees/'+ ded)
         }
   
 })

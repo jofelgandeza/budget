@@ -1,0 +1,21 @@
+<div class="login">
+    <div class="login-triangle"></div>
+    
+    <h2 class="login-header">Register</h2>
+  
+    <form class="login-container" action="/admins/saveRegister" method="POST">
+        <label for="name">Name</label>
+        <p><input type="text" placeholder="Name" id="name" name="name" required></p>
+        <label for="role">Role</label>  
+        <p><input type="text" placeholder="Role" id="role" name="role" required></p>
+        <label for="assCode">Assign Code</label>  
+        <p><input type="text" placeholder="Assign Code" id="assCode" name="assCode" required>
+            </p>
+        <label for="email">E-mail</label>  
+      <p><input type="email" placeholder="Email" name="email" required></p>
+      <label for="name">Password</label>  
+      <p><input type="password" placeholder="Password" name="password" required></p>
+        <button type="submit">Register</button>
+        <a href="/">Cancel</a>
+      </form>
+  </div>

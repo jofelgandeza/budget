@@ -1,0 +1,36 @@
+<section class="s1">
+    <div class="main-container">
+       <h4> REGIONAL OPERATIONS MAINTENANCE</h4>
+        <table class="content-table">
+            <tr>
+                <% if (fondRegions.length > 0) { %>
+                <% } else { %>
+                    <a class="btn btn-primary" href='/deds/setNewRegions'>SET NEW REGIONS</a>
+                <% } %>
+
+            </tr>
+            <tr>
+                <th> REGION CODE</th>
+                <th> REGION DESCRIPTION</th>
+                <th> LINKS</th>
+            </tr>
+            <% fondRegions.forEach(opRegion => { %>
+                <tr>
+                    <td><%= opRegion.regionCode %> </td>
+                    <td><%= opRegion.regionDesc %> </td>
+                    <td>
+                        <div class="btn-row">
+                            <a class="btn btn-primary" href="/deds/getRegionForEdit/<%= ded + opRegion.id %>/edit">Edit</a>
+                            <%- include('../partials/deleteForm', { url: `/deds/deleteRegion/${opRegion.id}` }) %>
+                        </div>        
+                    </td>
+                </tr>
+            <% }) %> 
+        </table>
+        <div>
+            <a class="btn btn-primary" href="/deds/newRegion">ADD NEW REGION</a>
+            <a class="btn btn-primary" href="/deds">DONE</a>
+        </div>
+    </div>
+</section>
+

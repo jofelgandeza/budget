@@ -1,0 +1,16 @@
+<h2 class="page-header">Edit Area</h2>
+<form action="/areas/putEditedBranch/<%= areaCode + branchID %>?_method=PUT" method="POST">
+    <%- include('_branch_form_fields') %>
+    <div class="form-row">
+        <div class="form-item-column">
+            <button class="btn btn-primary" type="submit">Update</button>
+        </div>
+        <div class="form-item-column">
+            <a class="btn btn-primary" href="/areas/branches/<%= areaCode %>%>">Cancel</a>
+        </div>
+        <div class="form-item-column">
+    
+        </div>
+
+    </div>
+</form>

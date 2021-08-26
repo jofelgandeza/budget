@@ -635,16 +635,9 @@ console.log(unitCode)
         const brnEmployees = await Employee.find({branch: poBranch, unit: poUnitLet})
 
         const unitPOs = await Po.find({unit_code: unitCode}, function (err, fndPO) {
-                if (!fndPO) {
-                
-                } else {
-                    foundPOs = fndPO
-                }
-            })
-            
-            if (foundPOs.length === 0) {
-                doneReadPOs = true
-            }
+
+            foundPOs = fndPO
+
             foundPOs.forEach(fndPos =>{
                 const id = fndPos._id
                 const poCode = fndPos.po_code
@@ -666,28 +659,26 @@ console.log(unitCode)
                 fondPO.push({poID: id, poCode: poCode, poNum: poNum, UnitCode: unitCode, poUnitLet: poUnitLet, 
                     poName: poName, poStatus: "Active", branch: poBrnch, poLoanProd: poLoanProd})
                 
-                doneReadPOs = true
             })
-
-//                console.log(fondPO)
             
-                sortedPOs= fondPO.sort( function (a,b) {
-                    if ( a.poNum < b.poNum ){
-                        return -1;
-                      }
-                      if ( a.poNum > b.poNum ){
-                        return 1;
-                      }
-                       return 0;
-                })
-        if (doneReadPOs) {
+            sortedPOs= fondPO.sort( function (a,b) {
+                if ( a.poNum < b.poNum ){
+                    return -1;
+                  }
+                  if ( a.poNum > b.poNum ){
+                    return 1;
+                  }
+                   return 0;
+            })
+    
             res.render('units/po', {
                 uniCod: unitCode,
                 fondPos: sortedPOs,
                 searchOptions: req.query,
                 yuser: yuser
             })
-        }
+
+        })
     } catch (err) {
         console.log(err)
         res.redirect('/')
@@ -716,7 +707,7 @@ router.get('/newPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
 // POST or Save new Unit
 router.post('/postNewPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
-    
+    const _user = req.user
     const param = req.params.id
     const brnCod = param.substr(0,3)
     const poUnit = param.substr(4,1)
@@ -743,6 +734,8 @@ router.post('/postNewPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => 
             unit_code: param,
             unit: poUnit,
             branch: brnCod,
+            area: _user.area,
+            region: _user.region,
             loan_type: req.body.poLoan,
             emp_code: "",
             num_centers: 0,
@@ -820,7 +813,7 @@ router.put('/putEditedPo/:id', authUser, authRole(ROLE.PUH), async function(req,
     let listPO
         try {
 
-            listPO = await Po.findOne({unit_code: uUnitCode})
+            listPO = await Po.findOne({po_code: poCode})
 
             listPO.unit_code = poUnitCode
             listPO.unit = poUnitNum
@@ -834,7 +827,7 @@ router.put('/putEditedPo/:id', authUser, authRole(ROLE.PUH), async function(req,
         } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.redirect('/branches/units/'+ brnCod, {
+            res.redirect('/units/'+ poUnitCode, {
             locals: locals
             })
         }
@@ -929,7 +922,7 @@ router.get('/setNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) 
 
 //SAVE NEW SET CENTERS
 router.post('/postNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
-
+    const _user = req.user
     const centerPoCode = req.body.po_Code
     const poNumber = centerPoCode.substr(5,1)
     const unitCode = centerPoCode.substr(4,1)
@@ -1001,8 +994,8 @@ router.post('/postNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res
         
             let center = new Center({
             
-                region: "NOL",
-                area: "NLE",
+                region: _user.region,
+                area: _user.area,
                 branch: branchCode,
                 unit: unitCode,
                 po: poNumber,
@@ -1092,6 +1085,7 @@ router.get('/newCenter/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 // POST or Save new CENTER
 router.post('/postNewCenter/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
+    const _user = req.user
     const centerPoCode = req.body.po_Code
     const poNumber = centerPoCode.substr(5,1)
     const unitCode = centerPoCode.substr(4,1)
@@ -1156,7 +1150,8 @@ router.post('/postNewCenter/:id', authUser, authRole(ROLE.PUH), async (req, res)
  
  let center = new Center({
  
-    area: "NLE",
+    region: _user.region,
+    area: _user.area,
     branch: branchCode,
     unit: unitCode,
     po: poNumber,

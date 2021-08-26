@@ -1,41 +1,35 @@
 <section class="s1">
     <div class="main-container">
-       <h4> AREA MAINTENANCE - <%= poCode %></h4>
+       <h4> AREA OPERATIONS MAINTENANCE</h4>
         <table class="content-table">
             <tr>
-                <% if (centers.length > 0) { %>
+                <% if (fondAreas.length > 0) { %>
                 <% } else { %>
-                    <a class="btn btn-primary" href='/units/setNewCenters/<%= poCode %>'>SET NEW CENTERS</a>
+                    <a class="btn btn-primary" href='/regions/setNewRegions'>SET NEW AREAS</a>
                 <% } %>
+
             </tr>
             <tr>
-                <th> CENTER NUMBER</th>
-                <th> CENTER CODE</th>
-                <th> ADDRESS</th>
-                <th> STATUS</th>
+                <th> AREA CODE</th>
+                <th> AREA DESCRIPTION</th>
+                <th> LINKS</th>
             </tr>
-            <% centers.forEach(fndCenter => { %>
+            <% fondAreas.forEach(regArea => { %>
                 <tr>
-                    <td><%= fndCenter.center_no %> </td>
-                    <td><%= fndCenter.center %> </td>
-                    <td>
-                        <% for(var adres of fndCenter.Info) { %>
-                            <%= adres.address %>                        
-                        <% } %>
-                    </td>
-                    <td><%= fndCenter.status %> </td>
+                    <td><%= regArea.areaCode %> </td>
+                    <td><%= regArea.areaDesc %> </td>
                     <td>
                         <div class="btn-row">
-                            <a class="btn btn-primary" href='/units/getCenterForEdit/<%= fndCenter.center + fndCenter._id %>/edit'>Edit</a>
-                            <%- include('../partials/deleteForm', { url: `/units/deleteCenter/${fndCenter._id}` }) %>
+                            <a class="btn btn-primary" href="/regions/getAreaForEdit/<%= regionCode + regArea.id %>/edit">Edit</a>
+                            <%- include('../partials/deleteForm', { url: `/regions/deleteArea/${regArea.id}` }) %>
                         </div>        
                     </td>
                 </tr>
             <% }) %> 
         </table>
         <div>
-            <a class="btn btn-primary" href='/units/newCenter/<%= poCode %>'>ADD NEW CENTER</a>
-            <a class="btn btn-primary" href='/units/pos/<%= unit_Code %>'>DONE</a>
+            <a class="btn btn-primary" href="/regions/newArea/<%= regionCode %>">ADD NEW AREA</a>
+            <a class="btn btn-primary" href="/regions/<%= regionCode %>">DONE</a>
         </div>
     </div>
 </section>

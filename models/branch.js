@@ -21,10 +21,6 @@ const mongoose = require('mongoose')
         type: String,
         required: false
     },
-    office_loc: {
-        type: String,
-        required: true
-    },
     address: {
         type: String,
         required: true

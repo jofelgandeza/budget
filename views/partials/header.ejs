@@ -23,6 +23,22 @@
                     <li class="header-nav header-link"> <a href='/units/<%= yuser.assCode %>'>Home</a></li>
                     <li class="header-nav header-link"> <a href='/units/pos/<%= yuser.assCode %>'>PO's</a></li>
                 <% } %>
+                <%if (yuser.role === "BM") { %>
+                    <li class="header-nav header-link"> <a href='/branches/<%= yuser.assCode %>'>Home</a></li>
+                    <li class="header-nav header-link"> <a href='/branches/units/<%= yuser.assCode %>'>Units</a></li>
+                <% } %>
+                <%if (yuser.role === "AM") { %>
+                    <li class="header-nav header-link"> <a href='/areas/<%= yuser.assCode %>'>Home</a></li>
+                    <li class="header-nav header-link"> <a href='/areas/branches/<%= yuser.assCode %>'>Branches</a></li>
+                <% } %>
+                <%if (yuser.role === "RD") { %>
+                    <li class="header-nav header-link"> <a href='/regions/<%= yuser.assCode %>'>Home</a></li>
+                    <li class="header-nav header-link"> <a href='/regions/areas/<%= yuser.assCode %>'>Areas</a></li>
+                <% } %>
+                <%if (yuser.role === "DED") { %>
+                    <li class="header-nav header-link"> <a href='/deds'>Home</a></li>
+                    <li class="header-nav header-link"> <a href='/deds/region/<%= yuser.assCode %>'>Regions</a></li>
+                <% } %>
                 <%if (yuser.role === "ADMIN") { %>
                     <li class="header-nav header-link"> <a href='/admins/register'>Register User</a></li>
                     <li class="header-nav header-link"><a href='/admins/users'>Users</a></li>

@@ -21,6 +21,14 @@ const posSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    area: {
+        type: String,
+        required: true
+    },
+    region: {
+        type: String,
+        required: true
+    },
     loan_type: {
         type: String,
         required: true

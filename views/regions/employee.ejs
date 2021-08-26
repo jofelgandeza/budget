@@ -1,0 +1,30 @@
+<section class="s1">
+    <div class="main-container">
+       <h4> AREA MANAGERS MAINTENANCE</h4>
+        <table class="content-table">
+            <tr>
+                <th> NAME</th>
+                <th> REGION ASSIGNMENT</th>
+                <th> LINKS</th>
+            </tr>
+            <% fndEmploy.forEach(brnEmployee => { %>
+                <tr>
+                    <td><%= brnEmployee.empName %> </td>
+                    <td><%= brnEmployee.empPost %> </td>
+                    <td>
+                        <div class="btn-row">
+                            <a class="btn btn-primary" href="/regions/getEmpForEdit/<%= regionCode + brnEmployee.empCode %>/edit">Edit</a>
+                            <a class="btn btn-primary" href="/regions/getEmpEditPass/<%= regionCode + brnEmployee.area %>/edit">Reset Password</a>
+                            <%- include('../partials/deleteForm', { url: `/regions/deleteEmp/${brnEmployee.empID}` }) %>
+                        </div>        
+                    </td>
+                </tr>
+            <% }) %> 
+        </table>
+        <div>
+            <a class="btn btn-primary" href="/regions/newEmployee/<%= regionCode %>">ADD NEW AREA MANAGER</a>
+            <a class="btn btn-primary" href="/regions/<%= regionCode %>">DONE</a>
+        </div>
+    </div>
+</section>
+
