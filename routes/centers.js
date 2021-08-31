@@ -422,6 +422,10 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
     let doneReadCenterBegBal = false
     let doneSaveFromOldClient = false
     let doneSaveFromOldAmt = false
+    let doneReadBegBalCli = false
+    let doneReadBegBalAmt = false
+    let ctrBegBalCli = []
+    let ctrBudgDetBegBalAmt = []
 
     try {
 
@@ -515,67 +519,72 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
       })
 
     // Saving Loan Beginning Balances to center_budget_dets.. NOTE: To be done only when setting Targets is finished!
-    if (doneReadCenterBegBal && canSaveBegBal) {
-        let canSaveOldLoanCli = false  
-        let canSaveOldLoanAmt = false
+    if (doneReadCenterBegBal) {
+            let canSaveOldLoanCli = false  
+            let canSaveOldLoanAmt = false
 
-        const centerBudgOLCFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
-            fndCtrBudgDetCliBegBal = foundVwList
-            console.log(fndCtrBudgDetCliBegBal)
-            if (!foundVwList) {
-                let OLDCtrCliBudg = new Center_budget_det({
-                    region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                    view_type: "PUH", loan_type: begLoanType, beg_bal: bClientCnt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanClient", 
-                    jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
+            ctrBegBalCli = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanClient"}, function (err, fndBegBalCli) {
+                console.log(fndBegBalCli)
+                doneReadBegBalCli = true
+            })
+
+            if (doneReadBegBalCli) {
+                if (isNull(ctrBegBalCli)) {
+                    let OLDCtrCliBudg = new Center_budget_det({
+                        region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                        view_type: "PUH", loan_type: begLoanType, beg_bal: bClientCnt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanClient", 
+                        jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
+                        })
+                    
+                        OLDCtrCliBudg.save()
+
+                } else {
+                    ctrBegBalCli.beg_bal = bClientCnt
+                    ctrBegBalCli.beg_bal_amt = begBalPrinc
+                    ctrBegBalCli.beg_bal_int = begBalInterest
+                    
+                    ctrBegBalCli.save();
+
+                }
+                doneSaveFromOldClient = true
+            }
+
+            ctrBudgDetBegBalAmt = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanAmt"}, function (err, fndBegBalAmt) {
+                console.log(fndBegBalAmt)
+                doneReadBegBalAmt = true
+            })
+
+            if (doneReadBegBalAmt) {
+                if (isNull(ctrBudgDetBegBalAmt)) {
+                    let OLFCtrAMTBudg = new Center_budget_det({
+                        region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                        view_type: "PUH", loan_type: begLoanType, beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanAmt", 
+                        jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                     })
-                const OLCtrClient = OLDCtrCliBudg.save()
+                    
+                    OLFCtrAMTBudg.save()
 
-            } else {
-                foundVwList.beg_bal = bClientCnt
-                foundVwList.beg_bal_amt = begBalPrinc
-                foundVwList.beg_bal_int = begBalInterest
-                
-                foundVwList.save();
-
-            }
-            doneSaveFromOldClient = true
-        })
-
-        const ctrBudgAmtDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanAmt"}, function(err, fndVwOldAmtList){ 
-            fndCenterBudgDetAmtBegBal =  fndVwOldAmtList
-
-            if (!fndVwOldAmtList) {
-                let OLFCtrAMTBudg = new Center_budget_det({
-                    region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                    view_type: "PUH", loan_type: begLoanType, beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanAmt", 
-                    jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
-                })
-                const OLCtrAMT = OLFCtrAMTBudg.save()
+                } else {
+                    ctrBudgDetBegBalAmt.beg_bal = bBalAmt
+                    ctrBudgDetBegBalAmt.beg_bal_amt = begBalPrinc
+                    ctrBudgDetBegBalAmt.beg_bal_int = begBalInterest
+                            
+                    ctrBudgDetBegBalAmt.save()
+                }
                 doneSaveFromOldAmt = true
+            } 
+                if (doneSaveFromOldClient && doneSaveFromOldAmt) {
 
-            } else {
-                fndVwOldAmtList.beg_bal = bBalAmt
-                fndVwOldAmtList.beg_bal_amt = begBalPrinc
-                fndVwOldAmtList.beg_bal_int = begBalInterest
-                        
-                fndVwOldAmtList.save()
+                    res.redirect('/centers/setBegBal/' + centerCode)
 
-            }
-            doneSaveFromOldAmt = true
-        })
-            
-            if (doneSaveFromOldClient && doneSaveFromOldAmt) {
+                // } else {
+                //     if (doneSaveNewFromOldClient && doneSaveNewFromOldAmt) {
+                //         res.redirect('/centers/setBegBal/' + centerCode)
+                //     }
+                }
 
-                res.redirect('/centers/setBegBal/' + centerCode)
-
-            // } else {
-            //     if (doneSaveNewFromOldClient && doneSaveNewFromOldAmt) {
-            //         res.redirect('/centers/setBegBal/' + centerCode)
-            //     }
-            }
-
-        } else {
-            res.redirect('/centers/setBegBal/' + centerCode)
+        // } else {
+        //     res.redirect('/centers/setBegBal/' + centerCode)
         }
     } catch(err) {
         console.log(err)
