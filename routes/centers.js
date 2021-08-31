@@ -58,7 +58,6 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
      let loanType = []
 
     let doneCenterRead = false
-    let doneTargetRead = false
     let doneLoanTypeRead = false
 
     try {
@@ -194,7 +193,6 @@ router.get('/viewTarget/:id', authUser, authRole("PO"), async (req, res) => {
     })
 
     let doneCenterRead = false
-    let doneTargetRead = false
     let doneLoanTypeRead = false
 
 //    console.log(POname)
