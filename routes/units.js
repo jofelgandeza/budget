@@ -568,7 +568,7 @@ router.post('/postNewPOs/:id', authUser, authRole(ROLE.PUH), async (req, res) =>
     const poUnit = param.substr(4,1)
     const poCod = param.substr(0,5)
     const numPOs = _.toNumber(req.body.numPOs)
-
+    const _user = req.user
     console.log(numPOs)
     let locals   
  
@@ -591,11 +591,13 @@ router.post('/postNewPOs/:id', authUser, authRole(ROLE.PUH), async (req, res) =>
                 unit_code: param,
                 unit: poUnit,
                 branch: brnCod,
+                area: _user.area,
+                region: _user.region,
                 loan_type: req.body.poLoan,
                 emp_code: "",
                 num_centers: 0,
                 num_centers_budg: 0, 
-                status: "Vacant"
+                status: "Active"
             })
             const newPO = await po.save()
         }
@@ -641,7 +643,7 @@ console.log(unitCode)
             foundPOs.forEach(fndPos =>{
                 const id = fndPos._id
                 const poCode = fndPos.po_code
-                const poNum = fndPos.po_number
+                const poNum = _.toNumber(fndPos.po_number)
                 const pounitCode = fndPos.unit_code
                 const pounitNum = fndPos.unit
                 const poBrnch = fndPos.branch
@@ -650,13 +652,21 @@ console.log(unitCode)
                 const poCenterNum = fndPos.num_centers
                 const poStatus = fndPos.status
                 let poName = " "
+                let poNumStr = ""
+                if (poNum < 10) {
+                    poNumStr = poCode.substr(0,5) + _.padStart(poNum, 2, '0')        
+                } else {
+                    poNumStr = poCode.substr(0,5) + _.toString(poNum)
+                }
+
+                
                 if (poEmpCod ===""){
                 } else {
                       const po_Name = _.find(brnEmployees, {emp_code: poEmpCod})
                         poName = po_Name.last_name + ", "+ po_Name.first_name + " "+ _.trim(po_Name.middle_name).substr(0,1) + "."
                  }
                     
-                fondPO.push({poID: id, poCode: poCode, poNum: poNum, UnitCode: unitCode, poUnitLet: poUnitLet, 
+                fondPO.push({poID: id, poCode: poNumStr, poNum: poNum, UnitCode: unitCode, poUnitLet: poUnitLet, 
                     poName: poName, poStatus: "Active", branch: poBrnch, poLoanProd: poLoanProd})
                 
             })
@@ -740,7 +750,7 @@ router.post('/postNewPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => 
             emp_code: "",
             num_centers: 0,
             num_centers_budg: 0, 
-            status: "Vacant"
+            status: "Active"
        })
        const newPO = await po.save()
        res.redirect('/units/pos/'+ param)
@@ -840,13 +850,13 @@ router.get('/setPOCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) =
 
     const IDcode = req.params.id
 
-    const poNumber = IDcode.substr(5,1)
+    const poNumber = _.trim(_.toNumber(IDcode.substr(5,2)))
     const unit_Code = IDcode.substr(0,5)
     const unitCode = IDcode.substr(4,1)
     const branchCode = IDcode.substr(0,3)
     const yuser = req.user
 
-    console.log(IDcode)
+    const poCode = unit_Code + poNumber
 
     let foundCenter = []
     let fndCenter = []
@@ -860,7 +870,7 @@ router.get('/setPOCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) =
             foundCenter = foundCenters
             doneReadCtr = true
         })
-
+        console.log(foundCenter)
         if (center.length === 0) {
             doneReadCtr = true
         }
@@ -871,7 +881,7 @@ router.get('/setPOCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) =
         
         if (doneReadCtr) {
             res.render('units/center', {
-                poCode: IDcode,
+                poCode: poCode,
                 unitCode: unitCode,
                 unit_Code: unit_Code,
                 centers: foundCenter,
@@ -906,6 +916,7 @@ router.get('/setNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) 
 
         res.render('units/setNewCenters', { 
             numCenters: numCenters,
+            uniCod: uniCode,
             lonType: lonType,
             poCode: poCode,
             yuser: yuser
@@ -924,13 +935,17 @@ router.get('/setNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) 
 router.post('/postNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     const _user = req.user
     const centerPoCode = req.body.po_Code
+    const ctrPoCod = centerPoCode.substr(0,5)
+
     const poNumber = centerPoCode.substr(5,1)
     const unitCode = centerPoCode.substr(4,1)
     const branchCode = centerPoCode.substr(0,3)
     const centerNumber = req.body.numCenters
     let centerNums = _.toNumber(req.body.numCenters) 
 
-    console.log(centerNums)
+    const ctrPoCode = ctrPoCod + _.trim(_.toString(_.toNumber(poNumber)))
+
+    console.log(centerPoCode)
     var i //defines i
 
     try {
@@ -938,12 +953,13 @@ router.post('/postNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res
         for (i = 1; i <= centerNums; i++) { //starts loop
             console.log("The Number Is: " + i) //What ever you want
 
+            let cntrCode = ""
             switch(poNumber) {
                 case "1": 
                     if (i < 10) {
-                        cntrCode = centerPoCode + _.padStart(i, 2, '0')        
+                        cntrCode = ctrPoCode + _.padStart(i, 2, '0')        
                     } else {
-                        cntrCode = centerPoCode + i
+                        cntrCode = ctrPoCode + i
                     }
                     break;
                 case "2": 
@@ -970,12 +986,15 @@ router.post('/postNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res
                 case "9": 
                     cntrNum = i + 80
                     break;
+                case "10": 
+                    cntrNum = i + 90
+                    break;
                 default:
                     cntrNum = 0
             }   
         
-                if (poNumber > 1) {
-                    cntrCode = centerPoCode + _.toString(cntrNum)
+                if (_.toNumber(poNumber) > 1) {
+                    cntrCode = ctrPoCode + _.toString(cntrNum)
                 }
         
             // let cntrCode
@@ -999,7 +1018,7 @@ router.post('/postNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res
                 branch: branchCode,
                 unit: unitCode,
                 po: poNumber,
-                po_code: centerPoCode,
+                po_code: ctrPoCode,
                 center_no: i,
                 center: cntrCode,
                 active_clients: 0,
@@ -1022,13 +1041,13 @@ router.post('/postNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res
             })
             
             let locals
-            let fondCtr
+            let fondCtr = []
             //console.log(brnCode)
             let canProceed = true
         
             fondCtr = await Center.findOne({center: cntrCode})
 
-            if (!fondCtr) {
+            if (isNull(fondCtr)) {
                 const newCoa = await center.save()
             } else {
                 canProceed = false
@@ -1349,13 +1368,25 @@ router.put('/putEditedCenter/:id', authUser, authRole(ROLE.PUH), async function(
 //DELETE Center Route
 router.delete('/deleteCenter/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
-    let poCntr
+    const parame = req.params.id
+    const poNum = _.toNumber(parame.substr(5,1))
+    const centerID = _.trim(parame.substr(6,30))
+    const unitCod = parame.substr(0,5)
+    let delCtrPO = ""
+    let cntrCode = ""
 
     try {
-        poCntr = await Center.findById(req.params.id)
-        const delCenterPO = poCntr.center.substr(0,6)
+        poCntr = await Center.findById(centerID)
+
+        if (poNum < 10) {
+            cntrCode = unitCod + _.padStart(poNum, 2, '0')        
+        } else {
+            cntrCode = unitCod + poNum
+        }
+        // const delCtrPO = poCntr.center.substr(0,6)
+
         await poCntr.remove()  
-        res.redirect('/units/setPOCenters/' + delCenterPO)
+        res.redirect('/units/setPOCenters/' + cntrCode)
     } catch (err) {
         console.log(err)
     }
@@ -1364,13 +1395,19 @@ router.delete('/deleteCenter/:id', authUser, authRole(ROLE.PUH), async (req, res
 
 router.delete('/deletePO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
+    const parame = req.params.id
+console.log(parame)
+    const poCode = _.trim(parame.substr(7,30))
+console.log(poCode)
+    const uniCode = _.trim(parame.substr(0,5))
+
     let unPO
 
     try {
-        unPO = await Po.findById(req.params.id)
+        unPO = await Po.findById(poCode)
         delUnitPO = unPO.unit_code
         await unPO.remove()  
-        res.redirect('/units/pos/'+delUnitPO)
+        res.redirect('/units/pos/'+uniCode)
     } catch (err) {
         console.log(err)
     }

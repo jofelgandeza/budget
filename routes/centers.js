@@ -531,7 +531,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
         const centerBudgOLCFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
             fndCtrBudgDetCliBegBal = foundVwList
             console.log(fndCtrBudgDetCliBegBal)
-            if (isNull(fndCtrBudgDetCliBegBal)) {
+            if (!foundVwList) {
                 let OLDCtrCliBudg = new Center_budget_det({
                     region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: begLoanType, beg_bal: bClientCnt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanClient", 
@@ -553,7 +553,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
         const ctrBudgAmtDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanAmt"}, function(err, fndVwOldAmtList){ 
             fndCenterBudgDetAmtBegBal =  fndVwOldAmtList
 
-            if (isNull(fndCenterBudgDetAmtBegBal)) {
+            if (!fndVwOldAmtList) {
                 let OLFCtrAMTBudg = new Center_budget_det({
                     region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: begLoanType, beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanAmt", 
