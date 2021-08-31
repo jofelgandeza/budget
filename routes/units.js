@@ -1542,74 +1542,19 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
 
     let viewTitle = ""
 
-    let jan_newCTotValue = 0  
-    let feb_newCTotValue = 0
-    let mar_newCTotValue = 0
-    let apr_newCTotValue = 0
-    let may_newCTotValue = 0
-    let jun_newCTotValue = 0
-    let jul_newCTotValue = 0
-    let aug_newCTotValue = 0
-    let sep_newCTotValue = 0
-    let oct_newCTotValue = 0
-    let nov_newCTotValue = 0
-    let dec_newCTotValue = 0
+    let jan_newCtotValue = 0  
+    let feb_newCtotValue = 0
+    let mar_newCtotValue = 0
+    let apr_newCtotValue = 0
+    let may_newCtotValue = 0
+    let jun_newCtotValue = 0
+    let jul_newCtotValue = 0
+    let aug_newCtotValue = 0
+    let sep_newCtotValue = 0
+    let oct_newCtotValue = 0
+    let nov_newCtotValue = 0
+    let dec_newCtotValue = 0
         let begBalOldClient = 0
-        let jan_oldCTotValue = 0   
-        let feb_oldCTotValue = 0
-        let mar_oldCTotValue = 0
-        let apr_oldCTotValue = 0
-        let may_oldCTotValue = 0
-        let jun_oldCTotValue = 0
-        let jul_oldCTotValue = 0
-        let aug_oldCTotValue = 0
-        let sep_oldCTotValue = 0
-        let oct_oldCTotValue = 0
-        let nov_oldCTotValue = 0
-        let dec_oldCTotValue = 0
-    let jan_newATotValue = 0  
-    let feb_newATotValue = 0
-    let mar_newATotValue = 0
-    let apr_newATotValue = 0
-    let may_newATotValue = 0
-    let jun_newATotValue = 0
-    let jul_newATotValue = 0
-    let aug_newATotValue = 0
-    let sep_newATotValue = 0
-    let oct_newATotValue = 0
-    let nov_newATotValue = 0
-    let dec_newATotValue = 0
-        let jan_oldATotValue = 0  
-        let feb_oldATotValue = 0
-        let mar_oldATotValue = 0
-        let apr_oldATotValue = 0
-        let may_oldATotValue = 0
-        let jun_oldATotValue = 0
-        let jul_oldATotValue = 0
-        let aug_oldATotValue = 0
-        let sep_oldATotValue = 0
-        let oct_oldATotValue = 0
-        let nov_oldATotValue = 0
-        let dec_oldATotValue = 0
-        let doneReadNLC = false
-        let doneReadOLC = false
-        let doneReadNLA = false
-        let doneReadOLA = false
-
-        let doneReadNLCli = false
-        let doneReadOLCli = false
-        let doneReadResCli = false
-
-        let fndUnitBudgExecTotLonAmt = []
-
-        let fndUnitBudgExecTotInc = []
-        let fndUnitBuExTotProcFees = []
-
-        poSumView = [ ]
-    try {
-
-        const foundCenters = await Center.find({branch: vwBranchCode, unit: vwUnitLetter}, function(err, foundCenters) {
-            const fndCenters = foundCenters
             let centerCntBegBal = 0
             let jan_centerCount = 0
             let feb_centerCount = 0
@@ -1623,79 +1568,90 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
             let oct_centerCount = 0
             let nov_centerCount = 0
             let dec_centerCount = 0
-                console.log(fndCenters)
-            fndCenters.forEach( fCenters => {
-                const monthCenterBegBal = _.trim(fCenters.beg_center_month)
-                    console.log(monthCenterBegBal)
-                if (fCenters.status === "For Target") {
-                    switch(monthCenterBegBal) {
-                        case "January":
-                            jan_centerCount = jan_centerCount + 1
-                            break;
-                        case "February":
-                            feb_centerCount = feb_centerCount + 1
-                            break;
-                        case "March":
-                            mar_centerCount = mar_centerCount + 1
-                            break;
-                        case "April":
-                            apr_centerCount = apr_centerCount + 1
-                            break;
-                        case "May":
-                            may_centerCount = may_centerCount + 1
-                            break;
-                        case "June":
-                            jun_centerCount = jun_centerCount + 1
-                            break;
-                        case "July":
-                            jul_centerCount = jul_centerCount + 1
-                            break;
-                        case "August":
-                            aug_centerCount = aug_centerCount + 1
-                            break;
-                        case "September":
-                            sep_centerCount = sep_centerCount + 1
-                            break;
-                        case "October":
-                            oct_centerCount = oct_centerCount + 1
-                            break;
-                        case "November":
-                            nov_centerCount = nov_centerCount + 1
-                            break;git 
-                        case "December":
-                            dec_centerCount = dec_centerCount + 1
-                            break;
-                        default:
-                            jan_centerCount = 0
-                    }
-                    
-                } else {
-                    centerCntBegBal = centerCntBegBal + 1
-                }
+            let tot_centerCount = 0
+    let jan_newAtotValue = 0  
+    let feb_newAtotValue = 0
+    let mar_newAtotValue = 0
+    let apr_newAtotValue = 0
+    let may_newAtotValue = 0
+    let jun_newAtotValue = 0
+    let jul_newAtotValue = 0
+    let aug_newAtotValue = 0
+    let sep_newAtotValue = 0
+    let oct_newAtotValue = 0
+    let nov_newAtotValue = 0
+    let dec_newAtotValue = 0
+        let jan_oldAtotValue = 0  
+        let feb_oldAtotValue = 0
+        let mar_oldAtotValue = 0
+        let apr_oldAtotValue = 0
+        let may_oldAtotValue = 0
+        let jun_oldAtotValue = 0
+        let jul_oldAtotValue = 0
+        let aug_oldAtotValue = 0
+        let sep_oldAtotValue = 0
+        let oct_oldAtotValue = 0
+        let nov_oldAtotValue = 0
+        let dec_oldAtotValue = 0
+        let doneReadNLC = false
+        let doneReadOLC = false
+        let doneReadNLA = false
+        let doneReadOLA = false
 
-            })
-            
-            jan_centerCount = jan_centerCount + centerCntBegBal
-            feb_centerCount = feb_centerCount + jan_centerCount
-            mar_centerCount = mar_centerCount + feb_centerCount
-            apr_centerCount = apr_centerCount + mar_centerCount
-            may_centerCount = may_centerCount + apr_centerCount
-            jun_centerCount = jun_centerCount + may_centerCount
-            jul_centerCount = jul_centerCount + jun_centerCount
-            aug_centerCount = aug_centerCount + jul_centerCount
-            sep_centerCount = sep_centerCount + aug_centerCount
-            oct_centerCount = oct_centerCount + sep_centerCount
-            nov_centerCount = nov_centerCount + oct_centerCount
-            dec_centerCount = dec_centerCount + nov_centerCount
+        let doneReadNLCli = false
+        let doneReadOLCli = false
+        let doneReadResCli = false
+        let doneReadNewOldResCli = false
 
-            poSumView.push({title: "NUMBER OF CENTERS", sortkey: 2, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_centerCount, feb_value: feb_centerCount, mar_value: mar_centerCount,
-                apr_value: apr_centerCount, may_value: may_centerCount, jun_value: jun_centerCount, jul_value: jul_centerCount, aug_value: aug_centerCount,
-                sep_value: sep_centerCount, oct_value: oct_centerCount, nov_value: nov_centerCount, dec_value: dec_centerCount, tot_value : dec_centerCount
-            })
+        let fndUnitBudgExecTotLonAmt = []
+        let fndUnitBudgExecNumCenters = []
 
-        })
-        
+        let fndUnitBudgExecTotInc = []
+        let fndUnitBuExTotProcFees = []
+
+        poSumView = [ ]
+
+        try {
+
         //  Pre-determine if items is already existed or saved in Budg_exec_sum Collection
+
+        const poBudgExecNumCenters = await Budg_exec_sum.find({unit: viewUnitCode, view_code: "NumberOfCenters"}, function (err, fndTotNumCenter) {
+                fndUnitBudgExecNumCenters = fndTotNumCenter
+                jan_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.jan_budg; })
+                feb_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.feb_budg; })
+                mar_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.mar_budg; })
+                apr_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.apr_budg; })
+                may_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.may_budg; })
+                jun_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.jun_budg; })
+                jul_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.jul_budg; })
+                aug_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.aug_budg; })
+                sep_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.sep_budg; })
+                oct_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.oct_budg; })
+                nov_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.nov_budg; })
+                dec_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.dec_budg; })
+
+                poSumView.push({title: "NUMBER OF CENTERS", sortkey: 2, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_centerCount, feb_value: feb_centerCount, mar_value: mar_centerCount,
+                    apr_value: apr_centerCount, may_value: may_centerCount, jun_value: jun_centerCount, jul_value: jul_centerCount, aug_value: aug_centerCount,
+                    sep_value: sep_centerCount, oct_value: oct_centerCount, nov_value: nov_centerCount, dec_value: dec_centerCount, tot_value : dec_centerCount
+                })
+
+                jan_centerCount = jan_centerCount + centerCntBegBal
+                feb_centerCount = feb_centerCount + jan_centerCount
+                mar_centerCount = mar_centerCount + feb_centerCount
+                apr_centerCount = apr_centerCount + mar_centerCount
+                may_centerCount = may_centerCount + apr_centerCount
+                jun_centerCount = jun_centerCount + may_centerCount
+                jul_centerCount = jul_centerCount + jun_centerCount
+                aug_centerCount = aug_centerCount + jul_centerCount
+                sep_centerCount = sep_centerCount + aug_centerCount
+                oct_centerCount = oct_centerCount + sep_centerCount
+                nov_centerCount = nov_centerCount + oct_centerCount
+                dec_centerCount = dec_centerCount + nov_centerCount
+
+                doneReadNumCenters = true
+    
+            })
+
             const poBudgExecTotLonAmt = await Budg_exec_sum.findOne({unit: viewUnitCode, view_code: "TotLoanAmt"}, function (err, fndTotLonAmt) {
                 fndUnitBudgExecTotLonAmt = fndTotLonAmt
             })
@@ -1709,16 +1665,12 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
             })
             console.log(poBudgExecTotLonAmt)
 
-            const foundCenterDet = await Center_budget_det.find({unit: viewUnitCode})
-
-        //    console.log(foundCenterDet)
-
         poSumView.push({title: "CENTERS", sortkey: 1, group: 1, isTitle: true})
 
         poSumView.push({title: "CLIENTS", sortkey: 3, group: 2, isTitle: true})
 
 
-        const newClientCntView = await Center_budget_det.find({unit: viewUnitCode, view_code: "NewLoanClient", client_count_included: true }, function (err, fndNewCliCnt) {
+        const newClientCntView = await Budg_exec_sum.find({unit: viewUnitCode, view_code: "NewClients"}, function (err, fndNewCliCnt) {
             jan_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jan_budg; })
             feb_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.feb_budg; })
             mar_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.mar_budg; })
@@ -1742,7 +1694,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
                 doneReadNLCli = true
         }) //, function (err, fndPOV) {
 
-        const oldClientCntView = await Center_budget_det.find({unit: viewUnitCode, view_code: "OldLoanClient", client_count_included: true}, function (err, fndOldCliCnt) {
+        const oldClientCntView = await Budg_exec_sum.find({unit: viewUnitCode, view_code: "NumReLoanCli"}, function (err, fndOldCliCnt) {
 
             begBalOldClient = _.sumBy(fndOldCliCnt, function(o) { return o.beg_bal; })
             jan_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.jan_budg; })
@@ -1760,17 +1712,16 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
 
             olTotValueClient = jan_oldCliTot + feb_oldCliTot + mar_oldCliTot + apr_oldCliTot + may_oldCliTot + jun_oldCliTot
                         + jul_oldCliTot + aug_oldCliTot + sep_oldCliTot + oct_oldCliTot + nov_oldCliTot + dec_oldCliTot
-            
-            poSumView.push({title: "Old Clients", sortkey: 5, group: 2, beg_bal: begBalOldClient, jan_value : jan_oldCliTot, feb_value : feb_oldCliTot, mar_value : mar_oldCliTot, apr_value : apr_oldCliTot,
+
+            poSumView.push({title: "Number of Reloan", sortkey: 10, group: 1, beg_bal: begBalOldClient, jan_value : jan_oldCliTot, feb_value : feb_oldCliTot, mar_value : mar_oldCliTot, apr_value : apr_oldCliTot,
                 may_value : may_oldCliTot, jun_value : jun_oldCliTot, jul_value : jul_oldCliTot, aug_value : aug_oldCliTot,
-                sep_value : sep_oldCliTot, oct_value : oct_oldCliTot, nov_value : nov_oldCliTot, dec_value : dec_oldCliTot, tot_value : dec_oldCliTot
+                sep_value : sep_oldCliTot, oct_value : oct_oldCliTot, nov_value : nov_oldCliTot, dec_value : dec_oldCliTot, tot_value : olTotValueClient
             }) 
 
-            doneReadOLCli = true
-
+            doneReadOLC = true
         }) //, function (err, fndPOV) {
 
-        const resClientCntView = await Center_budget_det.find({unit: viewUnitCode, view_code: "ResClientCount", client_count_included: true}, function (err, fndResCliCnt) {
+        const resClientCntView = await Budg_exec_sum.find({unit: viewUnitCode, view_code: "ResignClients"}, function (err, fndResCliCnt) {
 
             jan_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jan_budg; })
             feb_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.feb_budg; })
@@ -1787,17 +1738,12 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
 
             olTotValueClient = jan_resCliTot + feb_resCliTot + mar_resCliTot + apr_resCliTot + may_resCliTot + jun_resCliTot
                         + jul_resCliTot + aug_resCliTot + sep_resCliTot + oct_resCliTot + nov_resCliTot + dec_resCliTot
-            
-            poSumView.push({title: "Resign Clients", sortkey: 6, group: 2, jan_value : jan_resCliTot, feb_value : feb_resCliTot, mar_value : mar_resCliTot, apr_value : apr_resCliTot,
-                may_value : may_resCliTot, jun_value : jun_resCliTot, jul_value : jul_resCliTot, aug_value : aug_resCliTot,
-                sep_value : sep_resCliTot, oct_value : oct_resCliTot, nov_value : nov_resCliTot, dec_value : dec_resCliTot, tot_value : dec_resCliTot
-            }) 
-        
+                    
             doneReadResCli = true
 
         }) //, function (err, fndPOV) {
 
-    // if (doneReadNLCli && doneReadOLCli && doneReadResCli) {
+    if (doneReadNLCli && doneReadOLC && doneReadResCli) {
 
         jan_oldCliTot = begBalOldClient 
             let jan_totNumClients = (jan_oldCliTot + jan_newCliTot) - jan_resCliTot
@@ -1828,11 +1774,22 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
             apr_value : apr_totNumClients, may_value : may_totNumClients, jun_value : jun_totNumClients, jul_value : jul_totNumClients, aug_value : aug_totNumClients,
             sep_value : sep_totNumClients, oct_value : oct_totNumClients, nov_value : nov_totNumClients, dec_value : dec_totNumClients, tot_value : dec_totNumClients
         }) 
-    // }
+
+        poSumView.push({title: "Old Clients", sortkey: 5, group: 2, beg_bal: begBalOldClient, jan_value : jan_oldCliTot, feb_value : feb_oldCliTot, mar_value : mar_oldCliTot, apr_value : apr_oldCliTot,
+            may_value : may_oldCliTot, jun_value : jun_oldCliTot, jul_value : jul_oldCliTot, aug_value : aug_oldCliTot,
+            sep_value : sep_oldCliTot, oct_value : oct_oldCliTot, nov_value : nov_oldCliTot, dec_value : dec_oldCliTot, tot_value : dec_totNumClients
+       }) 
+
+       poSumView.push({title: "Resign Clients", sortkey: 6, group: 2, jan_value : jan_resCliTot, feb_value : feb_resCliTot, mar_value : mar_resCliTot, apr_value : apr_resCliTot,
+           may_value : may_resCliTot, jun_value : jun_resCliTot, jul_value : jul_resCliTot, aug_value : aug_resCliTot,
+           sep_value : sep_resCliTot, oct_value : oct_resCliTot, nov_value : nov_resCliTot, dec_value : dec_resCliTot, tot_value : dec_resCliTot
+       }) 
+       doneReadNewOldResCli = true
+    }
 
         poSumView.push({title: "NUMBER OF LOANS", sortkey: 8, group: 1, isTitle: true})
 
-        const newLoanClientView = await Center_budget_det.find({unit: viewUnitCode, view_code: "NewLoanClient"}, function (err, fndNewCli) {
+        const newLoanClientView = await Budg_exec_sum.find({unit: viewUnitCode, view_code: "NumNewLoanCli"}, function (err, fndNewCli) {
             jan_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jan_budg; })
             feb_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.feb_budg; })
             mar_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.mar_budg; })
@@ -1856,44 +1813,18 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
             doneReadNLC = true
         }) //, function (err, fndPOV) {
 
-        const oldLoanClientView = await Center_budget_det.find({unit: viewUnitCode, view_code: "OldLoanClient"}, function (err, fndOldCli) {
-
-            begBalOldClient = _.sumBy(fndOldCli, function(o) { return o.beg_bal; })
-            jan_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.jan_budg; })
-            feb_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.feb_budg; })
-            mar_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.mar_budg; })
-            apr_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.apr_budg; })
-            may_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.may_budg; })
-            jun_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.jun_budg; })
-            jul_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.jul_budg; })
-            aug_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.aug_budg; })
-            sep_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.sep_budg; })
-            oct_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.oct_budg; })
-            nov_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.nov_budg; })
-            dec_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.dec_budg; })
-
-            olTotValueClient = jan_oldCtotValue + feb_oldCtotValue + mar_oldCtotValue + apr_oldCtotValue + may_oldCtotValue + jun_oldCtotValue
-                        + jul_oldCtotValue + aug_oldCtotValue + sep_oldCtotValue + oct_oldCtotValue + nov_oldCtotValue + dec_oldCtotValue
-            
-            poSumView.push({title: "Number of Reloan", sortkey: 10, group: 1, beg_bal: begBalOldClient, jan_value : jan_oldCtotValue, feb_value : feb_oldCtotValue, mar_value : mar_oldCtotValue, apr_value : apr_oldCtotValue,
-                may_value : may_oldCtotValue, jun_value : jun_oldCtotValue, jul_value : jul_oldCtotValue, aug_value : aug_oldCtotValue,
-                sep_value : sep_oldCtotValue, oct_value : oct_oldCtotValue, nov_value : nov_oldCtotValue, dec_value : dec_oldCtotValue, tot_value : olTotValueClient
-            }) 
-            doneReadOLC = true
-
-        }) //, function (err, fndPOV) {
-            let jan_totNoOfLoan = jan_oldCtotValue + jan_newCtotValue
-            let feb_totNoOfLoan = feb_oldCtotValue + feb_newCtotValue
-            let mar_totNoOfLoan = mar_oldCtotValue + mar_newCtotValue
-            let apr_totNoOfLoan = apr_oldCtotValue + apr_newCtotValue
-            let may_totNoOfLoan = may_oldCtotValue + may_newCtotValue
-            let jun_totNoOfLoan = jun_oldCtotValue + jun_newCtotValue
-            let jul_totNoOfLoan = jul_oldCtotValue + jul_newCtotValue
-            let aug_totNoOfLoan = aug_oldCtotValue + aug_newCtotValue
-            let sep_totNoOfLoan = sep_oldCtotValue + sep_newCtotValue
-            let oct_totNoOfLoan = oct_oldCtotValue + oct_newCtotValue
-            let nov_totNoOfLoan = nov_oldCtotValue + nov_newCtotValue
-            let dec_totNoOfLoan = dec_oldCtotValue + dec_newCtotValue
+            let jan_totNoOfLoan = jan_oldCliTot + jan_newCtotValue
+            let feb_totNoOfLoan = feb_oldCliTot + feb_newCtotValue
+            let mar_totNoOfLoan = mar_oldCliTot + mar_newCtotValue
+            let apr_totNoOfLoan = apr_oldCliTot + apr_newCtotValue
+            let may_totNoOfLoan = may_oldCliTot + may_newCtotValue
+            let jun_totNoOfLoan = jun_oldCliTot + jun_newCtotValue
+            let jul_totNoOfLoan = jul_oldCliTot + jul_newCtotValue
+            let aug_totNoOfLoan = aug_oldCliTot + aug_newCtotValue
+            let sep_totNoOfLoan = sep_oldCliTot + sep_newCtotValue
+            let oct_totNoOfLoan = oct_oldCliTot + oct_newCtotValue
+            let nov_totNoOfLoan = nov_oldCliTot + nov_newCtotValue
+            let dec_totNoOfLoan = dec_oldCliTot + dec_newCtotValue
 
             if (doneReadNLC && doneReadOLC) {
                 let tot_totNoOfLoan = jan_totNoOfLoan + feb_totNoOfLoan + mar_totNoOfLoan + apr_totNoOfLoan + may_totNoOfLoan + jun_totNoOfLoan + jul_totNoOfLoan +
@@ -1908,7 +1839,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
         poSumView.push({title: "AMOUNT OF LOANS", sortkey: 12, group: 2, isTitle: true})
 
 
-        const newLoanAmtView = await Center_budget_det.find({unit: viewUnitCode, view_code: "NewLoanAmt"}, function (err, fndNewAmt) {
+        const newLoanAmtView = await Budg_exec_sum.find({unit: viewUnitCode, view_code: "NewLoanAmount"}, function (err, fndNewAmt) {
 
             jan_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jan_budg; })
             feb_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.feb_budg; })
@@ -1934,7 +1865,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
 
         }) //, function (err, fndPOV) {
 
-        const oldLoanAmtView = await Center_budget_det.find({unit: viewUnitCode, view_code: "OldLoanAmt"}, function (err, fndOldAmt) {
+        const oldLoanAmtView = await Budg_exec_sum.find({unit: viewUnitCode, view_code: "ReLoanAmount"}, function (err, fndOldAmt) {
 
             jan_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jan_budg; })
             feb_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.feb_budg; })
@@ -2543,7 +2474,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
 
                 poSumView.push({title: "MONTHLY COLLECTION", sortkey: 18, group: 1, jan_value : jan_totColAmt, feb_value : feb_totColAmt, mar_value : mar_totColAmt, 
                     apr_value : apr_totColAmt, may_value : may_totColAmt, jun_value : jun_totColAmt, jul_value : jul_totColAmt, 
-                    aug_value : aug_totColAmt, sep_value : sep_totColAmt, oct_value : oct_totColAmt, nov_value : nov_totColAmt, dec_value : dec_totColAmt
+                    aug_value : aug_totColAmt, sep_value : sep_totColAmt, oct_value : oct_totColAmt, nov_value : nov_totColAmt, dec_value : dec_totColAmt, tot_value : dec_totColAmt
                 
                 })
     
@@ -2584,7 +2515,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
                 })
                 poSumView.push({title: "Bal. from Prev. Month", sortkey: 23, group: 2, jan_value : jan_cbuBalFromPrevMo, feb_value : feb_cbuBalFromPrevMo, mar_value : mar_cbuBalFromPrevMo, 
                     apr_value : apr_cbuBalFromPrevMo, may_value : may_cbuBalFromPrevMo, jun_value : jun_cbuBalFromPrevMo, jul_value : jul_cbuBalFromPrevMo, 
-                    aug_value : aug_cbuBalFromPrevMo, sep_value : sep_cbuBalFromPrevMo, oct_value : oct_cbuBalFromPrevMo, nov_value : nov_cbuBalFromPrevMo, dec_value : dec_cbuBalFromPrevMo
+                    aug_value : aug_cbuBalFromPrevMo, sep_value : sep_cbuBalFromPrevMo, oct_value : oct_cbuBalFromPrevMo, nov_value : nov_cbuBalFromPrevMo, dec_value : dec_cbuBalFromPrevMo, tot_value: dec_totMonthCBU
                 })
                 poSumView.push({title: "  "+ "Less: Withdrawals", sortkey: 24, group: 2, jan_value : jan_cbuWithDrawal, feb_value : feb_cbuWithDrawal, mar_value : mar_cbuWithDrawal, 
                     apr_value : apr_cbuWithDrawal, may_value : may_cbuWithDrawal, jun_value : jun_cbuWithDrawal, jul_value : jul_cbuWithDrawal, 
@@ -2627,10 +2558,11 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
             let octRunBalPrevMon = sepRunBalAmt
             let novRunBalPrevMon = octRunBalAmt
             let decRunBalPrevMon = novRunBalAmt
+            let totRunBalPrevMon = decRunBalAmt 
             
             poSumView.push({title: "BAL. FROM PREV. MONTH", sortkey: 17, group: 1, jan_value : janRunBalPrevMon, feb_value : febRunBalPrevMon, mar_value : marRunBalPrevMon, 
                 apr_value : aprRunBalPrevMon, may_value : mayRunBalPrevMon, jun_value : junRunBalPrevMon, jul_value : julRunBalPrevMon, 
-                aug_value : augRunBalPrevMon, sep_value : sepRunBalPrevMon, oct_value : octRunBalPrevMon, nov_value : novRunBalPrevMon, dec_value : decRunBalPrevMon
+                aug_value : augRunBalPrevMon, sep_value : sepRunBalPrevMon, oct_value : octRunBalPrevMon, nov_value : novRunBalPrevMon, dec_value : decRunBalPrevMon, tot_value: totRunBalPrevMon
             
             })
             doneReadForCBU = true
@@ -2643,7 +2575,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
 
                     if (isNull(fndUnitBudgExecTotLonAmt)) { 
                         let newPoExecSumBudg = new Budg_exec_sum({
-                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: "Unit", title: "TOTAL AMOUNT OF LOAN", view_code: "TotLoanAmt", jan_budg : janTotAmtLoan, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: "Unit", title: "TOTAL AMOUNT OF LOAN", view_code: "TotLoanAmt", jan_budg : janTotAmtLoan, 
                             feb_budg : febTotAmtLoan, mar_budg : marTotAmtLoan, apr_budg : aprTotAmtLoan, may_budg : mayTotAmtLoan, jun_budg : junTotAmtLoan, jul_budg : julTotAmtLoan, 
                             aug_budg : augTotAmtLoan, sep_budg : sepTotAmtLoan, oct_budg : octTotAmtLoan, nov_budg : novTotAmtLoan, dec_budg : decTotAmtLoan                                        
                         })
@@ -2665,11 +2597,14 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
                         await fndUnitBudgExecTotLonAmt.save()            
                     }
 
+                    let nloanTotIntAmt = jan_totIntAmt + feb_totIntAmt + mar_totIntAmt + apr_totIntAmt + may_totIntAmt + jun_totIntAmt
+                      + jul_totIntAmt + aug_totIntAmt + sep_totIntAmt + oct_totIntAmt + nov_totIntAmt + dec_totIntAmt
+
                     if (isNull(fndUnitBudgExecTotInc)) { 
                         let newPoExecSumBudg = new Budg_exec_sum({
                             region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: "Unit", title: "LOAN FEES", view_code: "TotProjInc", jan_budg : jan_totIntAmt, 
                             feb_budg : feb_totIntAmt, mar_budg : mar_totIntAmt, apr_budg : apr_totIntAmt, may_budg : may_totIntAmt, jun_budg : jun_totIntAmt, jul_budg : jul_totIntAmt, 
-                            aug_budg : aug_totIntAmt, sep_budg : sep_totIntAmt, oct_budg : oct_totIntAmt, nov_budg : nov_totIntAmt, dec_budg : dec_totIntAmt                                        
+                            aug_budg : aug_totIntAmt, sep_budg : sep_totIntAmt, oct_budg : oct_totIntAmt, nov_budg : nov_totIntAmt, dec_budg : dec_totIntAmt, tot_budg: nloanTotIntAmt                                  
                         })
                         const lonTotAmtExecBudg = await newPoExecSumBudg.save()
                     } else {
@@ -2685,19 +2620,17 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
                         fndUnitBudgExecTotInc.oct_budg = oct_totIntAmt
                         fndUnitBudgExecTotInc.nov_budg = nov_totIntAmt
                         fndUnitBudgExecTotInc.dec_budg = dec_totIntAmt
+                        fndUnitBudgExecTotInc.tot_budg = nloanTotIntAmt
             
                         await fndUnitBudgExecTotInc.save()            
                     }
 
                     poSumView.push({title: "INCOME", sortkey: 25, group: 1, isTitle: true})
                     
-                    let nloanTotIntAmt = jan_totIntAmt + feb_totIntAmt + mar_totIntAmt + apr_totIntAmt + may_totIntAmt + jun_totIntAmt
-                      + jul_totIntAmt + aug_totIntAmt + sep_totIntAmt + oct_totIntAmt + nov_totIntAmt + dec_totIntAmt
-
                     if (nloanTotIntAmt > 0) {
                         poSumView.push({title: "Loan Fees", desc: "Loan Fees", sortkey: 26, group: 1, jan_value : jan_totIntAmt, feb_value : feb_totIntAmt, mar_value : mar_totIntAmt, apr_value : apr_totIntAmt,
                             may_value : may_totIntAmt, jun_value : jun_totIntAmt, jul_value : jul_totIntAmt, aug_value : aug_totIntAmt,
-                            sep_value : sep_totIntAmt, oct_value : oct_totIntAmt, nov_value : nov_totIntAmt, dec_value : dec_totIntAmt 
+                            sep_value : sep_totIntAmt, oct_value : oct_totIntAmt, nov_value : nov_totIntAmt, dec_value : dec_totIntAmt, tot_value: nloanTotIntAmt
                         })         
                     }
 
@@ -2715,13 +2648,17 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
                     let novProcFeeAmt = _.round(novTotAmtLoan * loanProcesFee, 2) 
                     let decProcFeeAmt = _.round(decTotAmtLoan * loanProcesFee, 2) 
 
+
+                    let nloanTotProcFeeAmt = janProcFeeAmt + febProcFeeAmt + marProcFeeAmt + aprProcFeeAmt + mayProcFeeAmt + junProcFeeAmt
+                      + julProcFeeAmt + augProcFeeAmt + sepProcFeeAmt + octProcFeeAmt + novProcFeeAmt + decProcFeeAmt
+
                     if (isNull(fndUnitBuExTotProcFees)) { 
                         let newPoExecSumBudg = new Budg_exec_sum({
-                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: "Unit", title: "PROCESSING FEES", view_code: "TotProcFee", jan_budg : janProcFeeAmt, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: "Unit", title: "PROCESSING FEES", view_code: "TotProcFee", jan_budg : janProcFeeAmt, 
                             feb_budg : febProcFeeAmt, mar_budg : marProcFeeAmt, apr_budg : aprProcFeeAmt, 
                             may_budg : mayProcFeeAmt, jun_budg : junProcFeeAmt, jul_budg : julProcFeeAmt, 
                             aug_budg : augProcFeeAmt, sep_budg : sepProcFeeAmt, oct_budg : octProcFeeAmt, 
-                            nov_budg : novProcFeeAmt, dec_budg : decProcFeeAmt
+                            nov_budg : novProcFeeAmt, dec_budg : decProcFeeAmt, tot_budg : nloanTotProcFeeAmt 
                         })
                         const lonTotAmtExecBudg = await newPoExecSumBudg.save()
                     } else {
@@ -2737,16 +2674,14 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
                         fndUnitBuExTotProcFees.oct_budg = octProcFeeAmt
                         fndUnitBuExTotProcFees.nov_budg = novProcFeeAmt
                         fndUnitBuExTotProcFees.dec_budg = decProcFeeAmt
+                        fndUnitBuExTotProcFees.dec_budg = nloanTotProcFeeAmt
             
                         await fndUnitBuExTotProcFees.save()            
                     }
-                    let nloanTotProcFeeAmt = janProcFeeAmt + febProcFeeAmt + marProcFeeAmt + aprProcFeeAmt + mayProcFeeAmt + junProcFeeAmt
-                      + julProcFeeAmt + augProcFeeAmt + sepProcFeeAmt + octProcFeeAmt + novProcFeeAmt + decProcFeeAmt
-
                     if (nloanTotIntAmt > 0) {
                         poSumView.push({title: "Processing Fees", desc: "Processing Fees", sortkey: 27, group: 1, jan_value : janProcFeeAmt, feb_value : febProcFeeAmt, mar_value : marProcFeeAmt, apr_value : aprProcFeeAmt,
                             may_value : mayProcFeeAmt, jun_value : junProcFeeAmt, jul_value : julProcFeeAmt, aug_value : augProcFeeAmt,
-                            sep_value : sepProcFeeAmt, oct_value : octProcFeeAmt, nov_value : novProcFeeAmt, dec_value : decProcFeeAmt 
+                            sep_value : sepProcFeeAmt, oct_value : octProcFeeAmt, nov_value : novProcFeeAmt, dec_value : decProcFeeAmt, tot_value: nloanTotProcFeeAmt 
                         })         
                     }
 
@@ -2760,7 +2695,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
                 }
                 return 0;
             })
-        if (doneReadForCBU) { 
+        if (doneReadForCBU && doneReadNewOldResCli) { 
             // res.json(poSumView)
 
             res.render('units/viewUnitTargetMon', {
@@ -3072,14 +3007,15 @@ router.get('/viewUnitProjInc/:id', authUser, authRole(ROLE.PUH), async (req, res
                     apr_loan_int: apr_totLonReleaseInt, may_loan_int: may_totLonReleaseInt, jun_loan_int: jun_totLonReleaseInt, jul_loan_int: jul_totLonReleaseInt, aug_loan_int: aug_totLonReleaseInt, 
                     sep_loan_int: sep_totLonReleaseInt, oct_loan_int: oct_totLonReleaseInt, nov_loan_int: nov_totLonReleaseInt, dec_loan_int: dec_totLonReleaseInt, rowTotloanInt: rowGranTotloanInt})
 
-        })
-        console.log(poTotLoanAmtArray)
+                    console.log(poTotLoanAmtArray)
 
-        res.render('units/viewUnitProjInc', {
-            vwUniCod: viewUnitCode,
-            poSumView: poTotLoanAmtArray,
-            yuser: yuser
-        })
+                res.render('units/viewUnitProjInc', {
+                    vwUniCod: viewUnitCode,
+                    poSumView: poTotLoanAmtArray,
+                    yuser: yuser
+                })
+            })
+
     } catch (err) {
         console.log(err)
         res.redirect('/units/'+ viewUnitCode)

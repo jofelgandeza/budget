@@ -417,13 +417,14 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
     const poNumber = centerCode.substr(5,1)
     const poCode = centerCode.substr(0,6)
     const bBalAmt = begBalInterest + begBalPrinc
-    const yuser = req.user
+    const _user = req.user
 
     let bgloanType = []
     let fnView = 0
     let item =[]
 
-    let curLoanBeg = []
+    let fndCenterBudgDetCliBegBal = []
+    let fndCenterBudgDetAmtBegBal = []
     let locals
     let canSaveBegBal = false
     
@@ -530,68 +531,49 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
         let canSaveOldLoanAmt = false
 
         const centerBudgOLCFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
-                if (err) {
-                    console.log(err)
-                }
-                else {
-                    if (isNull(foundVwList)) {
-                        canSaveOldLoanCli = true
+            fndCenterBudgDetCliBegBal = foundVwList
+            if (fndCenterBudgDetCliBegBal.length === 0) {
+                let OLDCtrCliBudg = new Center_budget_det({
+                    region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                    view_type: "PUH", loan_type: begLoanType, beg_bal: bClientCnt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanClient", 
+                    jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
+                    })
+                const OLCtrClient = OLDCtrCliBudg.save()
 
-                    } else {
-                        // console.log(foundVwList)
+            } else {
+                foundVwList.beg_bal = bClientCnt
+                foundVwList.beg_bal_amt = begBalPrinc
+                foundVwList.beg_bal_int = begBalInterest
+                
+                foundVwList.save();
 
-                        foundVwList.beg_bal = bClientCnt
-                        foundVwList.beg_bal_amt = begBalPrinc
-                        foundVwList.beg_bal_int = begBalInterest
-                        
-                        foundVwList.save();
-                    }
-                    doneSaveFromOldClient = true
-                }
-            })
-            if (isNull(centerBudgOLCFound) || canSaveOldLoanCli) {
+            }
+            doneSaveFromOldClient = true
+        })
 
-                    let OLDCtrCliBudg = new Center_budget_det({
-                        region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
-                        view_type: "PUH", loan_type: begLoanType, beg_bal: bClientCnt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanClient", 
-                        jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
-                        })
-                    const OLCtrClient = OLDCtrCliBudg.save()
-                    doneSaveFromOldClient = true
-            } 
+        const ctrBudgAmtDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanAmt"}, function(err, fndVwOldAmtList){ 
+            fndCenterBudgDetAmtBegBal =  fndVwOldAmtList
 
-            const ctrBudgAmtDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanAmt"}, function(err, fndVwOldAmtList){ 
-                if (err) {
-                    console.log(err)
-                }
-                else {
-                    if (isNull(fndVwOldAmtList)) {
-
-                        canSaveOldLoanAmt = true
-                    
-                    } else {
-                        // console.log(fndVwOldAmtList)
-
-                        fndVwOldAmtList.beg_bal = bBalAmt
-                        fndVwOldAmtList.beg_bal_amt = begBalPrinc
-                        fndVwOldAmtList.beg_bal_int = begBalInterest
-                        
-                        fndVwOldAmtList.save();
-                    }
-                    doneSaveFromOldAmt = true
-                }
-            })
-            
-            if (isNull(ctrBudgAmtDetFound) || canSaveOldLoanAmt) {
+            if (fndCenterBudgDetAmtBegBal.length === 0) {
                 let OLFCtrAMTBudg = new Center_budget_det({
-                    region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                    region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: begLoanType, beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanAmt", 
                     jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                 })
                 const OLCtrAMT = OLFCtrAMTBudg.save()
                 doneSaveFromOldAmt = true
-            }
 
+            } else {
+                fndVwOldAmtList.beg_bal = bBalAmt
+                fndVwOldAmtList.beg_bal_amt = begBalPrinc
+                fndVwOldAmtList.beg_bal_int = begBalInterest
+                        
+                fndVwOldAmtList.save()
+
+            }
+            doneSaveFromOldAmt = true
+        })
+            
             if (doneSaveFromOldClient && doneSaveFromOldAmt) {
 
                 res.redirect('/centers/setBegBal/' + centerCode)
@@ -614,14 +596,14 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
   // DELETE Beginning Balances...
   router.post('/delBegBal/:id', authUser, authRole("PO"), async (req, res) => {
     //   alert('Are you sure you want to delete this record?')
-        let centerCode = req.body.listName
+        let centerCode = _.trim(req.body.listName)
         const checkedItemId = _.trim(req.body.checkbox)
         const listName = req.params.id
         const yuser = req.user
 
     //    console.log(checkedItemId)
     //    console.log(centerCode)
-       let center
+    //    let center
        let delLoanType = ""
        let delLoanAmt = 0
        let delLoanClient = 0
@@ -629,63 +611,54 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
        let doneUpdateOldAmt = false
        let doneReadCenter = false
 
-       let foundBegBal = []
-       let modiCenter = []
-
+    //    let foundBegBal = []
+       let modCenter = []
+        let fndCenterDetBegBal = []
        try {       
       
-        const modiCtr = await Center.findOne({center: listName}, function(err, modifCenter) {
-            modiCenter = modifCenter
 
-            if (!isNull(modiCenter)) {
-                foundBegBal = modiCenter.Loan_beg_bal
+        const modiCtr = await Center.findOne({center: listName}) //, function(err, modifCenter) {
+        
+        if (!isNull(modiCtr)) {
+
+                const foundBegBal = modiCtr.Loan_beg_bal
 
                 foundBegBal.forEach(cntrBegBal => {
-                    const walaLang = cntrBegBal.month
-                    if (cntrBegBal._id === checkedItemId) {
+                    const walaLang = cntrBegBal.expected_maturity_date
+                    const begBalID = cntrBegBal.id
+
+                    if (cntrBegBal.id === checkedItemId) {
                         delLoanType = cntrBegBal.loan_type
+                        delLoanClient = cntrBegBal.beg_client_count
+                        delLoanAmt = cntrBegBal.beg_amount
                     }
                 })
-            }
-            modifCenter.beg_center_month = ""
-            modifCenter.save()
-        })
+                modiCtr.beg_center_month = ""
+                modiCtr.save()
 
-           center = await Center.findOneAndUpdate({center: listName}, {$pull: {Loan_beg_bal :{_id: checkedItemId }}}, function(err, foundList){
-               if (!err) {
-                //   console.log(foundList)
-                  delLoanType = foundList.loan_type
-                  delLoanClient = foundList.beg_client_count
-                  delLoanAmt = foundList.beg_amount
-   
-//                   res.redirect('/centers/setBegBal/' + centerCode)
-   
-               } else {
-                   console.log(err)
-               }
+            doneReadCenter = true
+        }
+
+        const center = await Center.findOneAndUpdate({center: listName}, {$pull: {Loan_beg_bal :{_id: checkedItemId }}}, function(err, foundList){
                doneReadCenter = true
-           })
+        })
    
            if (doneReadCenter) {
                 // Updating Loan Beginning Balances to center_budget_dets.. 
-                const centerBudgDetFound = await Center_budget_det.findOne({center: listName, loan_type: delLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
-                    if (err) {
-                        console.log(err)
-                    }
-                    else {
-                        console.log(foundVwList)
+                const centerBudgDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: delLoanType, view_code: "OldLoanClient"}, function(err, fndVwList){ 
+                    fndCenterDetBegBal = fndVwList
+                        console.log(fndCenterDetBegBal)
 
-                        foundVwList.beg_bal = 0
-                        foundVwList.beg_bal_amt = 0
-                        foundVwList.beg_bal_int = 0
+                        fndCenterDetBegBal.beg_bal = 0
+                        fndCenterDetBegBal.beg_bal_amt = 0
+                        fndCenterDetBegBal.beg_bal_int = 0
                         
-                        foundVwList.save();
+                        fndCenterDetBegBal.save();
 
-                    }
                         doneUpdateOldClient = true
                 })
 
-                const center2BudgDetFound = await Center_budget_det.findOne({center: listName, loan_type: delLoanType, view_code: "OldLoanAmt"}, function(err, foundBegAmtList){ 
+                const center2BudgDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: delLoanType, view_code: "OldLoanAmt"}, function(err, foundBegAmtList){ 
                     if (err) {
                         console.log(err)
                     }
@@ -710,8 +683,8 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                     login_date: new Date(),
                     user_name: req.user.name,
                     assign_code: req.user.assCode,
-                    activity: "Delete Beginning Balance for Center: " + listName,
-                    activity_desc: "Delete Beginning Balance for Center: " + listName
+                    activity: "Delete Beginning Balance for Center: " + centerCode,
+                    activity_desc: "Delete Beginning Balance for Center: " + centerCode
                    })
                     const saveLogUser = loggedUser.save()
 
@@ -921,7 +894,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
         if (isNull(centerBudgDet)) {
 
             let newCntrCliBudg = new Center_budget_det({
-                region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                 view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: centerView1Code,
                 jan_budg: janLoanCliBudg, feb_budg: febLoanCliBudg, mar_budg: marLoanCliBudg, apr_budg: aprLoanCliBudg,
                 may_budg: mayLoanCliBudg, jun_budg: junLoanCliBudg, jul_budg: julLoanCliBudg, aug_budg: augLoanCliBudg,
@@ -930,7 +903,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
             const newCtrClient = await newCntrCliBudg.save()
 
             let newCntrAmtBudg = new Center_budget_det({
-                region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                 view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: centerView2Code,
                 jan_budg: janLoanBudg, feb_budg: febLoanBudg, mar_budg: marLoanBudg, apr_budg: aprLoanBudg,
                 may_budg: mayLoanBudg, jun_budg: junLoanBudg, jul_budg: julLoanBudg, aug_budg: augLoanBudg,
@@ -950,7 +923,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
 
             if (isNull(centerBudg1Det)) { 
                 let newCtrCliBudg = new Center_budget_det({
-                    region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                    region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: centerView1Code,
                     jan_budg: janLoanCliBudg, feb_budg: febLoanCliBudg, mar_budg: marLoanCliBudg, apr_budg: aprLoanCliBudg,
                     may_budg: mayLoanCliBudg, jun_budg: junLoanCliBudg, jul_budg: julLoanCliBudg, aug_budg: augLoanCliBudg,
@@ -959,7 +932,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                 const nwCtrClient = await newCtrCliBudg.save()
     
                 let newCtrAmtBudg = new Center_budget_det({
-                    region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                    region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: centerView2Code,
                     jan_budg: janLoanBudg, feb_budg: febLoanBudg, mar_budg: marLoanBudg, apr_budg: aprLoanBudg,
                     may_budg: mayLoanBudg, jun_budg: junLoanBudg, jul_budg: julLoanBudg, aug_budg: augLoanBudg,
@@ -989,7 +962,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                 if (isNull(center2BudgDet)) { 
                     if (remarks === "Re-loan") {
                         let oldCtrAmtBudg = new Center_budget_det({
-                            region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                            region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                             view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: centerView2Code,
                             jan_budg: janLoanBudg, feb_budg: febLoanBudg, mar_budg: marLoanBudg, apr_budg: aprLoanBudg,
                             may_budg: mayLoanBudg, jun_budg: junLoanBudg, jul_budg: julLoanBudg, aug_budg: augLoanBudg,
@@ -1276,7 +1249,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
             if (centerView1Code === "OldLoanClient" && canSaveResign) {
                         
                 let newCntrCliResBudg = new Center_budget_det({
-                    region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                    region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: "ResClientCount",
                     jan_budg: janResCliBudg, feb_budg: febResCliBudg, mar_budg: marResCliBudg, apr_budg: aprResCliBudg,
                     may_budg: mayResCliBudg, jun_budg: junResCliBudg, jul_budg: julResCliBudg, aug_budg: augResCliBudg,
@@ -1292,7 +1265,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
 
                 if (isNull(centerResBudgDet)) { 
                     let newResCliBudg = new Center_budget_det({
-                        region: "NLO", area: "NEL", branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                        region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                         view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: "ResClientCount",
                         jan_budg: janResCliBudg, feb_budg: febResCliBudg, mar_budg: marResCliBudg, apr_budg: aprResCliBudg,
                         may_budg: mayResCliBudg, jun_budg: junResCliBudg, jul_budg: julResCliBudg, aug_budg: augResCliBudg,
@@ -1471,50 +1444,52 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
             
             if (recCounter === 1) {
 
-            let modiCenter = await Center.findOne({center: listName})  //, function(err, modiCenter) {
-               foundTargets = modiCenter.Targets
+                let modiCenter = await Center.findOne({center: listName})  //, function(err, modiCenter) {
+                foundTargets = modiCenter.Targets
 
-               foundTargets.forEach(cntrTarget => {
-                    const walaLang = cntrTarget.month
-                   if (cntrTarget._id == checkedItemId) {
-                       lonTypDet = cntrTarget.loan_type
-                       lonRemarks = cntrTarget.remarks
-                       month = cntrTarget.month
-                       fndNumClient = cntrTarget.numClient
-                       totAmount = cntrTarget.totAmount
-                       fndSemester = cntrTarget.semester
-   
-                       if (_.trim(cntrTarget.remarks) === "New Loan") {
-                           delNewClient = cntrTarget.numClient
-                           delNewClientAmt = cntrTarget.totAmount
-                           modiCenter.newClient = modiCenter.newClient - delNewClient
-                           modiCenter.newClientAmt = modiCenter.newClientAmt - delNewClientAmt
-                       } else {
-                            delOldClient = cntrTarget.numClient
-                           delOldClientAmt = cntrTarget.totAmount                        
-                           modiCenter.oldClient = modiCenter.oldClient - delOldClient
-                           modiCenter.oldClientAmt = modiCenter.oldClientAmt - delOldClientAmt
+                foundTargets.forEach(cntrTarget => {
+                        const walaLang = cntrTarget.month
+                    if (cntrTarget._id == checkedItemId) {
+                        lonTypDet = cntrTarget.loan_type
+                        lonRemarks = cntrTarget.remarks
+                        month = cntrTarget.month
+                        fndNumClient = cntrTarget.numClient
+                        totAmount = cntrTarget.totAmount
+                        fndSemester = cntrTarget.semester
+    
+                        if (_.trim(cntrTarget.remarks) === "New Loan") {
+                            delNewClient = cntrTarget.numClient
+                            delNewClientAmt = cntrTarget.totAmount
+                            modiCenter.newClient = modiCenter.newClient - delNewClient
+                            modiCenter.newClientAmt = modiCenter.newClientAmt - delNewClientAmt
+                        } else {
+                                delOldClient = cntrTarget.numClient
+                            delOldClientAmt = cntrTarget.totAmount                        
+                            modiCenter.oldClient = modiCenter.oldClient - delOldClient
+                            modiCenter.oldClientAmt = modiCenter.oldClientAmt - delOldClientAmt
 
-                           if (fndSemester === "Second Half") {
-                                modiCenter.resClient2 = modiCenter.resClient2 + fndNumClient // saving to resClient2 field for 2nd half/semester
-                            } else {
-                                modiCenter.resClient = modiCenter.resClient + fndNumClient //+ (curLoanTypeCliBegBal - rExPrevOldClient)
+                            if (fndSemester === "Second Half") {
+                                    modiCenter.resClient2 = modiCenter.resClient2 + fndNumClient // saving to resClient2 field for 2nd half/semester
+                                } else {
+                                    modiCenter.resClient = modiCenter.resClient + fndNumClient //+ (curLoanTypeCliBegBal - rExPrevOldClient)
+                                }
                             }
+
+        
                         }
-                    }
-                })
+                    
+                        if (foundTargets.length === 1) {
+                            modiCenter.resClient = 0
+                            modiCenter.resClient2 = 0 
+                            modiCenter.oldClient = 0
+                            modiCenter.oldClientAmt = 0
+                        }
+                        if (lonTypDet === "Group Loan" || lonTypDet === "Agricultural Loan") {
+                            modiCenter.save()
+                        }
+
+                    })
 //              console.log(modiCenter)
-                if (foundTargets.length === 1) {
-                    modiCenter.resClient = 0
-                    modiCenter.resClient2 = 0 
-                    modiCenter.oldClient = 0
-                    modiCenter.oldClientAmt = 0
-                }
-
-               if (lonTypDet === "Group Loan" || lonTypDet === "Agricultural Loan") {
-                    modiCenter.save()
-                }
-
               
                 if (lonRemarks === "New Loan") {
                     centerView1Code = "NewLoanClient"
@@ -1703,51 +1678,52 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
 
             if (lonRemarks === "Re-loan") {
 
-                modifyCenter3Det = await Center_budget_det.findOne({center: listName, loan_type: lonTypDet, view_code: "ResClientCount"}) //, function(err, modifyCenter2Det) {
-                    if (!isNull(modifyCenter3Det)) {
+               const modifyCenter3Det = await Center_budget_det.findOne({center: listName, loan_type: lonTypDet, view_code: "ResClientCount"},  function(err, modResClient) {
+                    if (!isNull(modResClient)) {
     
                     switch(month) {
                         case "January": 
-                            modifyCenter3Det.jan_budg = modifyCenter3Det.jan_budg + janLoanCliBudg
+                            modResClient.jan_budg = modResClient.jan_budg + janLoanCliBudg
                             break;
                         case "February": 
-                            modifyCenter3Det.feb_budg = modifyCenter3Det.feb_budg + febLoanCliBudg
+                            modResClient.feb_budg = modResClient.feb_budg + febLoanCliBudg
                             break;
                         case "March": 
-                            modifyCenter3Det.mar_budg = modifyCenter3Det.mar_budg + marLoanCliBudg
+                            modResClient.mar_budg = modResClient.mar_budg + marLoanCliBudg
                             break;
                         case "April": 
-                            modifyCenter3Det.apr_budg = modifyCenter3Det.apr_budg + aprLoanCliBudg
+                            modResClient.apr_budg = modResClient.apr_budg + aprLoanCliBudg
                             break;
                         case "May": 
-                            modifyCenter3Det.may_budg = modifyCenter3Det.may_budg + mayLoanCliBudg
+                            modResClient.may_budg = modResClient.may_budg + mayLoanCliBudg
                             break;
                         case "June": 
-                            modifyCenter3Det.jun_budg = modifyCenter3Det.jun_budg + junLoanCliBudg
+                            modResClient.jun_budg = modResClient.jun_budg + junLoanCliBudg
                             break;
                         case "July": 
-                            modifyCenter3Det.jul_budg = modifyCenter3Det.jul_budg + julLoanCliBudg
+                            modResClient.jul_budg = modResClient.jul_budg + julLoanCliBudg
                             break;
                         case "August": 
-                            modifyCenter3Det.aug_budg = modifyCenter3Det.aug_budg + augLoanCliBudg
+                            modResClient.aug_budg = modResClient.aug_budg + augLoanCliBudg
                             break;
                         case "September": 
-                            modifyCenter3Det.sep_budg = modifyCenter3Det.sep_budg + sepLoanCliBudg
+                            modResClient.sep_budg = modResClient.sep_budg + sepLoanCliBudg
                             break;
                         case "October": 
-                            modifyCenter3Det.oct_budg = modifyCenter3Det.oct_budg + octLoanCliBudg
+                            modResClient.oct_budg = modResClient.oct_budg + octLoanCliBudg
                             break;
                         case "November": 
-                            modifyCenter3Det.nov_budg = modifyCenter3Det.nov_budg + novLoanCliBudg
+                            modResClient.nov_budg = modResClient.nov_budg + novLoanCliBudg
                             break;
                         case "December": 
-                            modifyCenter3Det.dec_budg = modifyCenter3Det.dec_budg + decLoanCliBudg
+                            modResClient.dec_budg = modResClient.dec_budg + decLoanCliBudg
                             break;
                         default:
                             orderMonth = 0
                     }
-                    modifyCenter3Det.save()
-                }
+                    modResClient.save()
+                    }
+                })
             }
 
             center = await Center.findOneAndUpdate({center: listName}, {$pull: {Targets :{_id: checkedItemId }}}, function(err, foundList){
@@ -2045,7 +2021,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
                 if (isNull(fondPONumCenters)) { 
                     let newPONumCenters = new Budg_exec_sum({
-                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of Centers", view_code: "NumberOfCenters", sort_key: 2, display_group: 1, beg_bal: centerCntBegBal, jan_budg : jan_centerCount, 
+                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of Centers", view_code: "NumberOfCenters", sort_key: 2, display_group: 1, beg_bal: centerCntBegBal, jan_budg : jan_centerCount, 
                         feb_budg : feb_centerCount, mar_budg : mar_centerCount, apr_budg : apr_centerCount, may_budg : may_centerCount, jun_budg : jun_centerCount, jul_budg : jul_centerCount, 
                         aug_budg : aug_centerCount, sep_budg : sep_centerCount, oct_budg : oct_centerCount, nov_budg : nov_centerCount, dec_budg : dec_centerCount                                        
                     })
@@ -2105,7 +2081,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         
                     if (isNull(fondNewClients)) { 
                         let newNewClients = new Budg_exec_sum({
-                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "New Clients", view_code: "NewClients", sort_key: 4, display_group: 2, beg_bal: 0, jan_budg : jan_newCliTot, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "New Clients", view_code: "NewClients", sort_key: 4, display_group: 2, beg_bal: 0, jan_budg : jan_newCliTot, 
                             feb_budg : feb_newCliTot, mar_budg : mar_newCliTot, apr_budg : apr_newCliTot, may_budg : may_newCliTot, jun_budg : jun_newCliTot, jul_budg : jul_newCliTot, 
                             aug_budg : aug_newCliTot, sep_budg : sep_newCliTot, oct_budg : oct_newCliTot, nov_budg : nov_newCliTot, dec_budg : dec_newCliTot, tot_budg: tot_newCliTot
                         })
@@ -2223,7 +2199,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 fondResClients = fndTotLonAmt
                 if (isNull(fondResClients)) { 
                     let newNewClients = new Budg_exec_sum({
-                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Resign Clients", view_code: "ResignClients", sort_key: 5, display_group: 2, beg_bal: 0, jan_budg : jan_resCliTot, 
+                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Resign Clients", view_code: "ResignClients", sort_key: 5, display_group: 2, beg_bal: 0, jan_budg : jan_resCliTot, 
                         feb_budg : feb_resCliTot, mar_budg : mar_resCliTot, apr_budg : apr_resCliTot, may_budg : may_resCliTot, jun_budg : jun_resCliTot, jul_budg : jul_resCliTot, 
                         aug_budg : aug_resCliTot, sep_budg : sep_resCliTot, oct_budg : oct_resCliTot, nov_budg : nov_resCliTot, dec_budg : dec_resCliTot, tot_budg: dec_resCliTot                                   
                     })
@@ -2282,7 +2258,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
                 if (isNull(fondNewLoanCli)) { 
                     let newNewClients = new Budg_exec_sum({
-                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of New Loan", view_code: "NumNewLoanCli", sort_key: 8, display_group: 1, beg_bal: 0, jan_budg : jan_newCtotValue, 
+                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of New Loan", view_code: "NumNewLoanCli", sort_key: 8, display_group: 1, beg_bal: 0, jan_budg : jan_newCtotValue, 
                         feb_budg : feb_newCtotValue, mar_budg : mar_newCtotValue, apr_budg : apr_newCtotValue, may_budg : may_newCtotValue, jun_budg : jun_newCtotValue, jul_budg : jul_newCtotValue, 
                         aug_budg : aug_newCtotValue, sep_budg : sep_newCtotValue, oct_budg : oct_newCtotValue, nov_budg : nov_newCtotValue, dec_budg : dec_newCtotValue, tot_budg: tot_newCtotValue                                       
                     })
@@ -2326,7 +2302,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             tot_oldCtotValue = jan_oldCtotValue + feb_oldCtotValue + mar_oldCtotValue + apr_oldCtotValue + may_oldCtotValue + jun_oldCtotValue
                         + jul_oldCtotValue + aug_oldCtotValue + sep_oldCtotValue + oct_oldCtotValue + nov_oldCtotValue + dec_oldCtotValue
             
-            poSumView.push({title: "Number of Reloan", sortkey: 9, group: 1, isTitle: false, beg_bal: 0, jan_value : jan_oldCtotValue, feb_value : feb_oldCtotValue, mar_value : mar_oldCtotValue, apr_value : apr_oldCtotValue,
+            poSumView.push({title: "Number of Reloan", sortkey: 9, group: 1, isTitle: false, beg_bal: begBalOldClient, jan_value : jan_oldCtotValue, feb_value : feb_oldCtotValue, mar_value : mar_oldCtotValue, apr_value : apr_oldCtotValue,
                 may_value : may_oldCtotValue, jun_value : jun_oldCtotValue, jul_value : jul_oldCtotValue, aug_value : aug_oldCtotValue,
                 sep_value : sep_oldCtotValue, oct_value : oct_oldCtotValue, nov_value : nov_oldCtotValue, dec_value : dec_oldCtotValue, tot_value: tot_oldCtotValue
             }) 
@@ -2340,12 +2316,13 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 fondReLoanCli = fndTotLonAmt
                 if (isNull(fondReLoanCli)) { 
                     let newNewClients = new Budg_exec_sum({
-                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of Reloan", view_code: "NumReLoanCli", sort_key: 9, display_group: 1, beg_bal: 0, jan_budg : jan_oldCtotValue, 
+                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of Reloan", view_code: "NumReLoanCli", sort_key: 9, display_group: 1, beg_bal: begBalOldClient, jan_budg : jan_oldCtotValue, 
                         feb_budg : feb_oldCtotValue, mar_budg : mar_oldCtotValue, apr_budg : apr_oldCtotValue, may_budg : may_oldCtotValue, jun_budg : jun_oldCtotValue, jul_budg : jul_oldCtotValue, 
                         aug_budg : aug_oldCtotValue, sep_budg : sep_oldCtotValue, oct_budg : oct_oldCtotValue, nov_budg : nov_oldCtotValue, dec_budg : dec_oldCtotValue, tot_budg: tot_oldCtotValue                                      
                     })
                     newNewClients.save()
                 } else {
+                    fondReLoanCli.beg_bal = begBalOldClient
                     fondReLoanCli.jan_budg = jan_oldCtotValue
                     fondReLoanCli.feb_budg = feb_oldCtotValue
                     fondReLoanCli.mar_budg = mar_oldCtotValue
@@ -2390,9 +2367,9 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
         poSumView.push({title: "AMOUNT OF LOANS", sortkey: 11, group: 2, isTitle: true})
 
-
+        
         const newLoanAmtView = await Center_budget_det.find({po_code: viewPOCode, view_code: "NewLoanAmt"}, function (err, fndNewAmt) {
-
+        
             jan_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jan_budg; })
             feb_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.feb_budg; })
             mar_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.mar_budg; })
@@ -2422,7 +2399,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 fondNewLoanAmt = fndTotLonAmt
                 if (isNull(fondNewLoanAmt)) { 
                     let newNewClients = new Budg_exec_sum({
-                        region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Amount of New Loan", view_code: "NewLoanAmount", sort_key: 12, display_group: 2, beg_bal: 0, jan_budg : jan_newAtotValue, 
+                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Amount of New Loan", view_code: "NewLoanAmount", sort_key: 12, display_group: 2, beg_bal: 0, jan_budg : jan_newAtotValue, 
                         feb_budg : feb_newAtotValue, mar_budg : mar_newAtotValue, apr_budg : apr_newAtotValue, may_budg : may_newAtotValue, jun_budg : jun_newAtotValue, jul_budg : jul_newAtotValue, 
                         aug_budg : aug_newAtotValue, sep_budg : sep_newAtotValue, oct_budg : oct_newAtotValue, nov_budg : nov_newAtotValue, dec_budg : dec_newAtotValue, tot_budg : tot_newAtotValue                                       
                     })
@@ -2479,7 +2456,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         
                     if (isNull(fondReLoanAmt)) { 
                         let newNewClients = new Budg_exec_sum({
-                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Amount of Reloan", view_code: "ReLoanAmount", sort_key: 13, display_group: 2, beg_bal: 0, jan_budg : jan_oldAtotValue, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Amount of Reloan", view_code: "ReLoanAmount", sort_key: 13, display_group: 2, beg_bal: 0, jan_budg : jan_oldAtotValue, 
                             feb_budg : feb_oldAtotValue, mar_budg : mar_oldAtotValue, apr_budg : apr_oldAtotValue, may_budg : may_oldAtotValue, jun_budg : jun_oldAtotValue, jul_budg : jul_oldAtotValue, 
                             aug_budg : aug_oldAtotValue, sep_budg : sep_oldAtotValue, oct_budg : oct_oldAtotValue, nov_budg : nov_oldAtotValue, dec_budg : dec_oldAtotValue, tot_budg : tot_oldAtotValue                                      
                         })
@@ -3103,7 +3080,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fondMonthlyDisburse = fndTotLonAmt
                     if (isNull(fondMonthlyDisburse)) { 
                         let newNewClients = new Budg_exec_sum({
-                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "MONTHLY DISBURSEMENT (P)", view_code: "MonthlyDisbAmt", sort_key: 16, display_group: 1, beg_bal: 0, jan_budg : janTotAmtLoan, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "MONTHLY DISBURSEMENT (P)", view_code: "MonthlyDisbAmt", sort_key: 16, display_group: 1, beg_bal: 0, jan_budg : janTotAmtLoan, 
                             feb_budg : febTotAmtLoan, mar_budg : marTotAmtLoan, apr_budg : aprTotAmtLoan, may_budg : mayTotAmtLoan, jun_budg : junTotAmtLoan, jul_budg : julTotAmtLoan, 
                             aug_budg : augTotAmtLoan, sep_budg : sepTotAmtLoan, oct_budg : octTotAmtLoan, nov_budg : novTotAmtLoan, dec_budg : decTotAmtLoan, tot_budg : totTotAmtLoan
                         })
@@ -3209,7 +3186,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fondBalFromPrevMo = fndTotLonAmt
                     if (isNull(fondBalFromPrevMo)) { 
                         let newNewClients = new Budg_exec_sum({
-                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "BAL. FROM PREV. MONTH", view_code: "BalFromPrevMon", sort_key: 17, display_group: 1, beg_bal: 0, jan_budg : janRunBalPrevMon, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "BAL. FROM PREV. MONTH", view_code: "BalFromPrevMon", sort_key: 17, display_group: 1, beg_bal: 0, jan_budg : janRunBalPrevMon, 
                             feb_budg : febRunBalPrevMon, mar_budg : marRunBalPrevMon, apr_budg : aprRunBalPrevMon, may_budg : mayRunBalPrevMon, jun_budg : junRunBalPrevMon, jul_budg : julRunBalPrevMon, 
                             aug_budg : augRunBalPrevMon, sep_budg : sepRunBalPrevMon, oct_budg : octRunBalPrevMon, nov_budg : novRunBalPrevMon, dec_budg : decRunBalPrevMon                                        
                         })

@@ -63,7 +63,9 @@ router.post('/saveRegister', async (req, res) => {
                 email: eMail,
                 password: hashedPassword,
                 assCode: assCode,
-                role: role
+                role: role,
+                emp_code: "",
+                
             })
         
                const saveUser = nUser.save()

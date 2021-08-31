@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const loan_typeSchema = new mongoose.Schema({
-    loan_code: { 
+    loan_type: { 
         type: String,
         required: true
     },

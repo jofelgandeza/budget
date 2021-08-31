@@ -119,8 +119,10 @@
 							<div id="corner-tl" class="corner"></div>
 							<div id="corner-tr" class="corner"></div>
                             <ul id="navigation">
-                                <lh>OTHER VIEWS</lh>
-                                <li><a href="/branches/viewBranchTargetMon/<%= listTitle %>">EXECUTIVE SUMMARY </a></li>
+                                <lh>BUDGET VIEWS</lh>
+                                <li><a href='/areas/viewAreaProjCol/<%= listTitle %>'>Proj. Collection</a></li>
+                                <li><a href='/areas/viewAreaProjInc/<%= listTitle %>'>Projected Income </a></li>
+                                <li><a href="/areas/viewAreaTargetMon/<%= listTitle %>">EXECUTIVE SUMMARY </a></li>
                             </ul>
                             <div id="corner-br" class="corner"></div>
 							<div id="corner-bl" class="corner"></div>
@@ -175,7 +177,7 @@
                         <% } %>
                         <td>
                             <div class="btn-row">
-                                <a class="btn btn-primary" href="/branches/<%= unit.unit %>/edit">View</a>
+                                <a class="btn btn-primary" href="/areas/<%= unit.unit %>/edit">View</a>
                             </div>        
                         </td>
                     </tr>
@@ -183,7 +185,7 @@
             </table>
         </div>
         <div>
-            <a class="btn btn-primary" href="/branches/<%= listTitle %>">Done</a>
+            <a class="btn btn-primary" href="/areas/<%= listTitle %>">Done</a>
         </div>
 
     </section>
