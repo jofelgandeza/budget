@@ -423,11 +423,12 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
     let fnView = 0
     let item =[]
 
-    let fndCenterBudgDetCliBegBal = []
+    let fndCtrBudgDetCliBegBal = []
     let fndCenterBudgDetAmtBegBal = []
     let locals
     let canSaveBegBal = false
     
+    let doneReadCenterBegBal = false
     let doneSaveFromOldClient = false
     let doneSaveFromOldAmt = false
 
@@ -474,17 +475,14 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
 
 
       const centerFound = await Center.findOne({center: centerCode}, function(err, foundList){ 
-        if (err) {
-            console.log(err)
-        }
-        else {
-                const curLoanBeg = foundList.Loan_beg_bal
+
+            const curLoanBeg = foundList.Loan_beg_bal
 
                 if (curLoanBeg.length === 0) {
                     canSaveBegBal = true
                 } else {
                     curLoanBeg.forEach(curLoanBegBal => {
-                        if (curLoanBegBal.loan_type == _.trim(begLoanType)) {
+                        if (curLoanBegBal.loan_type === _.trim(begLoanType)) {
                             locals = {errorMessage: 'Beginning balance for '+ begLoanType +'  is already exists!'}
                         } else {
                             canSaveBegBal = true
@@ -522,17 +520,18 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                         locals: locals
                     })    
                  }
-         }
+            doneReadCenterBegBal = true
       })
 
     // Saving Loan Beginning Balances to center_budget_dets.. NOTE: To be done only when setting Targets is finished!
-    if (canSaveBegBal) {
+    if (doneReadCenterBegBal && canSaveBegBal) {
         let canSaveOldLoanCli = false  
         let canSaveOldLoanAmt = false
 
         const centerBudgOLCFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanClient"}, function(err, foundVwList){ 
-            fndCenterBudgDetCliBegBal = foundVwList
-            if (fndCenterBudgDetCliBegBal.length === 0) {
+            fndCtrBudgDetCliBegBal = foundVwList
+            console.log(fndCtrBudgDetCliBegBal)
+            if (isNull(fndCtrBudgDetCliBegBal)) {
                 let OLDCtrCliBudg = new Center_budget_det({
                     region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: begLoanType, beg_bal: bClientCnt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanClient", 
@@ -554,7 +553,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
         const ctrBudgAmtDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanAmt"}, function(err, fndVwOldAmtList){ 
             fndCenterBudgDetAmtBegBal =  fndVwOldAmtList
 
-            if (fndCenterBudgDetAmtBegBal.length === 0) {
+            if (isNull(fndCenterBudgDetAmtBegBal)) {
                 let OLFCtrAMTBudg = new Center_budget_det({
                     region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: begLoanType, beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanAmt", 
