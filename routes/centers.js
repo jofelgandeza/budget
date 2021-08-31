@@ -528,7 +528,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                 doneReadBegBalCli = true
             })
 
-            if (doneReadBegBalCli) {
+            // if (doneReadBegBalCli) {
                 if (isNull(ctrBegBalCli)) {
                     let OLDCtrCliBudg = new Center_budget_det({
                         region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
@@ -547,14 +547,14 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
 
                 }
                 doneSaveFromOldClient = true
-            }
+            // }
 
             ctrBudgDetBegBalAmt = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanAmt"}, function (err, fndBegBalAmt) {
                 console.log(fndBegBalAmt)
                 doneReadBegBalAmt = true
             })
 
-            if (doneReadBegBalAmt) {
+            // if (doneReadBegBalAmt) {
                 if (isNull(ctrBudgDetBegBalAmt)) {
                     let OLFCtrAMTBudg = new Center_budget_det({
                         region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
@@ -572,16 +572,13 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                     ctrBudgDetBegBalAmt.save()
                 }
                 doneSaveFromOldAmt = true
-            } 
-                if (doneSaveFromOldClient && doneSaveFromOldAmt) {
+            // } 
 
-                    res.redirect('/centers/setBegBal/' + centerCode)
+            if (doneSaveFromOldClient && doneSaveFromOldAmt) {
 
-                // } else {
-                //     if (doneSaveNewFromOldClient && doneSaveNewFromOldAmt) {
-                //         res.redirect('/centers/setBegBal/' + centerCode)
-                //     }
-                }
+                res.redirect('/centers/setBegBal/' + centerCode)
+
+            }
 
         // } else {
         //     res.redirect('/centers/setBegBal/' + centerCode)
