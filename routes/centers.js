@@ -70,7 +70,6 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
         
         loanType = await Loan_type.find()
 
-
         center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber})
    
         let totDisburseAmt = 0
@@ -146,7 +145,6 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
             rClient: rClient, bClient: bClient, budgEndBal: tbudgEndBal, totDisburse: totDisburseAmt})
 
 
-
             if (doneCenterRead && doneLoanTypeRead) {
                 res.render('centers/viewTargets', {
                     POname: POname,
@@ -174,10 +172,6 @@ router.get('/viewTarget/:id', authUser, authRole("PO"), async (req, res) => {
     const assignCode = IDcode.substr(0,6)
     const yuser = req.user
 
-     let searchOptions = {}
-     let poLoanTotals = []
-     let poLoanGrandTot = []
-     let centerTargets = []
      let foundCenter = []
 
      let nClient = 0
@@ -190,7 +184,6 @@ router.get('/viewTarget/:id', authUser, authRole("PO"), async (req, res) => {
      let resignClient = 0
      let budgBegBal = 0
      let budgBegBalCli = 0
-     let tbudgEndBal = 0
      let totDisburse = 0
      let lnType 
      let POname =" "
