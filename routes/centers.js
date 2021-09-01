@@ -427,6 +427,9 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
     let ctrBegBalCli = []
     let ctrBudgDetBegBalAmt = []
 
+    let centerFound = []
+    let doneReadCtr = false
+    let curLoanBeg = []
     try {
 
         // loType = await Loan_type.find({glp_topUp:true}, function (err, foundLoan) {
@@ -468,24 +471,16 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                 numMaturityMonth = 0
         }   
 
+        const ctrFound = await Center.findOne({center: centerCode}, function(err, foundCtr){ 
+            centerFound = foundCtr
+            doneReadCtr = true
+         })
 
-      const centerFound = await Center.findOne({center: centerCode}, function(err, foundList){ 
-
-            const curLoanBeg = foundList.Loan_beg_bal
-
+         if (doneReadCtr) {
+              const curLoanBeg = centerFound.Loan_beg_bal
+            
                 if (curLoanBeg.length === 0) {
                     canSaveBegBal = true
-                } else {
-                    curLoanBeg.forEach(curLoanBegBal => {
-                        if (curLoanBegBal.loan_type === _.trim(begLoanType)) {
-                            locals = {errorMessage: 'Beginning balance for '+ begLoanType +'  is already exists!'}
-                        } else {
-                            canSaveBegBal = true
-                        }
-                    })
-                }
-            
-                if (canSaveBegBal) {
                     item = {
                         loan_type: begLoanType,
                         beg_amount: bBalAmt,
@@ -496,39 +491,34 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                         month_number: numMaturityMonth,
                         dispView: fnView
                     }
-                        foundList.Loan_beg_bal.push(item);
+                    centerFound.Loan_beg_bal.push(item);
                         // console.log(item)
             //            setBegBal
-                        foundList.beg_center_month = monthNumber
-                        foundList.region = "TEST"
-                        foundList.save();
-            //            res.redirect('/centers/setBegBal/' + centerCode)
-                } else {
-                // res.redirect('/centers/setBegBal/' + centerCode)
+                    centerFound.beg_center_month = monthNumber
+                    centerFound.region = "TEST"
+                    centerFound.save();
 
-                    res.render('centers/setBegBal', { 
-                        unitID: poCode,
-                        loanType: bgloanType,
-                        listTitle: centerCode, 
-                        newListItems: curLoanBeg,
-                        monthSelect: begMonthSelect,
-                        locals: locals
-                    })    
-                 }
-            doneReadCenterBegBal = true
-      })
+                } else {
+                    curLoanBeg.forEach(curLoanBegBal => {
+                        if (curLoanBegBal.loan_type === _.trim(begLoanType)) {
+                            locals = {errorMessage: 'Beginning balance for '+ begLoanType +'  is already exists!'}
+                            canSaveBegBal = false
+                        } else {
+                            canSaveBegBal = true
+                        }
+                    })
+                }            
+                doneReadCenterBegBal = true
+            }
 
     // Saving Loan Beginning Balances to center_budget_dets.. NOTE: To be done only when setting Targets is finished!
-    if (doneReadCenterBegBal) {
+    if (doneReadCenterBegBal && canSaveBegBal) {
             let canSaveOldLoanCli = false  
             let canSaveOldLoanAmt = false
 
-            ctrBegBalCli = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanClient"}, function (err, fndBegBalCli) {
+            const ctrBBalCli = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanClient"}, function (err, fndBegBalCli) {
+                ctrBegBalCli = fndBegBalCli
                 console.log(fndBegBalCli)
-                doneReadBegBalCli = true
-            })
-
-            // if (doneReadBegBalCli) {
                 if (isNull(ctrBegBalCli)) {
                     let OLDCtrCliBudg = new Center_budget_det({
                         region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
@@ -539,22 +529,21 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                         OLDCtrCliBudg.save()
 
                 } else {
-                    ctrBegBalCli.beg_bal = bClientCnt
-                    ctrBegBalCli.beg_bal_amt = begBalPrinc
-                    ctrBegBalCli.beg_bal_int = begBalInterest
+                    fndBegBalCli.beg_bal = bClientCnt
+                    fndBegBalCli.beg_bal_amt = begBalPrinc
+                    fndBegBalCli.beg_bal_int = begBalInterest
                     
-                    ctrBegBalCli.save();
+                    fndBegBalCli.save();
 
                 }
                 doneSaveFromOldClient = true
-            // }
-
-            ctrBudgDetBegBalAmt = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanAmt"}, function (err, fndBegBalAmt) {
-                console.log(fndBegBalAmt)
-                doneReadBegBalAmt = true
             })
 
-            // if (doneReadBegBalAmt) {
+
+            const ctrBudgDetBBalAmt = await Center_budget_det.findOne({center: centerCode, loan_type: begLoanType, view_code: "OldLoanAmt"}, function (err, fndBegBalAmt) {
+                ctrBudgDetBegBalAmt = fndBegBalAmt
+                console.log(fndBegBalAmt)
+
                 if (isNull(ctrBudgDetBegBalAmt)) {
                     let OLFCtrAMTBudg = new Center_budget_det({
                         region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
@@ -565,14 +554,14 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                     OLFCtrAMTBudg.save()
 
                 } else {
-                    ctrBudgDetBegBalAmt.beg_bal = bBalAmt
-                    ctrBudgDetBegBalAmt.beg_bal_amt = begBalPrinc
-                    ctrBudgDetBegBalAmt.beg_bal_int = begBalInterest
+                    fndBegBalAmt.beg_bal = bBalAmt
+                    fndBegBalAmt.beg_bal_amt = begBalPrinc
+                    fndBegBalAmt.beg_bal_int = begBalInterest
                             
-                    ctrBudgDetBegBalAmt.save()
+                    fndBegBalAmt.save()
                 }
                 doneSaveFromOldAmt = true
-            // } 
+            })
 
             if (doneSaveFromOldClient && doneSaveFromOldAmt) {
 
@@ -580,9 +569,19 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
 
             }
 
-        // } else {
-        //     res.redirect('/centers/setBegBal/' + centerCode)
-        }
+        } else {
+        
+            if (doneReadCtr && !canSaveBegBal) {
+                res.render('centers/setBegBal', { 
+                    unitID: poCode,
+                    loanType: bgloanType,
+                    listTitle: centerCode, 
+                    newListItems: curLoanBeg,
+                    monthSelect: begMonthSelect,
+                    locals: locals
+                })    
+            }
+        }   
     } catch(err) {
         console.log(err)
     }
@@ -597,48 +596,48 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
         const listName = req.params.id
         const yuser = req.user
 
-    //    console.log(checkedItemId)
-    //    console.log(centerCode)
-    //    let center
        let delLoanType = ""
        let delLoanAmt = 0
        let delLoanClient = 0
        let doneUpdateOldClient = false
        let doneUpdateOldAmt = false
        let doneReadCenter = false
+        let doneReadCtr = false
 
-    //    let foundBegBal = []
-       let modCenter = []
         let fndCenterDetBegBal = []
+        let fondCtr = []
+
        try {       
       
 
-        const modiCtr = await Center.findOne({center: listName}) //, function(err, modifCenter) {
+        const modiCtr = await Center.findOne({center: listName}, function (err, fndCtr) {
+            fondCtr = fndCtr
+            doneReadCtr = true
+        }) //, function(err, modifCenter) {
         
-        if (!isNull(modiCtr)) {
+        if (doneReadCtr) {
 
-                const foundBegBal = modiCtr.Loan_beg_bal
+                const foundBegBal = fondCtr.Loan_beg_bal
 
                 foundBegBal.forEach(cntrBegBal => {
                     const walaLang = cntrBegBal.expected_maturity_date
                     const begBalID = cntrBegBal.id
 
-                    if (cntrBegBal.id === checkedItemId) {
+                    if (cntrBegBal._id == checkedItemId) {
                         delLoanType = cntrBegBal.loan_type
                         delLoanClient = cntrBegBal.beg_client_count
                         delLoanAmt = cntrBegBal.beg_amount
                     }
                 })
-                modiCtr.beg_center_month = ""
-                modiCtr.save()
+                fondCtr.beg_center_month = ""
+                fondCtr.save()
 
             doneReadCenter = true
         }
 
-        const center = await Center.findOneAndUpdate({center: listName}, {$pull: {Loan_beg_bal :{_id: checkedItemId }}}, function(err, foundList){
-               doneReadCenter = true
-        })
-   
+        const center = await Center.findOneAndUpdate({center: listName}, {$pull: {Loan_beg_bal :{_id: checkedItemId }}})
+        
+        console.log(delLoanType)
            if (doneReadCenter) {
                 // Updating Loan Beginning Balances to center_budget_dets.. 
                 const centerBudgDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: delLoanType, view_code: "OldLoanClient"}, function(err, fndVwList){ 
@@ -654,11 +653,9 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                         doneUpdateOldClient = true
                 })
 
+                let fndCBDBegAmt = []
                 const center2BudgDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: delLoanType, view_code: "OldLoanAmt"}, function(err, foundBegAmtList){ 
-                    if (err) {
-                        console.log(err)
-                    }
-                    else {
+                    fndCBDBegAmt = foundBegAmtList
                         console.log(foundBegAmtList)
 
                         foundBegAmtList.beg_bal = 0
@@ -666,12 +663,11 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                         foundBegAmtList.beg_bal_int = 0
                         
                         foundBegAmtList.save();
-                    }
                     doneUpdateOldAmt = true
                 })
-            }
+            // }
 
-            if (doneReadCenter && doneUpdateOldClient && doneUpdateOldAmt) {
+            // if (doneReadCenter && doneUpdateOldClient && doneUpdateOldAmt) {
 
                 const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress)
                 let loggedUser = new User_log({
