@@ -1427,6 +1427,7 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
 
         let recCounter = 0
         let foundTargets = []
+        let zeroFndTargets = false
         lonTypDet = ""
         lonRemarks = ""
 
@@ -1467,18 +1468,18 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
                                 }
                             }
 
-        
-                        }
-                    
-                        if (foundTargets.length === 1) {
-                            modiCenter.resClient = 0
-                            modiCenter.resClient2 = 0 
-                            modiCenter.oldClient = 0
-                            modiCenter.oldClientAmt = 0
-                        }
-                        if (lonTypDet === "Group Loan" || lonTypDet === "Agricultural Loan") {
-                            modiCenter.save()
-                        }
+                            if (foundTargets.length === 1) {
+                                modiCenter.resClient = 0
+                                modiCenter.resClient2 = 0 
+                                modiCenter.oldClient = 0
+                                modiCenter.oldClientAmt = 0
+                                zeroFndTargets = true
+                            }
+                            if (lonTypDet === "Group Loan" || lonTypDet === "Agricultural Loan") {
+                                modiCenter.save()
+                            }
+            
+                        }                    
 
                     })
 //              console.log(modiCenter)
@@ -1577,49 +1578,48 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
             if (isNull(modifyCenter1Det)) {
 
             } else {
-           
-               switch(month) {
-                   case "January": 
-                       modifyCenter1Det.jan_budg = modifyCenter1Det.jan_budg - janLoanCliBudg
-                       break;
-                   case "February": 
-                       modifyCenter1Det.feb_budg = modifyCenter1Det.feb_budg - febLoanCliBudg
-                       break;
-                   case "March": 
-                       modifyCenter1Det.mar_budg = modifyCenter1Det.mar_budg - marLoanCliBudg
-                       break;
-                   case "April": 
-                       modifyCenter1Det.apr_budg = modifyCenter1Det.apr_budg - aprLoanCliBudg
-                       break;
-                   case "May": 
-                       modifyCenter1Det.may_budg = modifyCenter1Det.may_budg - mayLoanCliBudg
-                       break;
-                   case "June": 
-                       modifyCenter1Det.jun_budg = modifyCenter1Det.jun_budg - junLoanCliBudg
-                       break;
-                   case "July": 
-                       modifyCenter1Det.jul_budg = modifyCenter1Det.jul_budg - julLoanCliBudg
-                       break;
-                   case "August": 
-                       modifyCenter1Det.aug_budg = modifyCenter1Det.aug_budg - augLoanCliBudg
-                       break;
-                   case "September": 
-                       modifyCenter1Det.sep_budg = modifyCenter1Det.sep_budg - sepLoanCliBudg
-                       break;
-                   case "October": 
-                       modifyCenter1Det.oct_budg = modifyCenter1Det.oct_budg - octLoanCliBudg
-                       break;
-                   case "November": 
-                       modifyCenter1Det.nov_budg = modifyCenter1Det.nov_budg - novLoanCliBudg
-                       break;
-                   case "December": 
-                       modifyCenter1Det.dec_budg = modifyCenter1Det.dec_budg - decLoanCliBudg
-                       break;
-                   default:
-                       orderMonth = 0
-               }           
-               modifyCenter1Det.save()
-            }
+                    switch(month) {
+                        case "January": 
+                            modifyCenter1Det.jan_budg = modifyCenter1Det.jan_budg - janLoanCliBudg
+                            break;
+                        case "February": 
+                            modifyCenter1Det.feb_budg = modifyCenter1Det.feb_budg - febLoanCliBudg
+                            break;
+                        case "March": 
+                            modifyCenter1Det.mar_budg = modifyCenter1Det.mar_budg - marLoanCliBudg
+                            break;
+                        case "April": 
+                            modifyCenter1Det.apr_budg = modifyCenter1Det.apr_budg - aprLoanCliBudg
+                            break;
+                        case "May": 
+                            modifyCenter1Det.may_budg = modifyCenter1Det.may_budg - mayLoanCliBudg
+                            break;
+                        case "June": 
+                            modifyCenter1Det.jun_budg = modifyCenter1Det.jun_budg - junLoanCliBudg
+                            break;
+                        case "July": 
+                            modifyCenter1Det.jul_budg = modifyCenter1Det.jul_budg - julLoanCliBudg
+                            break;
+                        case "August": 
+                            modifyCenter1Det.aug_budg = modifyCenter1Det.aug_budg - augLoanCliBudg
+                            break;
+                        case "September": 
+                            modifyCenter1Det.sep_budg = modifyCenter1Det.sep_budg - sepLoanCliBudg
+                            break;
+                        case "October": 
+                            modifyCenter1Det.oct_budg = modifyCenter1Det.oct_budg - octLoanCliBudg
+                            break;
+                        case "November": 
+                            modifyCenter1Det.nov_budg = modifyCenter1Det.nov_budg - novLoanCliBudg
+                            break;
+                        case "December": 
+                            modifyCenter1Det.dec_budg = modifyCenter1Det.dec_budg - decLoanCliBudg
+                            break;
+                        default:
+                            orderMonth = 0
+                    }           
+                    modifyCenter1Det.save()
+                }
    
            modifyCenter2Det = await Center_budget_det.findOne({center: listName, loan_type: lonTypDet, view_code: centerView2Code}) //, function(err, modifyCenter2Det) {
              if (isNull(modifyCenter2Det)) {
@@ -1668,54 +1668,73 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
                modifyCenter2Det.save()
             }
 
-            if (lonRemarks === "Re-loan") {
+            if (lonRemarks === "Re-loan" || zeroFndTargets) {
 
                const modifyCenter3Det = await Center_budget_det.findOne({center: listName, loan_type: lonTypDet, view_code: "ResClientCount"},  function(err, modResClient) {
                     if (!isNull(modResClient)) {
     
-                    switch(month) {
-                        case "January": 
-                            modResClient.jan_budg = modResClient.jan_budg + janLoanCliBudg
-                            break;
-                        case "February": 
-                            modResClient.feb_budg = modResClient.feb_budg + febLoanCliBudg
-                            break;
-                        case "March": 
-                            modResClient.mar_budg = modResClient.mar_budg + marLoanCliBudg
-                            break;
-                        case "April": 
-                            modResClient.apr_budg = modResClient.apr_budg + aprLoanCliBudg
-                            break;
-                        case "May": 
-                            modResClient.may_budg = modResClient.may_budg + mayLoanCliBudg
-                            break;
-                        case "June": 
-                            modResClient.jun_budg = modResClient.jun_budg + junLoanCliBudg
-                            break;
-                        case "July": 
-                            modResClient.jul_budg = modResClient.jul_budg + julLoanCliBudg
-                            break;
-                        case "August": 
-                            modResClient.aug_budg = modResClient.aug_budg + augLoanCliBudg
-                            break;
-                        case "September": 
-                            modResClient.sep_budg = modResClient.sep_budg + sepLoanCliBudg
-                            break;
-                        case "October": 
-                            modResClient.oct_budg = modResClient.oct_budg + octLoanCliBudg
-                            break;
-                        case "November": 
-                            modResClient.nov_budg = modResClient.nov_budg + novLoanCliBudg
-                            break;
-                        case "December": 
-                            modResClient.dec_budg = modResClient.dec_budg + decLoanCliBudg
-                            break;
-                        default:
-                            orderMonth = 0
-                    }
-                    modResClient.save()
+                        if (zeroFndTargets) {
+                            modResClient.jan_budg = 0
+                            modResClient.feb_budg = 0
+                            modResClient.mar_budg = 0
+                            modResClient.apr_budg = 0
+                            modResClient.may_budg = 0
+                            modResClient.jun_budg = 0
+                            modResClient.jul_budg = 0
+                            modResClient.aug_budg = 0
+                            modResClient.sep_budg = 0
+                            modResClient.oct_budg = 0
+                            modResClient.nov_budg = 0
+                            modResClient.dec_budg = 0
+                            modResClient.save()
+        
+                        } else {
+                            switch(month) {
+                                case "January": 
+                                    modResClient.jan_budg = modResClient.jan_budg + janLoanCliBudg
+                                    break;
+                                case "February": 
+                                    modResClient.feb_budg = modResClient.feb_budg + febLoanCliBudg
+                                    break;
+                                case "March": 
+                                    modResClient.mar_budg = modResClient.mar_budg + marLoanCliBudg
+                                    break;
+                                case "April": 
+                                    modResClient.apr_budg = modResClient.apr_budg + aprLoanCliBudg
+                                    break;
+                                case "May": 
+                                    modResClient.may_budg = modResClient.may_budg + mayLoanCliBudg
+                                    break;
+                                case "June": 
+                                    modResClient.jun_budg = modResClient.jun_budg + junLoanCliBudg
+                                    break;
+                                case "July": 
+                                    modResClient.jul_budg = modResClient.jul_budg + julLoanCliBudg
+                                    break;
+                                case "August": 
+                                    modResClient.aug_budg = modResClient.aug_budg + augLoanCliBudg
+                                    break;
+                                case "September": 
+                                    modResClient.sep_budg = modResClient.sep_budg + sepLoanCliBudg
+                                    break;
+                                case "October": 
+                                    modResClient.oct_budg = modResClient.oct_budg + octLoanCliBudg
+                                    break;
+                                case "November": 
+                                    modResClient.nov_budg = modResClient.nov_budg + novLoanCliBudg
+                                    break;
+                                case "December": 
+                                    modResClient.dec_budg = modResClient.dec_budg + decLoanCliBudg
+                                    break;
+                                default:
+                                    orderMonth = 0
+                            }
+                            modResClient.save()
+                        }
                     }
                 })
+            } else {
+
             }
 
             center = await Center.findOneAndUpdate({center: listName}, {$pull: {Targets :{_id: checkedItemId }}}, function(err, foundList){
