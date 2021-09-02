@@ -473,14 +473,11 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
 
         const ctrFound = await Center.findOne({center: centerCode}, function(err, foundCtr){ 
             centerFound = foundCtr
-            doneReadCtr = true
-         })
 
-         if (doneReadCtr) {
               const curLoanBeg = centerFound.Loan_beg_bal
             
                 if (curLoanBeg.length === 0) {
-                    canSaveBegBal = true
+
                     item = {
                         loan_type: begLoanType,
                         beg_amount: bBalAmt,
@@ -498,6 +495,8 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                     centerFound.region = "TEST"
                     centerFound.save();
 
+                    canSaveBegBal = true
+
                 } else {
                     curLoanBeg.forEach(curLoanBegBal => {
                         if (curLoanBegBal.loan_type === _.trim(begLoanType)) {
@@ -509,7 +508,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                     })
                 }            
                 doneReadCenterBegBal = true
-            }
+            })
 
     // Saving Loan Beginning Balances to center_budget_dets.. NOTE: To be done only when setting Targets is finished!
     if (doneReadCenterBegBal && canSaveBegBal) {
@@ -612,18 +611,14 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
 
         const modiCtr = await Center.findOne({center: listName}, function (err, fndCtr) {
             fondCtr = fndCtr
-            doneReadCtr = true
-        }) //, function(err, modifCenter) {
         
-        if (doneReadCtr) {
-
                 const foundBegBal = fondCtr.Loan_beg_bal
 
                 foundBegBal.forEach(cntrBegBal => {
                     const walaLang = cntrBegBal.expected_maturity_date
                     const begBalID = cntrBegBal.id
 
-                    if (cntrBegBal._id == checkedItemId) {
+                    if (cntrBegBal.id === checkedItemId) {
                         delLoanType = cntrBegBal.loan_type
                         delLoanClient = cntrBegBal.beg_client_count
                         delLoanAmt = cntrBegBal.beg_amount
@@ -633,7 +628,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                 fondCtr.save()
 
             doneReadCenter = true
-        }
+        }) //, function(err, modifCenter) {
 
         const center = await Center.findOneAndUpdate({center: listName}, {$pull: {Loan_beg_bal :{_id: checkedItemId }}})
         
@@ -1318,7 +1313,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
   
   })
 
-  // PUT /save Beginning Balances per center
+  // 
   router.put("/viewMonthlyPO/:id", authUser, authRole("PO", "ADMIN"), async function(req, res){
 
     const viewMonPOcode = req.params.id
