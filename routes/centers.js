@@ -2687,7 +2687,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                             jan_loanReleaseAmt = janTotAmtLoan
                                 jan_totInitCBUAmt = jan_newAtotValue * initCBUrate  //Initial Capital Build-Up
                           
-                                jan_totWklyCBUAmt = jan_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                jan_totWklyCBUAmt = jan_totInitCBUAmt + (begBalOldClient * 50 * 4) // Monthly CBU Amount
                                 jan_totCBUInt = _.round((begBalmonthContriCBU + jan_totInitCBUAmt + jan_totWklyCBUAmt) * .01 / 6)
                                 jan_cbuBalFromPrevMo = begBalmonthContriCBU
                                 jan_cbuWithDrawal = jan_resCliTot * withdrawalCBUrate
@@ -3130,7 +3130,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     aug_value : aug_totInitCBUAmt, sep_value : sep_totInitCBUAmt, oct_value : oct_totInitCBUAmt, nov_value : nov_totInitCBUAmt, dec_value : dec_totInitCBUAmt, tot_value : tot_totInitCBUAmt
                 
                 })
-                poSumView.push({title: "Monthly Contribution", sortkey: 21, group: 2, jan_value : jan_totWklyCBUAmt, feb_value : feb_totWklyCBUAmt, mar_value : mar_totWklyCBUAmt, 
+                poSumView.push({title: "Monthly Contribution", sortkey: 21, group: 2, beg_bal: (begBalOldClient * 50 * 4), jan_value : jan_totWklyCBUAmt, feb_value : feb_totWklyCBUAmt, mar_value : mar_totWklyCBUAmt, 
                     apr_value : apr_totWklyCBUAmt, may_value : may_totWklyCBUAmt, jun_value : jun_totWklyCBUAmt, jul_value : jul_totWklyCBUAmt, 
                     aug_value : aug_totWklyCBUAmt, sep_value : sep_totWklyCBUAmt, oct_value : oct_totWklyCBUAmt, nov_value : nov_totWklyCBUAmt, dec_value : dec_totWklyCBUAmt, tot_value : tot_totWklyCBUAmt
                 })

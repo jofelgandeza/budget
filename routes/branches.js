@@ -2216,11 +2216,11 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                             jan_loanReleaseAmt = janTotAmtLoan
                                 jan_totInitCBUAmt = jan_newAtotValue * initCBUrate  //Initial Capital Build-Up
                           
-                                jan_totWklyCBUAmt = jan_totNumClients * wklyCBUrate // Monthly CBU Amount
+                                jan_totWklyCBUAmt = jan_totInitCBUAmt + (begBalOldClient * 50 * 4)   // * wklyCBUrate // Monthly CBU Amount
                                 jan_totCBUInt = _.round((begBalmonthContriCBU + jan_totInitCBUAmt + jan_totWklyCBUAmt) * .01 / 6)
                                 jan_cbuBalFromPrevMo = begBalmonthContriCBU
                                 jan_cbuWithDrawal = jan_resCliTot * withdrawalCBUrate
-                                jan_totMonthCBU = jan_totInitCBUAmt + jan_totWklyCBUAmt + jan_totCBUInt + jan_cbuBalFromPrevMo + jan_cbuWithDrawal 
+                                jan_totMonthCBU = (jan_totInitCBUAmt + jan_totWklyCBUAmt + jan_totCBUInt + jan_cbuBalFromPrevMo) - jan_cbuWithDrawal 
 
                                 jan_InterestAmt = 0
                                     jan_CollectAmt = 0
@@ -2261,7 +2261,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                                 feb_totCBUInt = _.round((jan_totMonthCBU + feb_totInitCBUAmt + feb_totWklyCBUAmt) * .01 / 6)
                                 feb_cbuBalFromPrevMo = jan_totMonthCBU
                                 feb_cbuWithDrawal = feb_resCliTot * withdrawalCBUrate
-                                feb_totMonthCBU = feb_totInitCBUAmt + feb_totWklyCBUAmt + feb_totCBUInt + feb_cbuBalFromPrevMo + feb_cbuWithDrawal 
+                                feb_totMonthCBU = (feb_totInitCBUAmt + feb_totWklyCBUAmt + feb_totCBUInt + feb_cbuBalFromPrevMo) - feb_cbuWithDrawal 
 
                                 feb_InterestAmt = 0
                                     feb_CollectAmt = 0
@@ -2299,7 +2299,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                                 mar_totCBUInt = _.round((feb_totMonthCBU + mar_totInitCBUAmt + mar_totWklyCBUAmt) * .01 / 6)
                                 mar_cbuBalFromPrevMo = feb_totMonthCBU
                                 mar_cbuWithDrawal = mar_resCliTot * withdrawalCBUrate
-                                mar_totMonthCBU = mar_totInitCBUAmt + mar_totWklyCBUAmt + mar_totCBUInt + mar_cbuBalFromPrevMo + mar_cbuWithDrawal 
+                                mar_totMonthCBU = (mar_totInitCBUAmt + mar_totWklyCBUAmt + mar_totCBUInt + mar_cbuBalFromPrevMo) - mar_cbuWithDrawal 
 
                                 mar_InterestAmt = 0
                                     mar_CollectAmt = 0
@@ -2337,7 +2337,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                                 apr_totCBUInt = _.round((mar_totMonthCBU + apr_totInitCBUAmt + apr_totWklyCBUAmt) * .01 / 6)
                                 apr_cbuBalFromPrevMo = mar_totMonthCBU
                                 apr_cbuWithDrawal = apr_resCliTot * withdrawalCBUrate
-                                apr_totMonthCBU = apr_totInitCBUAmt + apr_totWklyCBUAmt + apr_totCBUInt + apr_cbuBalFromPrevMo + apr_cbuWithDrawal 
+                                apr_totMonthCBU = (apr_totInitCBUAmt + apr_totWklyCBUAmt + apr_totCBUInt + apr_cbuBalFromPrevMo) - apr_cbuWithDrawal 
 
                                 apr_InterestAmt = 0
                                     apr_CollectAmt = 0
@@ -2375,7 +2375,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                                 may_totCBUInt = _.round((apr_totMonthCBU + may_totInitCBUAmt + may_totWklyCBUAmt) * .01 / 6)
                                 may_cbuBalFromPrevMo = apr_totMonthCBU
                                 may_cbuWithDrawal = may_resCliTot * withdrawalCBUrate
-                                may_totMonthCBU = may_totInitCBUAmt + may_totWklyCBUAmt + may_totCBUInt + may_cbuBalFromPrevMo + may_cbuWithDrawal 
+                                may_totMonthCBU = (may_totInitCBUAmt + may_totWklyCBUAmt + may_totCBUInt + may_cbuBalFromPrevMo) - may_cbuWithDrawal 
 
                                 may_InterestAmt = 0
                                     may_CollectAmt = 0
@@ -2413,7 +2413,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                                 jun_totCBUInt = _.round((may_totMonthCBU + jun_totInitCBUAmt + jun_totWklyCBUAmt) * .01 / 6)
                                 jun_cbuBalFromPrevMo = may_totMonthCBU
                                 jun_cbuWithDrawal = jun_resCliTot * withdrawalCBUrate
-                                jun_totMonthCBU = jun_totInitCBUAmt + jun_totWklyCBUAmt + jun_totCBUInt + jun_cbuBalFromPrevMo + jun_cbuWithDrawal 
+                                jun_totMonthCBU = (jun_totInitCBUAmt + jun_totWklyCBUAmt + jun_totCBUInt + jun_cbuBalFromPrevMo) - jun_cbuWithDrawal 
 
                                 jun_InterestAmt = 0
                                     may_CollectAmt = 0
@@ -2451,7 +2451,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                                 jul_totCBUInt = _.round((jun_totMonthCBU + jul_totInitCBUAmt + jul_totWklyCBUAmt) * .01 / 6)
                                 jul_cbuBalFromPrevMo = jun_totMonthCBU
                                 jul_cbuWithDrawal = jul_resCliTot * withdrawalCBUrate
-                                jul_totMonthCBU = jul_totInitCBUAmt + jul_totWklyCBUAmt + jul_totCBUInt + jul_cbuBalFromPrevMo + jul_cbuWithDrawal 
+                                jul_totMonthCBU = (jul_totInitCBUAmt + jul_totWklyCBUAmt + jul_totCBUInt + jul_cbuBalFromPrevMo) - jul_cbuWithDrawal 
 
                                 jul_InterestAmt = 0
                                     jul_CollectAmt = 0
@@ -2485,7 +2485,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                                 aug_totCBUInt = _.round((jul_totMonthCBU + aug_totInitCBUAmt + aug_totWklyCBUAmt) * .01 / 6)
                                 aug_cbuBalFromPrevMo = jul_totMonthCBU
                                 aug_cbuWithDrawal = aug_resCliTot * withdrawalCBUrate
-                                aug_totMonthCBU = aug_totInitCBUAmt + aug_totWklyCBUAmt + aug_totCBUInt + aug_cbuBalFromPrevMo + aug_cbuWithDrawal 
+                                aug_totMonthCBU = (aug_totInitCBUAmt + aug_totWklyCBUAmt + aug_totCBUInt + aug_cbuBalFromPrevMo) - aug_cbuWithDrawal 
 
                                 aug_InterestAmt = 0
                                     aug_CollectAmt = 0
@@ -2515,7 +2515,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                                 sep_totCBUInt = _.round((aug_totMonthCBU + sep_totInitCBUAmt + sep_totWklyCBUAmt) * .01 / 6)
                                 sep_cbuBalFromPrevMo = aug_totMonthCBU
                                 sep_cbuWithDrawal = sep_resCliTot * withdrawalCBUrate
-                                sep_totMonthCBU = sep_totInitCBUAmt + sep_totWklyCBUAmt + sep_totCBUInt + sep_cbuBalFromPrevMo + sep_cbuWithDrawal 
+                                sep_totMonthCBU = (sep_totInitCBUAmt + sep_totWklyCBUAmt + sep_totCBUInt + sep_cbuBalFromPrevMo) - sep_cbuWithDrawal 
 
                                 sep_InterestAmt = 0
                                     sep_CollectAmt = 0
@@ -2541,7 +2541,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                                 oct_totCBUInt = _.round((sep_totMonthCBU + oct_totInitCBUAmt + oct_totWklyCBUAmt) * .01 / 6)
                                 oct_cbuBalFromPrevMo = sep_totMonthCBU
                                 oct_cbuWithDrawal = oct_resCliTot * withdrawalCBUrate
-                                oct_totMonthCBU = oct_totInitCBUAmt + oct_totWklyCBUAmt + oct_totCBUInt + oct_cbuBalFromPrevMo + oct_cbuWithDrawal 
+                                oct_totMonthCBU = (oct_totInitCBUAmt + oct_totWklyCBUAmt + oct_totCBUInt + oct_cbuBalFromPrevMo) - oct_cbuWithDrawal 
 
                                 oct_InterestAmt = 0
                                     oct_CollectAmt = 0
@@ -2563,7 +2563,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                                 nov_totCBUInt = _.round((oct_totMonthCBU + nov_totInitCBUAmt + nov_totWklyCBUAmt) * .01 / 6)
                                 nov_cbuBalFromPrevMo = oct_totMonthCBU
                                 nov_cbuWithDrawal = nov_resCliTot * withdrawalCBUrate
-                                nov_totMonthCBU = nov_totInitCBUAmt + nov_totWklyCBUAmt + nov_totCBUInt + nov_cbuBalFromPrevMo + nov_cbuWithDrawal 
+                                nov_totMonthCBU = (nov_totInitCBUAmt + nov_totWklyCBUAmt + nov_totCBUInt + nov_cbuBalFromPrevMo) - nov_cbuWithDrawal 
 
                                 nov_InterestAmt = 0
                                     nov_CollectAmt = 0
@@ -2581,7 +2581,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                                 dec_totCBUInt = _.round((nov_totMonthCBU + dec_totInitCBUAmt + dec_totWklyCBUAmt) * .01 / 6)
                                 dec_cbuBalFromPrevMo = nov_totMonthCBU
                                 dec_cbuWithDrawal = dec_resCliTot * withdrawalCBUrate
-                                dec_totMonthCBU = dec_totInitCBUAmt + dec_totWklyCBUAmt + dec_totCBUInt + dec_cbuBalFromPrevMo + dec_cbuWithDrawal 
+                                dec_totMonthCBU = (dec_totInitCBUAmt + dec_totWklyCBUAmt + dec_totCBUInt + dec_cbuBalFromPrevMo) - dec_cbuWithDrawal 
 
                                 dec_InterestAmt = 0
                                 break;
@@ -2621,7 +2621,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                 let tot_totCBUInt = jan_totCBUInt + feb_totCBUInt + mar_totCBUInt + apr_totCBUInt + may_totCBUInt + jun_totCBUInt + jul_totCBUInt +
                         aug_totCBUInt + sep_totCBUInt + oct_totCBUInt + nov_totCBUInt + dec_totCBUInt
 
-                let tot_cbuWithDrawal = jan_cbuWithDrawal + feb_cbuWithDrawal + mar_cbuWithDrawal + apr_cbuWithDrawal + may_cbuWithDrawal + jun_cbuWithDrawal + jul_cbuWithDrawal
+                let tot_cbuWithDrawal = jan_cbuWithDrawal + feb_cbuWithDrawal + mar_cbuWithDrawal + apr_cbuWithDrawal + may_cbuWithDrawal + jun_cbuWithDrawal + jul_cbuWithDrawal +
                         aug_cbuWithDrawal + sep_cbuWithDrawal + oct_cbuWithDrawal + nov_cbuWithDrawal + dec_cbuWithDrawal
 
                 poSumView.push({title: "Initial Capital Build-Up", sortkey: 20, group: 2, jan_value : jan_totInitCBUAmt, feb_value : feb_totInitCBUAmt, mar_value : mar_totInitCBUAmt, 
@@ -2629,7 +2629,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                     aug_value : aug_totInitCBUAmt, sep_value : sep_totInitCBUAmt, oct_value : oct_totInitCBUAmt, nov_value : nov_totInitCBUAmt, dec_value : dec_totInitCBUAmt, tot_value : tot_totInitCBUAmt
                 
                 })
-                poSumView.push({title: "Monthly Contribution", sortkey: 21, group: 2, jan_value : jan_totWklyCBUAmt, feb_value : feb_totWklyCBUAmt, mar_value : mar_totWklyCBUAmt, 
+                poSumView.push({title: "Monthly Contribution", sortkey: 21, group: 2, beg_bal: begBalOldClient * 50 * 4, jan_value : jan_totWklyCBUAmt, feb_value : feb_totWklyCBUAmt, mar_value : mar_totWklyCBUAmt, 
                     apr_value : apr_totWklyCBUAmt, may_value : may_totWklyCBUAmt, jun_value : jun_totWklyCBUAmt, jul_value : jul_totWklyCBUAmt, 
                     aug_value : aug_totWklyCBUAmt, sep_value : sep_totWklyCBUAmt, oct_value : oct_totWklyCBUAmt, nov_value : nov_totWklyCBUAmt, dec_value : dec_totWklyCBUAmt, tot_value : tot_totWklyCBUAmt
                 })
