@@ -1669,6 +1669,19 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
         let oct_reLoanCliTot = 0
         let nov_reLoanCliTot = 0
         let dec_reLoanCliTot = 0
+    
+        let jan_totNumClients = 0
+        let feb_totNumClients = 0
+        let mar_totNumClients = 0
+        let apr_totNumClients = 0
+        let may_totNumClients = 0
+        let jun_totNumClients = 0
+        let jul_totNumClients = 0
+        let aug_totNumClients = 0
+        let sep_totNumClients = 0
+        let oct_totNumClients = 0
+        let nov_totNumClients = 0
+        let dec_totNumClients = 0
         
         let doneReadNLC = false
         let doneReadOLC = false
@@ -1903,29 +1916,29 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
     if (doneReadNLCli && doneReadOLC && doneReadResCli) {
 
         jan_oldCliTot = begBalOldClient 
-            let jan_totNumClients = (jan_oldCliTot + jan_newCliTot) - jan_resCliTot
+            jan_totNumClients = (jan_oldCliTot + jan_newCliTot) - jan_resCliTot
         feb_oldCliTot = jan_totNumClients
-            let feb_totNumClients = (feb_oldCliTot + feb_newCliTot) - feb_resCliTot    
+            feb_totNumClients = (feb_oldCliTot + feb_newCliTot) - feb_resCliTot    
         mar_oldCliTot = feb_totNumClients
-            let mar_totNumClients = (mar_oldCliTot + mar_newCliTot) - mar_resCliTot
+            mar_totNumClients = (mar_oldCliTot + mar_newCliTot) - mar_resCliTot
         apr_oldCliTot = mar_totNumClients
-            let apr_totNumClients = (apr_oldCliTot + apr_newCliTot) - apr_resCliTot
+            apr_totNumClients = (apr_oldCliTot + apr_newCliTot) - apr_resCliTot
         may_oldCliTot = apr_totNumClients
-            let may_totNumClients = (may_oldCliTot + may_newCliTot) - may_resCliTot
+            may_totNumClients = (may_oldCliTot + may_newCliTot) - may_resCliTot
         jun_oldCliTot = may_totNumClients
-            let jun_totNumClients = (jun_oldCliTot + jun_newCliTot) - jun_resCliTot
+            jun_totNumClients = (jun_oldCliTot + jun_newCliTot) - jun_resCliTot
         jul_oldCliTot = jun_totNumClients
-            let jul_totNumClients = (jul_oldCliTot + jul_newCliTot) - jul_resCliTot
+            jul_totNumClients = (jul_oldCliTot + jul_newCliTot) - jul_resCliTot
         aug_oldCliTot = jul_totNumClients
-            let aug_totNumClients = (aug_oldCliTot + aug_newCliTot) - aug_resCliTot
+            aug_totNumClients = (aug_oldCliTot + aug_newCliTot) - aug_resCliTot
         sep_oldCliTot = aug_totNumClients
-            let sep_totNumClients = (sep_oldCliTot + sep_newCliTot) - sep_resCliTot
+            sep_totNumClients = (sep_oldCliTot + sep_newCliTot) - sep_resCliTot
         oct_oldCliTot = sep_totNumClients
-            let oct_totNumClients = (oct_oldCliTot + oct_newCliTot) - oct_resCliTot
+            oct_totNumClients = (oct_oldCliTot + oct_newCliTot) - oct_resCliTot
         nov_oldCliTot = oct_totNumClients
-            let nov_totNumClients = (nov_oldCliTot + nov_newCliTot) - nov_resCliTot
+            nov_totNumClients = (nov_oldCliTot + nov_newCliTot) - nov_resCliTot
         dec_oldCliTot = nov_totNumClients
-            let dec_totNumClients = (dec_oldCliTot + dec_newCliTot) - dec_resCliTot
+            dec_totNumClients = (dec_oldCliTot + dec_newCliTot) - dec_resCliTot
         
         poSumView.push({title: "TOTAL NO. OF CLIENTS", sortkey: 7, group: 2, jan_value : jan_totNumClients, feb_value : feb_totNumClients, mar_value : mar_totNumClients, 
             apr_value : apr_totNumClients, may_value : may_totNumClients, jun_value : jun_totNumClients, jul_value : jul_totNumClients, aug_value : aug_totNumClients,
@@ -2203,7 +2216,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                             jan_loanReleaseAmt = janTotAmtLoan
                                 jan_totInitCBUAmt = jan_newAtotValue * initCBUrate  //Initial Capital Build-Up
                           
-                                jan_totWklyCBUAmt = jan_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                jan_totWklyCBUAmt = jan_totNumClients * wklyCBUrate // Monthly CBU Amount
                                 jan_totCBUInt = _.round((begBalmonthContriCBU + jan_totInitCBUAmt + jan_totWklyCBUAmt) * .01 / 6)
                                 jan_cbuBalFromPrevMo = begBalmonthContriCBU
                                 jan_cbuWithDrawal = jan_resCliTot * withdrawalCBUrate
@@ -2241,10 +2254,10 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                         case "February":
                             loanAmount = febTotAmtLoan
                             feb_loanReleaseAmt = febTotAmtLoan
-                            runTotWklyCBUAmt = runTotWklyCBUAmt + jan_totNoOfLoan 
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + jan_totNumClients 
 
                                 feb_totInitCBUAmt = feb_newAtotValue * initCBUrate
-                                feb_totWklyCBUAmt = feb_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                feb_totWklyCBUAmt = feb_totNumClients * wklyCBUrate // Monthly CBU Amount
                                 feb_totCBUInt = _.round((jan_totMonthCBU + feb_totInitCBUAmt + feb_totWklyCBUAmt) * .01 / 6)
                                 feb_cbuBalFromPrevMo = jan_totMonthCBU
                                 feb_cbuWithDrawal = feb_resCliTot * withdrawalCBUrate
@@ -2280,9 +2293,9 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                         case "March":
                             loanAmount = marTotAmtLoan
                             mar_loanReleaseAmt = marTotAmtLoan
-                            runTotWklyCBUAmt = runTotWklyCBUAmt + feb_totNoOfLoan 
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + feb_totNumClients 
                                 mar_totInitCBUAmt = mar_newAtotValue * initCBUrate  
-                                mar_totWklyCBUAmt = mar_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                mar_totWklyCBUAmt = mar_totNumClients * wklyCBUrate // Monthly CBU Amount
                                 mar_totCBUInt = _.round((feb_totMonthCBU + mar_totInitCBUAmt + mar_totWklyCBUAmt) * .01 / 6)
                                 mar_cbuBalFromPrevMo = feb_totMonthCBU
                                 mar_cbuWithDrawal = mar_resCliTot * withdrawalCBUrate
@@ -2318,9 +2331,9 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                         case "April":
                             loanAmount = aprTotAmtLoan
                             apr_loanReleaseAmt = aprTotAmtLoan
-                            runTotWklyCBUAmt = runTotWklyCBUAmt + mar_totNoOfLoan 
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + mar_totNumClients 
                                 apr_totInitCBUAmt = apr_newAtotValue * initCBUrate  
-                                apr_totWklyCBUAmt = apr_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                apr_totWklyCBUAmt = apr_totNumClients * wklyCBUrate // Monthly CBU Amount
                                 apr_totCBUInt = _.round((mar_totMonthCBU + apr_totInitCBUAmt + apr_totWklyCBUAmt) * .01 / 6)
                                 apr_cbuBalFromPrevMo = mar_totMonthCBU
                                 apr_cbuWithDrawal = apr_resCliTot * withdrawalCBUrate
@@ -2356,9 +2369,9 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                         case "May":
                             loanAmount = mayTotAmtLoan
                             may_loanReleaseAmt = mayTotAmtLoan
-                            runTotWklyCBUAmt = runTotWklyCBUAmt + apr_totNoOfLoan 
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + apr_totNumClients 
                                 may_totInitCBUAmt = may_newAtotValue * initCBUrate  
-                                may_totWklyCBUAmt = may_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                may_totWklyCBUAmt = may_totNumClients * wklyCBUrate // Monthly CBU Amount
                                 may_totCBUInt = _.round((apr_totMonthCBU + may_totInitCBUAmt + may_totWklyCBUAmt) * .01 / 6)
                                 may_cbuBalFromPrevMo = apr_totMonthCBU
                                 may_cbuWithDrawal = may_resCliTot * withdrawalCBUrate
@@ -2394,9 +2407,9 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                         case "June":
                             loanAmount = junTotAmtLoan
                             jun_loanReleaseAmt = junTotAmtLoan
-                            runTotWklyCBUAmt = runTotWklyCBUAmt + may_totNoOfLoan 
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + may_totNumClients 
                                 jun_totInitCBUAmt = jun_newAtotValue * initCBUrate  
-                                jun_totWklyCBUAmt = jun_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                jun_totWklyCBUAmt = jun_totNumClients * wklyCBUrate // Monthly CBU Amount
                                 jun_totCBUInt = _.round((may_totMonthCBU + jun_totInitCBUAmt + jun_totWklyCBUAmt) * .01 / 6)
                                 jun_cbuBalFromPrevMo = may_totMonthCBU
                                 jun_cbuWithDrawal = jun_resCliTot * withdrawalCBUrate
@@ -2432,9 +2445,9 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                         case "July":
                             loanAmount = julTotAmtLoan
                             jul_loanReleaseAmt = julTotAmtLoan
-                            runTotWklyCBUAmt = runTotWklyCBUAmt + jun_totNoOfLoan 
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + jun_totNumClients 
                                 jul_totInitCBUAmt = jul_newAtotValue * initCBUrate  
-                                jul_totWklyCBUAmt = jul_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                jul_totWklyCBUAmt = jul_totNumClients * wklyCBUrate // Monthly CBU Amount
                                 jul_totCBUInt = _.round((jun_totMonthCBU + jul_totInitCBUAmt + jul_totWklyCBUAmt) * .01 / 6)
                                 jul_cbuBalFromPrevMo = jun_totMonthCBU
                                 jul_cbuWithDrawal = jul_resCliTot * withdrawalCBUrate
@@ -2466,9 +2479,9 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                         case "August":
                             loanAmount = augTotAmtLoan
                             aug_loanReleaseAmt = augTotAmtLoan
-                            runTotWklyCBUAmt = runTotWklyCBUAmt + jul_totNoOfLoan 
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + jul_totNumClients 
                                 aug_totInitCBUAmt = aug_newAtotValue * initCBUrate  
-                                aug_totWklyCBUAmt = aug_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                aug_totWklyCBUAmt = aug_totNumClients * wklyCBUrate // Monthly CBU Amount
                                 aug_totCBUInt = _.round((jul_totMonthCBU + aug_totInitCBUAmt + aug_totWklyCBUAmt) * .01 / 6)
                                 aug_cbuBalFromPrevMo = jul_totMonthCBU
                                 aug_cbuWithDrawal = aug_resCliTot * withdrawalCBUrate
@@ -2496,9 +2509,9 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                         case "September":
                             loanAmount = sepTotAmtLoan
                             sep_loanReleaseAmt = sepTotAmtLoan
-                            runTotWklyCBUAmt = runTotWklyCBUAmt + aug_totNoOfLoan 
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + aug_totNumClients 
                                 sep_totInitCBUAmt = sep_newAtotValue * initCBUrate  
-                                sep_totWklyCBUAmt = sep_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                sep_totWklyCBUAmt = sep_totNumClients * wklyCBUrate // Monthly CBU Amount
                                 sep_totCBUInt = _.round((aug_totMonthCBU + sep_totInitCBUAmt + sep_totWklyCBUAmt) * .01 / 6)
                                 sep_cbuBalFromPrevMo = aug_totMonthCBU
                                 sep_cbuWithDrawal = sep_resCliTot * withdrawalCBUrate
@@ -2522,9 +2535,9 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                         case "October":
                             loanAmount = octTotAmtLoan
                             oct_loanReleaseAmt = octTotAmtLoan
-                            runTotWklyCBUAmt = runTotWklyCBUAmt + sep_totNoOfLoan 
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + sep_totNumClients 
                                 oct_totInitCBUAmt = oct_newAtotValue * initCBUrate  
-                                oct_totWklyCBUAmt = oct_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                oct_totWklyCBUAmt = oct_totNumClients * wklyCBUrate // Monthly CBU Amount
                                 oct_totCBUInt = _.round((sep_totMonthCBU + oct_totInitCBUAmt + oct_totWklyCBUAmt) * .01 / 6)
                                 oct_cbuBalFromPrevMo = sep_totMonthCBU
                                 oct_cbuWithDrawal = oct_resCliTot * withdrawalCBUrate
@@ -2544,9 +2557,9 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                         case "November":
                             loanAmount = novTotAmtLoan
                             nov_loanReleaseAmt = novTotAmtLoan
-                            runTotWklyCBUAmt = runTotWklyCBUAmt + dec_totNoOfLoan 
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + dec_totNumClients 
                                 nov_totInitCBUAmt = nov_newAtotValue * initCBUrate  
-                                nov_totWklyCBUAmt = nov_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                nov_totWklyCBUAmt = nov_totNumClients * wklyCBUrate // Monthly CBU Amount
                                 nov_totCBUInt = _.round((oct_totMonthCBU + nov_totInitCBUAmt + nov_totWklyCBUAmt) * .01 / 6)
                                 nov_cbuBalFromPrevMo = oct_totMonthCBU
                                 nov_cbuWithDrawal = nov_resCliTot * withdrawalCBUrate
@@ -2562,9 +2575,9 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                         case "December":
                             loanAmount = decTotAmtLoan
                             dec_loanReleaseAmt = decTotAmtLoan
-                            runTotWklyCBUAmt = runTotWklyCBUAmt + dec_totNoOfLoan 
+                            runTotWklyCBUAmt = runTotWklyCBUAmt + dec_totNumClients 
                                 dec_totInitCBUAmt = dec_newAtotValue * initCBUrate  
-                                dec_totWklyCBUAmt = dec_totNoOfLoan * wklyCBUrate // Monthly CBU Amount
+                                dec_totWklyCBUAmt = dec_totNumClients * wklyCBUrate // Monthly CBU Amount
                                 dec_totCBUInt = _.round((nov_totMonthCBU + dec_totInitCBUAmt + dec_totWklyCBUAmt) * .01 / 6)
                                 dec_cbuBalFromPrevMo = nov_totMonthCBU
                                 dec_cbuWithDrawal = dec_resCliTot * withdrawalCBUrate
