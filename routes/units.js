@@ -1630,6 +1630,20 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
         let oct_oldAtotValue = 0
         let nov_oldAtotValue = 0
         let dec_oldAtotValue = 0
+
+        let jan_reLoanCliTot = 0
+        let feb_reLoanCliTot = 0
+        let mar_reLoanCliTot = 0
+        let apr_reLoanCliTot = 0
+        let may_reLoanCliTot = 0
+        let jun_reLoanCliTot = 0
+        let jul_reLoanCliTot = 0
+        let aug_reLoanCliTot = 0
+        let sep_reLoanCliTot = 0
+        let oct_reLoanCliTot = 0
+        let nov_reLoanCliTot = 0
+        let dec_reLoanCliTot = 0
+
         let doneReadNLC = false
         let doneReadOLC = false
         let doneReadNLA = false
@@ -1747,10 +1761,23 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
             nov_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.nov_budg; })
             dec_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.dec_budg; })
 
+            jan_reLoanCliTot = jan_oldCliTot
+            feb_reLoanCliTot = feb_oldCliTot
+            mar_reLoanCliTot = mar_oldCliTot
+            apr_reLoanCliTot = apr_oldCliTot
+            may_reLoanCliTot = may_oldCliTot
+            jun_reLoanCliTot = jun_oldCliTot
+            jul_reLoanCliTot = jul_oldCliTot
+            aug_reLoanCliTot = aug_oldCliTot
+            sep_reLoanCliTot = sep_oldCliTot
+            oct_reLoanCliTot = oct_oldCliTot
+            nov_reLoanCliTot = nov_oldCliTot
+            dec_reLoanCliTot = dec_oldCliTot
+
             olTotValueClient = jan_oldCliTot + feb_oldCliTot + mar_oldCliTot + apr_oldCliTot + may_oldCliTot + jun_oldCliTot
                         + jul_oldCliTot + aug_oldCliTot + sep_oldCliTot + oct_oldCliTot + nov_oldCliTot + dec_oldCliTot
 
-            poSumView.push({title: "Number of Reloan", sortkey: 10, group: 1, beg_bal: begBalOldClient, jan_value : jan_oldCliTot, feb_value : feb_oldCliTot, mar_value : mar_oldCliTot, apr_value : apr_oldCliTot,
+            poSumView.push({title: "Number of Reloan", sortkey: 10, group: 1, beg_bal: 0, jan_value : jan_oldCliTot, feb_value : feb_oldCliTot, mar_value : mar_oldCliTot, apr_value : apr_oldCliTot,
                 may_value : may_oldCliTot, jun_value : jun_oldCliTot, jul_value : jul_oldCliTot, aug_value : aug_oldCliTot,
                 sep_value : sep_oldCliTot, oct_value : oct_oldCliTot, nov_value : nov_oldCliTot, dec_value : dec_oldCliTot, tot_value : olTotValueClient
             }) 
@@ -1850,20 +1877,20 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
             doneReadNLC = true
         }) //, function (err, fndPOV) {
 
-            let jan_totNoOfLoan = jan_oldCliTot + jan_newCtotValue
-            let feb_totNoOfLoan = feb_oldCliTot + feb_newCtotValue
-            let mar_totNoOfLoan = mar_oldCliTot + mar_newCtotValue
-            let apr_totNoOfLoan = apr_oldCliTot + apr_newCtotValue
-            let may_totNoOfLoan = may_oldCliTot + may_newCtotValue
-            let jun_totNoOfLoan = jun_oldCliTot + jun_newCtotValue
-            let jul_totNoOfLoan = jul_oldCliTot + jul_newCtotValue
-            let aug_totNoOfLoan = aug_oldCliTot + aug_newCtotValue
-            let sep_totNoOfLoan = sep_oldCliTot + sep_newCtotValue
-            let oct_totNoOfLoan = oct_oldCliTot + oct_newCtotValue
-            let nov_totNoOfLoan = nov_oldCliTot + nov_newCtotValue
-            let dec_totNoOfLoan = dec_oldCliTot + dec_newCtotValue
+            let jan_totNoOfLoan = jan_reLoanCliTot + jan_newCtotValue
+            let feb_totNoOfLoan = feb_reLoanCliTot + feb_newCtotValue
+            let mar_totNoOfLoan = mar_reLoanCliTot + mar_newCtotValue
+            let apr_totNoOfLoan = apr_reLoanCliTot + apr_newCtotValue
+            let may_totNoOfLoan = may_reLoanCliTot + may_newCtotValue
+            let jun_totNoOfLoan = jun_reLoanCliTot + jun_newCtotValue
+            let jul_totNoOfLoan = jul_reLoanCliTot + jul_newCtotValue
+            let aug_totNoOfLoan = aug_reLoanCliTot + aug_newCtotValue
+            let sep_totNoOfLoan = sep_reLoanCliTot + sep_newCtotValue
+            let oct_totNoOfLoan = oct_reLoanCliTot + oct_newCtotValue
+            let nov_totNoOfLoan = nov_reLoanCliTot + nov_newCtotValue
+            let dec_totNoOfLoan = dec_reLoanCliTot + dec_newCtotValue
 
-            // if (doneReadNLC && doneReadOLC) {
+            if (doneReadNLC && doneReadOLC) {
                 let tot_totNoOfLoan = jan_totNoOfLoan + feb_totNoOfLoan + mar_totNoOfLoan + apr_totNoOfLoan + may_totNoOfLoan + jun_totNoOfLoan + jul_totNoOfLoan +
                         aug_totNoOfLoan + sep_totNoOfLoan + oct_totNoOfLoan + nov_totNoOfLoan + dec_totNoOfLoan
 
@@ -1871,7 +1898,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
                     apr_value : apr_totNoOfLoan, may_value : may_totNoOfLoan, jun_value : jun_totNoOfLoan, jul_value : jul_totNoOfLoan, aug_value : aug_totNoOfLoan,
                     sep_value : sep_totNoOfLoan, oct_value : oct_totNoOfLoan, nov_value : nov_totNoOfLoan, dec_value : dec_totNoOfLoan, tot_value: tot_totNoOfLoan
                }) 
-            // }
+            }
 
         poSumView.push({title: "AMOUNT OF LOANS", sortkey: 12, group: 2, isTitle: true})
 
