@@ -346,7 +346,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 })
 
 // View BRANCH's Budget per UNIT  - TUG
-router.get('/perUnit/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
+router.get('/perUnitsss/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     
     const unitCodePO = req.params.id
     const branchCodePO = unitCodePO.substring(0,3)
@@ -1516,6 +1516,10 @@ router.delete('/deleteEmp/:id', authUser, authRole(ROLE.BM), async (req, res) =>
 })
 
 // View BRANCH PROJECTED COLLECTIONS ROUTE
+router.get('/perUnit/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+    res.send('Ongoing development')
+})
+
 router.get('/viewBranchProjCol/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     res.send('Ongoing development')
 })
