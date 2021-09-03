@@ -172,6 +172,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
         let unCode = _.trim(uh.unit)
         let uniCode = unCode
         let unHeadName = uh.first_name + " " + uh.middle_name.substr(0,1) + ". " + uh.last_name
+        let forSortUnitNum = uniCode
 
         let nUnitLoanTot = 0
         let nUnitLoanTotCount = 0
@@ -194,7 +195,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
             let oloanTotCount = 0
             let resloanTot = 0
             let begLoanTot = 0
-            let begClientTot = 0
+            let uBegClientTot = 0
             let bClientAmt = 0
             let bClientCnt = 0
             lnType = loan_type.loan_type
@@ -207,7 +208,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
             foundCenter.forEach(center => {
                 const unitCode = center.unit
-                if (unitCode === unCode) { 
+                if (unitCode === forSortUnitNum) { 
                     const lnType = center.loan_code
                     let centerTargets = center.Targets
                     let LoanBegBal = center.Loan_beg_bal
@@ -237,19 +238,19 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
                     LoanBegBal.forEach(centerBegBal => {
                         if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
                             begLoanTot = centerBegBal.beg_amount
-                            begClientTot = centerBegBal.beg_client_count
-                            bClientCnt = bClientCnt + begClientTot
+                            bClientCnt = centerBegBal.beg_client_count
+                            uBegClientTot = uBegClientTot + bClientCnt
                             bClientAmt = bClientAmt + begLoanTot
                         }
                     })
                 }
             })
             let totAmounts = nloanTot + oloanTot 
-            let branchBudgEndBal = (begClientTot + nloanTotCount) - resloanTot
+            let branchBudgEndBal = (uBegClientTot + nloanTotCount) - resloanTot
             totbudgEndBal = totbudgEndBal + branchBudgEndBal
 //            let amtDisburse = oloanTot + oloanTot
             
-            unitLoanTotals.push({unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClientCnt,
+            unitLoanTotals.push({sortkey: forSortUnitNum, unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: uBegClientTot,
                 begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: branchBudgEndBal})
 
             nUnitLoanTot = nUnitLoanTot + nloanTot
@@ -258,7 +259,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
             oUnitLoanTotCount = oUnitLoanTotCount + oloanTotCount
             resUnitLoanTot = resUnitLoanTot + resloanTot
             begUnitLoanTot = begUnitLoanTot + begLoanTot
-            begUnitClientTot = begUnitClientTot + begClientTot
+            begUnitClientTot = begUnitClientTot + uBegClientTot
             
         })
 
@@ -266,7 +267,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
         let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
         let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
 
-        unitLoanTotals.push({unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
+        unitLoanTotals.push({sortkey: forSortUnitNum, unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
             begClientAmt: begUnitLoanTot, ntotAmount: nUnitLoanTot, onumClient: oUnitLoanTotCount, ototAmount: oUnitLoanTot, resiloanTot: resUnitLoanTot, budgEndBal: budgUnitEndBal})
 
             doneFoundPO = true
@@ -338,6 +339,216 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
             })
         }
+    } 
+    catch (err) {
+        console.log(err)
+    }
+})
+
+// View BRANCH's Budget per UNIT  - TUG
+router.get('/perUnit/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
+    
+    const unitCodePO = req.params.id
+    const branchCodePO = unitCodePO.substring(0,3)
+    const unitLetterPO = unitCodePO.substr(4,1)
+    const _userPO = req.user
+    console.log(_userPO)
+
+    const unitPosisyon = posisyon
+
+    let foundPOunits = []
+    let officerNamePUH = ""
+    let foundPOs = []
+    let postManagerPO = ""
+    let postUnitHeadPO = ""
+    let postProgOfrPO = ""
+
+    // console.log(unitPosisyon)
+    
+    let unitLoanTotals = []
+    let foundCenter = []
+    
+    // const POdata = await Employee.findOne({assign_code: IDcode})
+    // const POname = POdata.first_name + " " + POdata.middle_name.substr(0,1) + ". " + POdata.last_name
+    // const POposition = POdata.position_code
+
+    let doneReadTot = false
+    let doneReadSubTot = false
+    let doneReadLoanTot = false
+   
+    unitPosisyon.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii._id
+        if (fndPositionEmp === "BRN_MGR") {
+            postManagerPO = fndPositID
+        }
+        if (fndPositionEmp === "UNI_HED") {
+            postUnitHeadPO = fndPositID
+        }
+        if (fndPositionEmp === "PRO_OFR") {
+            postProgOfrPO = fndPositID
+        }
+    })
+
+    let unitEmployees = []
+    let unitPUH = []
+    
+    try {
+
+        unitPUH = await Employee.find({assign_code: unitCodePO, position_code: postUnitHeadPO})
+        console.log(unitPUH)
+
+            officerNamePUH = unitPUH.first_name + " " + _.trim(unitPUH.middle_name).substring(0,1) + ". " + unitPUH.last_name
+
+        // foundPOs = _.find(unitEmployees, {unit: unitLetterPO, position_code: postProgOfrPO})
+        //     console.log(foundPOs)
+        const programOfficers = await Employee.find({branch: branchCodePO, unit: unitLetterPO, position_code: postProgOfrPO}, function (err, foundPO){
+            foundPOs = foundPO
+            })
+       
+        let fndPositionEmp 
+        let fndPositID
+
+        const loanType = await Loan_type.find({})
+
+        const center = await Center.find({branch: branchCodePO, unit: unitLetterPO}, function (err, foundCenters) {
+//        const center = await Center.find(searchOptions)
+
+            foundCenter = foundCenters.sort()
+            doneReadTot = true
+        })
+
+        if (center.length === 0) {
+            doneReadTot = true  
+        }
+//    console.log(foundCenter)
+
+    foundPOs.forEach(uh => {
+
+        let poNum = _.trim(uh.po_number)
+        let uniCode = poNum
+        let unHeadName = uh.first_name + " " + uh.middle_name.substr(0,1) + ". " + uh.last_name
+        let forSortPoNum = poNum
+
+        let nUnitLoanTot = 0
+        let nUnitLoanTotCount = 0
+        let oUnitLoanTot = 0
+        let oUnitLoanTotCount = 0
+        let resUnitLoanTot = 0
+        let begUnitLoanTot = 0
+        let begUnitClientTot = 0
+
+        let typeLoan = ""
+        let count = 0 
+    
+        loanType.forEach(loan_type => {
+            typeLoan = loan_type.title
+            let nloanTot = 0
+            let nloanTotCount = 0
+            let oloanTot = 0
+            let oloanTotCount = 0
+            let resloanTot = 0
+            let begLoanTot = 0
+            let uBegClientTot = 0
+            let bClientAmt = 0
+            let bClientCnt = 0
+            lnType = loan_type.loan_type
+
+            count = count + 1
+            if (count !== 1) {
+                uniCode = " "
+                unHeadName = ""
+                poNum = ""
+            } 
+
+            foundCenter.forEach(center => {
+                const poNo = center.po
+                if (poNo === forSortPoNum) { 
+                    const lnType = center.loan_code
+                    let centerTargets = center.Targets
+                    let LoanBegBal = center.Loan_beg_bal
+//                  let centerLoanBegBal = center.Loan_beg_bal                
+                    // resloanTot = resloanTot + (center.resClient + center.resClient2)
+            
+                    if (lnType === _.trim(lnType)) {
+                        BudgBegBal = center.budget_BegBal
+                    }
+                    // console.log(resignClient)
+                    // console.log(resloanTot)
+
+                    centerTargets.forEach(centerLoan => {
+                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
+                            const loanRem = centerLoan.remarks
+                            if (_.trim(loanRem) === "New Loan") {
+                                nloanTot = nloanTot + centerLoan.totAmount
+                                nloanTotCount = nloanTotCount + centerLoan.numClient
+                            } else {
+                                oloanTot = oloanTot + centerLoan.totAmount
+                                oloanTotCount = oloanTotCount + centerLoan.numClient
+                                resloanTot = resloanTot + centerLoan.resignClient
+                            }
+                        }
+                    })
+
+                    LoanBegBal.forEach(centerBegBal => {
+                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
+                            begLoanTot = centerBegBal.beg_amount
+                            bClientCnt = centerBegBal.beg_client_count
+                            uBegClientTot = uBegClientTot + bClientCnt
+                            bClientAmt = bClientAmt + begLoanTot
+                        }
+                    })
+                }
+            })
+            let totAmounts = nloanTot + oloanTot 
+            let budgEndBal = (uBegClientTot + nloanTotCount) - resloanTot
+//            let amtDisburse = oloanTot + oloanTot
+            
+            unitLoanTotals.push({sortkey: forSortPoNum, po: poNum, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: uBegClientTot,
+                begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: budgEndBal})
+
+            nUnitLoanTot = nUnitLoanTot + nloanTot
+            nUnitLoanTotCount = nUnitLoanTotCount + nloanTotCount
+            oUnitLoanTot = oUnitLoanTot + oloanTot
+            oUnitLoanTotCount = oUnitLoanTotCount + oloanTotCount
+            resUnitLoanTot = resUnitLoanTot + resloanTot
+            begUnitLoanTot = begUnitLoanTot + begLoanTot
+            begUnitClientTot = begUnitClientTot + uBegClientTot
+    
+        })
+
+        typeLoan = "PO TOTALS"
+        let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
+        let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
+
+        unitLoanTotals.push({sortkey: forSortPoNum, po: poNum, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
+            begClientAmt: begUnitLoanTot, ntotAmount: nUnitLoanTot, onumClient: oUnitLoanTotCount, ototAmount: oUnitLoanTot, resiloanTot: resUnitLoanTot, budgEndBal: budgUnitEndBal})
+        
+            doneReadSubTot = true
+    })
+    // console.log(unitLoanTotals)
+            if (unitLoanTotals.length !== 0) {
+                sortedPOs = unitLoanTotals.sort( function (a,b) {
+                    if ( a.sortkey < b.sortkey ){
+                        return -1;
+                      }
+                      if ( a.sortkey > b.sortkey ){
+                        return 1;
+                      }
+                       return 0;
+                })
+            }
+
+        if (doneReadTot && doneReadSubTot) {
+            // res.send('Eto oh!')
+            res.render('units/budgetPerPO', {
+                yuser: _userPO,
+                perUnitCode: unitCodePO,
+                officerName: officerNamePUH,
+                unitLoanTots: unitLoanTotals
+            })
+        }             
+
     } 
     catch (err) {
         console.log(err)
