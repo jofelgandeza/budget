@@ -294,7 +294,7 @@ router.get('/:id/edit', authUser, authRole("PO"), async (req, res) => {
               }
                return 0;
         })
-        
+            monthSelect.push(" ")
         if (doneRedEditCenter) {
             res.render("centers/targets", {
                 centerID: centerCode,
@@ -883,6 +883,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
             let newCntrCliBudg = new Center_budget_det({
                 region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                 view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: centerView1Code,
+                beg_bal: 0, beg_bal_amt: 0, beg_bal_int: 0,
                 jan_budg: janLoanCliBudg, feb_budg: febLoanCliBudg, mar_budg: marLoanCliBudg, apr_budg: aprLoanCliBudg,
                 may_budg: mayLoanCliBudg, jun_budg: junLoanCliBudg, jul_budg: julLoanCliBudg, aug_budg: augLoanCliBudg,
                 sep_budg: sepLoanCliBudg, oct_budg: octLoanCliBudg, nov_budg: novLoanCliBudg, dec_budg: decLoanCliBudg
@@ -892,6 +893,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
             let newCntrAmtBudg = new Center_budget_det({
                 region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                 view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: centerView2Code,
+                beg_bal: 0, beg_bal_amt: 0, beg_bal_int: 0,
                 jan_budg: janLoanBudg, feb_budg: febLoanBudg, mar_budg: marLoanBudg, apr_budg: aprLoanBudg,
                 may_budg: mayLoanBudg, jun_budg: junLoanBudg, jul_budg: julLoanBudg, aug_budg: augLoanBudg,
                 sep_budg: sepLoanBudg, oct_budg: octLoanBudg, nov_budg: novLoanBudg, dec_budg: decLoanBudg
@@ -912,6 +914,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                 let newCtrCliBudg = new Center_budget_det({
                     region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: centerView1Code,
+                    beg_bal: 0, beg_bal_amt: 0, beg_bal_int: 0,
                     jan_budg: janLoanCliBudg, feb_budg: febLoanCliBudg, mar_budg: marLoanCliBudg, apr_budg: aprLoanCliBudg,
                     may_budg: mayLoanCliBudg, jun_budg: junLoanCliBudg, jul_budg: julLoanCliBudg, aug_budg: augLoanCliBudg,
                     sep_budg: sepLoanCliBudg, oct_budg: octLoanCliBudg, nov_budg: novLoanCliBudg, dec_budg: decLoanCliBudg
@@ -921,6 +924,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                 let newCtrAmtBudg = new Center_budget_det({
                     region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
                     view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: centerView2Code,
+                    beg_bal: 0, beg_bal_amt: 0, beg_bal_int: 0,
                     jan_budg: janLoanBudg, feb_budg: febLoanBudg, mar_budg: marLoanBudg, apr_budg: aprLoanBudg,
                     may_budg: mayLoanBudg, jun_budg: junLoanBudg, jul_budg: julLoanBudg, aug_budg: augLoanBudg,
                     sep_budg: sepLoanBudg, oct_budg: octLoanBudg, nov_budg: novLoanBudg, dec_budg: decLoanBudg
@@ -2057,18 +2061,34 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         poSumView.push({title: "CLIENTS", sortkey: 3, group: 2, isTitle: true})
 
         const newClientCntView = await Center_budget_det.find({po_code: viewPOCode, view_code: "NewLoanClient", client_count_included: true }, function (err, fndNewCliCnt) {
-            jan_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jan_budg; })
-            feb_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.feb_budg; })
-            mar_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.mar_budg; })
-            apr_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.apr_budg; })
-            may_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.may_budg; })
-            jun_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jun_budg; })
-            jul_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jul_budg; })
-            aug_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.aug_budg; })
-            sep_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.sep_budg; })
-            oct_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.oct_budg; })
-            nov_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.nov_budg; })
-            dec_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.dec_budg; })
+
+            fndNewCliCnt.forEach(newCliCnt => {
+                jan_newCliTot = jan_newCliTot + newCliCnt.jan_budg
+                feb_newCliTot = feb_newCliTot + newCliCnt.feb_budg
+                mar_newCliTot = mar_newCliTot + newCliCnt.mar_budg
+                apr_newCliTot = apr_newCliTot + newCliCnt.apr_budg
+                may_newCliTot = may_newCliTot + newCliCnt.may_budg
+                jun_newCliTot = jun_newCliTot + newCliCnt.jun_budg
+                jul_newCliTot = jul_newCliTot + newCliCnt.jul_budg
+                aug_newCliTot = aug_newCliTot + newCliCnt.aug_budg
+                sep_newCliTot = sep_newCliTot + newCliCnt.sep_budg
+                oct_newCliTot = oct_newCliTot + newCliCnt.oct_budg
+                nov_newCliTot = nov_newCliTot + newCliCnt.nov_budg
+                dec_newCliTot = dec_newCliTot + newCliCnt.dec_budg
+            })
+
+            // jan_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jan_budg; })
+            // feb_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.feb_budg; })
+            // mar_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.mar_budg; })
+            // apr_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.apr_budg; })
+            // may_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.may_budg; })
+            // jun_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jun_budg; })
+            // jul_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jul_budg; })
+            // aug_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.aug_budg; })
+            // sep_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.sep_budg; })
+            // oct_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.oct_budg; })
+            // nov_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.nov_budg; })
+            // dec_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.dec_budg; })
 
             nwTotValueClient = jan_newCliTot + feb_newCliTot + mar_newCliTot + apr_newCliTot + may_newCliTot + jun_newCliTot
                 + jul_newCliTot + aug_newCliTot + sep_newCliTot + oct_newCliTot + nov_newCliTot + dec_newCliTot
@@ -2079,7 +2099,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 }) 
                 doneReadNLCli = true
 
-            }) //, function (err, fndPOV) {
+        }) //, function (err, fndPOV) {
 
             if (doneReadNLCli) {
                 const fndNewClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NewClients"}, function (err, fndTotLonAmt) {
@@ -2112,22 +2132,43 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 })
 
             }
-        const oldClientCntView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanClient", client_count_included: true}, function (err, fndOldCliCnt) {
+        const oldClientCntView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanClient", client_count_included: true}, function (err, fndOldClientCnt) {
 
-            begBalOldClient = _.sumBy(fndOldCliCnt, function(o) { return o.beg_bal; })
-            jan_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.jan_budg; })
-            feb_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.feb_budg; })
-            mar_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.mar_budg; })
-            apr_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.apr_budg; })
-            may_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.may_budg; })
-            jun_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.jun_budg; })
-            jul_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.jul_budg; })
-            aug_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.aug_budg; })
-            sep_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.sep_budg; })
-            oct_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.oct_budg; })
-            nov_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.nov_budg; })
-            dec_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.dec_budg; })
+            // begBalOldClient = _.sumBy(fndOldCliCnt, function(o) { return o.beg_bal; })
+            // jan_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.jan_budg; })
+            // feb_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.feb_budg; })
+            // mar_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.mar_budg; })
+            // apr_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.apr_budg; })
+            // may_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.may_budg; })
+            // jun_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.jun_budg; })
+            // jul_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.jul_budg; })
+            // aug_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.aug_budg; })
+            // sep_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.sep_budg; })
+            // oct_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.oct_budg; })
+            // nov_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.nov_budg; })
+            // dec_oldClientTot = _.sumBy(fndOldCliCnt, function(o) { return o.dec_budg; })
+            console.log(fndOldClientCnt)
+            fndOldClientCnt.forEach(OldCliCnt => {
 
+                let begBalOldCli = OldCliCnt.beg_bal
+                if (!begBalOldCli) {
+                    begBalOldClient = begBalOldClient + 0
+                } else {
+                    begBalOldClient = begBalOldClient + OldCliCnt.beg_bal
+                }
+                jan_oldClientTot = jan_oldClientTot + OldCliCnt.jan_budg
+                feb_oldClientTot = feb_oldClientTot + OldCliCnt.feb_budg
+                mar_oldClientTot = mar_oldClientTot + OldCliCnt.mar_budg
+                apr_oldClientTot = apr_oldClientTot + OldCliCnt.apr_budg
+                may_oldClientTot = may_oldClientTot + OldCliCnt.may_budg
+                jun_oldClientTot = jun_oldClientTot + OldCliCnt.jun_budg
+                jul_oldClientTot = jul_oldClientTot + OldCliCnt.jul_budg
+                aug_oldClientTot = aug_oldClientTot + OldCliCnt.aug_budg
+                sep_oldClientTot = sep_oldClientTot + OldCliCnt.sep_budg
+                oct_oldClientTot = oct_oldClientTot + OldCliCnt.oct_budg
+                nov_oldClientTot = nov_oldClientTot + OldCliCnt.nov_budg
+                dec_oldClientTot = dec_oldClientTot + OldCliCnt.dec_budg
+            })
             olTotValueClient = jan_oldClientTot + feb_oldClientTot + mar_oldClientTot + apr_oldClientTot + may_oldClientTot + jun_oldClientTot
                         + jul_oldClientTot + aug_oldClientTot + sep_oldClientTot + oct_oldClientTot + nov_oldClientTot + dec_oldClientTot
             
@@ -2137,19 +2178,34 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
             const resClientCntView = await Center_budget_det.find({po_code: viewPOCode, view_code: "ResClientCount", client_count_included: true}, function (err, fndResCliCnt) {
 
-                jan_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jan_budg; })
-                feb_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.feb_budg; })
-                mar_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.mar_budg; })
-                apr_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.apr_budg; })
-                may_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.may_budg; })
-                jun_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jun_budg; })
-                jul_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jul_budg; })
-                aug_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.aug_budg; })
-                sep_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.sep_budg; })
-                oct_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.oct_budg; })
-                nov_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.nov_budg; })
-                dec_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.dec_budg; })
+                // jan_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jan_budg; })
+                // feb_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.feb_budg; })
+                // mar_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.mar_budg; })
+                // apr_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.apr_budg; })
+                // may_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.may_budg; })
+                // jun_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jun_budg; })
+                // jul_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jul_budg; })
+                // aug_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.aug_budg; })
+                // sep_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.sep_budg; })
+                // oct_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.oct_budg; })
+                // nov_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.nov_budg; })
+                // dec_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.dec_budg; })
         
+                fndResCliCnt.forEach(ResCliCnt => {
+                    jan_resCliTot = jan_resCliTot + ResCliCnt.jan_budg
+                    feb_resCliTot = feb_resCliTot + ResCliCnt.feb_budg
+                    mar_resCliTot = mar_resCliTot + ResCliCnt.mar_budg
+                    apr_resCliTot = apr_resCliTot + ResCliCnt.apr_budg
+                    may_resCliTot = may_resCliTot + ResCliCnt.may_budg
+                    jun_resCliTot = jun_resCliTot + ResCliCnt.jun_budg
+                    jul_resCliTot = jul_resCliTot + ResCliCnt.jul_budg
+                    aug_resCliTot = aug_resCliTot + ResCliCnt.aug_budg
+                    sep_resCliTot = sep_resCliTot + ResCliCnt.sep_budg
+                    oct_resCliTot = oct_resCliTot + ResCliCnt.oct_budg
+                    nov_resCliTot = nov_resCliTot + ResCliCnt.nov_budg
+                    dec_resCliTot = dec_resCliTot + ResCliCnt.dec_budg
+                })
+
                 olTotValueClient = jan_resCliTot + feb_resCliTot + mar_resCliTot + apr_resCliTot + may_resCliTot + jun_resCliTot
                             + jul_resCliTot + aug_resCliTot + sep_resCliTot + oct_resCliTot + nov_resCliTot + dec_resCliTot
                 
@@ -2235,18 +2291,33 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         poSumView.push({title: "NUMBER OF LOANS", sortkey: 7, group: 1, isTitle: true})
 
         const newLoanClientView = await Center_budget_det.find({po_code: viewPOCode, view_code: "NewLoanClient"}, function (err, fndNewCli) {
-            jan_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jan_budg; })
-            feb_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.feb_budg; })
-            mar_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.mar_budg; })
-            apr_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.apr_budg; })
-            may_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.may_budg; })
-            jun_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jun_budg; })
-            jul_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jul_budg; })
-            aug_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.aug_budg; })
-            sep_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.sep_budg; })
-            oct_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.oct_budg; })
-            nov_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.nov_budg; })
-            dec_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.dec_budg; })
+            // jan_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jan_budg; })
+            // feb_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.feb_budg; })
+            // mar_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.mar_budg; })
+            // apr_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.apr_budg; })
+            // may_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.may_budg; })
+            // jun_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jun_budg; })
+            // jul_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jul_budg; })
+            // aug_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.aug_budg; })
+            // sep_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.sep_budg; })
+            // oct_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.oct_budg; })
+            // nov_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.nov_budg; })
+            // dec_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.dec_budg; })
+
+            fndNewCli.forEach(NewCli => {
+                jan_newCtotValue = jan_newCtotValue + NewCli.jan_budg
+                feb_newCtotValue = feb_newCtotValue + NewCli.feb_budg
+                mar_newCtotValue = mar_newCtotValue + NewCli.mar_budg
+                apr_newCtotValue = apr_newCtotValue + NewCli.apr_budg
+                may_newCtotValue = may_newCtotValue + NewCli.may_budg
+                jun_newCtotValue = jun_newCtotValue + NewCli.jun_budg
+                jul_newCtotValue = jul_newCtotValue + NewCli.jul_budg
+                aug_newCtotValue = aug_newCtotValue + NewCli.aug_budg
+                sep_newCtotValue = sep_newCtotValue + NewCli.sep_budg
+                oct_newCtotValue = oct_newCtotValue + NewCli.oct_budg
+                nov_newCtotValue = nov_newCtotValue + NewCli.nov_budg
+                dec_newCtotValue = dec_newCtotValue + NewCli.dec_budg
+            })
 
             tot_newCtotValue = jan_newCtotValue + feb_newCtotValue + mar_newCtotValue + apr_newCtotValue + may_newCtotValue + jun_newCtotValue
                 + jul_newCtotValue + aug_newCtotValue + sep_newCtotValue + oct_newCtotValue + nov_newCtotValue + dec_newCtotValue
@@ -2289,23 +2360,46 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             })
         }   
 
-        const oldLoanClientView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanClient"}, function (err, fndOldCli) {
+        begBalOldClient = 0
+        const oldLoanClientView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanClient"}, function (err, fndOldClient) {
 
-            begBalOldClient = _.sumBy(fndOldCli, function(o) { return o.beg_bal; })
-            jan_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.jan_budg; })
-            feb_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.feb_budg; })
-            mar_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.mar_budg; })
-            apr_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.apr_budg; })
-            may_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.may_budg; })
-            jun_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.jun_budg; })
-            jul_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.jul_budg; })
-            aug_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.aug_budg; })
-            sep_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.sep_budg; })
-            oct_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.oct_budg; })
-            nov_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.nov_budg; })
-            dec_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.dec_budg; })
+            // begBalOldClient = _.sumBy(fndOldCli, function(o) { return o.beg_bal; })
+            // jan_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.jan_budg; })
+            // feb_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.feb_budg; })
+            // mar_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.mar_budg; })
+            // apr_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.apr_budg; })
+            // may_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.may_budg; })
+            // jun_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.jun_budg; })
+            // jul_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.jul_budg; })
+            // aug_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.aug_budg; })
+            // sep_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.sep_budg; })
+            // oct_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.oct_budg; })
+            // nov_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.nov_budg; })
+            // dec_oldCtotValue = _.sumBy(fndOldCli, function(o) { return o.dec_budg; })
 
-            tot_oldCtotValue = jan_oldCtotValue + feb_oldCtotValue + mar_oldCtotValue + apr_oldCtotValue + may_oldCtotValue + jun_oldCtotValue
+            fndOldClient.forEach(OldCli => {
+                let begBalOldCli = OldCli.beg_bal
+                if (!begBalOldCli) {
+                    begBalOldClient = begBalOldClient + 0
+                } else {
+                    begBalOldClient = begBalOldClient + OldCli.beg_bal
+                }
+                // begBalOldClient = begBalOldClient + OldCli.beg_bal
+                jan_oldCtotValue = jan_oldCtotValue + OldCli.jan_budg
+                feb_oldCtotValue = feb_oldCtotValue + OldCli.feb_budg
+                mar_oldCtotValue = mar_oldCtotValue + OldCli.mar_budg
+                apr_oldCtotValue = apr_oldCtotValue + OldCli.apr_budg
+                may_oldCtotValue = may_oldCtotValue + OldCli.may_budg
+                jun_oldCtotValue = jun_oldCtotValue + OldCli.jun_budg
+                jul_oldCtotValue = jul_oldCtotValue + OldCli.jul_budg
+                aug_oldCtotValue = aug_oldCtotValue + OldCli.aug_budg
+                sep_oldCtotValue = sep_oldCtotValue + OldCli.sep_budg
+                oct_oldCtotValue = oct_oldCtotValue + OldCli.oct_budg
+                nov_oldCtotValue = nov_oldCtotValue + OldCli.nov_budg
+                dec_oldCtotValue = dec_oldCtotValue + OldCli.dec_budg
+            })
+
+        tot_oldCtotValue = jan_oldCtotValue + feb_oldCtotValue + mar_oldCtotValue + apr_oldCtotValue + may_oldCtotValue + jun_oldCtotValue
                         + jul_oldCtotValue + aug_oldCtotValue + sep_oldCtotValue + oct_oldCtotValue + nov_oldCtotValue + dec_oldCtotValue
             
             poSumView.push({title: "Number of Reloan", sortkey: 9, group: 1, isTitle: false, beg_bal: begBalOldClient, jan_value : jan_oldCtotValue, feb_value : feb_oldCtotValue, mar_value : mar_oldCtotValue, apr_value : apr_oldCtotValue,
@@ -2376,18 +2470,33 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         
         const newLoanAmtView = await Center_budget_det.find({po_code: viewPOCode, view_code: "NewLoanAmt"}, function (err, fndNewAmt) {
         
-            jan_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jan_budg; })
-            feb_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.feb_budg; })
-            mar_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.mar_budg; })
-            apr_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.apr_budg; })
-            may_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.may_budg; })
-            jun_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jun_budg; })
-            jul_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jul_budg; })
-            aug_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.aug_budg; })
-            sep_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.sep_budg; })
-            oct_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.oct_budg; })
-            nov_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.nov_budg; })
-            dec_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.dec_budg; })
+            // jan_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jan_budg; })
+            // feb_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.feb_budg; })
+            // mar_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.mar_budg; })
+            // apr_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.apr_budg; })
+            // may_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.may_budg; })
+            // jun_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jun_budg; })
+            // jul_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jul_budg; })
+            // aug_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.aug_budg; })
+            // sep_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.sep_budg; })
+            // oct_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.oct_budg; })
+            // nov_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.nov_budg; })
+            // dec_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.dec_budg; })
+
+            fndNewAmt.forEach(NewAmt => {
+                jan_newAtotValue = jan_newAtotValue + NewAmt.jan_budg
+                feb_newAtotValue = feb_newAtotValue + NewAmt.feb_budg
+                mar_newAtotValue = mar_newAtotValue + NewAmt.mar_budg
+                apr_newAtotValue = apr_newAtotValue + NewAmt.apr_budg
+                may_newAtotValue = may_newAtotValue + NewAmt.may_budg
+                jun_newAtotValue = jun_newAtotValue + NewAmt.jun_budg
+                jul_newAtotValue = jul_newAtotValue + NewAmt.jul_budg
+                aug_newAtotValue = aug_newAtotValue + NewAmt.aug_budg
+                sep_newAtotValue = sep_newAtotValue + NewAmt.sep_budg
+                oct_newAtotValue = oct_newAtotValue + NewAmt.oct_budg
+                nov_newAtotValue = nov_newAtotValue + NewAmt.nov_budg
+                dec_newAtotValue = dec_newAtotValue + NewAmt.dec_budg
+            })
 
             tot_newAtotValue = jan_newAtotValue + feb_newAtotValue + mar_newAtotValue + apr_newAtotValue + may_newAtotValue + jun_newAtotValue
                     + jul_newAtotValue + aug_newAtotValue + sep_newAtotValue + oct_newAtotValue + nov_newAtotValue + dec_newAtotValue
@@ -2432,18 +2541,33 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
         const oldLoanAmtView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanAmt"}, function (err, fndOldAmt) {
 
-            jan_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jan_budg; })
-            feb_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.feb_budg; })
-            mar_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.mar_budg; })
-            apr_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.apr_budg; })
-            may_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.may_budg; })
-            jun_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jun_budg; })
-            jul_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jul_budg; })
-            aug_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.aug_budg; })
-            sep_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.sep_budg; })
-            oct_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.oct_budg; })
-            nov_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.nov_budg; })
-            dec_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.dec_budg; })
+            // jan_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jan_budg; })
+            // feb_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.feb_budg; })
+            // mar_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.mar_budg; })
+            // apr_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.apr_budg; })
+            // may_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.may_budg; })
+            // jun_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jun_budg; })
+            // jul_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jul_budg; })
+            // aug_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.aug_budg; })
+            // sep_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.sep_budg; })
+            // oct_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.oct_budg; })
+            // nov_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.nov_budg; })
+            // dec_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.dec_budg; })
+
+            fndOldAmt.forEach(OldAmt => {
+                jan_oldAtotValue = jan_oldAtotValue + OldAmt.jan_budg
+                feb_oldAtotValue = feb_oldAtotValue + OldAmt.feb_budg
+                mar_oldAtotValue = mar_oldAtotValue + OldAmt.mar_budg
+                apr_oldAtotValue = apr_oldAtotValue + OldAmt.apr_budg
+                may_oldAtotValue = may_oldAtotValue + OldAmt.may_budg
+                jun_oldAtotValue = jun_oldAtotValue + OldAmt.jun_budg
+                jul_oldAtotValue = jul_oldAtotValue + OldAmt.jul_budg
+                aug_oldAtotValue = aug_oldAtotValue + OldAmt.aug_budg
+                sep_oldAtotValue = sep_oldAtotValue + OldAmt.sep_budg
+                oct_oldAtotValue = oct_oldAtotValue + OldAmt.oct_budg
+                nov_oldAtotValue = nov_oldAtotValue + OldAmt.nov_budg
+                dec_oldAtotValue = dec_oldAtotValue + OldAmt.dec_budg
+            })
 
             tot_oldAtotValue = jan_oldAtotValue + feb_oldAtotValue + mar_oldAtotValue + apr_oldAtotValue + may_oldAtotValue + jun_oldAtotValue
                     + jul_oldAtotValue + aug_oldAtotValue + sep_oldAtotValue + oct_oldAtotValue + nov_oldAtotValue + dec_oldAtotValue
@@ -3228,7 +3352,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 }
                 return 0;
             })
-        if (doneReadClientCount && doneReadLoanCount && doneReadLoanAmt) {
+        if (doneReadClientCount && doneReadLoanAmt) {  //doneReadLoanCount
             res.render('centers/viewTargetsMonthly', {
                 poCode: viewPOCode,
                 poSumView: poSumView,

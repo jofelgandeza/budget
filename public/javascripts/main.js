@@ -147,7 +147,9 @@ function getSemester() {
  //   document.getElementById("semesterID").value = x
  
     switch(nmonth) {
-        case "January":case "February":case "March":case "April":case "May":case "June":
+        case "January":
+            document.getElementById("semesterID").value = "First Half"
+        case "February":case "March":case "April":case "May":case "June":
             document.getElementById("semesterID").value = "First Half"
             break;
         case "July":case "August":case "September":case "October":case "November":case "December":
