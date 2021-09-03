@@ -2023,7 +2023,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
             let nov_totNoOfLoan = nov_reLoanCliTot + nov_newCtotValue
             let dec_totNoOfLoan = dec_reLoanCliTot + dec_newCtotValue
 
-            if (doneReadNLC && doneReadOLC) {
+            // if (doneReadNLC && doneReadOLC) {
                 let tot_totNoOfLoan = jan_totNoOfLoan + feb_totNoOfLoan + mar_totNoOfLoan + apr_totNoOfLoan + may_totNoOfLoan + jun_totNoOfLoan + jul_totNoOfLoan +
                         aug_totNoOfLoan + sep_totNoOfLoan + oct_totNoOfLoan + nov_totNoOfLoan + dec_totNoOfLoan
 
@@ -2031,7 +2031,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
                     apr_value : apr_totNoOfLoan, may_value : may_totNoOfLoan, jun_value : jun_totNoOfLoan, jul_value : jul_totNoOfLoan, aug_value : aug_totNoOfLoan,
                     sep_value : sep_totNoOfLoan, oct_value : oct_totNoOfLoan, nov_value : nov_totNoOfLoan, dec_value : dec_totNoOfLoan, tot_value: tot_totNoOfLoan
                }) 
-            }
+            // }
 
         poSumView.push({title: "AMOUNT OF LOANS", sortkey: 12, group: 2, isTitle: true})
 
