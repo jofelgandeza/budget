@@ -24,7 +24,6 @@ const begMonthSelect = ["January","February", "March", "April", "May", "June"];
 
 let poSumView = []
 
-
 router.get('/:id', authUser, authRole("PO"), async (req, res) => {
 
     const IDcode = req.params.id
@@ -2457,13 +2456,13 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         let tot_totNoOfLoan = jan_totNoOfLoan + feb_totNoOfLoan + mar_totNoOfLoan + apr_totNoOfLoan + may_totNoOfLoan + jun_totNoOfLoan + jul_totNoOfLoan +
             aug_totNoOfLoan + sep_totNoOfLoan + oct_totNoOfLoan + nov_totNoOfLoan + dec_totNoOfLoan
         
-        if (doneReadNLC && doneReadOLC) {
+        // if (doneReadNLC && doneReadOLC) {
             poSumView.push({title: "TOTAL NO. OF LOAN", sortkey: 10, group: 1, isTitle: false, jan_value : jan_oldCtotValue + jan_newCtotValue, feb_value : feb_oldCtotValue + feb_newCtotValue, mar_value : mar_oldCtotValue + mar_newCtotValue, 
             apr_value : apr_oldCtotValue + apr_newCtotValue, may_value : may_oldCtotValue + may_newCtotValue, jun_value : jun_oldCtotValue + jun_newCtotValue, jul_value : jul_oldCtotValue + jul_newCtotValue, aug_value : aug_oldCtotValue + aug_newCtotValue,
                 sep_value : sep_oldCtotValue + sep_newCtotValue, oct_value : oct_oldCtotValue + oct_newCtotValue, nov_value : nov_oldCtotValue + nov_newCtotValue, dec_value : dec_oldCtotValue + dec_newCtotValue, tot_value: tot_totNoOfLoan
             }) 
             doneReadLoanCount = true
-        }
+        // }
 
         poSumView.push({title: "AMOUNT OF LOANS", sortkey: 11, group: 2, isTitle: true})
 
