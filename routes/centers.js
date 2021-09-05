@@ -293,7 +293,7 @@ router.get('/:id/edit', authUser, authRole("PO"), async (req, res) => {
               }
                return 0;
         })
-            monthSelect.push(" ")
+
         if (doneRedEditCenter) {
             res.render("centers/targets", {
                 centerID: centerCode,
@@ -491,6 +491,10 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                         // console.log(item)
             //            setBegBal
                     centerFound.beg_center_month = monthNumber
+                    if (loanType === "Group Loan" || loanType === "Agricultural Loan") {
+                        centerFound.budget_BegBalCli = bClientCnt
+                        // centerFound.budget_BegBal = begBalPrinc
+                    }
                     centerFound.region = "TEST"
                     centerFound.save();
 
@@ -1176,7 +1180,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                     foundList.newClient = (rExNewClient + rExPrevNewClient) + numClient
                     foundList.newClientAmt = (rExNewClientAmt + rExPrevNewAmt) + totAmount
                 }
-            } else {
+            } else {  // Loan Amounts from other Loan Types shall only be added into the Total Disbursement Amount
                 if (remarks === "Re-loan") {
                     foundList.oldClientAmt = (rExOldClientAmt + rExPrevOldAmt) + totAmount
                 } else {
@@ -1666,7 +1670,7 @@ router.post('/delete/:id', authUser, authRole("PO", "ADMIN"), async (req, res) =
                modifyCenter2Det.save()
             }
 
-            if (lonRemarks === "Re-loan" || zeroFndTargets) {
+            if (lonRemarks === "Re-loan") {
 
                const modifyCenter3Det = await Center_budget_det.findOne({center: listName, loan_type: lonTypDet, view_code: "ResClientCount"},  function(err, modResClient) {
                     if (!isNull(modResClient)) {
