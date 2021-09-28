@@ -23,7 +23,7 @@
                     <td><%= fndPOs.poStatus %> </td>
                     <td>
                         <div class="btn-row">
-                            <a class="btn btn-primary" href='/units/getPOForEdit/<%= fndPOs.poCode %>/edit'>Edit</a>
+                            <a class="btn btn-primary" href='/units/getPOForEdit/<%= poCode %>/edit'>Edit</a>
                             <a class="btn btn-primary" href='/units/setPOCenters/<%= fndPOs.poCode %>'>Centers</a>
                             <%- include('../partials/deleteForm', { url: `/units/deletePO/${fndPOs.poCode+fndPOs.poID}` }) %>
                         </div>        

@@ -683,6 +683,7 @@ console.log(unitCode)
     
             res.render('units/po', {
                 uniCod: unitCode,
+                poCode: poCode,
                 fondPos: sortedPOs,
                 searchOptions: req.query,
                 yuser: yuser

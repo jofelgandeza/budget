@@ -708,7 +708,9 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                     monthReLoan2 = poEditedData.monthReLoan2
 
                     totResign1 = totBegBal1 - totOldCliSem1
-                    totResign2 = totBegBal2 - totOldCliSem2
+                    if (totOldCliSem2 > 0) {
+                        totResign2 = totBegBal2 - totOldCliSem2
+                    }
 
                     const totalResign = totResign1 + totResign2
 
@@ -718,7 +720,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                     // totOldAmtDiff2 = poEditedData.tOldAmtDiff2
 
                     const ctrOldCliBudgDet = Center.findOne({center: centerCode, loan_type: ctrLonTyp}, function (err, fndOldCli) {
-                        fndOldCli.newClient = totOldCliSem1 + totOldCliSem2
+                        fndOldCli.newClient = totNewCliSem1 + totNewCliSem2
                         fndOldCli.newClientAmt = totNewAmtSem1 + totNewAmtSem2
                         fndOldCli.oldClient = totOldCliSem1 + totOldCliSem2
                         fndOldCli.oldClientAmt = totOldAmtSem1 + totOldAmtSem2
