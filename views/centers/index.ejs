@@ -3,6 +3,16 @@
             Budget Breakdown per CENTER  
             <table class="content-table">
                 <tr>
+
+                </tr>
+                <tr>
+                    <% if (yuser.role === "PO") { %>
+                        <div>
+                            <a class="btn btn-primary" href="/centers/setBegBals/<%= poCode %>">SET Center Beginning Balances</a>
+                        </div>
+                    <% } %>
+                </tr>
+                <tr>
                     <th> CENTERS</th>
                     <th> NEW CLIENT</th>
                     <th> NEW CLIENT AMT</th>

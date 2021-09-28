@@ -35,6 +35,294 @@ let poSumView = []
 
 router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 
+//     const branchCode = req.params.id
+//     const _user = req.user
+
+//     const fndPositi = posisyon
+
+//     let foundManager = []
+//     let foundPOunits = []
+//     let foundPO = []
+//     let officerName = ""
+//     let postManager = ""
+//     let postUnitHead = ""
+//     let postProgOfr = ""
+
+//     let poLoanTotals = []
+//     let unitLoanTotals = []
+//     let brnLoanTotals = []
+//     let brnLoanGrandTot = []
+//     let fndCenters = []
+//     let foundCenter = []
+    
+
+//     let newClients = 0
+//     let nClientAmt = 0
+//     let oClient = 0
+//     let oClientAmt = 0
+//     let rClient = 0
+//     let rClient2 = 0
+//     let resloanTot = 0
+//     let resignClient = 0
+//     let budgEndBal = 0
+//     let totDisburse = 0
+//     let budgBegBal = 0
+//     let tbudgEndBal = 0
+//     let totbudgEndBal = 0
+
+//     let lnType 
+//     // const POdata = await Employee.findOne({assign_code: IDcode})
+//     // const POname = POdata.first_name + " " + POdata.middle_name.substr(0,1) + ". " + POdata.last_name
+//     // const POposition = POdata.position_code
+
+//     let doneReadCenter = false
+//     let doneFoundPO = false
+//     let doneReadLonTyp = false
+   
+//     fndPositi.forEach(fndPosii => {
+//         const fndPositionEmp = fndPosii.code
+//         const fndPositID = fndPosii.id
+//         if (fndPositionEmp === "BRN_MGR") {
+//             postManager = fndPositID
+//         }
+//         if (fndPositionEmp === "UNI_HED") {
+//             postUnitHead = fndPositID
+//         }
+//         if (fndPositionEmp === "PRO_OFR") {
+//             postProgOfr = fndPositID
+//         }
+//     })
+
+//     try {
+
+
+//         const branchManager = await Employee.find({branch: branchCode, position_code: postManager}, function (err, foundBMs){
+//             foundManager = foundBMs
+
+//            })
+        
+//            if (branchManager) {
+//                 branchManager.forEach(manager => {
+//                     officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
+//                 })
+//             }            
+//         const unitOfficers = await Employee.find({branch: branchCode, position_code: postUnitHead}, function (err, foundUHs){
+//             foundPOunits = foundUHs
+//             })
+//         const programOfficers = await Employee.find({branch: branchCode, position_code: postProgOfr}, function (err, foundPO){
+//             foundPOs = foundPO
+//             })
+
+//         // console.log(officerName)
+//         // console.log(foundPOunits)
+//         // console.log(foundPOs)
+
+//         const loanType = await Loan_type.find({})
+
+//         const center = await Center.find({branch: branchCode}, function (err, foundCenters) {
+// //        const center = await Center.find(searchOptions)
+//             fndCenters = foundCenters
+//             if (fndCenters.length === 0) {
+//                 doneReadCenter = true
+            
+//             } else {
+
+//                 fndCenters.forEach ( fnCenter => {
+
+
+//                 })
+
+//                 newClients = _.sumBy(center, function(o) { return o.newClient; });
+//                 nClientAmt = _.sumBy(center, function(o) { return o.newClientAmt; });
+//                 oClient = _.sumBy(center, function(o) { return o.oldClient; });
+//                 oClientAmt = _.sumBy(center, function(o) { return o.oldClientAmt; });
+//                 rClient = _.sumBy(center, function(o) { return o.resClient; });
+//                 rClient2 = _.sumBy(center, function(o) { return o.resClient2; });
+//                 budgBegBal = _.sumBy(center, function(o) { return o.budget_BegBal; });
+//                 budgEndBal = oClient + newClients 
+//                 totDisburse = nClientAmt + oClientAmt
+//                 // tbudgEndBal = (budgBegBal + newClients) - (rClient + rClient2)
+
+//                 foundCenter = center.sort()
+
+//                 doneReadCenter = true   
+//             }
+//         })
+
+//     foundPOunits.forEach(uh => {
+
+//         let unCode = _.trim(uh.unit)
+//         let uniCode = unCode
+//         let unHeadName = uh.first_name + " " + uh.middle_name.substr(0,1) + ". " + uh.last_name
+//         let forSortUnitNum = uniCode
+
+//         let nUnitLoanTot = 0
+//         let nUnitLoanTotCount = 0
+//         let oUnitLoanTot = 0
+//         let oUnitLoanTotCount = 0
+//         let resUnitLoanTot = 0
+//         let begUnitLoanTot = 0
+//         let begUnitClientTot = 0
+//         let bUnitClient = 0
+//         let bUnitClientCnt = 0
+
+//         let typeLoan = ""
+//         let count = 0 
+    
+//         loanType.forEach(loan_type => {
+//             typeLoan = loan_type.title
+//             let nloanTot = 0
+//             let nloanTotCount = 0
+//             let oloanTot = 0
+//             let oloanTotCount = 0
+//             let resloanTot = 0
+//             let begLoanTot = 0
+//             let uBegClientTot = 0
+//             let bClientAmt = 0
+//             let bClientCnt = 0
+//             lnType = loan_type.loan_type
+
+//             count = count + 1
+//             if (count !== 1) {
+//                 uniCode = " "
+//                 unHeadName = ""
+//             } 
+
+//             foundCenter.forEach(center => {
+//                 const unitCode = center.unit
+//                 if (unitCode === forSortUnitNum) { 
+//                     const lnType = center.loan_code
+//                     let centerTargets = center.Targets
+//                     let LoanBegBal = center.Loan_beg_bal
+// //                  let centerLoanBegBal = center.Loan_beg_bal                
+//                     let resignClient = center.resClient
+            
+//                     if (lnType === _.trim(lnType)) {
+//                         BudgBegBal = center.budget_BegBal
+//                     }
+//                     // console.log(resignClient)
+//                     // console.log(resloanTot)
+
+//                     centerTargets.forEach(centerLoan => {
+//                         if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
+//                             const loanRem = centerLoan.remarks
+//                             if (_.trim(loanRem) === "New Loan") {
+//                                 nloanTot = nloanTot + centerLoan.totAmount
+//                                 nloanTotCount = nloanTotCount + centerLoan.numClient
+//                             } else {
+//                                 oloanTot = oloanTot + centerLoan.totAmount
+//                                 oloanTotCount = oloanTotCount + centerLoan.numClient
+//                                 resloanTot = resloanTot + centerLoan.resignClient
+//                             }
+//                         }
+//                     })
+
+//                     LoanBegBal.forEach(centerBegBal => {
+//                         if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
+//                             begLoanTot = centerBegBal.beg_amount
+//                             bClientCnt = centerBegBal.beg_client_count
+//                             uBegClientTot = uBegClientTot + bClientCnt
+//                             bClientAmt = bClientAmt + begLoanTot
+//                         }
+//                     })
+//                 }
+//             })
+//             let totAmounts = nloanTot + oloanTot 
+//             let branchBudgEndBal = (uBegClientTot + nloanTotCount) - resloanTot
+//             totbudgEndBal = totbudgEndBal + branchBudgEndBal
+// //            let amtDisburse = oloanTot + oloanTot
+            
+//             unitLoanTotals.push({sortkey: forSortUnitNum, unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: uBegClientTot,
+//                 begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: branchBudgEndBal})
+
+//             nUnitLoanTot = nUnitLoanTot + nloanTot
+//             nUnitLoanTotCount = nUnitLoanTotCount + nloanTotCount
+//             oUnitLoanTot = oUnitLoanTot + oloanTot
+//             oUnitLoanTotCount = oUnitLoanTotCount + oloanTotCount
+//             resUnitLoanTot = resUnitLoanTot + resloanTot
+//             begUnitLoanTot = begUnitLoanTot + begLoanTot
+//             begUnitClientTot = begUnitClientTot + uBegClientTot
+            
+//         })
+
+//         typeLoan = "UNIT TOTALS"
+//         let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
+//         let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
+
+//         unitLoanTotals.push({sortkey: forSortUnitNum, unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
+//             begClientAmt: begUnitLoanTot, ntotAmount: nUnitLoanTot, onumClient: oUnitLoanTotCount, ototAmount: oUnitLoanTot, resiloanTot: resUnitLoanTot, budgEndBal: budgUnitEndBal})
+
+//             doneFoundPO = true
+//     })
+
+// // LOOP for getting Different Loan products totals in the branch
+//     let gtBegBalClient = 0
+//     let gtBegBalAmt = 0
+
+//     loanType.forEach(loan_type => {
+//         const typeLoan = loan_type.title
+//         let nloanTot = 0
+//         let nloanTotCount = 0
+//         let oloanTot = 0
+//         let oloanTotCount = 0
+//         let resloanTot = 0
+//         let begLoanTot = 0
+//         let ubegClientTot = 0
+//         let bClient = 0
+//         let bClientCnt = 0
+//         const lonType = loan_type.loan_type
+// //        let unCode = ""
+//         unitLoanTotals.forEach(uLoanTots => {
+//             const ulnType = uLoanTots.loan_type
+//             if (ulnType === typeLoan) {
+//                 nloanTot = nloanTot + uLoanTots.ntotAmount
+//                 nloanTotCount = nloanTotCount + uLoanTots.nnumClient
+//                 oloanTot = oloanTot + uLoanTots.ototAmount
+//                 oloanTotCount = oloanTotCount + uLoanTots.onumClient
+//                 resloanTot = resloanTot + uLoanTots.resiloanTot
+//                 begLoanTot = begLoanTot + uLoanTots.begClientAmt
+//                 ubegClientTot = ubegClientTot + uLoanTots.begClientTot
+
+//                 gtBegBalClient = gtBegBalClient + uLoanTots.begClientTot
+//                 gtBegBalAmt = gtBegBalAmt + uLoanTots.begClientAmt
+//             }
+
+//         })
+//         let totBranchAmounts = nloanTot + oloanTot 
+//         let budgBranchEndBal = (ubegClientTot + nloanTotCount) - resloanTot
+//             tbudgEndBal = tbudgEndBal + budgBranchEndBal
+
+//         brnLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totBranchAmounts, begClientTot: ubegClientTot,
+//             begClientAmt: begLoanTot, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgBranchEndBal})
+
+//             doneReadLonTyp = true
+
+//     })
+
+//  //   console.log(unitLoanTotals)
+// //    console.log(brnLoanTotals)
+
+//             brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
+//                 rClient: rClient + rClient2, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
+
+//             console.log(totDisburse)
+
+// //            console.log(foundPOunits)
+//         if ( doneReadCenter && doneFoundPO && doneReadLonTyp) {
+//             res.render('branches/budget', {
+//                 listTitle: branchCode,
+//                 officerName: officerName,
+//                 loanTots: brnLoanTotals,
+//                 poGrandTot: brnLoanGrandTot,
+//                 unitLoanTots: unitLoanTotals,
+//                 searchOptions: req.query,
+//                 yuser: _user,
+//                 dateToday: new Date()
+
+//             })
+//         }
+//     } 
+
     const branchCode = req.params.id
     const _user = req.user
     let searchOptions = {}
@@ -51,7 +339,8 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
             yuser: _user,
             dateToday: new Date()
         })
-    } catch (err) {
+    } 
+    catch (err) {
         console.log(err)
         res.redirect('/')
     }
@@ -653,6 +942,275 @@ router.get('/employees/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 } catch (err) {
         console.log(err)
         res.redirect('/')
+    }
+})
+
+// PAR rate and Amount Entry
+router.get('/PARentry/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+    res.send('Feature ongoing development. Sorry for the inconvenience.')
+})
+
+
+// View budegt per PO and set for EDIT
+router.get('/perPOforEdit/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+    
+    const branchCode = req.params.id
+    const _user = req.user
+
+    const fndPositi = posisyon
+
+    let foundManager = []
+    let foundPOunits = []
+    let foundPO = []
+    let officerName = ""
+    let postManager = ""
+    let postUnitHead = ""
+    let postProgOfr = ""
+
+    let poLoanTotals = []
+    let unitLoanTotals = []
+    let brnLoanTotals = []
+    let brnLoanGrandTot = []
+    let centerTargets = []
+    let foundCenter = []
+    
+
+    let newClients = 0
+    let nClientAmt = 0
+    let oClient = 0
+    let oClientAmt = 0
+    let rClient = 0
+    let rClient2 = 0
+    let resloanTot = 0
+    let resignClient = 0
+    let budgEndBal = 0
+    let totDisburse = 0
+    let budgBegBal = 0
+    let tbudgEndBal = 0
+    let totbudgEndBal = 0
+
+    let lnType 
+    // const POdata = await Employee.findOne({assign_code: IDcode})
+    // const POname = POdata.first_name + " " + POdata.middle_name.substr(0,1) + ". " + POdata.last_name
+    // const POposition = POdata.position_code
+
+    let doneReadCenter = false
+    let doneFoundPO = false
+    let doneFndUnits = false
+    let doneFndPOs = false
+   
+    fndPositi.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii.id
+        if (fndPositionEmp === "BRN_MGR") {
+            postManager = fndPositID
+        }
+        if (fndPositionEmp === "UNI_HED") {
+            postUnitHead = fndPositID
+        }
+        if (fndPositionEmp === "PRO_OFR") {
+            postProgOfr = fndPositID
+        }
+    })
+
+    try {
+
+
+        const branchManager = await Employee.find({branch: branchCode, position_code: postManager}, function (err, foundBMs){
+            foundManager = foundBMs
+
+           })
+        
+           if (branchManager) {
+                branchManager.forEach(manager => {
+                    officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
+                })
+            }            
+        const unitOfficers = await Employee.find({branch: branchCode, position_code: postUnitHead}, function (err, foundUHs){
+            foundPOunits = foundUHs
+            doneFndUnits = true
+            })
+        const programOfficers = await Employee.find({branch: branchCode, position_code: postProgOfr}, function (err, foundPO){
+            foundPOs = foundPO
+            doneFndPOs = true
+            })
+
+        // console.log(officerName)
+        // console.log(foundPOunits)
+        // console.log(foundPOs)
+
+        const loanType = await Loan_type.find({})
+
+        const center = await Center.find({branch: branchCode}) //, function (err, foundCenters) {
+//        const center = await Center.find(searchOptions)
+            if (center.length === 0) {
+                doneReadCenter = true
+            
+            } else {
+
+                newClients = _.sumBy(center, function(o) { return o.newClient; });
+                nClientAmt = _.sumBy(center, function(o) { return o.newClientAmt; });
+                oClient = _.sumBy(center, function(o) { return o.oldClient; });
+                oClientAmt = _.sumBy(center, function(o) { return o.oldClientAmt; });
+                rClient = _.sumBy(center, function(o) { return o.resClient; });
+                rClient2 = _.sumBy(center, function(o) { return o.resClient2; });
+                budgBegBal = _.sumBy(center, function(o) { return o.budget_BegBal; });
+                // budgEndBal = budgBegBal - oClient + newClients 
+                totDisburse = nClientAmt + oClientAmt
+                tbudgEndBal = (budgBegBal + newClients) - (rClient + rClient2)
+
+                foundCenter = center.sort()
+
+                doneReadCenter = true   
+            }
+
+            console.log(foundCenter)
+            let poCode = ""
+        if (doneFndUnits && doneFndPOs && doneReadCenter) {
+
+            foundPOunits.forEach(uh => {
+
+                let unCode = _.trim(uh.unit)
+                let uniCode = uh.assign_code
+                let unHeadName = "UNIT-" + unCode + " " + uh.first_name + " " + uh.middle_name.substr(0,1) + ". " + uh.last_name
+                let forSortUnitNum = uniCode
+
+                let nUnitLoanTot = 0
+                let nUnitLoanTotCount = 0
+                let oUnitLoanTot = 0
+                let oUnitLoanTotCount = 0
+                let resUnitLoanTot = 0
+                let begUnitLoanTot = 0
+                let begUnitClientTot = 0
+                let endUnitCliCnt = 0
+                let unitTotAmtDisb = 0
+                let nUnitBudgEndBal = 0
+
+                let typeLoan = ""
+
+                poLoanTotals.push({isTitle: true, sortkey: uniCode, unit: uniCode, unitHead: unHeadName})
+            
+                foundPOs.forEach(pos => {
+                    const poUnitCode= _.trim(pos.assign_code).substr(0,5)
+                     poCode = pos.assign_code
+                    const poNumber = pos.po_number
+                    let count = 0 
+                    if (poUnitCode === uniCode) {
+
+                        let poName = "PO-" + poNumber + ' - ' + pos.first_name + " " + pos.middle_name.substr(0,1) + ". " + pos.last_name
+
+                        poLoanTotals.push({isTitle: true, isEdit: false, sortkey: uniCode, unit: uniCode, unitHead: poName})
+
+                        let nPOLoanTotCli = 0
+                        let nPOLoanTotAmt = 0
+                        let oPOLoanTotCli = 0
+                        let oPOLoanTotAmt = 0
+                        let resPOLoanTot = 0
+                        let begPOLoanTotCli = 0
+                        let begPOClientTotAmt = 0
+                        let totbudgEndBal = 0
+                        let poTotAmtDisb = 0
+                
+                        // lnType = loan_type.loan_type
+                        count = count + 1
+                        if (count !== 1) {
+                            uniCode = " "
+                            unHeadName = ""
+                        } 
+
+                        foundCenter.forEach(center => {
+                            const centerPoCode = center.po_code
+
+                            if (centerPoCode === poCode) { 
+                                const lnType = center.loan_code
+                                let centerTargets = center.Targets
+                                let cntrCode = center.center
+                                let LoanBegBal = center.Loan_beg_bal
+
+                                let begCtrLoanTotCli = 0
+                                let begCtrClientTotAmt = 0
+                                let ctrTotbudgEndBal = 0
+                                let CtrTotAmtDisb = 0
+
+                                let nCtrLoanTotCli = center.newClient
+                                let nCtrLoanTotAmt = center.newClientAmt
+                                let oCtrLoanTotCli = center.oldClient
+                                let oCtrLoanTotAmt = center.oldClientAmt
+                                let resCtrLoanTot = center.resClient +  + center.resClient2
+                            
+                                nPOLoanTotCli = nPOLoanTotCli + center.newClient
+                                nPOLoanTotAmt = nPOLoanTotAmt + center.newClientAmt
+                                oPOLoanTotCli = oPOLoanTotCli + center.oldClient
+                                oPOLoanTotAmt = oPOLoanTotAmt + center.oldClientAmt
+                                resPOLoanTot = resPOLoanTot + (center.resClient +  + center.resClient2)
+
+                                LoanBegBal.forEach(centerBegBal => {
+                                    if (_.trim(centerBegBal.loan_type) === "Group Loan" || _.trim(centerBegBal.loan_type) === "Agricultural Loan") {
+                                        begCtrLoanTotCli = centerBegBal.beg_client_count
+                                        begCtrClientTotAmt = centerBegBal.beg_amount
+
+                                        begPOClientTotAmt = begPOClientTotAmt + centerBegBal.beg_amount
+                                        begPOLoanTotCli = begPOLoanTotCli+ centerBegBal.beg_client_count
+                                    }
+                                })        
+                                CtrTotAmtDisb = nCtrLoanTotAmt + oCtrLoanTotAmt
+                                ctrTotbudgEndBal = (begCtrLoanTotCli + nCtrLoanTotCli) - resCtrLoanTot
+
+                                poLoanTotals.push({isTitle: false, isEdit: true, sortkey: poCode, unit: " ", unitHead: cntrCode, nnumClient: nCtrLoanTotCli, amtDisburse: CtrTotAmtDisb, begClientTot: begCtrLoanTotCli,
+                                    begClientAmt: begCtrClientTotAmt, ntotAmount: nCtrLoanTotAmt, onumClient: oCtrLoanTotCli, ototAmount: oCtrLoanTotAmt, resiloanTot: resCtrLoanTot, budgEndBal: ctrTotbudgEndBal})
+                            }
+                        })
+
+                        let totAmounts = nPOLoanTotAmt + oPOLoanTotAmt 
+                        let poBudgEndBal = (begPOLoanTotCli + nPOLoanTotCli) - resPOLoanTot
+                        totbudgEndBal = totbudgEndBal + poBudgEndBal
+            //            let amtDisburse = oloanTot + oloanTot
+                        
+                        poLoanTotals.push({isTitle: false, isEdit: false, sortkey: poCode, unit: "", unitHead: "PO-" + poNumber + " TOTALS", nnumClient: nPOLoanTotCli, amtDisburse: totAmounts, begClientTot: begPOLoanTotCli,
+                            begClientAmt: begPOClientTotAmt, ntotAmount: nPOLoanTotAmt, onumClient: oPOLoanTotCli, ototAmount: oPOLoanTotAmt, resiloanTot: resPOLoanTot, budgEndBal: poBudgEndBal})
+
+                        nUnitLoanTot = nUnitLoanTot + nPOLoanTotAmt
+                        nUnitLoanTotCount = nUnitLoanTotCount + nPOLoanTotCli
+                        oUnitLoanTot = oUnitLoanTot + oPOLoanTotAmt
+                        oUnitLoanTotCount = oUnitLoanTotCount + oPOLoanTotCli
+                        resUnitLoanTot = resUnitLoanTot + resPOLoanTot
+                        begUnitLoanTot = begUnitLoanTot + begPOClientTotAmt
+                        begUnitClientTot = begUnitClientTot + begPOLoanTotCli
+                        endUnitCliCnt = endUnitCliCnt + poBudgEndBal
+                        unitTotAmtDisb = unitTotAmtDisb + totAmounts
+                    }
+                })
+
+                let poRowDesc = "UNIT-" + unCode + " TOTALS"
+                let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
+                let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
+
+                poLoanTotals.push({isTitle: false, isEdit: false, sortkey: uniCode, unit: uniCode, unitHead: poRowDesc, nnumClient: nUnitLoanTotCount, amtDisburse: unitTotAmtDisb, begClientTot: begUnitClientTot,
+                    begClientAmt: begUnitLoanTot, ntotAmount: nUnitLoanTot, onumClient: oUnitLoanTotCount, ototAmount: oUnitLoanTot, resiloanTot: resUnitLoanTot, budgEndBal: endUnitCliCnt})
+                    
+            })
+            doneFoundPO = true
+        }
+            // brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
+            //     rClient: rClient + rClient2, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
+
+            // console.log(totDisburse)
+
+//            console.log(foundPOunits)
+        if ( doneReadCenter && doneFoundPO) {
+            res.render('branches/viewPOBudgForEdit', {
+                listTitle: branchCode,
+                officerName: officerName,
+                poLoanTots: poLoanTotals,
+                searchOptions: req.query,
+                yuser: _user,
+                dateToday: new Date()
+
+            })
+        }
+    } 
+    catch (err) {
+        console.log(err)
     }
 })
 

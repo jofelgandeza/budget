@@ -1,0 +1,146 @@
+    <div class="box" id="heading">
+      <h3> Set targets for center: <%= listTitle %> </h3>
+    </div>
+
+    <div class="box" id="heading">
+      <h4> Beginning Balances:</h4>
+      <table>
+            <tr style="background-color: rgb(1, 76, 95);">
+                <th>LOAN TYPE</th>
+                <th></th>
+                <th>CLIENT</th>
+                <th></th>
+                <th>PRINCIPAL</th>
+                <th></th>
+                <th>INTEREST</th>
+            </tr>
+            
+            <% begBalData.forEach(function(begBal, index) { %>
+                <tr>
+                    <td style="align-content: flex-end;">
+                        <p> <%= begBal.begLonType %></p>
+                    </td>
+                    <td></td>
+                    <td style="text-align: right;">
+                        <p><%= begBal.begClient %></p>
+                    </td>
+                    <td></td>
+                    <td style="text-align: right;">
+                        <p><%= begBal.begPrincipal %></p>
+                    </td>
+                    <td></td>
+                    <td style="text-align: right;">
+                        <p> <%= begBal.begInterest %></p>
+                    </td>
+                </tr>
+            <% }) %>
+        </table>
+    </div>
+            <table class="table-set-targets">
+                <tr style="background-color: rgb(1, 76, 95);">
+                    <th></th>
+                    <th>LOAN TYPE</th>
+                    <th>MONTH</th>
+                    <TH>PERIOD</TH>
+                    <TH>#OF CLIENTS</TH>
+                    <TH>AMOUNT</TH>
+                    <th>TOTAL</th>
+                    <th>REMARKS</th>
+                    <th></th>
+                </tr>
+
+            <form  action="/centers/saveEditTargets/<%= listTitle %>?_method=PUT" method="POST">
+                    <% for(var i=0; i<newListItems.length; i++) {%>
+                        <tr style= "<%= newListItems[i].semester === "First Half" ? "background-color:rgb(2, 93, 116)" : "background-color:rgb(0, 74, 95)" %>" >
+                            <td>
+                            </td>
+                            <td>
+                                <p><%= newListItems[i].loan_type %></p>
+                            </td>
+                            <td>
+                                <p><%= newListItems[i].month %></p>
+                            </td>
+                            <td>
+                                <p><%= newListItems[i].semester %></p>
+                            </td>
+                            <td>
+                                <input type="number" maxlength = "10" style = "background-color:#025575; text-align: right; padding: 10px 15px; font-size: 18px" name="numClient" id="numClient<%= i %>" onchange ="getTotAmt('<%= newListItems[i].amount %>', 'numClient<%= i %>', '<%= i %>', '<%= newListItems.length %>' )" value= <%= newListItems[i].numClient %> >
+                            </td>
+                            <td>
+                                <p style="text-align: right;"><%= newListItems[i].amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></p>                        
+                            </td>
+                            <td>      
+                                <input disabled type="text" style = "background-color:#025575; text-align: right; padding: 10px 15px; font-size: 18px" name="totAmt" id="totAmt<%= i %>" value= <%= newListItems[i].totAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %> >
+                            </td>
+                            <td>
+                                <p><%= newListItems[i].remarks %></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <input type="hidden" name="idClient" value="<%= newListItems[i]._id%>"> </input>
+                        </tr>
+                        <% if (i == newListItems.length - 1) { %>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>
+                                    <button type="submit"  class="btn btn-primary" name="targets" value=<%= listTitle %>>SAVE</button>
+                                </td>
+                                <td>TOTAL-></td>
+                                <td>      
+                                    <input disabled type="text" style = "background-color:#025575; text-align: right; padding: 10px 15px; font-size: 18px" name="totAmt" id="gTotAmt" value= <%= totCntrBudgAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %> %> >
+                                </td>
+                                </tr>
+    
+                        <% } %>
+                    <% } %>
+                    <input type="hidden" name="listName" value="<%= listTitle %>"> </input>
+                </form>
+                <tr class="form-item-target">
+                    <form action="/centers/<%= listTitle %>?_method=PUT" method="POST">
+                    <td>New:</td>
+                    <td>
+                        <select name="loanType" id="loanType">
+                            <% loanType.forEach(function(loan_type, index) { %>
+                                    <option label="<%= loan_type.title %>" value="<%= loan_type.title  %>"></option>
+                            <% }) %>
+                        </select>            
+                    </td>
+                    <td>
+                        <select name="month" id="monthID" onchange="getSemester()">
+                            <% monthSelect.forEach(function(month, index) { %> 
+                                    <option label="<%= month %>" value="<%= month  %>"></option>
+                            <% }) %>
+                        </select>            
+                    </td>
+                    <td>
+                        <input type="text" name="semester" id="semesterID" value="First Half" placeholder="Semester">
+                    </td>
+                    <td>
+                        <input type="text" class="targNumCli" name="numClient" placeholder="Number of Clients" required autocomplete="off">
+                    </td>
+                    <td>
+                        <input type="text" class="targetAmt" name="amount" placeholder="Loan Amount" required autocomplete="off">
+                    </td>
+                    <td>
+                        <select name="remarks" id="remarks">
+                            <option value="New Loan">New Loan</option>
+                            <option value="Re-loan">Re-loan</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button type="submit" name="list" value=<%= listTitle %>>+</button>
+                    </td>
+                    <td class="btn-row">
+                        <% if (yuser.role === "BM") { %>
+                            <a class="btn btn-primary" href="/branches/perPOforEdit/<%= poCode.substr(0,3) %>">Done</a>
+                        <% } else { %>
+                            <a class="btn btn-primary" href="/centers/viewTarget/<%= poCode %>">Done</a>
+
+                        <% } %>
+                    </td>
+                    </form>
+                </tr>
+            </table>

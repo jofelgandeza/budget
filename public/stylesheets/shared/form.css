@@ -178,7 +178,7 @@
     min-height: 70px;
     display: flex;
     align-items: center;
-    border-bottom: 1px solid #F1F1F1;
+    border-bottom: 1px solid #042aa7;
   }
   
 /* table {
@@ -214,6 +214,19 @@ th, td {
     border-bottom: .5px solid #1f58f7;
 }
 
+.table-set-targets {
+    margin: 15px 0;
+    border: 1px solid #CCC;
+    border-collapse: collapse;
+}
+
+.table-set-targets td {
+    border: none;
+    align-items: bottom;
+    /* text-align: right; */
+    /* padding: 2px 5px; */
+
+}
 
 .content-table-brnView {
     border-collapse: collapse;
@@ -228,6 +241,7 @@ th, td {
 
 .content-table-brnView th,
 .content-table-brnView td {
+    text-align: right;
     padding: 10px 15px;
 }
 

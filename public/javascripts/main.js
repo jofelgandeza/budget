@@ -1,5 +1,6 @@
 // const Position = require('../models/position')
-const _ = require('lodash')
+// const _ = require('lodash')
+// const Cleave = require('../public/javascripts/cleave.js')
 //alert('Reply from main.js')
 //const Cleave = require('cleave')
 
@@ -221,6 +222,100 @@ function setPositValue() {
 
 }
 
+function getTotAmt(numClient, param2, param3, targetLength) {
+    let targTotAmt = 0
+    const numCliValue = document.getElementById(param2).value
+        // alert(numCliValue)
+    const totAmount  =  numClient * numCliValue
+    const totAmtID = 'totAmt' + param3
+    
+    const totStrAmount = totAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    document.getElementById(totAmtID).value = totStrAmount
+
+    for(var i=0; i<targetLength; i++) {
+        const tarAmtID = 'totAmt' + i
+
+        const targAmount = document.getElementById(tarAmtID).value
+
+        const targStrAmount = targAmount.replace(',','')
+
+        const targeAmount = parseInt(targStrAmount)
+
+        targTotAmt = targTotAmt + targeAmount
+    }
+    const totStrTargAmt = targTotAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    document.getElementById('gTotAmt').value = totStrTargAmt
+}
+
+
+function getTotCli(param2, param3, targetLength) {
+    let targTotAmt = 0
+    // alert('Pwede!')
+        // alert(numCliValue)
+    const numCliValue = document.getElementById(param2).value
+    
+    const totAmount  =  numCliValue
+    const totAmtID = 'numClient' + param3
+    
+    document.getElementById(totAmtID).value = totAmount
+
+    for(var i=0; i<targetLength; i++) {
+        const tarAmtID = 'numClient' + i
+
+        const targAmount = document.getElementById(tarAmtID).value
+        const targeAmount = parseInt(targAmount)
+
+        targTotAmt = targTotAmt + targeAmount
+        // alert(targTotAmt)
+    }
+    document.getElementById('gtotCli').value = targTotAmt
+}
+
+function getTotPrin(param2, param3, targetLength) {
+    let targTotAmt = 0
+    // alert('Pwede!')
+        // alert(numCliValue)
+    const numCliValue = document.getElementById(param2).value
+    
+    const totAmount  =  numCliValue
+    const totAmtID = 'begPrincipal' + param3
+    
+    document.getElementById(totAmtID).value = totAmount
+
+    for(var i=0; i<targetLength; i++) {
+        const tarAmtID = 'begPrincipal' + i
+
+        const targAmount = document.getElementById(tarAmtID).value
+        const targeAmount = parseInt(targAmount)
+
+        targTotAmt = targTotAmt + targeAmount
+        // alert(targTotAmt)
+    }
+    document.getElementById('gtotPrin').value = targTotAmt
+}
+
+function getTotInt(param2, param3, targetLength) {
+    let targTotAmt = 0
+    // alert('Pwede!')
+        // alert(numCliValue)
+    const numCliValue = document.getElementById(param2).value
+    
+    const totAmount  =  numCliValue
+    const totAmtID = 'begInterest' + param3
+    
+    document.getElementById(totAmtID).value = totAmount
+
+    for(var i=0; i<targetLength; i++) {
+        const tarAmtID = 'begInterest' + i
+
+        const targAmount = document.getElementById(tarAmtID).value
+        const targeAmount = parseInt(targAmount)
+
+        targTotAmt = targTotAmt + targeAmount
+        // alert(targTotAmt)
+    }
+    document.getElementById('gtotInt').value = targTotAmt
+}
 
 function compareFirstNames( a, b ) {
     if ( a.first_name < b.first_name ){

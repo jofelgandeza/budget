@@ -10,7 +10,7 @@ function authUser(req, res, next) {
     next()
   }
   
-  function authRole(role) {
+  function authRole(role, role2) {
     return (req, res, next) => {
         let params_ID = req.params.id
         let paramsID = ""
@@ -36,8 +36,12 @@ function authUser(req, res, next) {
         }          
         // console.log(paramsID + ", " + req.user.assCode)
         if (req.user.role !== role || req.user.assCode !== paramsID) {
-          res.status(401)
-          return res.send('Not allowed')
+          if (role2 === "BM") {
+
+          } else {
+            res.status(401)
+            return res.send('Not allowed')
+          }
         }  
           next()
     }

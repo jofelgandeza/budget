@@ -1,0 +1,81 @@
+    <div class="box" id="heading">
+      <h3> Set CENTER Beginning Balances for PO: <%= poCode %> </h3>
+    </div>
+
+            <table class="table-set-targets">
+                <tr style="background-color: rgb(1, 76, 95);">
+                    <TH>CENTER CODE</TH>
+                    <TH>MONTH</TH>
+                    <TH>#CLIENTS</TH>
+                    <TH>PRINCIPAL</TH>
+                    <th>INTEREST</th>
+                    <th></th>
+                </tr>
+
+            <form  action="/centers/saveBegBals/<%= poCode %>?_method=PUT" method="POST">
+                    <tr style="background-color: rgb(1, 76, 95);">
+                        <th><%= loanType %> ONLY</th>
+                    </tr>
+                    <% for(var i=0; i<begBalData.length; i++) {%>
+                        <tr class= "form-item-target">
+                            <td>      
+                                <input disabled type="text" style = "background-color:#01435e; text-align: right; padding: 10px 15px; font-size: 18px" name="Center" id="Center" value= <%= begBalData[i].center %> %> >
+                            </td>
+                            <td>
+                                <select name="month" id="month" ">
+                                    <% monthSelect.forEach(function(month, index) { %>
+                                        <% if ( month == begBalData[i].begMonth) { %>
+                                           <option selected value="<%= begBalData[i].begMonth %>" label="<%= month %>"> </option>
+                                        <% } else { %>
+                                            <option value="<%= month %>" label="<%= month %>"> </option>
+                                        <%  } %>
+                                    <% }) %> 
+                                </select>         
+                            </td>   
+                                <td>
+                                <input type="number" maxlength = "10" style = "background-color:#025575; text-align: right; padding: 10px 15px; font-size: 18px" name="numClient" id="numClient<%= i %>" onchange ="getTotCli('numClient<%= i %>', '<%= i %>', '<%= begBalData.length %>' )" value= <%= begBalData[i].begClient %> >
+                            </td>
+                            <td>
+                                <input type="number" class="BegBalPrin" style = "background-color:#025575; text-align: right; padding: 10px 15px; font-size: 18px" name="begPrincipal" id="begPrincipal<%= i %>"  onchange ="getTotPrin('begPrincipal<%= i %>', '<%= i %>', '<%= begBalData.length %>' )"value= <%= begBalData[i].begPrincipal %> >
+                            </td>
+                            <td>
+                                <input type="number" class="input_amount" maxlength = "10" style = "background-color:#025575; text-align: right; padding: 10px 15px; font-size: 18px" name="begInterest" id="begInterest<%= i %>"  onchange ="getTotInt('begInterest<%= i %>', '<%= i %>', '<%= begBalData.length %>' )"value= <%= begBalData[i].begInterest %> >
+                            </td>
+                        </tr>
+                        <tr>
+                            <input type="hidden" name="begCenter" value="<%= begBalData[i].center%>"> </input>
+                        </tr>
+                        <% if (i == begBalData.length - 1) { %>
+                            <tr class= "form-item-target">
+                                <td>
+
+                                </td>
+                                <td>TOTALS-></td>
+                                <td>      
+                                    <input disabled type="number" style = "background-color:#01435e; text-align: right; padding: 10px 15px; font-size: 18px" name="totCli" id="gtotCli" value= <%= totCntrBudgCli %> %> >
+                                </td>
+                                <td>      
+                                    <input disabled type="number" style = "background-color:#01435e; text-align: right; padding: 10px 15px; font-size: 18px" name="totPrin" id="gtotPrin" value= <%= totCntrBudgPrin %> %> >
+                                </td>
+                                <td>      
+                                    <input disabled type="number" style = "background-color:#01435e; text-align: right; padding: 10px 15px; font-size: 18px" name="totInt" id="gtotInt" value= <%= totCntrBudgInt %> %> >
+                                </td>
+                                </tr>
+    
+                        <% } %>
+                    <% } %>
+                    <input type="hidden" name="listName" value="<%= poCode %>"> </input>
+                    <tr>
+                        <td>
+                        </td>
+                        <td>                            
+                        </td>
+                        <td style="text-align:center">
+                            <button type="submit"  class="btn btn-primary" name="targets" value=<%= poCode  %>>SAVE</button>
+                        </td>
+                        <td style="text-align:center">
+                            <a class="btn btn-primary" href="/centers/viewTarget/<%= poCode %>">BACK</a>
+                        </td>
+                    </tr>
+                </form>
+            </table>

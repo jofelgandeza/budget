@@ -1,20 +1,21 @@
     <div class="box" id="heading">
       <h3> Set targets for center: <%= listTitle %> </h3>
     </div>
-            <table>
-                <tr>
+            <table class="table-set-targets">
+                <tr style="background-color: rgb(2, 93, 116);">
                     <th></th>
                     <th>LOAN TYPE</th>
                     <th>MONTH</th>
                     <TH>PERIOD</TH>
-                    <TH>NO. OF CLIENTS</TH>
+                    <TH>#OF CLIENTS</TH>
                     <TH>AMOUNT</TH>
                     <th>TOTAL</th>
                     <th>REMARKS</th>
+                    <th>LINK</th>
                 </tr>
                 <% newListItems.forEach(function(item) { %>
                     <form  action="/centers/delete/<%= listTitle %>" method="post">
-                        <tr>
+                        <tr style= "<%= item.semester === "First Half" ? "background-color:rgb(2, 93, 116)" : "background-color:rgb(0, 74, 95)" %>" >
                             <td>
                                 <input type="checkbox" name="checkbox" value="<%=item._id%>" onChange="this.form.submit()">
                             </td>
@@ -37,12 +38,12 @@
                                 <p><%= item.totAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></p>                        
                             </td>
                             <td>
-                                <p><%= item.resClient %></p>
-                            </td>
-                            <td>
                                 <p><%= item.remarks %></p>
                             </td>
-                    </tr>
+                            <td class="btn-row">
+                                <a class="btn btn-primary" href="/centers/viewTarget/<%= listTitle %>">Edit</a>
+                            </td>
+                        </tr>
                     <input type="hidden" name="listName" value="<%= listTitle %>"> </input>
                 </form>
                 <% }) %>
@@ -83,7 +84,6 @@
                     </td>
                     <td class="btn-row">
                             <a class="btn btn-primary" href="/centers/viewTarget/<%= listTitle %>">Done</a>
-
                     </td>
                     </form>
                 </tr>

@@ -4,13 +4,17 @@
     --nav-link-font-weight: 100;
 }
 
-.header-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    /* background-color: blue; */
-}
+/* .header-nav {
+    height: 80px;
+    width: 100%;
+} */
 
+/* OLD NAV Design */
+.header-nav { 
+    display: flex;
+    justify-content: space-between; 
+    align-items: flex-start;
+} 
 
 .header-title {
     color: var(--color-text-light);

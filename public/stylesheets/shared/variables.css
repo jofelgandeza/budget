@@ -1,6 +1,4 @@
 :root {
-    /* --color-base-hue: 550;
-    --color-danger-hue-offset: 180; */
     --color-base-hue: 550;
     --color-danger-hue-offset: 630;
     --color-danger-hue: calc(var(--color-base-hue) - var(--color-danger-hue-offset));
@@ -8,5 +6,13 @@
     --color-background-light: hsl(var(--color-base-hue), 150%, 18%);
     --color-text-light: hsl(var(--color-base-hue), 100%, 87%);
     --color-text-light-pHolder: hsl(var(--color-base-hue), 100%, 65%);
+
+    /* --color-base-hue: 204;
+    --color-danger-hue-offset: 630;
+    --color-danger-hue: calc(var(--color-base-hue) - var(--color-danger-hue-offset));
+    --color-background-dark: hsl(var(--color-base-hue), 75%, 68%);
+    --color-background-light: hsl(var(--color-base-hue), 51%, 80%);
+    --color-text-light: hsl(var(--color-base-hue), 100%, 87%);
+    --color-text-light-pHolder: hsl(var(--color-base-hue), 100%, 65%); */
 
 }
