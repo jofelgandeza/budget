@@ -14,7 +14,7 @@
                     <td>
                         <div class="btn-row">
                             <a class="btn btn-primary" href="/regions/getEmpForEdit/<%= regionCode + brnEmployee.empCode %>/edit">Edit</a>
-                            <a class="btn btn-primary" href="/regions/getEmpEditPass/<%= regionCode + brnEmployee.area %>/edit">Reset Password</a>
+                            <a class="btn btn-primary" href="/regions/getEmpEditPass/<%= regionCode + brnEmployee.empCode %>/edit">Reset Password</a>
                             <%- include('../partials/deleteForm', { url: `/regions/deleteEmp/${brnEmployee.empID}` }) %>
                         </div>        
                     </td>

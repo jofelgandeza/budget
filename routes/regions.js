@@ -745,6 +745,9 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.RD), async (req, 
     let regionAreas = []
     
     let ass_Code = ""
+    let doneReadEmp = false
+    let doneReadArea = false
+    let doneReadYoser = false
 
    try {
 
@@ -755,34 +758,42 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.RD), async (req, 
             possit = _.trim(foundEmploy.position_code)
            console.log(possit)
            areaAsignCode = foundEmploy.assign_code
+
+           doneReadEmp = true
         })
         
-        const emPosit = await Area.findOne({area: areaAsignCode}, function (err, fndArea) {
-            areaAsignDesc = fndArea.area_desc
-            regionAreas = fndArea
-        })
-    
+        if (doneReadEmp) {
+            const emPosit = await Area.findOne({area: areaAsignCode}, function (err, fndArea) {
+                areaAsignDesc = fndArea.area_desc
+                regionAreas = fndArea
+
+                doneReadArea = true
+            })
+        }
             // console.log(employe)
         const yoser = await User.findOne({assCode: areaAsignCode}, function (err, foundUser) {
             //            console.log(foundlist)
             fndUser = foundUser
             console.log(fndUser)
+
+            doneReadYoser = true
         })
 
         yoser.password = ""
-            
-        res.render('regions/resetPassword', {
-            regionCode: regionCode,
-            areaAsignDesc: areaAsignDesc,
-            foundArea: regionAreas,
-            user: yoser,
-            emp: employe, 
-            locals: locals,
-            yuser: _user,
-            newEmp: false,
-            resetPW: true
-       })
-
+        
+        if (doneReadArea && doneReadYoser ) {
+            res.render('regions/resetPassword', {
+                regionCode: regionCode,
+                areaAsignDesc: areaAsignDesc,
+                foundArea: regionAreas,
+                user: yoser,
+                emp: employe, 
+                locals: locals,
+                yuser: _user,
+                newEmp: false,
+                resetPW: true
+        })
+        }
 //        res.render('centers/edit', { centers: center, coaClass: coaClass })
 
    } catch (err) {
