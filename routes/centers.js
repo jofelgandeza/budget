@@ -1133,7 +1133,7 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                 console.log(fndBegBalCli)
                                 if (isNull(ctrBegBalCli)) {
                                     let OLDCtrCliBudg = new Center_budget_det({
-                                        region: _user.region, area: _user.area, branch: branchCode, unit: unit_ID, po: poNumber, po_code: poCode, center: centerCode,
+                                        region: req.user.region, area: req.user.area, branch: branchCode, unit: unit_ID, po: poNumber, po_code: poCode, center: centerCode,
                                         view_type: "PUH", loan_type: loanTyp, beg_bal: numClient[i], beg_bal_amt: begPrincipal[i], beg_bal_int: begInterest[i], client_count_included: true, view_code: "OldLoanClient", 
                                         jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                                         })
@@ -1158,7 +1158,7 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                 
                                 if (isNull(ctrBudgDetBegBalAmt)) {
                                     let OLFCtrAMTBudg = new Center_budget_det({
-                                        region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                                        region: req.user.region, area: req.user.area, branch: branchCode, unit: unit_ID, po: poNumber, po_code: poCode, center: centerCode,
                                         view_type: "PUH", loan_type: loanTyp, beg_bal: numClient[i], beg_bal_amt: begPrincipal[i], beg_bal_int: begInterest[i], client_count_included: true, view_code: "OldLoanAmt", 
                                         jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                                     })
@@ -1300,9 +1300,6 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
     let locals
     let canSaveBegBal = false
     
-    let doneReadCenterBegBal = false
-    let doneSaveFromOldClient = false
-    let doneSaveFromOldAmt = false
     let doneReadBegBalCli = false
     let doneReadBegBalAmt = false
     let ctrBegBalCli = []
@@ -1323,7 +1320,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
             if (!err) {
                 const finView = foundloanView.display_order
                 fnView = finView
-        } else {
+            } else {
                 console.log(err)
             }
         })
@@ -1352,6 +1349,8 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                 numMaturityMonth = 0
         }   
 
+        let doneReadCenterBegBal = false
+
         const ctrFound = await Center.findOne({center: centerCode}, function(err, foundCtr){ 
             centerFound = foundCtr
 
@@ -1368,14 +1367,13 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                 dispView: fnView
              }
 
-            if (curLoanBeg.length === 0) {
+            if (curLoanBeg.length == 0) {
 
-                    centerFound.Loan_beg_bal.push(item);
-                    centerFound.beg_center_month = monthNumber
                     if (begLoanType === "Group Loan" || begLoanType === "Agricultural Loan") {
                         centerFound.budget_BegBalCli = bClientCnt
 
                     }
+                    centerFound.beg_center_month = monthNumber
                     centerFound.region = req.user.region
                     centerFound.Loan_beg_bal.push(item);
                     centerFound.save();
@@ -1397,10 +1395,13 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                 }
             }            
                 doneReadCenterBegBal = true
-            })
-
-    // Saving Loan Beginning Balances to center_budget_dets.. NOTE: To be done only when setting Targets is finished!
-    if (doneReadCenterBegBal && canSaveBegBal) {
+        })
+    
+        let doneSaveFromOldClient = false
+        let doneSaveFromOldAmt = false
+        
+        // Saving Loan Beginning Balances to center_budget_dets.. NOTE: To be done only when setting Targets is finished!
+        if (doneReadCenterBegBal && canSaveBegBal) {
             let canSaveOldLoanCli = false  
             let canSaveOldLoanAmt = false
 
@@ -1459,7 +1460,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
 
         } else {
         
-            if (doneReadCtr && !canSaveBegBal) {
+            if (doneReadCenterBegBal && !canSaveBegBal) {
                 res.render('centers/setBegBal', { 
                     unitID: poCode,
                     loanType: bgloanType,
