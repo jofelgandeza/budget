@@ -1298,23 +1298,28 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
     let fndCtrBudgDetCliBegBal = []
     let fndCenterBudgDetAmtBegBal = []
     let locals
-    let canSaveBegBal = false
     
     let doneReadBegBalCli = false
     let doneReadBegBalAmt = false
     let ctrBegBalCli = []
     let ctrBudgDetBegBalAmt = []
+    let doneSaveFromOldClient = false
+    let doneSaveFromOldAmt = false
 
     let centerFound = []
     let doneReadCtr = false
     let curLoanBeg = []
+    let doneReadCenterBegBal = false
+    let canSaveBegBal = false
+
+
     try {
 
         // loType = await Loan_type.find({glp_topUp:true}, function (err, foundLoan) {
 
-        loType = await Loan_type.find({}, function (err, foundLoan) {
-            bgloanType = foundLoan
-        })
+        // loType = await Loan_type.find({}, function (err, foundLoan) {
+        //     bgloanType = foundLoan
+        // })
  
         const loanViewOrder = await Loan_type.findOne({title: _.trim(begLoanType)}, function(err, foundloanView) {
             if (!err) {
@@ -1349,12 +1354,10 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                 numMaturityMonth = 0
         }   
 
-        let doneReadCenterBegBal = false
-
         const ctrFound = await Center.findOne({center: centerCode}, function(err, foundCtr){ 
             centerFound = foundCtr
 
-              const curLoanBeg = centerFound.Loan_beg_bal
+              const curLoanBeg = foundCtr.Loan_beg_bal
             
               item = {
                 loan_type: begLoanType,
@@ -1370,13 +1373,13 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
             if (curLoanBeg.length == 0) {
 
                     if (begLoanType === "Group Loan" || begLoanType === "Agricultural Loan") {
-                        centerFound.budget_BegBalCli = bClientCnt
+                        foundCtr.budget_BegBalCli = bClientCnt
 
                     }
-                    centerFound.beg_center_month = monthNumber
-                    centerFound.region = req.user.region
-                    centerFound.Loan_beg_bal.push(item);
-                    centerFound.save();
+                    foundCtr.beg_center_month = monthNumber
+                    foundCtr.region = req.user.region
+                    foundCtr.Loan_beg_bal.push(item);
+                    foundCtr.save();
 
                     canSaveBegBal = true
 
@@ -1386,19 +1389,15 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                             locals = {errorMessage: 'Beginning balance for '+ begLoanType +'  is already exists!'}
                             canSaveBegBal = false
                         } else {
-                            canSaveBegBal = true
+                            foundCtr.Loan_beg_bal.push(item);
+                            foundCtr.save();
+                                    canSaveBegBal = true
                         }
                     })
-                if (canSaveBegBal) {
-                    centerFound.Loan_beg_bal.push(item);
-                    centerFound.save();
-                }
             }            
                 doneReadCenterBegBal = true
         })
     
-        let doneSaveFromOldClient = false
-        let doneSaveFromOldAmt = false
         
         // Saving Loan Beginning Balances to center_budget_dets.. NOTE: To be done only when setting Targets is finished!
         if (doneReadCenterBegBal && canSaveBegBal) {
@@ -1452,24 +1451,24 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                 doneSaveFromOldAmt = true
             })
 
-            if (doneSaveFromOldClient && doneSaveFromOldAmt) {
+            // if (doneSaveFromOldClient && doneSaveFromOldAmt) {
 
                 res.redirect('/centers/setBegBal/' + centerCode)
 
-            }
+            // }
 
-        } else {
+        // } else {
         
-            if (doneReadCenterBegBal && !canSaveBegBal) {
-                res.render('centers/setBegBal', { 
-                    unitID: poCode,
-                    loanType: bgloanType,
-                    listTitle: centerCode, 
-                    newListItems: curLoanBeg,
-                    monthSelect: begMonthSelect,
-                    locals: locals
-                })    
-            }
+        //     if (doneReadCenterBegBal && !canSaveBegBal) {
+        //         res.render('centers/setBegBal', { 
+        //             unitID: poCode,
+        //             loanType: bgloanType,
+        //             listTitle: centerCode, 
+        //             newListItems: curLoanBeg,
+        //             monthSelect: begMonthSelect,
+        //             locals: locals
+        //         })    
+        //     }
         }   
     } catch(err) {
         console.log(err)
