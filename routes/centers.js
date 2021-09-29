@@ -464,6 +464,8 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
     let monthNewLoan2 = ""
     let monthReLoan1 = ""
     let monthReLoan2 = ""
+    let num_Client = 0
+    let id_Client = ""
 
     let poEditedTargPerLonTyp = []
 
@@ -515,8 +517,15 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                 return 0;
             })
 
+            let idClientLen = 0
 
-            for(var i=0; i<idClient.length; i++) {
+            if (sortedTargets.length == 1) {
+                idClientLen = 1
+            } else {
+                idClientLen = sortedTargets.length
+            }
+
+            for(var i=0; i<idClientLen; i++) {
                 
                  loanTyp = sortedTargets[i].loan_type
 
@@ -540,15 +549,15 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                         }
                             hasChangesTarg = false
     
-                            let totNewCliSem1 = 0
-                            let totNewAmtSem1 = 0
-                            let totNewCliSem2 = 0
-                            let totNewAmtSem2 = 0
+                            totNewCliSem1 = 0
+                            totNewAmtSem1 = 0
+                            totNewCliSem2 = 0
+                            totNewAmtSem2 = 0
                         
-                            let totOldCliSem1 = 0
-                            let totOldAmtSem1 = 0
-                            let totOldCliSem2 = 0
-                            let totOldAmtSem2 = 0
+                            totOldCliSem1 = 0
+                            totOldAmtSem1 = 0
+                            totOldCliSem2 = 0
+                            totOldAmtSem2 = 0
                                                                         
                             totBegBal1 = 0
                             totBegBal2 = 0
@@ -566,6 +575,14 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
 
                 totBegBal1 = sortedTargets[i].begBal
                 const targetClient = _.toNumber(numClient[i])
+
+                if (sortedTargets.length == 1) {
+                    id_Client = idClient
+                    num_Client = numClient
+                } else {
+                    id_Client = idClient[i]
+                    num_Client = numClient[i]
+                }
 
                 if (_.toNumber(numClient[i]) == sortedTargets[i].numClient) { // if TARGETS have no changes
 
@@ -660,20 +677,26 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                             secondSemChanged = true
                         }
                     }
-
                    const curResTarcenter =  await Center.findOneAndUpdate({"center": centerCode}, 
                         {$set: {"Targets.$[el].numClient": _.toNumber(numClient[i]), "Targets.$[el].totAmount": totalAmt, "Targets.$[el].newClient": targNewClient, "Targets.$[el].oldClient": targOldClient}}, 
-                        {arrayFilters: [{"el._id": idClient[i] }]}, function(err, foundResList){
+                        {arrayFilters: [{"el._id": id_Client }]}, function(err, foundResList){
                         
                             console.log(foundResList)
                     })
                     
                     console.log(curResTarcenter)
                 }
+
                 prevLoanTyp = sortedTargets[i].loan_type
 
-                if (numClient[i] == 0) {
-                    const center = await Center.findOneAndUpdate({center: centerCode}, {$pull: {Targets :{_id: idClient[i] }}})
+                if (num_Client == 0) {
+                    const center = await Center.findOneAndUpdate({center: centerCode}, {$pull: {Targets :{_id: id_Client }}})
+                    if (sortedTargets.length == 1) {
+                        poEditedTargPerLonTyp.push({center: centerCode, centerLoanTyp: centerLoanTyp, loan_type: loanTyp, tNewCliSem1: totNewCliSem1, tNewAmtSem1: totNewAmtSem1, tNewCliSem2: totNewCliSem2, tNewAmtSem2: totNewAmtSem2,
+                            tBegBal1: totBegBal1, tBegBal2: totBegBal2, tOldAmtSem1: totOldAmtSem1, tOldAmtSem2: totOldAmtSem2,
+                            tOldCliSem1: totOldCliSem1, tOldCliSem2: totOldCliSem2, monthNewLoan1: monthNewLoan1, monthNewLoan2: monthNewLoan2, monthReLoan1: monthReLoan1, monthReLoan2: monthReLoan2})
+                    }
+
                 } else {
                     if (hasChangesTarg && (i == (idClient.length - 1))) {
                         poEditedTargPerLonTyp.push({center: centerCode, centerLoanTyp: centerLoanTyp, loan_type: loanTyp, tNewCliSem1: totNewCliSem1, tNewAmtSem1: totNewAmtSem1, tNewCliSem2: totNewCliSem2, tNewAmtSem2: totNewAmtSem2,
@@ -2670,6 +2693,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
     let nwTotValueClient = 0
     let nwTotValueAmt = 0
     let olTotValueClient = 0
+    let resTotValueClient = 0
     let olTotValueAmt = 0
 
     let viewTitle = ""
@@ -3095,7 +3119,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     dec_resCliTot = dec_resCliTot + ResCliCnt.dec_budg
                 })
 
-                olTotValueClient = jan_resCliTot + feb_resCliTot + mar_resCliTot + apr_resCliTot + may_resCliTot + jun_resCliTot
+                resTotValueClient = jan_resCliTot + feb_resCliTot + mar_resCliTot + apr_resCliTot + may_resCliTot + jun_resCliTot
                             + jul_resCliTot + aug_resCliTot + sep_resCliTot + oct_resCliTot + nov_resCliTot + dec_resCliTot
                 
                 doneReadResCli = true
@@ -3133,7 +3157,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             
             poSumView.push({title: "Resign Clients", sortkey: 6, group: 2, isTitle: false, jan_value : jan_resCliTot, feb_value : feb_resCliTot, mar_value : mar_resCliTot, apr_value : apr_resCliTot,
                 may_value : may_resCliTot, jun_value : jun_resCliTot, jul_value : jul_resCliTot, aug_value : aug_resCliTot,
-                sep_value : sep_resCliTot, oct_value : oct_resCliTot, nov_value : nov_resCliTot, dec_value : dec_resCliTot, tot_value: dec_resCliTot
+                sep_value : sep_resCliTot, oct_value : oct_resCliTot, nov_value : nov_resCliTot, dec_value : dec_resCliTot, tot_value: resTotValueClient
             }) 
             
             poSumView.push({title: "TOTAL NO. OF CLIENTS", sortkey: 7, group: 2, isTitle: false, jan_value : jan_totNumClients, feb_value : feb_totNumClients, mar_value : mar_totNumClients, 
@@ -3152,7 +3176,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     let newNewClients = new Budg_exec_sum({
                         region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Resign Clients", view_code: "ResignClients", sort_key: 5, display_group: 2, beg_bal: 0, jan_budg : jan_resCliTot, 
                         feb_budg : feb_resCliTot, mar_budg : mar_resCliTot, apr_budg : apr_resCliTot, may_budg : may_resCliTot, jun_budg : jun_resCliTot, jul_budg : jul_resCliTot, 
-                        aug_budg : aug_resCliTot, sep_budg : sep_resCliTot, oct_budg : oct_resCliTot, nov_budg : nov_resCliTot, dec_budg : dec_resCliTot, tot_budg: dec_resCliTot                                   
+                        aug_budg : aug_resCliTot, sep_budg : sep_resCliTot, oct_budg : oct_resCliTot, nov_budg : nov_resCliTot, dec_budg : dec_resCliTot, tot_budg: resTotValueClient                                   
                     })
                     newNewClients.save()
                 } else {
