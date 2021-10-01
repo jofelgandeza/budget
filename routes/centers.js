@@ -691,11 +691,11 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
 
                 if (num_Client == 0) {
                     const center = await Center.findOneAndUpdate({center: centerCode}, {$pull: {Targets :{_id: id_Client }}})
-                    if (sortedTargets.length == 1) {
+                    // if (sortedTargets.length == 1) {
                         poEditedTargPerLonTyp.push({center: centerCode, centerLoanTyp: centerLoanTyp, loan_type: loanTyp, tNewCliSem1: totNewCliSem1, tNewAmtSem1: totNewAmtSem1, tNewCliSem2: totNewCliSem2, tNewAmtSem2: totNewAmtSem2,
                             tBegBal1: totBegBal1, tBegBal2: totBegBal2, tOldAmtSem1: totOldAmtSem1, tOldAmtSem2: totOldAmtSem2,
                             tOldCliSem1: totOldCliSem1, tOldCliSem2: totOldCliSem2, monthNewLoan1: monthNewLoan1, monthNewLoan2: monthNewLoan2, monthReLoan1: monthReLoan1, monthReLoan2: monthReLoan2})
-                    }
+                    // }
 
                 } else {
                     if (hasChangesTarg && (i == (idClient.length - 1))) {
@@ -742,7 +742,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                     // totOldCliDiff2 = poEditedData.tOldCliDiff2
                     // totOldAmtDiff2 = poEditedData.tOldAmtDiff2
 
-                    const ctrOldCliBudgDet = Center.findOne({center: centerCode, loan_type: ctrLonTyp}, function (err, fndOldCli) {
+                    const ctrBudgDet = Center.findOne({center: centerCode, loan_type: ctrLonTyp}, function (err, fndOldCli) {
                         fndOldCli.newClient = totNewCliSem1 + totNewCliSem2
                         fndOldCli.newClientAmt = totNewAmtSem1 + totNewAmtSem2
                         fndOldCli.oldClient = totOldCliSem1 + totOldCliSem2
@@ -756,7 +756,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
 
                     if (totalResign !== 0) {
 
-                        const ctrOldCliBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "ResClientCount"}, function (err, fndResCli) {
+                        const ctrResBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "ResClientCount"}, function (err, fndResCli) {
 
                             switch(monthReLoan1) {
                                 case "January": 
@@ -810,7 +810,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
 
                     const totalOldCli = totOldCliSem1 + totOldCliSem2
 
-                    if (totalOldCli !== 0) {
+                    // if (totalOldCli !== 0) {
 
                         const ctrOldCliBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "OldLoanClient"}, function (err, fndOldCli) {
 
@@ -862,13 +862,13 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
 
                             fndOldCli.save()
                         })
-                    }
+                    // }
 
                     const totalOldAmt = totOldAmtSem1 + totOldAmtSem2
 
-                    if (totalOldAmt !== 0) {
+                    // if (totalOldAmt !== 0) {
 
-                        const ctrOldCliBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "OldLoanAmt"}, function (err, fndOldAmt) {
+                        const ctrOldAmtBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "OldLoanAmt"}, function (err, fndOldAmt) {
 
                             switch(monthReLoan1) {
                                 case "January": 
@@ -918,11 +918,11 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
 
                             fndOldAmt.save()
                         })
-                    }
+                    // }
 
                     const totalNewCli = totNewCliSem1 + totNewCliSem2
 
-                    if (totalNewCli !== 0) {
+                    // if (totalNewCli !== 0) {
 
                         const ctrNewCliBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "NewLoanClient"}, function (err, fndNewCli) {
 
@@ -974,13 +974,13 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
 
                             fndNewCli.save()
                         })
-                    }
+                    // }
 
                     const totalNewAmt = totNewAmtSem1 + totNewAmtSem2
 
-                    if (totalNewAmt !== 0) {
+                    // if (totalNewAmt !== 0) {
 
-                        const ctrNewCliBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "NewLoanAmt"}, function (err, fndNewLoanAmt) {
+                        const ctrNewAmtBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "NewLoanAmt"}, function (err, fndNewLoanAmt) {
 
                             switch(monthNewLoan1) {
                                 case "January": 
@@ -1029,7 +1029,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                             }   
                             fndNewLoanAmt.save()
                         })
-                    }
+                    // }
 
                 })
             }
@@ -2976,33 +2976,20 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
         const newClientCntView = await Center_budget_det.find({po_code: viewPOCode, view_code: "NewLoanClient", client_count_included: true }, function (err, fndNewCliCnt) {
 
-            fndNewCliCnt.forEach(newCliCnt => {
-                jan_newCliTot = jan_newCliTot + newCliCnt.jan_budg
-                feb_newCliTot = feb_newCliTot + newCliCnt.feb_budg
-                mar_newCliTot = mar_newCliTot + newCliCnt.mar_budg
-                apr_newCliTot = apr_newCliTot + newCliCnt.apr_budg
-                may_newCliTot = may_newCliTot + newCliCnt.may_budg
-                jun_newCliTot = jun_newCliTot + newCliCnt.jun_budg
-                jul_newCliTot = jul_newCliTot + newCliCnt.jul_budg
-                aug_newCliTot = aug_newCliTot + newCliCnt.aug_budg
-                sep_newCliTot = sep_newCliTot + newCliCnt.sep_budg
-                oct_newCliTot = oct_newCliTot + newCliCnt.oct_budg
-                nov_newCliTot = nov_newCliTot + newCliCnt.nov_budg
-                dec_newCliTot = dec_newCliTot + newCliCnt.dec_budg
+            fndNewCliCnt.forEach(newCliCount => {
+                jan_newCliTot = jan_newCliTot + newCliCount.jan_budg
+                feb_newCliTot = feb_newCliTot + newCliCount.feb_budg
+                mar_newCliTot = mar_newCliTot + newCliCount.mar_budg
+                apr_newCliTot = apr_newCliTot + newCliCount.apr_budg
+                may_newCliTot = may_newCliTot + newCliCount.may_budg
+                jun_newCliTot = jun_newCliTot + newCliCount.jun_budg
+                jul_newCliTot = jul_newCliTot + newCliCount.jul_budg
+                aug_newCliTot = aug_newCliTot + newCliCount.aug_budg
+                sep_newCliTot = sep_newCliTot + newCliCount.sep_budg
+                oct_newCliTot = oct_newCliTot + newCliCount.oct_budg
+                nov_newCliTot = nov_newCliTot + newCliCount.nov_budg
+                dec_newCliTot = dec_newCliTot + newCliCount.dec_budg
             })
-
-            // jan_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jan_budg; })
-            // feb_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.feb_budg; })
-            // mar_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.mar_budg; })
-            // apr_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.apr_budg; })
-            // may_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.may_budg; })
-            // jun_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jun_budg; })
-            // jul_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jul_budg; })
-            // aug_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.aug_budg; })
-            // sep_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.sep_budg; })
-            // oct_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.oct_budg; })
-            // nov_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.nov_budg; })
-            // dec_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.dec_budg; })
 
             nwTotValueClient = jan_newCliTot + feb_newCliTot + mar_newCliTot + apr_newCliTot + may_newCliTot + jun_newCliTot
                 + jul_newCliTot + aug_newCliTot + sep_newCliTot + oct_newCliTot + nov_newCliTot + dec_newCliTot
