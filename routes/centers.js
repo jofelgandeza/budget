@@ -1104,7 +1104,7 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                             numMaturityMonth = 0
                     }   
             
-                    canSaveBegBal = false
+                    // canSaveBegBal = false
     
                     const fndCenter = await Center.findOne({center: centerCode}, function (err, centerFound) {
     
@@ -1132,13 +1132,14 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                 centerFound.Loan_beg_bal.push(item);
     
                             } else {
-                                canSaveBegBal = true
                             }        
                             centerFound.beg_center_month = month[i]
                             centerFound.budget_BegBalCli = numClient[i]
         
                             centerFound.region = req.user.region
                             centerFound.save();
+
+                            canSaveBegBal = true
         
                     })
             
