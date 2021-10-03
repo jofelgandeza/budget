@@ -249,8 +249,38 @@ th, td {
     border-bottom: 1px solid #1f58f7;
 }
 
+
+.content1-table-brnView {
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 0.7em;
+    min-width: 600px;
+}
+
+.content1-table-brnView thead, tr {
+    text-align: left;
+}
+
+.content1-table-brnView th,
+.content1-table-brnView td {
+    text-align: right;
+    padding: 2px 4px;
+}
+
+.content1-table-brnView tbody tr {
+    border-bottom: 1px solid #1f58f7;
+}
+
+
 .td-bold {
     font-weight: 500;
+}
+
+.tdRowAmt {
+    text-align: right;
+}
+.tdRowDesc {
+    text-align: left;
 }
 
 ::placeholder {

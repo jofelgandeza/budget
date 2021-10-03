@@ -1,9 +1,10 @@
     <section class="s1">
 		<div class="main-container">
-            Budget Breakdown per CENTER  
+            <h3> Budget Breakdown per CENTER  </h3>
             <table class="content-table">
                 <tr>
-
+                <h5> Reminder:</h5>
+                <p>Please SET Center Beginning Balances first before Setting the Targets.</p> 
                 </tr>
                 <tr>
                     <% if (yuser.role === "PO") { %>
@@ -20,6 +21,7 @@
                     <th> OLD CLIENT AMT</th>
                     <th> RESIGN</th>
                     <th> LINKS</th>
+                    
                 </tr>
                 <% centers.forEach(center => { %>
                     <tr>

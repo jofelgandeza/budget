@@ -251,8 +251,31 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
     let sortedTargets = []  
     let doneRedEditCenter = false
     let doneSortData = false
+    let ctrBrkDownTots = []
     let totCntrBudgAmt = 0
     let begBalData = []
+
+    let totNewCliSem1 = 0
+    let totNewAmtSem1 = 0
+    let totNewCliSem2 = 0
+    let totNewAmtSem2 = 0
+
+    let totOldCliSem1 = 0
+    let totOldAmtSem1 = 0
+    let totOldCliSem2 = 0
+    let totOldAmtSem2 = 0
+
+    let totResignSem1 = 0
+    let totResignSem2 = 0
+
+    let totLoanAmount = 0
+    let totNumCli = 0
+    let totLoanAmtSem1 = 0
+    let totLoanAmtSem2 = 0
+        
+    let totBegBal1 = 0
+    let totBegBal2 = 0
+
     try {
 
         const loanType = await Loan_type.find({}, function (err, foundLoan) {
@@ -267,11 +290,17 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
 
         if (Editcenter.length !== 0) {
             
+            let totResign1 = Editcenter.resClient
+            let totResign2 = Editcenter.resClient2
+
             Editcenter.Loan_beg_bal.forEach( listBeg => {
                 const begLonType = listBeg.loan_type
                 const begClient = listBeg.beg_client_count
                 const begPrincipal = listBeg.beg_principal
                 const begInterest = listBeg.beg_interest
+                if (begLonType === "Group Loan") {
+                    totBegBal1 = begClient
+                }
 
                 begBalData.push({begLonType: begLonType, begClient: begClient, begPrincipal: begPrincipal, begInterest: begInterest })
              })
@@ -286,17 +315,57 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
                 const totAmount = list.totAmount
                 const remarks = list.remarks
                     totCntrBudgAmt = totCntrBudgAmt + totAmount
-                const sortKey = _.toString(list.dispView) + list.loan_type + _.toString(list.monthOrder)
+                    totLoanAmount = totLoanAmount + totAmount
+
+                    const sortKey = _.toString(list.dispView) + list.loan_type + _.toString(list.monthOrder)
                 
                 forSortTargets.push({_id: _id, sortKey: sortKey, loan_type: loan_type, month: month, semester: semester, numClient: numClient, amount: amount, totAmount: totAmount, remarks: remarks})
 
+
+                if (semester === "First Half") {
+
+                    if (remarks === "New Loan") {
+                        totBegBal2 = totBegBal2 + numClient
+                        totNewCliSem1 = totNewCliSem1 + numClient
+                        totNewAmtSem1 = totNewAmtSem1 + totAmount
+
+                    } else {
+                        totBegBal2 = totBegBal2 + numClient
+                        totOldCliSem1 = totOldCliSem1 + numClient
+                        totOldAmtSem1 = totOldAmtSem1 + totAmount
+
+                    }
+                } else {   // Second Half
+
+                    if (remarks === "New Loan") {
+                        totNewCliSem2 = totNewCliSem2 + numClient
+                        totNewAmtSem2 = totNewAmtSem2 + totAmount
+
+                    } else {
+                        monthReLoan2 = month
+                        totOldCliSem2 = totOldCliSem2 + numClient
+                        totOldAmtSem2 = totOldAmtSem2 + totAmount
+                        
+                    }
+                }
+
             } )
             doneRedEditCenter = true
+            let totCliSem1 = totNewCliSem1 + totOldCliSem1
+            let totCliSem2  = totNewCliSem2 + totOldCliSem2
+            let totLoanAmtSem1 = totNewAmtSem1 + totOldAmtSem1 
+            let totLoanAmtSem2 = totNewAmtSem2 + totOldAmtSem2 
+
+            ctrBrkDownTots.push({totBegBal1: totBegBal1, totBegBal2: totBegBal2, totNewCliSem1: totNewCliSem1, totNewCliSem2: totNewCliSem2,
+                totNewAmtSem1: totNewAmtSem1, totNewAmtSem2: totNewAmtSem2, totOldCliSem1: totOldCliSem1, totOldCliSem2: totOldCliSem2,
+                totOldAmtSem1: totOldAmtSem1, totOldAmtSem2: totOldAmtSem2, totResign1: totResign1, totResign2: totResign2,
+                totCliSem1: totCliSem1, totCliSem2: totCliSem2, totLoanAmount: totLoanAmount, totLoanAmtSem1: totLoanAmtSem1, totLoanAmtSem2: totLoanAmtSem2 })
+
 
         } else {
             doneRedEditCenter = true
         }
-
+        console.log(ctrBrkDownTots)
         sortedTargets = forSortTargets.sort( function (a,b) {
             if ( a.sortKey < b.sortKey ){
                 return -1;
@@ -315,6 +384,7 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
                 newListItems: sortedTargets,
                 totCntrBudgAmt: totCntrBudgAmt,
                 begBalData: begBalData,
+                ctrBrkDownTots: ctrBrkDownTots,
                 monthSelect: monthSelect,
                 yuser: yuser
             });
@@ -368,7 +438,7 @@ router.get('/setBegBals/:id', authUser, authRole("PO", "BM"), async (req, res) =
                     ctrBegBalCli = ctrBegBal.beg_client_count
                     begPrincipal = ctrBegBal.beg_principal
                     begInterest = ctrBegBal.beg_interest
-                    begBalID = ctrBegBal.beg_interest
+                    begBalID = ctrBegBal._id
                     begMonth = ctrBegBal.expected_maturity_date
                     totCntrBudgPrin = totCntrBudgPrin + begPrincipal
                     totCntrBudgCli = totCntrBudgCli + ctrBegBalCli
@@ -754,7 +824,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                         // To update newClient, NewClientAmt, oldClient, oldClientAmt, resClient, resClient2 in CENTER fields
                     })
 
-                    if (totalResign !== 0) {
+                    if (totalResign >= 0) {
 
                         const ctrResBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "ResClientCount"}, function (err, fndResCli) {
 
@@ -1063,10 +1133,11 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
     const begInterest = req.body.begInterest
     const begPrincipal = req.body.begPrincipal
     const month = req.body.month
+    const begBalID = req.body.idBegbal
     // const totalAmt = req.body.totAmt
     let doneReadCenter = false
 
-    let loanTyp = ""
+    let loanTyp = "Group Loan"
     let hasChangesBal = false
     let centerCode = ""
     let canSaveBegBal = false
@@ -1075,10 +1146,10 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
 
             for(var i=0; i<begCenter.length; i++) {
 
-                if (numClient[i] > 0) {
-                    loanTyp = "Group Loan"
+                // if (numClient[i] > 0) {
                     centerCode = begCenter[i]
                     let totBegAmount = 0
+                    let num_Client = _.toNumber(numClient[i])
     
                     let numMaturityMonth = 0
                     switch(month[i]) {
@@ -1104,48 +1175,66 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                             numMaturityMonth = 0
                     }   
             
-                    // canSaveBegBal = false
+                    canSaveBegBal = false
+                    let hasChangedBegBal = false
+                    let canDeleteBegBal = false
     
                     const fndCenter = await Center.findOne({center: centerCode}, function (err, centerFound) {
-    
-                        const ctrBegBals = centerFound.Loan_beg_bal
-                        let ctrBegBalCli = 0
-            
-                        let recCtr = 0
             
                             const curLoanBeg = centerFound.Loan_beg_bal
                             totBegAmount = _.toNumber(begPrincipal[i]) + _.toNumber(begInterest[i])
-                            
-                            let item = {
-                                loan_type: loanTyp,
-                                beg_amount: totBegAmount,
-                                beg_interest: begInterest[i],
-                                beg_principal: begPrincipal[i],
-                                beg_client_count: numClient[i],
-                                expected_maturity_date: month[i],
-                                month_number: numMaturityMonth,
-                                dispView: 1
-                             }
-            
-                            if (curLoanBeg.length === 0) {
-            
+                                        
+                            if (curLoanBeg.length === 0  && num_Client > 0) {
+                                let item = {
+                                    loan_type: loanTyp,
+                                    beg_amount: totBegAmount,
+                                    beg_interest: begInterest[i],
+                                    beg_principal: begPrincipal[i],
+                                    beg_client_count: num_Client,
+                                    expected_maturity_date: month[i],
+                                    month_number: numMaturityMonth,
+                                    dispView: 1
+                                 }
+    
                                 centerFound.Loan_beg_bal.push(item);
+
+                                canSaveBegBal = true
     
                             } else {
-                            }        
-                            centerFound.beg_center_month = month[i]
-                            centerFound.budget_BegBalCli = numClient[i]
-        
-                            centerFound.region = req.user.region
-                            centerFound.save();
 
-                            canSaveBegBal = true
+                                curLoanBeg.forEach(ctrBegBal => {
+                                    if (ctrBegBal.loan_type === loanTyp) {
+                                        const begBalClient = ctrBegBal.beg_client_count
+                                        if (begBalClient === num_Client) {
+                                        } else {
+                                            hasChangedBegBal = true
+                                            if (num_Client === 0) {
+                                                canDeleteBegBal = true
+                                            }
+                                            canSaveBegBal = true
+                                        }                                         
+                                    }
+                                })
+
+                            }
+
+                            if (canSaveBegBal) {
+                                centerFound.beg_center_month = month[i]
+                                centerFound.budget_BegBalCli = num_Client
+            
+                                centerFound.region = req.user.region
+                                centerFound.save(); 
+                            }                           
         
                     })
             
+                    if (num_Client === 0 && canDeleteBegBal) {
+                        const center = await Center.findOneAndUpdate({center: centerCode}, {$pull: {Loan_beg_bal :{_id: begBalID[i] }}})                        
+                    }
+
                         if (canSaveBegBal) {
                             const curResTarcenter =  await Center.findOneAndUpdate({"center": centerCode}, 
-                                    {$set: {"Loan_beg_bal.$[el].beg_client_count": _.toNumber(numClient[i]), "Loan_beg_bal.$[el].beg_amount": totBegAmount, "Loan_beg_bal.$[el].beg_interest": begInterest[i], 
+                                    {$set: {"Loan_beg_bal.$[el].beg_client_count": num_Client, "Loan_beg_bal.$[el].beg_amount": totBegAmount, "Loan_beg_bal.$[el].beg_interest": begInterest[i], 
                                     "Loan_beg_bal.$[el].beg_principal": begPrincipal[i], "Loan_beg_bal.$[el].expected_maturity_date": month[i], "Loan_beg_bal.$[el].month_number": numMaturityMonth }}, 
                                     {arrayFilters: [{"el.loan_type": loanTyp }]}, function(err, foundResList){
                                     
@@ -1158,14 +1247,14 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                 if (isNull(ctrBegBalCli)) {
                                     let OLDCtrCliBudg = new Center_budget_det({
                                         region: req.user.region, area: req.user.area, branch: branchCode, unit: unit_ID, po: poNumber, po_code: poCode, center: centerCode,
-                                        view_type: "PUH", loan_type: loanTyp, beg_bal: numClient[i], beg_bal_amt: begPrincipal[i], beg_bal_int: begInterest[i], client_count_included: true, view_code: "OldLoanClient", 
+                                        view_type: "PUH", loan_type: loanTyp, beg_bal: num_Client, beg_bal_amt: begPrincipal[i], beg_bal_int: begInterest[i], client_count_included: true, view_code: "OldLoanClient", 
                                         jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                                         })
                                     
                                         OLDCtrCliBudg.save()
                 
                                 } else {
-                                    fndBegBalCli.beg_bal = numClient[i]
+                                    fndBegBalCli.beg_bal = num_Client
                                     fndBegBalCli.beg_bal_amt = begPrincipal[i]
                                     fndBegBalCli.beg_bal_int = begInterest[i]
                                     
@@ -1183,14 +1272,14 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                 if (isNull(ctrBudgDetBegBalAmt)) {
                                     let OLFCtrAMTBudg = new Center_budget_det({
                                         region: req.user.region, area: req.user.area, branch: branchCode, unit: unit_ID, po: poNumber, po_code: poCode, center: centerCode,
-                                        view_type: "PUH", loan_type: loanTyp, beg_bal: numClient[i], beg_bal_amt: begPrincipal[i], beg_bal_int: begInterest[i], client_count_included: true, view_code: "OldLoanAmt", 
+                                        view_type: "PUH", loan_type: loanTyp, beg_bal: num_Client, beg_bal_amt: begPrincipal[i], beg_bal_int: begInterest[i], client_count_included: true, view_code: "OldLoanAmt", 
                                         jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                                     })
                                     
                                     OLFCtrAMTBudg.save()
                 
                                 } else {
-                                    fndBegBalAmt.beg_bal = numClient[i]
+                                    fndBegBalAmt.beg_bal = num_Client
                                     fndBegBalAmt.beg_bal_amt = begPrincipal[i]
                                     fndBegBalAmt.beg_bal_int = begInterest[i]
                                             
@@ -1203,12 +1292,12 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                         }
                         // console.log(curResTarcenter)
                         
-                }
+                // }
                 doneReadCenter = true
             }
 
             if (doneReadCenter) {
-                res.redirect('/centers/viewTarget/' + centerCode)
+                res.redirect('/centers/viewTarget/' + poCode)
             }
         console.log(numClient)
         // alert(Success )
@@ -3343,8 +3432,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         let oct_totNoOfLoan = oct_oldCtotValue + oct_newCtotValue
         let nov_totNoOfLoan = nov_oldCtotValue + nov_newCtotValue
         let dec_totNoOfLoan = dec_oldCtotValue + dec_newCtotValue
-        let tot_totNoOfLoan = jan_totNoOfLoan + feb_totNoOfLoan + mar_totNoOfLoan + apr_totNoOfLoan + may_totNoOfLoan + jun_totNoOfLoan + jul_totNoOfLoan +
-            aug_totNoOfLoan + sep_totNoOfLoan + oct_totNoOfLoan + nov_totNoOfLoan + dec_totNoOfLoan
+        let tot_totNoOfLoan = tot_oldCtotValue + tot_newCtotValue
         
         // if (doneReadNLC && doneReadOLC) {
             poSumView.push({title: "TOTAL NO. OF LOAN", sortkey: 10, group: 1, isTitle: false, jan_value : jan_oldCtotValue + jan_newCtotValue, feb_value : feb_oldCtotValue + feb_newCtotValue, mar_value : mar_oldCtotValue + mar_newCtotValue, 

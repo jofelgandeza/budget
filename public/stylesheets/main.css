@@ -203,6 +203,25 @@ body {
     grid-auto-flow: column;
 }
 
+.box {
+    width: 70vw;
+    height: 20vh;
+    font-family: 'Gotham Rounded';
+    font-size: 16px;
+    color: var(--color-text-light);
+    text-align: right;
+    align-items: center;
+    background-color: rgb(114, 121, 22);
+    margin: 10px auto;
+    outline: 2px solid #444e0d;
+    display: grid;
+    grid-template-columns: 10px repeat(4, minmax(90px, 1fr));
+    grid-template-rows: 30px;
+    grid-auto-columns: 90px 120px 350px;
+    grid-auto-rows: 30px;
+    grid-auto-flow: column;
+ }
+
 .accountLabel {
     text-align: left;
 }
@@ -297,6 +316,10 @@ h6 { font-size: 16px;}
 	margin: 0 auto;
 }
 
+.main-container1{
+	width: 1440x;
+	margin: 0 auto;
+}
 
 .greeting-wrapper{
 	display: grid;
@@ -309,7 +332,7 @@ h6 { font-size: 16px;}
 .intro-wrapper{
 	background-color: var(--secondaryColor);
 	border:1px solid var(--borderColor);
-	border-radius:5px 5px 0 0;
+	border-radius:3px 5px 0 0;
 
 
 	-webkit-box-shadow: -1px 1px 3px -1px rgba(0,0,0,0.75);
@@ -324,6 +347,23 @@ h6 { font-size: 16px;}
 	;
 }
 
+.intro-wrapper1{
+	background-color: var(--secondaryColor);
+	border:1px solid var(--borderColor);
+	border-radius:0 1px 0 0;
+
+
+	-webkit-box-shadow: -1px 1px 3px -1px rgba(0,0,0,0.75);
+	-moz-box-shadow: -1px 1px 3px -1px rgba(0,0,0,0.75);
+	box-shadow: -1px 1px 3px -1px rgba(0,0,0,0.75);
+
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	grid-template-areas: 
+		'nav-wrapper nav-wrapper nav-wrapper'
+		'left-column right-column right-column'
+	;
+}
 
 .-wrapper{
 	background-color: var(--secondaryColor);
@@ -483,6 +523,16 @@ h6 { font-size: 16px;}
     background-color: rgb(83, 83, 3);
 
 }
+
+.leftCtrBreakdown-column{
+	grid-area: right-column;
+    align-items: left;
+	padding-top: 20px;
+    padding-bottom: 10px;
+    background-color: rgb(83, 83, 3);
+
+}
+
 
 #preview-shadow{
 	background-color: var(--previewShadow);
@@ -659,6 +709,19 @@ h6 { font-size: 16px;}
 
 	.right-column{
 		justify-content: center;
+	}
+
+	.intro-wrapper1{
+		grid-template-columns: 1fr 1fr 1fr 1fr;
+		grid-template-areas: 
+			'nav-wrapper'
+			'left-column'
+			'right-column'
+		;
+	}
+
+	.left-column{
+		justify-content: right;
 	}
 
 }
