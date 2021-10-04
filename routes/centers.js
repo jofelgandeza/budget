@@ -644,14 +644,16 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                 }
 
                 totBegBal1 = sortedTargets[i].begBal
-                const targetClient = _.toNumber(numClient[i])
+                let targetClient = 0
 
                 if (sortedTargets.length == 1) {
                     id_Client = idClient
                     num_Client = numClient
+                    targetClient = _.toNumber(num_Client)
                 } else {
                     id_Client = idClient[i]
                     num_Client = numClient[i]
+                    targetClient = _.toNumber(num_Client)
                 }
 
                 if (_.toNumber(numClient[i]) == sortedTargets[i].numClient) { // if TARGETS have no changes
@@ -686,7 +688,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                 } else { // IF target has changes / modifications
                     hasChangesTarg = true
                     loanTyp = sortedTargets[i].loan_type  
-                    let totalAmt = numClient[i] * sortedTargets[i].amount
+                    let totalAmt = num_Client * sortedTargets[i].amount
                     let targNewClient = 0
                     let targOldClient = 0
                     const totCliDiff = targetClient - sortedTargets[i].numClient
@@ -703,7 +705,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                             totNewAmtDiff1 = totNewAmtDiff1 + (totCliDiff * sortedTargets[i].amount)
                             totBegBal2 = totBegBal2 + sortedTargets[i].numClient
 
-                            totNewCliSem1 = totNewCliSem1 + numClient[i]
+                            totNewCliSem1 = totNewCliSem1 + targetClient
                             totNewAmtSem1 = totNewAmtSem1 + totalAmt
 
                             firstSemChanged = true
@@ -781,8 +783,9 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
 
                 poEditedTargPerLonTyp.forEach( poEditedData => {
 
+                    let centerForEdit =  poEditedData.center
                     loanTyp = poEditedData.loan_type
-                    ctrLonTyp = poEditedData.centerLoanTyp
+                    let ctrLonTyp = poEditedData.centerLoanTyp
                     totNewCliSem1 = poEditedData.tNewCliSem1
                     totNewCliSem2 = poEditedData.tNewCliSem2
                     totNewAmtSem1 = poEditedData.tNewAmtSem1 
@@ -812,7 +815,9 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                     // totOldCliDiff2 = poEditedData.tOldCliDiff2
                     // totOldAmtDiff2 = poEditedData.tOldAmtDiff2
 
-                    const ctrBudgDet = Center.findOne({center: centerCode, loan_type: ctrLonTyp}, function (err, fndOldCli) {
+                    const ctrBudgDet = Center.findOne({center: centerForEdit, loan_type: ctrLonTyp}, function (err, fndOldCli) {
+                        console.log(fndOldCli)
+
                         fndOldCli.newClient = totNewCliSem1 + totNewCliSem2
                         fndOldCli.newClientAmt = totNewAmtSem1 + totNewAmtSem2
                         fndOldCli.oldClient = totOldCliSem1 + totOldCliSem2
@@ -826,7 +831,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
 
                     if (totalResign >= 0) {
 
-                        const ctrResBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "ResClientCount"}, function (err, fndResCli) {
+                        const ctrResBudgDet = Center_budget_det.findOne({center: centerForEdit, loan_type: loanTyp, view_code: "ResClientCount"}, function (err, fndResCli) {
 
                             switch(monthReLoan1) {
                                 case "January": 
@@ -873,16 +878,17 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                                 default:
                                     orderMonth = 0
                             }   
-
-                            fndResCli.save()
+                            if (!isNull(fndResCli)) {
+                                fndResCli.save()
+                            }
                         })
                     }
 
                     const totalOldCli = totOldCliSem1 + totOldCliSem2
 
-                    // if (totalOldCli !== 0) {
+                    if (totalOldCli >= 0) {
 
-                        const ctrOldCliBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "OldLoanClient"}, function (err, fndOldCli) {
+                        const ctrOldCliBudgDet = Center_budget_det.findOne({center: centerForEdit, loan_type: loanTyp, view_code: "OldLoanClient"}, function (err, fndOldCli) {
 
                             switch(monthReLoan1) {
                                 case "January": 
@@ -930,15 +936,17 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                                     orderMonth = 0
                             }   
 
-                            fndOldCli.save()
+                            if (!isNull(fndOldCli)) {
+                                fndOldCli.save()
+                            }
                         })
-                    // }
+                    }
 
                     const totalOldAmt = totOldAmtSem1 + totOldAmtSem2
 
-                    // if (totalOldAmt !== 0) {
+                    if (totalOldAmt >= 0) {
 
-                        const ctrOldAmtBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "OldLoanAmt"}, function (err, fndOldAmt) {
+                        const ctrOldAmtBudgDet = Center_budget_det.findOne({center: centerForEdit, loan_type: loanTyp, view_code: "OldLoanAmt"}, function (err, fndOldAmt) {
 
                             switch(monthReLoan1) {
                                 case "January": 
@@ -985,17 +993,19 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                                 default:
                                     orderMonth = 0
                             }   
-
-                            fndOldAmt.save()
+                            if (!isNull(fndOldAmt)) {
+                                fndOldAmt.save()
+                            }
                         })
-                    // }
+                    }
 
                     const totalNewCli = totNewCliSem1 + totNewCliSem2
 
-                    // if (totalNewCli !== 0) {
+                    if (totalNewCli >= 0) {
 
-                        const ctrNewCliBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "NewLoanClient"}, function (err, fndNewCli) {
-
+                        const ctrNewCliBudgDet = Center_budget_det.findOne({center: centerForEdit, loan_type: loanTyp, view_code: "NewLoanClient"}, function (err, fndNewCli) {
+                            const foundNewCli = fndNewCli
+                            console.log(foundNewCli)
                             switch(monthNewLoan1) {
                                 case "January": 
                                     fndNewCli.jan_budg = totNewCliSem1
@@ -1041,16 +1051,18 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                                 default:
                                     orderMonth = 0
                             }   
-
-                            fndNewCli.save()
+                            if (!isNull(fndNewCli)) {
+                                fndNewCli.save()
+                            }
                         })
-                    // }
+                        console.log(ctrNewCliBudgDet)
+                    }
 
                     const totalNewAmt = totNewAmtSem1 + totNewAmtSem2
 
-                    // if (totalNewAmt !== 0) {
+                    if (totalNewAmt >= 0) {
 
-                        const ctrNewAmtBudgDet = Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "NewLoanAmt"}, function (err, fndNewLoanAmt) {
+                        const ctrNewAmtBudgDet = Center_budget_det.findOne({center: centerForEdit, loan_type: loanTyp, view_code: "NewLoanAmt"}, function (err, fndNewLoanAmt) {
 
                             switch(monthNewLoan1) {
                                 case "January": 
@@ -1096,10 +1108,12 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                                     break;
                                 default:
                                     orderMonth = 0
-                            }   
-                            fndNewLoanAmt.save()
+                            }
+                            if (!isNull(fndNewLoanAmt)) {
+                                fndNewLoanAmt.save()
+                            }
                         })
-                    // }
+                    }
 
                 })
             }
