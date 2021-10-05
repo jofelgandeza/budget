@@ -1232,15 +1232,24 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
 
                             }
 
+                            if (isNull(curLoanBeg)) {
+                                centerFound.beg_center_month = ""
+                            }
+
                             if (canSaveBegBal) {
-                                centerFound.beg_center_month = month[i]
+                                if (canDeleteBegBal) {
+                                    centerFound.beg_center_month = ""
+                                } else {
+                                    centerFound.beg_center_month = month[i]
+                                }
                                 centerFound.budget_BegBalCli = num_Client
             
                                 centerFound.region = req.user.region
                                 centerFound.save(); 
                             }                           
         
-                    })
+                        })
+
             
                     if (num_Client === 0 && canDeleteBegBal) {
                         const center = await Center.findOneAndUpdate({center: centerCode}, {$pull: {Loan_beg_bal :{_id: begBalID[i] }}})                        
