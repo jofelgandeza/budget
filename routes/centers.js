@@ -1232,7 +1232,7 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
 
                             }
 
-                            if (isNull(curLoanBeg) || num_Client == 0) {
+                            if (isNull(curLoanBeg) || num_Client === 0) {
                                 centerFound.beg_center_month = ""
                             }
 
@@ -1240,7 +1240,11 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                 if (canDeleteBegBal) {
                                     centerFound.beg_center_month = ""
                                 } else {
-                                    centerFound.beg_center_month = month[i]
+                                    if (num_Client === 0) {
+                                        centerFound.beg_center_month = ""
+                                    } else {
+                                        centerFound.beg_center_month = month[i]
+                                    }
                                 }
                                 centerFound.budget_BegBalCli = num_Client
             
