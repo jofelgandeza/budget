@@ -1232,7 +1232,7 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
 
                             }
 
-                            if (isNull(curLoanBeg)) {
+                            if (isNull(curLoanBeg) || num_Client == 0) {
                                 centerFound.beg_center_month = ""
                             }
 
