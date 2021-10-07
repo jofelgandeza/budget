@@ -48,8 +48,6 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 //     let postUnitHead = ""
 //     let postProgOfr = ""
 
-//     let poLoanTotals = []
-//     let unitLoanTotals = []
 //     let brnLoanTotals = []
 //     let brnLoanGrandTot = []
 //     let fndCenters = []
@@ -62,15 +60,14 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 //     let oClientAmt = 0
 //     let rClient = 0
 //     let rClient2 = 0
-//     let resloanTot = 0
-//     let resignClient = 0
 //     let budgEndBal = 0
 //     let totDisburse = 0
 //     let budgBegBal = 0
 //     let tbudgEndBal = 0
 //     let totbudgEndBal = 0
-
 //     let lnType 
+
+//     let totCenters = 0
 //     // const POdata = await Employee.findOne({assign_code: IDcode})
 //     // const POname = POdata.first_name + " " + POdata.middle_name.substr(0,1) + ". " + POdata.last_name
 //     // const POposition = POdata.position_code
@@ -119,59 +116,40 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 
 //         const loanType = await Loan_type.find({})
 
-//         const center = await Center.find({branch: branchCode}, function (err, foundCenters) {
+//         const center = await Center.find({branch: branchCode}, function (err, fdCenters) {
 // //        const center = await Center.find(searchOptions)
+//             foundCenters = fdCenters
 //             fndCenters = foundCenters
+
 //             if (fndCenters.length === 0) {
 //                 doneReadCenter = true
             
 //             } else {
 
 //                 fndCenters.forEach ( fnCenter => {
+                    
+//                     newClients = newClients + fnCenter.newClient
+//                     oClient = oClient +  fnCenter.oldClient
+//                     nClientAmt = nClientAmt + fnCenter.newClientAmt
+//                     oClientAmt = oClientAmt + fnCenter.oldClientAmt
 
+//                     budgEndBal = oClient + newClients 
+//                     totDisburse = nClientAmt + oClientAmt
 
-//                 })
-
-//                 newClients = _.sumBy(center, function(o) { return o.newClient; });
-//                 nClientAmt = _.sumBy(center, function(o) { return o.newClientAmt; });
-//                 oClient = _.sumBy(center, function(o) { return o.oldClient; });
-//                 oClientAmt = _.sumBy(center, function(o) { return o.oldClientAmt; });
-//                 rClient = _.sumBy(center, function(o) { return o.resClient; });
-//                 rClient2 = _.sumBy(center, function(o) { return o.resClient2; });
-//                 budgBegBal = _.sumBy(center, function(o) { return o.budget_BegBal; });
-//                 budgEndBal = oClient + newClients 
-//                 totDisburse = nClientAmt + oClientAmt
-//                 // tbudgEndBal = (budgBegBal + newClients) - (rClient + rClient2)
-
-//                 foundCenter = center.sort()
+//                     totCenters = totCenters + 1
+//                     })
 
 //                 doneReadCenter = true   
 //             }
 //         })
 
-//     foundPOunits.forEach(uh => {
-
-//         let unCode = _.trim(uh.unit)
-//         let uniCode = unCode
-//         let unHeadName = uh.first_name + " " + uh.middle_name.substr(0,1) + ". " + uh.last_name
-//         let forSortUnitNum = uniCode
-
-//         let nUnitLoanTot = 0
-//         let nUnitLoanTotCount = 0
-//         let oUnitLoanTot = 0
-//         let oUnitLoanTotCount = 0
-//         let resUnitLoanTot = 0
-//         let begUnitLoanTot = 0
-//         let begUnitClientTot = 0
-//         let bUnitClient = 0
-//         let bUnitClientCnt = 0
-
+    
 //         let typeLoan = ""
 //         let count = 0 
     
 //         loanType.forEach(loan_type => {
 //             typeLoan = loan_type.title
-//             let nloanTot = 0
+//             let loanTotAmt = 0
 //             let nloanTotCount = 0
 //             let oloanTot = 0
 //             let oloanTotCount = 0
@@ -189,14 +167,10 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 //             } 
 
 //             foundCenter.forEach(center => {
-//                 const unitCode = center.unit
-//                 if (unitCode === forSortUnitNum) { 
-//                     const lnType = center.loan_code
-//                     let centerTargets = center.Targets
-//                     let LoanBegBal = center.Loan_beg_bal
-// //                  let centerLoanBegBal = center.Loan_beg_bal                
-//                     let resignClient = center.resClient
-            
+
+//                 let centerTargets = center.Targets
+//                 let LoanBegBal = center.Loan_beg_bal
+// \            
 //                     if (lnType === _.trim(lnType)) {
 //                         BudgBegBal = center.budget_BegBal
 //                     }
@@ -206,8 +180,8 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 //                     centerTargets.forEach(centerLoan => {
 //                         if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
 //                             const loanRem = centerLoan.remarks
-//                             if (_.trim(loanRem) === "New Loan") {
-//                                 nloanTot = nloanTot + centerLoan.totAmount
+//                             if (_.trim(loanRem) === "New Loa n") {
+//                                 loanTotAmt = loanTotAmt + centerLoan.totAmount
 //                                 nloanTotCount = nloanTotCount + centerLoan.numClient
 //                             } else {
 //                                 oloanTot = oloanTot + centerLoan.totAmount
@@ -225,8 +199,7 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 //                             bClientAmt = bClientAmt + begLoanTot
 //                         }
 //                     })
-//                 }
-//             })
+//              })
 //             let totAmounts = nloanTot + oloanTot 
 //             let branchBudgEndBal = (uBegClientTot + nloanTotCount) - resloanTot
 //             totbudgEndBal = totbudgEndBal + branchBudgEndBal
@@ -244,16 +217,6 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 //             begUnitClientTot = begUnitClientTot + uBegClientTot
             
 //         })
-
-//         typeLoan = "UNIT TOTALS"
-//         let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
-//         let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
-
-//         unitLoanTotals.push({sortkey: forSortUnitNum, unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
-//             begClientAmt: begUnitLoanTot, ntotAmount: nUnitLoanTot, onumClient: oUnitLoanTotCount, ototAmount: oUnitLoanTot, resiloanTot: resUnitLoanTot, budgEndBal: budgUnitEndBal})
-
-//             doneFoundPO = true
-//     })
 
 // // LOOP for getting Different Loan products totals in the branch
 //     let gtBegBalClient = 0

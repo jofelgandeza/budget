@@ -1720,7 +1720,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
     const loanType = req.body.loanType
     const month = req.body.month
     const semester = req.body.semester
-    const numClient = _.toNumber(_.replace(req.body.numClient,',',''))
+    const numClient = _.toNumber(req.body.numClient)
     const amount = _.toNumber(_.replace(req.body.amount,',',''))
     const totAmount = numClient * amount
     const remarks = req.body.remarks
