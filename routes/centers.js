@@ -1116,6 +1116,20 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                     }
 
                 })
+                const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress)
+                console.log(ip) // ip address of the user
+                console.log(lookup(ip)) // location of the user
+        
+                let loggedUser = new User_log({
+                  IP: ip,
+                  login_date: new Date(),
+                  user_name: req.user.name,
+                  assign_code: req.user.assCode,
+                  activity: "Made Changes in a Target" + centerCode,
+                  activity_desc: "User logged-in.",
+                })
+                  const saveLogUser = loggedUser.save()
+                        
             }
 
             if (req.user.role === "BM") {
