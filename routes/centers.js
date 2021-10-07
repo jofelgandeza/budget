@@ -656,7 +656,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                     targetClient = _.toNumber(num_Client)
                 }
 
-                if (_.toNumber(numClient[i]) == sortedTargets[i].numClient) { // if TARGETS have no changes
+                if (num_Client == sortedTargets[i].numClient) { // if TARGETS have no changes
 
                     if (sortedTargets[i].remarks === "New Loan") {       
 
@@ -749,14 +749,14 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                             secondSemChanged = true
                         }
                     }
-                   const curResTarcenter =  await Center.findOneAndUpdate({"center": centerCode}, 
-                        {$set: {"Targets.$[el].numClient": _.toNumber(numClient[i]), "Targets.$[el].totAmount": totalAmt, "Targets.$[el].newClient": targNewClient, "Targets.$[el].oldClient": targOldClient}}, 
-                        {arrayFilters: [{"el._id": id_Client }]}, function(err, foundResList){
+                    const curResTarcenter =  await Center.findOneAndUpdate({"center": centerCode}, 
+                            {$set: {"Targets.$[el].numClient": num_Client, "Targets.$[el].totAmount": totalAmt, "Targets.$[el].newClient": targNewClient, "Targets.$[el].oldClient": targOldClient}}, 
+                            {arrayFilters: [{"el._id": id_Client }]}, function(err, foundResList){
+                            
+                                console.log(foundResList)
+                        })
                         
-                            console.log(foundResList)
-                    })
-                    
-                    console.log(curResTarcenter)
+                        console.log(curResTarcenter)
                 }
 
                 prevLoanTyp = sortedTargets[i].loan_type
