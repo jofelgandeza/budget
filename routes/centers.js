@@ -537,6 +537,9 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
     let num_Client = 0
     let id_Client = ""
 
+    let nowZeroTargetsLength = false
+    let nowOneTargetsLength = false
+
     let poEditedTargPerLonTyp = []
 
     let hasChangesTarg = false
@@ -650,6 +653,8 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                     id_Client = idClient
                     num_Client = numClient
                     targetClient = _.toNumber(num_Client)
+                    nowOneTargetsLength = true
+
                 } else {
                     id_Client = idClient[i]
                     num_Client = numClient[i]
@@ -688,12 +693,15 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                 } else { // IF target has changes / modifications
                     hasChangesTarg = true
                     loanTyp = sortedTargets[i].loan_type  
-                    let totalAmt = num_Client * sortedTargets[i].amount
+                    let totalAmt = targetClient * sortedTargets[i].amount
                     let targNewClient = 0
                     let targOldClient = 0
                     const totCliDiff = targetClient - sortedTargets[i].numClient
 
                     // let totBegBal2 = 0
+                    if (targetClient == 0) {
+                        nowZeroTargetsLength = true
+                    }
 
                     if(sortedTargets[i].remarks === "New Loan") {
                         targNewClient = targetClient

@@ -1873,20 +1873,6 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
 
             const oldClientCntView = await Budg_exec_sum.find({unit: viewUnitCode, view_code: "NumReLoanCli"}, function (err, fndOldCliCnt) {
 
-            // begBalOldClient = _.sumBy(fndOldCliCnt, function(o) { return o.beg_bal; })
-            // jan_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.jan_budg; })
-            // feb_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.feb_budg; })
-            // mar_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.mar_budg; })
-            // apr_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.apr_budg; })
-            // may_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.may_budg; })
-            // jun_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.jun_budg; })
-            // jul_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.jul_budg; })
-            // aug_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.aug_budg; })
-            // sep_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.sep_budg; })
-            // oct_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.oct_budg; })
-            // nov_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.nov_budg; })
-            // dec_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.dec_budg; })
-
             fndOldCliCnt.forEach(OldCliCnt => {
                 begBalOldClient = begBalOldClient + OldCliCnt.beg_bal
                 jan_oldCliTot = jan_oldCliTot + OldCliCnt.jan_budg
