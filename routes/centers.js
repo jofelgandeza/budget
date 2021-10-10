@@ -3766,8 +3766,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             // oct_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.oct_budg; })
             // nov_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.nov_budg; })
             // dec_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.dec_budg; })
-
-            fndNewAmt.forEach(NewAmt => {
+            const fondNewLnAmts = fndNewAmt
+            fondNewLnAmts.forEach(NewAmt => {
                 jan_newAtotValue = jan_newAtotValue + NewAmt.jan_budg
                 feb_newAtotValue = feb_newAtotValue + NewAmt.feb_budg
                 mar_newAtotValue = mar_newAtotValue + NewAmt.mar_budg
