@@ -1470,9 +1470,9 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                     centerCode = begCenter[i]
                     let totBegAmount = 0
                     let num_Client = _.toNumber(numClient[i])
-    
+                    let begMonth = month[i]
                     let numMaturityMonth = 0
-                    switch(month[i]) {
+                    switch(begMonth) {
                         case "January": 
                             numMaturityMonth = 11 
                             break;
@@ -1511,7 +1511,7 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                     beg_interest: begInterest[i],
                                     beg_principal: begPrincipal[i],
                                     beg_client_count: num_Client,
-                                    expected_maturity_date: month[i],
+                                    expected_maturity_date: begMonth,
                                     month_number: numMaturityMonth,
                                     dispView: 1
                                  }
@@ -1525,7 +1525,8 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                 curLoanBeg.forEach(ctrBegBal => {
                                     if (ctrBegBal.loan_type === loanTyp) {
                                         const begBalClient = ctrBegBal.beg_client_count
-                                        if (begBalClient === num_Client) {
+
+                                        if (begBalClient === num_Client && ctrBegBal.expected_maturity_date === begMonth ) {
                                         } else {
                                             hasChangedBegBal = true
                                             if (num_Client === 0) {
@@ -1549,7 +1550,7 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                     if (num_Client === 0) {
                                         centerFound.beg_center_month = ""
                                     } else {
-                                        centerFound.beg_center_month = month[i]
+                                        centerFound.beg_center_month = begMonth
                                     }
                                 }
                                 centerFound.budget_BegBalCli = num_Client
@@ -1557,10 +1558,10 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                 centerFound.region = req.user.region
                                 centerFound.save(); 
                             }                           
-        
+                            doneReadCenter = true
                         })
 
-            
+           if (doneReadCenter) { 
                     if (num_Client === 0 && canDeleteBegBal) {
                         const center = await Center.findOneAndUpdate({center: centerCode}, {$pull: {Loan_beg_bal :{_id: begBalID[i] }}})                        
                     }
@@ -1628,8 +1629,9 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                 // }
                 doneReadCenter = true
             }
+        }
 
-            if (doneReadCenter) {
+        if (doneReadCenter) {
                 res.redirect('/centers/viewTarget/' + poCode)
             }
         console.log(numClient)
