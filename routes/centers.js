@@ -18,6 +18,7 @@ const user = require('../models/user')
 const User_log = require('../models/user_log')
 const excel = require('exceljs')
 const Cleave = require('../public/javascripts/cleave.js')
+const { lookup } = require('geoip-lite')
 
 
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
@@ -545,13 +546,20 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
     let hasChangesTarg = false
     let firstSemChanged = false
     let secondSemChanged = false
+
     try {
+
+        let ctrBegBalCli = 0
+        let ctrBegBals = []
 
         const fndCenter = await Center.findOne({center: centerCode}, function (err, foundCenter) {
             const ctrTargets = foundCenter.Targets
-            const ctrBegBals = foundCenter.Loan_beg_bal
-            let ctrBegBalCli = 0
-            foundCenter.Targets.forEach( list => {
+            ctrBegBals = foundCenter.Loan_beg_bal
+            doneReadCenter = true
+
+        })
+
+        fndCenter.Targets.forEach( list => {
                 
                 const _id = list._id
                 const loan_type = list.loan_type
@@ -575,9 +583,6 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                 forSortTargets.push({_id: _id, sortKey: sortKey, loan_type: loan_type, begBal: ctrBegBalCli, month: month, semester: semester, numClient: numClient, amount: amount, totAmount: totAmount, remarks: remarks})
 
             })
-
-            doneReadCenter = true
-        })
 
         if (doneReadCenter) {
             sortedTargets = forSortTargets.sort( function (a,b) {
@@ -616,9 +621,321 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
 
                     } else {
                         if (hasChangesTarg) {
-                            poEditedTargPerLonTyp.push({center: centerCode, centerLoanTyp: centerLoanTyp, loan_type: loanTyp, tNewCliSem1: totNewCliSem1, tNewAmtSem1: totNewAmtSem1, tNewCliSem2: totNewCliSem2, tNewAmtSem2: totNewAmtSem2,
-                                tBegBal1: totBegBal1, tBegBal2: totBegBal2, tOldAmtSem1: totOldAmtSem1, tOldAmtSem2: totOldAmtSem2,
-                                tOldCliSem1: totOldCliSem1, tOldCliSem2: totOldCliSem2, monthNewLoan1: monthNewLoan1, monthNewLoan2: monthNewLoan2, monthReLoan1: monthReLoan1, monthReLoan2: monthReLoan2})
+                            
+                            // Save changes to center_budget_dets here...
+
+                            totResign1 = totBegBal1 - totOldCliSem1
+                            if (totOldCliSem2 > 0) {
+                                totResign2 = totBegBal2 - totOldCliSem2
+                            }
+        
+                            const totalResign = totResign1 + totResign2
+        
+                            const ctrBudgDet = await Center.findOne({center: centerCode, loan_type: "GLP"}, function (err, fndOldCli) {
+                                // console.log(fndOldCli)
+        
+                                fndOldCli.newClient = totNewCliSem1 + totNewCliSem2
+                                fndOldCli.newClientAmt = totNewAmtSem1 + totNewAmtSem2
+                                fndOldCli.oldClient = totOldCliSem1 + totOldCliSem2
+                                fndOldCli.oldClientAmt = totOldAmtSem1 + totOldAmtSem2
+                                fndOldCli.resClient = totResign1
+                                fndOldCli.resClient2 = totResign2
+        
+                                fndOldCli.save()
+                                // To update newClient, NewClientAmt, oldClient, oldClientAmt, resClient, resClient2 in CENTER fields
+                            })
+    
+                            if (totalResign >= 0) {
+    
+                                const ctrResBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "ResClientCount"}, function (err, fndResCli) {
+        
+                                    switch(monthReLoan1) {
+                                        case "January": 
+                                        fndResCli.jan_budg = totResign1
+                                            break;
+                                        case "February": 
+                                            fndResCli.feb_budg = totResign1
+                                            break;
+                                        case "March": 
+                                            fndResCli.mar_budg = totResign1
+                                            break;
+                                        case "April": 
+                                            fndResCli.apr_budg = totResign1
+                                            break;
+                                        case "May": 
+                                            fndResCli.may_budg = totResign1
+                                            break;
+                                        case "June": 
+                                            fndResCli.jun_budg = totResign1
+                                            break;
+                                        default:
+                                            orderMonth = 0
+                                    }   
+        
+                                    switch(monthReLoan2) {
+                                        case "July": 
+                                            fndResCli.jul_budg = totResign2
+                                            break;
+                                        case "August": 
+                                            fndResCli.aug_budg = totResign2
+                                            break;
+                                        case "September": 
+                                            fndResCli.sep_budg = totResign2
+                                            break;
+                                        case "October": 
+                                            fndResCli.oct_budg = totResign2
+                                            break;
+                                        case "November": 
+                                            fndResCli.nov_budg = totResign2
+                                            break;
+                                        case "December": 
+                                            fndResCli.dec_budg = totResign2
+                                            break;
+                                        default:
+                                            orderMonth = 0
+                                    }   
+                                    if (!isNull(fndResCli)) {
+                                        fndResCli.save()
+                                    }
+                                })
+                            }
+        
+                            const totalOldCli = totOldCliSem1 + totOldCliSem2
+        
+                            if (totalOldCli >= 0) {
+        
+                                const ctrOldCliBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "OldLoanClient"}, function (err, fndOldCli) {
+        
+                                    switch(monthReLoan1) {
+                                        case "January": 
+                                        fndOldCli.jan_budg = totOldCliSem1
+                                            break;
+                                        case "February": 
+                                            fndOldCli.feb_budg = totOldCliSem1
+                                            break;
+                                        case "March": 
+                                            fndOldCli.mar_budg = totOldCliSem1
+                                            break;
+                                        case "April": 
+                                            fndOldCli.apr_budg = totOldCliSem1
+                                            break;
+                                        case "May": 
+                                            fndOldCli.may_budg = totOldCliSem1
+                                            break;
+                                        case "June": 
+                                            fndOldCli.jun_budg = totOldCliSem1
+                                            break;
+                                        default:
+                                            orderMonth = 0
+                                    }   
+        
+                                    switch(monthReLoan2) {
+                                        case "July": 
+                                            fndOldCli.jul_budg = totOldCliSem2
+                                            break;
+                                        case "August": 
+                                            fndOldCli.aug_budg = totOldCliSem2
+                                            break;
+                                        case "September": 
+                                            fndOldCli.sep_budg = totOldCliSem2
+                                            break;
+                                        case "October": 
+                                            fndOldCli.oct_budg = totOldCliSem2
+                                            break;
+                                        case "November": 
+                                            fndOldCli.nov_budg = totOldCliSem2
+                                            break;
+                                        case "December": 
+                                            fndOldCli.dec_budg = totOldCliSem2
+                                            break;
+                                        default:
+                                            orderMonth = 0
+                                    }   
+        
+                                    if (!isNull(fndOldCli)) {
+                                        fndOldCli.save()
+                                    }
+                                })
+                                console.log(ctrOldCliBudgDet)
+                            }
+        
+                            const totalOldAmt = totOldAmtSem1 + totOldAmtSem2
+        
+                            if (totalOldAmt >= 0) {
+        
+                                const ctrOldAmtBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "OldLoanAmt"}, function (err, fndOldAmt) {
+        
+                                    switch(monthReLoan1) {
+                                        case "January": 
+                                        fndOldAmt.jan_budg = totOldAmtSem1
+                                            break;
+                                        case "February": 
+                                            fndOldAmt.feb_budg = totOldAmtSem1
+                                            break;
+                                        case "March": 
+                                            fndOldAmt.mar_budg = totOldAmtSem1
+                                            break;
+                                        case "April": 
+                                            fndOldAmt.apr_budg = totOldAmtSem1
+                                            break;
+                                        case "May": 
+                                            fndOldAmt.may_budg = totOldAmtSem1
+                                            break;
+                                        case "June": 
+                                            fndOldAmt.jun_budg = totOldAmtSem1
+                                            break;
+                                        default:
+                                            orderMonth = 0
+                                    }   
+        
+                                    switch(monthReLoan2) {
+                                        case "July": 
+                                            fndOldAmt.jul_budg = totOldAmtSem2
+                                            break;
+                                        case "August": 
+                                            fndOldAmt.aug_budg = totOldAmtSem2
+                                            break;
+                                        case "September": 
+                                            fndOldAmt.sep_budg = totOldAmtSem2
+                                            break;
+                                        case "October": 
+                                            fndOldAmt.oct_budg = totOldAmtSem2
+                                            break;
+                                        case "November": 
+                                            fndOldAmt.nov_budg = totOldAmtSem2
+                                            break;
+                                        case "December": 
+                                            fndOldAmt.dec_budg = totOldAmtSem2
+                                            break;
+                                        default:
+                                            orderMonth = 0
+                                    }   
+                                    if (!isNull(fndOldAmt)) {
+                                        fndOldAmt.save()
+                                    }
+                                })
+                            }
+        
+                            const totalNewCli = totNewCliSem1 + totNewCliSem2
+        
+                            if (totalNewCli >= 0) {
+        
+                                const ctrNewCliBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "NewLoanClient"}, function (err, fndNewCli) {
+                                    const foundNewCli = fndNewCli
+                                    console.log(foundNewCli)
+                                    switch(monthNewLoan1) {
+                                        case "January": 
+                                            fndNewCli.jan_budg = totNewCliSem1
+                                            break;
+                                        case "February": 
+                                            fndNewCli.feb_budg = totNewCliSem1
+                                            break;
+                                        case "March": 
+                                            fndNewCli.mar_budg = totNewCliSem1
+                                            break;
+                                        case "April": 
+                                            fndNewCli.apr_budg = totNewCliSem1
+                                            break;
+                                        case "May": 
+                                            fndNewCli.may_budg = totNewCliSem1
+                                            break;
+                                        case "June": 
+                                            fndNewCli.jun_budg = totNewCliSem1
+                                            break;
+                                        default:
+                                            orderMonth = 0
+                                    }   
+        
+                                    switch(monthNewLoan2) {
+                                        case "July": 
+                                            fndNewCli.jul_budg = totNewCliSem2
+                                            break;
+                                        case "August": 
+                                            fndNewCli.aug_budg = totNewCliSem2
+                                            break;
+                                        case "September": 
+                                            fndNewCli.sep_budg = totNewCliSem2
+                                            break;
+                                        case "October": 
+                                            fndNewCli.oct_budg = totNewCliSem2
+                                            break;
+                                        case "November": 
+                                            fndNewCli.nov_budg = totNewCliSem2
+                                            break;
+                                        case "December": 
+                                            fndNewCli.dec_budg = totNewCliSem2
+                                            break;
+                                        default:
+                                            orderMonth = 0
+                                    }   
+                                    if (!isNull(fndNewCli)) {
+                                        fndNewCli.save()
+                                    }
+                                })
+                                console.log(ctrNewCliBudgDet)
+                            }
+        
+                            const totalNewAmt = totNewAmtSem1 + totNewAmtSem2
+        
+                            if (totalNewAmt >= 0) {
+        
+                                const ctrNewAmtBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "NewLoanAmt"}, function (err, fndNewLoanAmt) {
+        
+                                    switch(monthNewLoan1) {
+                                        case "January": 
+                                        fndNewLoanAmt.jan_budg = totNewAmtSem1
+                                            break;
+                                        case "February": 
+                                            fndNewLoanAmt.feb_budg = totNewAmtSem1
+                                            break;
+                                        case "March": 
+                                            fndNewLoanAmt.mar_budg = totNewAmtSem1
+                                            break;
+                                        case "April": 
+                                            fndNewLoanAmt.apr_budg = totNewAmtSem1
+                                            break;
+                                        case "May": 
+                                            fndNewLoanAmt.may_budg = totNewAmtSem1
+                                            break;
+                                        case "June": 
+                                            fndNewLoanAmt.jun_budg = totNewAmtSem1
+                                            break;
+                                        default:
+                                            orderMonth = 0
+                                    }   
+        
+                                    switch(monthNewLoan2) {
+                                        case "July": 
+                                            fndNewLoanAmt.jul_budg = totNewAmtSem2
+                                            break;
+                                        case "August": 
+                                            fndNewLoanAmt.aug_budg = totNewAmtSem2
+                                            break;
+                                        case "September": 
+                                            fndNewLoanAmt.sep_budg = totNewAmtSem2
+                                            break;
+                                        case "October": 
+                                            fndNewLoanAmt.oct_budg = totNewAmtSem2
+                                            break;
+                                        case "November": 
+                                            fndNewLoanAmt.nov_budg = totNewAmtSem2
+                                            break;
+                                        case "December": 
+                                            fndNewLoanAmt.dec_budg = ftotNewAmtSem2
+                                            break;
+                                        default:
+                                            orderMonth = 0
+                                    }
+                                    if (!isNull(fndNewLoanAmt)) {
+                                        fndNewLoanAmt.save()
+                                    }
+                                })
+                            }
+        
+                            // poEditedTargPerLonTyp.push({center: centerCode, centerLoanTyp: centerLoanTyp, loan_type: loanTyp, tNewCliSem1: totNewCliSem1, tNewAmtSem1: totNewAmtSem1, tNewCliSem2: totNewCliSem2, tNewAmtSem2: totNewAmtSem2,
+                            //     tBegBal1: totBegBal1, tBegBal2: totBegBal2, tOldAmtSem1: totOldAmtSem1, tOldAmtSem2: totOldAmtSem2,
+                            //     tOldCliSem1: totOldCliSem1, tOldCliSem2: totOldCliSem2, monthNewLoan1: monthNewLoan1, monthNewLoan2: monthNewLoan2, monthReLoan1: monthReLoan1, monthReLoan2: monthReLoan2})
+                                
                         }
                             hasChangesTarg = false
     
@@ -641,7 +958,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                             monthReLoan2 = ""
                     
                     
-                        }
+                    }
                 } else {
 
                 }
@@ -661,7 +978,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                     targetClient = _.toNumber(num_Client)
                 }
 
-                if (num_Client == sortedTargets[i].numClient) { // if TARGETS have no changes
+                if (targetClient == sortedTargets[i].numClient) { // if TARGETS have no changes
 
                     if (sortedTargets[i].remarks === "New Loan") {       
 
@@ -757,394 +1074,361 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                             secondSemChanged = true
                         }
                     }
-                    const curResTarcenter =  await Center.findOneAndUpdate({"center": centerCode}, 
-                            {$set: {"Targets.$[el].numClient": num_Client, "Targets.$[el].totAmount": totalAmt, "Targets.$[el].newClient": targNewClient, "Targets.$[el].oldClient": targOldClient}}, 
-                            {arrayFilters: [{"el._id": id_Client }]}, function(err, foundResList){
-                            
-                                console.log(foundResList)
-                        })
                         
-                        console.log(curResTarcenter)
+                        // Delete Target if target Client is ZERO-0
+                    if (targetClient == 0) {
+                        const center = await Center.findOneAndUpdate({center: centerCode}, {$pull: {Targets :{_id: id_Client }}})
+                    } else {
+
+                        const curResTarcenter =  await Center.findOneAndUpdate({"center": centerCode}, 
+                            {$set: {"Targets.$[el].numClient": targetClient, "Targets.$[el].totAmount": totalAmt, "Targets.$[el].newClient": targNewClient, "Targets.$[el].oldClient": targOldClient}}, 
+                            {arrayFilters: [{"el._id": id_Client }]}, function(err, foundResList){
+                        
+                            // console.log(foundResList)
+                        })
+                    }
                 }
 
                 prevLoanTyp = sortedTargets[i].loan_type
 
-                if (num_Client == 0) {
-                    const center = await Center.findOneAndUpdate({center: centerCode}, {$pull: {Targets :{_id: id_Client }}})
-                    // if (sortedTargets.length == 1) {
-                        poEditedTargPerLonTyp.push({center: centerCode, centerLoanTyp: centerLoanTyp, loan_type: loanTyp, tNewCliSem1: totNewCliSem1, tNewAmtSem1: totNewAmtSem1, tNewCliSem2: totNewCliSem2, tNewAmtSem2: totNewAmtSem2,
-                            tBegBal1: totBegBal1, tBegBal2: totBegBal2, tOldAmtSem1: totOldAmtSem1, tOldAmtSem2: totOldAmtSem2,
-                            tOldCliSem1: totOldCliSem1, tOldCliSem2: totOldCliSem2, monthNewLoan1: monthNewLoan1, monthNewLoan2: monthNewLoan2, monthReLoan1: monthReLoan1, monthReLoan2: monthReLoan2})
-                    // }
+                    if (i == (idClientLen - 1) && hasChangesTarg) {
 
-                } else {
-                    if (hasChangesTarg && (i == (idClient.length - 1))) {
-                        poEditedTargPerLonTyp.push({center: centerCode, centerLoanTyp: centerLoanTyp, loan_type: loanTyp, tNewCliSem1: totNewCliSem1, tNewAmtSem1: totNewAmtSem1, tNewCliSem2: totNewCliSem2, tNewAmtSem2: totNewAmtSem2,
-                            tBegBal1: totBegBal1, tBegBal2: totBegBal2, tOldAmtSem1: totOldAmtSem1, tOldAmtSem2: totOldAmtSem2,
-                            tOldCliSem1: totOldCliSem1, tOldCliSem2: totOldCliSem2, monthNewLoan1: monthNewLoan1, monthNewLoan2: monthNewLoan2, monthReLoan1: monthReLoan1, monthReLoan2: monthReLoan2})
+                        //MAKE THE SAVING OF THE CHANGES in center_budget_dets here...
+                        totResign1 = totBegBal1 - totOldCliSem1
+                        if (totOldCliSem2 > 0) {
+                            totResign2 = totBegBal2 - totOldCliSem2
+                        }
+    
+                        const totalResign = totResign1 + totResign2
+    
+                        const ctrBudgDet = await Center.findOne({center: centerCode, loan_type: "GLP"}, function (err, fndOldCli) {
+                            // console.log(fndOldCli)
+    
+                            fndOldCli.newClient = totNewCliSem1 + totNewCliSem2
+                            fndOldCli.newClientAmt = totNewAmtSem1 + totNewAmtSem2
+                            fndOldCli.oldClient = totOldCliSem1 + totOldCliSem2
+                            fndOldCli.oldClientAmt = totOldAmtSem1 + totOldAmtSem2
+                            fndOldCli.resClient = totResign1
+                            fndOldCli.resClient2 = totResign2
+    
+                            fndOldCli.save()
+                            // To update newClient, NewClientAmt, oldClient, oldClientAmt, resClient, resClient2 in CENTER fields
+                        })
+
+                        if (totalResign >= 0) {
+
+                            const ctrResBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "ResClientCount"}, function (err, fndResCli) {
+    
+                                switch(monthReLoan1) {
+                                    case "January": 
+                                    fndResCli.jan_budg = totResign1
+                                        break;
+                                    case "February": 
+                                        fndResCli.feb_budg = totResign1
+                                        break;
+                                    case "March": 
+                                        fndResCli.mar_budg = totResign1
+                                        break;
+                                    case "April": 
+                                        fndResCli.apr_budg = totResign1
+                                        break;
+                                    case "May": 
+                                        fndResCli.may_budg = totResign1
+                                        break;
+                                    case "June": 
+                                        fndResCli.jun_budg = totResign1
+                                        break;
+                                    default:
+                                        orderMonth = 0
+                                }   
+    
+                                switch(monthReLoan2) {
+                                    case "July": 
+                                        fndResCli.jul_budg = totResign2
+                                        break;
+                                    case "August": 
+                                        fndResCli.aug_budg = totResign2
+                                        break;
+                                    case "September": 
+                                        fndResCli.sep_budg = totResign2
+                                        break;
+                                    case "October": 
+                                        fndResCli.oct_budg = totResign2
+                                        break;
+                                    case "November": 
+                                        fndResCli.nov_budg = totResign2
+                                        break;
+                                    case "December": 
+                                        fndResCli.dec_budg = totResign2
+                                        break;
+                                    default:
+                                        orderMonth = 0
+                                }   
+                                if (!isNull(fndResCli)) {
+                                    fndResCli.save()
+                                }
+                            })
+                        }
+    
+                        const totalOldCli = totOldCliSem1 + totOldCliSem2
+    
+                        if (totalOldCli >= 0) {
+    
+                            const ctrOldCliBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "OldLoanClient"}, function (err, fndOldCli) {
+    
+                                switch(monthReLoan1) {
+                                    case "January": 
+                                    fndOldCli.jan_budg = totOldCliSem1
+                                        break;
+                                    case "February": 
+                                        fndOldCli.feb_budg = totOldCliSem1
+                                        break;
+                                    case "March": 
+                                        fndOldCli.mar_budg = totOldCliSem1
+                                        break;
+                                    case "April": 
+                                        fndOldCli.apr_budg = totOldCliSem1
+                                        break;
+                                    case "May": 
+                                        fndOldCli.may_budg = totOldCliSem1
+                                        break;
+                                    case "June": 
+                                        fndOldCli.jun_budg = totOldCliSem1
+                                        break;
+                                    default:
+                                        orderMonth = 0
+                                }   
+    
+                                switch(monthReLoan2) {
+                                    case "July": 
+                                        fndOldCli.jul_budg = totOldCliSem2
+                                        break;
+                                    case "August": 
+                                        fndOldCli.aug_budg = totOldCliSem2
+                                        break;
+                                    case "September": 
+                                        fndOldCli.sep_budg = totOldCliSem2
+                                        break;
+                                    case "October": 
+                                        fndOldCli.oct_budg = totOldCliSem2
+                                        break;
+                                    case "November": 
+                                        fndOldCli.nov_budg = totOldCliSem2
+                                        break;
+                                    case "December": 
+                                        fndOldCli.dec_budg = totOldCliSem2
+                                        break;
+                                    default:
+                                        orderMonth = 0
+                                }   
+    
+                                if (!isNull(fndOldCli)) {
+                                    fndOldCli.save()
+                                }
+                            })
+                            console.log(ctrOldCliBudgDet)
+                        }
+    
+                        const totalOldAmt = totOldAmtSem1 + totOldAmtSem2
+    
+                        if (totalOldAmt >= 0) {
+    
+                            const ctrOldAmtBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "OldLoanAmt"}, function (err, fndOldAmt) {
+    
+                                switch(monthReLoan1) {
+                                    case "January": 
+                                    fndOldAmt.jan_budg = totOldAmtSem1
+                                        break;
+                                    case "February": 
+                                        fndOldAmt.feb_budg = totOldAmtSem1
+                                        break;
+                                    case "March": 
+                                        fndOldAmt.mar_budg = totOldAmtSem1
+                                        break;
+                                    case "April": 
+                                        fndOldAmt.apr_budg = totOldAmtSem1
+                                        break;
+                                    case "May": 
+                                        fndOldAmt.may_budg = totOldAmtSem1
+                                        break;
+                                    case "June": 
+                                        fndOldAmt.jun_budg = totOldAmtSem1
+                                        break;
+                                    default:
+                                        orderMonth = 0
+                                }   
+    
+                                switch(monthReLoan2) {
+                                    case "July": 
+                                        fndOldAmt.jul_budg = totOldAmtSem2
+                                        break;
+                                    case "August": 
+                                        fndOldAmt.aug_budg = totOldAmtSem2
+                                        break;
+                                    case "September": 
+                                        fndOldAmt.sep_budg = totOldAmtSem2
+                                        break;
+                                    case "October": 
+                                        fndOldAmt.oct_budg = totOldAmtSem2
+                                        break;
+                                    case "November": 
+                                        fndOldAmt.nov_budg = totOldAmtSem2
+                                        break;
+                                    case "December": 
+                                        fndOldAmt.dec_budg = totOldAmtSem2
+                                        break;
+                                    default:
+                                        orderMonth = 0
+                                }   
+                                if (!isNull(fndOldAmt)) {
+                                    fndOldAmt.save()
+                                }
+                            })
+                        }
+    
+                        const totalNewCli = totNewCliSem1 + totNewCliSem2
+    
+                        if (totalNewCli >= 0) {
+    
+                            const ctrNewCliBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "NewLoanClient"}, function (err, fndNewCli) {
+                                const foundNewCli = fndNewCli
+                                console.log(foundNewCli)
+                                switch(monthNewLoan1) {
+                                    case "January": 
+                                        fndNewCli.jan_budg = totNewCliSem1
+                                        break;
+                                    case "February": 
+                                        fndNewCli.feb_budg = totNewCliSem1
+                                        break;
+                                    case "March": 
+                                        fndNewCli.mar_budg = totNewCliSem1
+                                        break;
+                                    case "April": 
+                                        fndNewCli.apr_budg = totNewCliSem1
+                                        break;
+                                    case "May": 
+                                        fndNewCli.may_budg = totNewCliSem1
+                                        break;
+                                    case "June": 
+                                        fndNewCli.jun_budg = totNewCliSem1
+                                        break;
+                                    default:
+                                        orderMonth = 0
+                                }   
+    
+                                switch(monthNewLoan2) {
+                                    case "July": 
+                                        fndNewCli.jul_budg = totNewCliSem2
+                                        break;
+                                    case "August": 
+                                        fndNewCli.aug_budg = totNewCliSem2
+                                        break;
+                                    case "September": 
+                                        fndNewCli.sep_budg = totNewCliSem2
+                                        break;
+                                    case "October": 
+                                        fndNewCli.oct_budg = totNewCliSem2
+                                        break;
+                                    case "November": 
+                                        fndNewCli.nov_budg = totNewCliSem2
+                                        break;
+                                    case "December": 
+                                        fndNewCli.dec_budg = totNewCliSem2
+                                        break;
+                                    default:
+                                        orderMonth = 0
+                                }   
+                                if (!isNull(fndNewCli)) {
+                                    fndNewCli.save()
+                                }
+                            })
+                            console.log(ctrNewCliBudgDet)
+                        }
+    
+                        const totalNewAmt = totNewAmtSem1 + totNewAmtSem2
+    
+                        if (totalNewAmt >= 0) {
+    
+                            const ctrNewAmtBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "NewLoanAmt"}, function (err, fndNewLoanAmt) {
+    
+                                switch(monthNewLoan1) {
+                                    case "January": 
+                                    fndNewLoanAmt.jan_budg = totNewAmtSem1
+                                        break;
+                                    case "February": 
+                                        fndNewLoanAmt.feb_budg = totNewAmtSem1
+                                        break;
+                                    case "March": 
+                                        fndNewLoanAmt.mar_budg = totNewAmtSem1
+                                        break;
+                                    case "April": 
+                                        fndNewLoanAmt.apr_budg = totNewAmtSem1
+                                        break;
+                                    case "May": 
+                                        fndNewLoanAmt.may_budg = totNewAmtSem1
+                                        break;
+                                    case "June": 
+                                        fndNewLoanAmt.jun_budg = totNewAmtSem1
+                                        break;
+                                    default:
+                                        orderMonth = 0
+                                }   
+    
+                                switch(monthNewLoan2) {
+                                    case "July": 
+                                        fndNewLoanAmt.jul_budg = totNewAmtSem2
+                                        break;
+                                    case "August": 
+                                        fndNewLoanAmt.aug_budg = totNewAmtSem2
+                                        break;
+                                    case "September": 
+                                        fndNewLoanAmt.sep_budg = totNewAmtSem2
+                                        break;
+                                    case "October": 
+                                        fndNewLoanAmt.oct_budg = totNewAmtSem2
+                                        break;
+                                    case "November": 
+                                        fndNewLoanAmt.nov_budg = totNewAmtSem2
+                                        break;
+                                    case "December": 
+                                        fndNewLoanAmt.dec_budg = ftotNewAmtSem2
+                                        break;
+                                    default:
+                                        orderMonth = 0
+                                }
+                                if (!isNull(fndNewLoanAmt)) {
+                                    fndNewLoanAmt.save()
+                                }
+                            })
+                        }
+    
+                            // poEditedTargPerLonTyp.push({center: centerCode, centerLoanTyp: centerLoanTyp, loan_type: loanTyp, tNewCliSem1: totNewCliSem1, tNewAmtSem1: totNewAmtSem1, tNewCliSem2: totNewCliSem2, tNewAmtSem2: totNewAmtSem2,
+                            // tBegBal1: totBegBal1, tBegBal2: totBegBal2, tOldAmtSem1: totOldAmtSem1, tOldAmtSem2: totOldAmtSem2,
+                            // tOldCliSem1: totOldCliSem1, tOldCliSem2: totOldCliSem2, monthNewLoan1: monthNewLoan1, monthNewLoan2: monthNewLoan2, monthReLoan1: monthReLoan1, monthReLoan2: monthReLoan2})
                 
                     }
                 }
-            }
 
-            if (hasChangesTarg) {
-
-                poEditedTargPerLonTyp.forEach( poEditedData => {
-
-                    let centerForEdit =  poEditedData.center
-                    loanTyp = poEditedData.loan_type
-                    let ctrLonTyp = poEditedData.centerLoanTyp
-                    totNewCliSem1 = poEditedData.tNewCliSem1
-                    totNewCliSem2 = poEditedData.tNewCliSem2
-                    totNewAmtSem1 = poEditedData.tNewAmtSem1 
-                    totNewAmtSem2 = poEditedData.tNewAmtSem2
-
-                    totOldCliSem1 = poEditedData.tOldCliSem1
-                    totOldCliSem2 = poEditedData.tOldCliSem2
-                    totOldAmtSem1 = poEditedData.tOldAmtSem1
-                    totOldAmtSem2 = poEditedData.tOldAmtSem2
-
-                    totBegBal1 = poEditedData.tBegBal1
-                    totBegBal2 = poEditedData.tBegBal2  
-                    monthNewLoan1 = poEditedData.monthNewLoan1
-                    monthNewLoan2 = poEditedData.monthNewLoan2
-                    monthReLoan1 = poEditedData.monthReLoan1
-                    monthReLoan2 = poEditedData.monthReLoan2
-
-                    totResign1 = totBegBal1 - totOldCliSem1
-                    if (totOldCliSem2 > 0) {
-                        totResign2 = totBegBal2 - totOldCliSem2
-                    }
-
-                    const totalResign = totResign1 + totResign2
-
-                    // totOldCliDiff1 = poEditedData.tOldCliDiff1
-                    // totOldAmtDiff1 = poEditedData.tOldAmtDiff1
-                    // totOldCliDiff2 = poEditedData.tOldCliDiff2
-                    // totOldAmtDiff2 = poEditedData.tOldAmtDiff2
-
-                    const ctrBudgDet = Center.findOne({center: centerForEdit, loan_type: ctrLonTyp}, function (err, fndOldCli) {
-                        console.log(fndOldCli)
-
-                        fndOldCli.newClient = totNewCliSem1 + totNewCliSem2
-                        fndOldCli.newClientAmt = totNewAmtSem1 + totNewAmtSem2
-                        fndOldCli.oldClient = totOldCliSem1 + totOldCliSem2
-                        fndOldCli.oldClientAmt = totOldAmtSem1 + totOldAmtSem2
-                        fndOldCli.resClient = totResign1
-                        fndOldCli.resClient2 = totResign2
-
-                        fndOldCli.save()
-                        // To update newClient, NewClientAmt, oldClient, oldClientAmt, resClient, resClient2 in CENTER fields
-                    })
-
-                    if (totalResign >= 0) {
-
-                        const ctrResBudgDet = Center_budget_det.findOne({center: centerForEdit, loan_type: loanTyp, view_code: "ResClientCount"}, function (err, fndResCli) {
-
-                            switch(monthReLoan1) {
-                                case "January": 
-                                fndResCli.jan_budg = totResign1
-                                    break;
-                                case "February": 
-                                    fndResCli.feb_budg = totResign1
-                                    break;
-                                case "March": 
-                                    fndResCli.mar_budg = totResign1
-                                    break;
-                                case "April": 
-                                    fndResCli.apr_budg = totResign1
-                                    break;
-                                case "May": 
-                                    fndResCli.may_budg = totResign1
-                                    break;
-                                case "June": 
-                                    fndResCli.jun_budg = totResign1
-                                    break;
-                                default:
-                                    orderMonth = 0
-                            }   
-
-                            switch(monthReLoan2) {
-                                case "July": 
-                                    fndResCli.jul_budg = totResign2
-                                    break;
-                                case "August": 
-                                    fndResCli.aug_budg = totResign2
-                                    break;
-                                case "September": 
-                                    fndResCli.sep_budg = totResign2
-                                    break;
-                                case "October": 
-                                    fndResCli.oct_budg = totResign2
-                                    break;
-                                case "November": 
-                                    fndResCli.nov_budg = totResign2
-                                    break;
-                                case "December": 
-                                    fndResCli.dec_budg = totResign2
-                                    break;
-                                default:
-                                    orderMonth = 0
-                            }   
-                            if (!isNull(fndResCli)) {
-                                fndResCli.save()
-                            }
-                        })
-                    }
-
-                    const totalOldCli = totOldCliSem1 + totOldCliSem2
-
-                    if (totalOldCli >= 0) {
-
-                        const ctrOldCliBudgDet = Center_budget_det.findOne({center: centerForEdit, loan_type: loanTyp, view_code: "OldLoanClient"}, function (err, fndOldCli) {
-
-                            switch(monthReLoan1) {
-                                case "January": 
-                                fndOldCli.jan_budg = totOldCliSem1
-                                    break;
-                                case "February": 
-                                    fndOldCli.feb_budg = totOldCliSem1
-                                    break;
-                                case "March": 
-                                    fndOldCli.mar_budg = totOldCliSem1
-                                    break;
-                                case "April": 
-                                    fndOldCli.apr_budg = totOldCliSem1
-                                    break;
-                                case "May": 
-                                    fndOldCli.may_budg = totOldCliSem1
-                                    break;
-                                case "June": 
-                                    fndOldCli.jun_budg = totOldCliSem1
-                                    break;
-                                default:
-                                    orderMonth = 0
-                            }   
-
-                            switch(monthReLoan2) {
-                                case "July": 
-                                    fndOldCli.jul_budg = totOldCliSem2
-                                    break;
-                                case "August": 
-                                    fndOldCli.aug_budg = totOldCliSem2
-                                    break;
-                                case "September": 
-                                    fndOldCli.sep_budg = totOldCliSem2
-                                    break;
-                                case "October": 
-                                    fndOldCli.oct_budg = totOldCliSem2
-                                    break;
-                                case "November": 
-                                    fndOldCli.nov_budg = totOldCliSem2
-                                    break;
-                                case "December": 
-                                    fndOldCli.dec_budg = totOldCliSem2
-                                    break;
-                                default:
-                                    orderMonth = 0
-                            }   
-
-                            if (!isNull(fndOldCli)) {
-                                fndOldCli.save()
-                            }
-                        })
-                    }
-
-                    const totalOldAmt = totOldAmtSem1 + totOldAmtSem2
-
-                    if (totalOldAmt >= 0) {
-
-                        const ctrOldAmtBudgDet = Center_budget_det.findOne({center: centerForEdit, loan_type: loanTyp, view_code: "OldLoanAmt"}, function (err, fndOldAmt) {
-
-                            switch(monthReLoan1) {
-                                case "January": 
-                                fndOldAmt.jan_budg = totOldAmtSem1
-                                    break;
-                                case "February": 
-                                    fndOldAmt.feb_budg = totOldAmtSem1
-                                    break;
-                                case "March": 
-                                    fndOldAmt.mar_budg = totOldAmtSem1
-                                    break;
-                                case "April": 
-                                    fndOldAmt.apr_budg = totOldAmtSem1
-                                    break;
-                                case "May": 
-                                    fndOldAmt.may_budg = totOldAmtSem1
-                                    break;
-                                case "June": 
-                                    fndOldAmt.jun_budg = totOldAmtSem1
-                                    break;
-                                default:
-                                    orderMonth = 0
-                            }   
-
-                            switch(monthReLoan2) {
-                                case "July": 
-                                    fndOldAmt.jul_budg = totOldAmtSem2
-                                    break;
-                                case "August": 
-                                    fndOldAmt.aug_budg = totOldAmtSem2
-                                    break;
-                                case "September": 
-                                    fndOldAmt.sep_budg = totOldAmtSem2
-                                    break;
-                                case "October": 
-                                    fndOldAmt.oct_budg = totOldAmtSem2
-                                    break;
-                                case "November": 
-                                    fndOldAmt.nov_budg = totOldAmtSem2
-                                    break;
-                                case "December": 
-                                    fndOldAmt.dec_budg = totOldAmtSem2
-                                    break;
-                                default:
-                                    orderMonth = 0
-                            }   
-                            if (!isNull(fndOldAmt)) {
-                                fndOldAmt.save()
-                            }
-                        })
-                    }
-
-                    const totalNewCli = totNewCliSem1 + totNewCliSem2
-
-                    if (totalNewCli >= 0) {
-
-                        const ctrNewCliBudgDet = Center_budget_det.findOne({center: centerForEdit, loan_type: loanTyp, view_code: "NewLoanClient"}, function (err, fndNewCli) {
-                            const foundNewCli = fndNewCli
-                            console.log(foundNewCli)
-                            switch(monthNewLoan1) {
-                                case "January": 
-                                    fndNewCli.jan_budg = totNewCliSem1
-                                    break;
-                                case "February": 
-                                    fndNewCli.feb_budg = totNewCliSem1
-                                    break;
-                                case "March": 
-                                    fndNewCli.mar_budg = totNewCliSem1
-                                    break;
-                                case "April": 
-                                    fndNewCli.apr_budg = totNewCliSem1
-                                    break;
-                                case "May": 
-                                    fndNewCli.may_budg = totNewCliSem1
-                                    break;
-                                case "June": 
-                                    fndNewCli.jun_budg = totNewCliSem1
-                                    break;
-                                default:
-                                    orderMonth = 0
-                            }   
-
-                            switch(monthNewLoan2) {
-                                case "July": 
-                                    fndNewCli.jul_budg = totNewCliSem2
-                                    break;
-                                case "August": 
-                                    fndNewCli.aug_budg = totNewCliSem2
-                                    break;
-                                case "September": 
-                                    fndNewCli.sep_budg = totNewCliSem2
-                                    break;
-                                case "October": 
-                                    fndNewCli.oct_budg = totNewCliSem2
-                                    break;
-                                case "November": 
-                                    fndNewCli.nov_budg = totNewCliSem2
-                                    break;
-                                case "December": 
-                                    fndNewCli.dec_budg = totNewCliSem2
-                                    break;
-                                default:
-                                    orderMonth = 0
-                            }   
-                            if (!isNull(fndNewCli)) {
-                                fndNewCli.save()
-                            }
-                        })
-                        console.log(ctrNewCliBudgDet)
-                    }
-
-                    const totalNewAmt = totNewAmtSem1 + totNewAmtSem2
-
-                    if (totalNewAmt >= 0) {
-
-                        const ctrNewAmtBudgDet = Center_budget_det.findOne({center: centerForEdit, loan_type: loanTyp, view_code: "NewLoanAmt"}, function (err, fndNewLoanAmt) {
-
-                            switch(monthNewLoan1) {
-                                case "January": 
-                                fndNewLoanAmt.jan_budg = totNewAmtSem1
-                                    break;
-                                case "February": 
-                                    fndNewLoanAmt.feb_budg = totNewAmtSem1
-                                    break;
-                                case "March": 
-                                    fndNewLoanAmt.mar_budg = totNewAmtSem1
-                                    break;
-                                case "April": 
-                                    fndNewLoanAmt.apr_budg = totNewAmtSem1
-                                    break;
-                                case "May": 
-                                    fndNewLoanAmt.may_budg = totNewAmtSem1
-                                    break;
-                                case "June": 
-                                    fndNewLoanAmt.jun_budg = totNewAmtSem1
-                                    break;
-                                default:
-                                    orderMonth = 0
-                            }   
-
-                            switch(monthNewLoan2) {
-                                case "July": 
-                                    fndNewLoanAmt.jul_budg = totNewAmtSem2
-                                    break;
-                                case "August": 
-                                    fndNewLoanAmt.aug_budg = totNewAmtSem2
-                                    break;
-                                case "September": 
-                                    fndNewLoanAmt.sep_budg = totNewAmtSem2
-                                    break;
-                                case "October": 
-                                    fndNewLoanAmt.oct_budg = ftotNewAmtSem2
-                                    break;
-                                case "November": 
-                                    fndNewLoanAmt.nov_budg = totNewAmtSem2
-                                    break;
-                                case "December": 
-                                    fndNewLoanAmt.dec_budg = ftotNewAmtSem2
-                                    break;
-                                default:
-                                    orderMonth = 0
-                            }
-                            if (!isNull(fndNewLoanAmt)) {
-                                fndNewLoanAmt.save()
-                            }
-                        })
-                    }
-
-                })
-                const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress)
-                console.log(ip) // ip address of the user
-                console.log(lookup(ip)) // location of the user
+                // const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress)
+                // console.log(ip) // ip address of the user
+                // console.log(lookup(ip)) // location of the user
         
-                let loggedUser = new User_log({
-                  IP: ip,
-                  login_date: new Date(),
-                  user_name: req.user.name,
-                  assign_code: req.user.assCode,
-                  activity: "Made Changes in a Target" + centerCode,
-                  activity_desc: "User logged-in.",
-                })
-                  const saveLogUser = loggedUser.save()
+                // let loggedUser = new User_log({
+                //   IP: ip,
+                //   login_date: new Date(),
+                //   user_name: req.user.name,
+                //   assign_code: req.user.assCode,
+                //   activity: "Changed a Target",
+                //   activity_desc: "Made Changes in a Target" + centerCode,
+                // })
+                //   const saveLogUser = loggedUser.save()
                         
-            }
-
-            if (req.user.role === "BM") {
-                res.redirect('/branches/perPOforEdit/' + req.user.assCode)
-            } else {
-                res.redirect('/centers/viewTarget/' + centerCode)
-            }
+        }
+    
+        if (req.user.role === "BM") {
+            res.redirect('/branches/perPOforEdit/' + req.user.assCode)
+        } else {
+            res.redirect('/centers/viewTarget/' + centerCode)
         }
         console.log(numClient)
         // alert(Success )
