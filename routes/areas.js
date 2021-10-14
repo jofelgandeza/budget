@@ -330,13 +330,6 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
             console.log(totDisburse)
 
         
-        }
-
- //   console.log(unitLoanTotals)
-//    console.log(brnLoanTotals)
-
-//            console.log(foundAMBranches)
-        if ( doneReadCenter && doneFoundPO && doneReadLonTyp) {
             res.render('areas/budget', {
                 listTitle: areaCode,
                 officerName: officerName,
@@ -349,6 +342,11 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
 
             })
         }
+
+ //   console.log(unitLoanTotals)
+//    console.log(brnLoanTotals)
+
+//            console.log(foundAMBranches)
     } 
     catch (err) {
         console.log(err)
