@@ -368,7 +368,9 @@ router.get('/employees/:id', authUser, authRole(ROLE.RD), async (req, res) => {
     const regionCode = req.params.id
     const _user = req.user
     
-    const areaMgrID = "611d088fdb81bf7f61039615"
+    // const areaMgrID = "611d088fdb81bf7f61039615"
+
+    fndPositi = posisyon
 
     let fondEmploy = []
     let sortedEmp = []
@@ -386,6 +388,15 @@ router.get('/employees/:id', authUser, authRole(ROLE.RD), async (req, res) => {
     let empCanProceed = false
     let fndEmployees = []
     let Areas = []
+
+    fndPositi.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii.id
+        if (fndPositionEmp === "AREA_MGR") {
+            areaMgrID = fndPositID
+        }
+    })
+
     
     try {
 
@@ -496,13 +507,20 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.RD), async (req, res) => 
     const nFName = _.trim(req.body.fName).toUpperCase()
     const nMName = _.trim(req.body.mName).toUpperCase()
     const nName =  nLName + ", " + nFName + " " + nMName
-
-    const areaMgrID = "611d088fdb81bf7f61039615"
-
-    const regionPosiID = "611d094bdb81bf7f61039616"
+    
+    let areaMgrID = ""
 
     console.log(req.body.password)
 
+    let fndPositi = posisyon
+
+    fndPositi.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii.id
+        if (fndPositionEmp === "AREA_MGR") {
+            areaMgrID = fndPositID
+        }
+    })
     
 let locals
 //console.log(brnCode)

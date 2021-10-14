@@ -162,7 +162,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
   async function setUser(req, res, next) {
     if (req.user == null) {
       users = await User.find()
-      posisyon = await Position.find({group_code: "BRN"})
+      posisyon = await Position.find({})
     }
       next()
   }

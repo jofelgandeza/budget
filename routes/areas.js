@@ -74,7 +74,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let officerName = ""
     let postManager = ""
     let postUnitHead = ""
-    let postProgOfr = ""
+    let postAreaMgr = ""
 
     let unitLoanTotals = []
     let brnLoanTotals = []
@@ -101,24 +101,27 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let doneReadCenter = false
     let doneFoundMgr = false
     let doneReadLonTyp = false
+
+    console.log(fndPositi)
    
     fndPositi.forEach(fndPosii => {
         const fndPositionEmp = fndPosii.code
         const fndPositID = fndPosii.id
+        if (fndPositionEmp === "AREA_MGR") {
+            postAreaMgr = fndPositID
+        }
         if (fndPositionEmp === "BRN_MGR") {
             postManager = fndPositID
         }
         if (fndPositionEmp === "UNI_HED") {
             postUnitHead = fndPositID
         }
-        if (fndPositionEmp === "PRO_OFR") {
-            postProgOfr = fndPositID
-        }
     })
 
+    console.log(postAreaMgr)
     try {
 
-        const areaManager = await Employee.find({area: areaCode, position_code: branchMgrID}, function (err, foundBMs){
+        const areaManager = await Employee.find({area: areaCode, position_code: postAreaMgr}, function (err, foundBMs){
             foundBranchMgr = foundBMs
 
            })
@@ -365,7 +368,8 @@ router.get('/employees/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     const areaCode = req.params.id
     const _user = req.user
     
-    const branchMgrID = "604f06bf7ca02f8a731fa8a6"
+    let branchMgrID = ""
+    let fndPositi = posisyon
 
     let fondEmploy = []
     let sortedEmp = []
@@ -379,6 +383,14 @@ router.get('/employees/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let empAssign = ""
     let empID = ""
     let empUnit = ""
+
+    fndPositi.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii.id
+        if (fndPositionEmp === "BRN_MGR") {
+            branchMgrID = fndPositID
+        }
+    })
 
     let empCanProceed = false
     
@@ -491,7 +503,16 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.AM), async (req, res) => 
     const nName =  nLName + ", " + nFName + " " + nMName
     const areaCod = req.params.id
 
-    const branchMgrID = "604f06bf7ca02f8a731fa8a6"
+    let branchMgrID = ""
+    let fndPositi = posisyon
+
+    fndPositi.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii.id
+        if (fndPositionEmp === "BRN_MGR") {
+            branchMgrID = fndPositID
+        }
+    })
 
 let locals
 //console.log(brnCode)

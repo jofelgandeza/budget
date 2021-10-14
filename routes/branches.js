@@ -252,6 +252,9 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
             doneFoundPO = true
     })
 
+    if (foundPOunits.length === 0) {
+        doneFoundPO = true
+    }
 // LOOP for getting Different Loan products totals in the branch
     let gtBegBalClient = 0
     let gtBegBalAmt = 0
