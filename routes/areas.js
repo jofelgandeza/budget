@@ -99,7 +99,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     // const POposition = POdata.position_code
 
     let doneReadCenter = false
-    let doneFoundPO = false
+    let doneFoundMgr = false
     let doneReadLonTyp = false
    
     fndPositi.forEach(fndPosii => {
@@ -130,6 +130,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
             }            
         const branMgrs = await Employee.find({area: areaCode, position_code: postManager}, function (err, foundUHs){
             foundAMBranches = foundUHs
+            doneFoundMgr = true
             })
 
          loanType = await Loan_type.find({})
@@ -171,7 +172,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
         console.log(newClients)
         console.log(foundAMBranches)
 
-        if (doneReadCenter) {
+        if (doneReadCenter && doneFoundMgr) {
             foundAMBranches.forEach(am => {
 
                 let brCode = _.trim(am.branch)
@@ -247,6 +248,8 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                                     bClientAmt = bClientAmt + begLoanTot
                                 }
                             })
+
+                            
                         }
                     })
                     let totAmounts = nloanTot + oloanTot 
