@@ -1561,7 +1561,7 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                             doneReadCenter = true
                         })
 
-           if (doneReadCenter) { 
+                if (doneReadCenter) { 
                     if (num_Client === 0 && canDeleteBegBal) {
                         const center = await Center.findOneAndUpdate({center: centerCode}, {$pull: {Loan_beg_bal :{_id: begBalID[i] }}})                        
                     }

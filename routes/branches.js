@@ -193,7 +193,6 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
                     let LoanBegBal = center.Loan_beg_bal
 //                  let centerLoanBegBal = center.Loan_beg_bal                
                     let resignClient = center.resClient
-                    totCenters = totCenters + 1
 
                     if (lnType === _.trim(lnType)) {
                         BudgBegBal = center.budget_BegBal

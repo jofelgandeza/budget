@@ -666,7 +666,7 @@ console.log(unitCode)
                         poName = po_Name.last_name + ", "+ po_Name.first_name + " "+ _.trim(po_Name.middle_name).substr(0,1) + "."
                  }
                     
-                fondPO.push({poID: id, poCode: poNumStr, poNum: poNum, UnitCode: unitCode, poUnitLet: poUnitLet, 
+                fondPO.push({poID: id, poCode: poNumStr, realPOCode: poCode, poNum: poNum, UnitCode: unitCode, poUnitLet: poUnitLet, 
                     poName: poName, poStatus: "Active", branch: poBrnch, poLoanProd: poLoanProd})
                 
             })
@@ -793,7 +793,7 @@ router.get('/getPOForEdit/:id/edit', authUser, authRole(ROLE.PUH), async (req, r
         const unitPO = await Po.findOne({po_code: param}, function (err, fndPO) {
             foundedPO = fndPO
         })
-        console.log(foundedPO)
+        // console.log(foundedPO)
 
         res.render('units/editPO', { 
             po: foundedPO, 
@@ -817,7 +817,7 @@ router.put('/putEditedPo/:id', authUser, authRole(ROLE.PUH), async function(req,
     const poUnitCode = poCode.substring(0,5)
     const poUnitNum = poCode.substring(4,1)
     const poNum = poCode.substring(5,1)
-    const ln_Typ = req.body.loanTyp
+    const ln_Typ = req.body.poLoan
 
     console.log(req.params.id)
 
