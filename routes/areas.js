@@ -133,8 +133,10 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
             doneFoundMgr = true
             })
 
-         loanType = await Loan_type.find({})
-
+          const loan_Type= await Loan_type.find({}, function (err, fndLoanTyp) {
+            loanType = fndLoanTyp
+            doneReadLonTyp = true
+          })
         const center = await Center.find({area: areaCode}, function (err, fndCenters) {
 //        const center = await Center.find(searchOptions)
                 foundCenter = fndCenters.sort()
@@ -172,7 +174,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
         console.log(newClients)
         console.log(foundAMBranches)
 
-        if (doneReadCenter && doneFoundMgr) {
+        if (doneReadCenter && doneFoundMgr && doneReadLonTyp) {
             foundAMBranches.forEach(am => {
 
                 let brCode = _.trim(am.branch)
@@ -249,7 +251,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                                 }
                             })
 
-                            
+
                         }
                     })
                     let totAmounts = nloanTot + oloanTot 
