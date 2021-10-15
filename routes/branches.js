@@ -146,6 +146,7 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
                 doneReadCenter = true   
             }
 
+            totCenters = foundCenter.length
     foundPOunits.forEach(uh => {
 
         let unCode = _.trim(uh.unit)
