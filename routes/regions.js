@@ -40,6 +40,7 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
     let foundPOunits = []
     let foundPO = []
     let officerName = ""
+    let postRegDir = ""
     let postAreaMgr = ""
     let postManager = ""
     let postUnitHead = ""
@@ -62,6 +63,7 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
     let tbudgEndBal = 0
     let totbudgEndBal = 0
 
+    let foundRegDir = []
     let foundAreaMgr = []
     let foundAreaBranches = []
     let foundAreaUnits = []
@@ -84,7 +86,7 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
         const fndPositionEmp = fndPosii.code
         const fndPositID = fndPosii.id
         if (fndPositionEmp === "REG_DIR") {
-            postAreaMgr = fndPositID
+            postRegDir = fndPositID
         }
         if (fndPositionEmp === "AREA_MGR") {
             postAreaMgr = fndPositID
@@ -102,7 +104,7 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
 
     try {
 
-        const areaManager = await Employee.find({area: areaCode}, function (err, foundAreaEmp){
+        const areaManager = await Employee.find({region: regionCode}, function (err, foundAreaEmp){
             fndAreaEmps = foundAreaEmp
         })
 
@@ -113,6 +115,9 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
 
             const empName = areaEmps.first_name + " " + areaEmps.middle_name.substr(0,1) + ". " + areaEmps.last_name
             
+            if( areaEmpPost == postRegDir) {
+                foundRegDir.push({assCode: assignCode, emp_name: empName})
+            }
             if( areaEmpPost == postAreaMgr) {
                 foundAreaMgr.push({assCode: assignCode, emp_name: empName})
             }
@@ -138,7 +143,7 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
         
         const loanType = await Loan_type.find({})
 
-        const center = await Center.find({area: areaCode}) //, function (err, foundCenters) {
+        const center = await Center.find({region: regionCode}) //, function (err, foundCenters) {
 //        const center = await Center.find(searchOptions)
             if (center.length === 0) {
                 doneReadCenter = true
@@ -328,8 +333,14 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
 
 //            console.log(foundPOunits)
         if ( doneReadCenter && doneFoundPO && doneReadLonTyp) {
-            res.render('areas/index', {
-                areaCode: areaCode,
+
+            const foundRegion = await Region.findOne({region: regionCode})
+            fndRegion = foundRegion
+            console.log(fndRegion)
+
+            res.render('regions/index', {
+                regionCode: regionCode,
+                regionDesc: fndRegion.region_desc,
                 officerName: officerName,
                 loanTots: brnLoanTotals,
                 poGrandTot: brnLoanGrandTot,
@@ -377,6 +388,11 @@ router.get('/areas/:id', authUser, authRole(ROLE.RD), async (req, res) => {
     let doneReadRegion = false
 
     let empName = []
+    let areaCode = ""
+    let areaDesc = ""
+    let areaEmp = ""
+
+    // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
 
     try {
 
