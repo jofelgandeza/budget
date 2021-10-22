@@ -226,7 +226,7 @@
                                 <td></td>
                                 <td></td>
                                 <td>
-                                    <button type="submit"  class="btn btn-primary" name="targets" value=<%= listTitle %>>SAVE</button>
+                                    <button type="submit"  class="btn btn-primary" name="targets" value=<%= listTitle %>>Save Changes Above</button>
                                 </td>
                                 <td>TOTAL-></td>
                                 <td>      
@@ -238,6 +238,9 @@
                     <% } %>
                     <input type="hidden" name="listName" value="<%= listTitle %>"> </input>
                 </form>
+                <tr>
+                    <td>------</td>
+                </tr>
                 <tr class="form-item-target">
                     <form action="/centers/<%= listTitle %>?_method=PUT" method="POST">
                         <td>New:</td>
@@ -275,9 +278,9 @@
                         </td>
                         <td>
                             <% if (yuser.role === "BM") { %>
-                                <a class="btn btn-primary" href="/branches/perPOforEdit/<%= poCode.substr(0,3) %>">Done</a>
+                                <a class="btn btn-primary" href="/branches/perPOforEdit/<%= poCode.substr(0,3) %>">BACK</a>
                             <% } else { %>
-                                <a class="btn btn-primary" href="/centers/viewTarget/<%= poCode %>">Done</a>
+                                <a class="btn btn-primary" href="/centers/viewTarget/<%= poCode %>">BACK</a>
 
                             <% } %>
                         </td>
