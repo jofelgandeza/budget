@@ -302,7 +302,8 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                 perUnitCode: unitCode,
                 officerName: officerName,
                 loanTots: brnLoanTotals,
-                poGrandTot: brnLoanGrandTot
+                poGrandTot: brnLoanGrandTot,
+                dateToday: new Date()
             })
         }             
 

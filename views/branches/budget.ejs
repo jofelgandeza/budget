@@ -23,7 +23,7 @@
 				<div class="left-column">
                     <table class="content-table-brnView">
                         <tr>
-                            <th>BUDGET</th>
+                            <th>BUDGET SUMMARY</th>
                             <th colspan="7"></th>
                         </tr>
                         <tr>
@@ -150,9 +150,8 @@
                     <th> LOAN TYPE</th>
                     <th> BEG BAL</th>
                     <th> NEW CLIENT</th>
-                    <th> OLD CLIENT</th>
+                    <th> RE-LOAN CLIENT</th>
                     <th> RESIGN</th>
-                    <th> LINKS</th>
                 </tr>
                 <% unitLoanTots.forEach(unit => { %>
                     <tr>
@@ -179,11 +178,6 @@
                         <% } else { %>
                             <td style=>-</td>
                         <% } %>
-                        <td>
-                            <div class="btn-row">
-                                <a class="btn btn-primary" href="/branches/<%= unit.unit %>/edit">View</a>
-                            </div>        
-                        </td>
                     </tr>
                 <% }) %> 
             </table>

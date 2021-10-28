@@ -152,7 +152,8 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
                     loanTots: poLoanTotals,
                     poGrandTot: poLoanGrandTot,
                     searchOptions: req.query,
-                    yuser: yuser   
+                    yuser: yuser,
+                    dateToday: new Date()
                 })
             }
         } catch (err) {
@@ -3689,7 +3690,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         tot_oldCtotValue = jan_oldCtotValue + feb_oldCtotValue + mar_oldCtotValue + apr_oldCtotValue + may_oldCtotValue + jun_oldCtotValue
                         + jul_oldCtotValue + aug_oldCtotValue + sep_oldCtotValue + oct_oldCtotValue + nov_oldCtotValue + dec_oldCtotValue
             
-            poSumView.push({title: "Number of Reloan", sortkey: 9, group: 1, isTitle: false, beg_bal: begBalOldClient, jan_value : jan_oldCtotValue, feb_value : feb_oldCtotValue, mar_value : mar_oldCtotValue, apr_value : apr_oldCtotValue,
+            poSumView.push({title: "Number of Reloan", sortkey: 9, group: 1, isTitle: false, beg_bal: 0, jan_value : jan_oldCtotValue, feb_value : feb_oldCtotValue, mar_value : mar_oldCtotValue, apr_value : apr_oldCtotValue,
                 may_value : may_oldCtotValue, jun_value : jun_oldCtotValue, jul_value : jul_oldCtotValue, aug_value : aug_oldCtotValue,
                 sep_value : sep_oldCtotValue, oct_value : oct_oldCtotValue, nov_value : nov_oldCtotValue, dec_value : dec_oldCtotValue, tot_value: tot_oldCtotValue
             }) 
@@ -4642,7 +4643,9 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             res.render('centers/viewTargetsMonthly', {
                 poCode: viewPOCode,
                 poSumView: poSumView,
-                yuser: yuser
+                yuser: yuser,
+                dateToday: new Date()
+
             })
         }
     } catch (err) {

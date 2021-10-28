@@ -130,28 +130,6 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
 
             i = i + 1
         })
-            //  foundAreaMgr = _.find(fndAreaEmps, {'position_code': postAreaMgr})
-
-            //  foundAreaBranches = _.find(fndAreaEmps, {position_code: postManager})
-
-            //  foundAreaUnits = _.find(fndAreaEmps, {position_code: postUnitHead})
-
-            //  foundAreaPOs = _.find(fndAreaEmps, {position_code: postProgOfr})
-
-    // console.log(foundAreaBranches)
-//-------*
-        // const areaManager = await Employee.find({area: areaCode, position_code: postAreaMgr}, function (err, foundBMs){
-        //     foundManager = foundBMs
-
-        //    })
-        
-        //    if (areaManager) {
-        //         areaManager.forEach(manager => {
-        //             officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
-        //         })
-        //     }            
-        // const unitOfficers = await Employee.find({area: areaCode, position_code: postUnitHead}, function (err, foundUHs){
-        //     foundPOunits = foundUHs
             totBranches = foundAreaBranches.length
             totUnits = foundAreaUnits.length
             // })
@@ -160,10 +138,6 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
             totPOs = foundAreaPOs.length
             // })
         
-        // console.log(officerName)
-        // console.log(foundPOunits)
-        // console.log(foundPOs)
-
         const loanType = await Loan_type.find({})
 
         const center = await Center.find({area: areaCode}) //, function (err, foundCenters) {
