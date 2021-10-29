@@ -1293,9 +1293,19 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
         ePONum = req.body.poNumber
     }
 
-    const assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
+    let assignUnit = ""
+    assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
+
+    if (ePosition === "BRN_ACT") {
+        assignUnit = "BA"
+    }
+    if (ePosition === "BRN_AST") {
+        assignUnit = "BAA"
+
+    }
 
     const brnCode = _.trim(req.body.brnCode).toUpperCase()
+    
     const assCode = brnCode + "-" + assignUnit
     const empCod = req.body.empCode
 
@@ -1344,8 +1354,9 @@ try {
             if (!getExistingUser) {
                     UserProceed = true 
             } else {
-                    UserProceed = false
-                    locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
+                    UserProceed = true
+                    const userAssignCode = await User.findOneAndUpdate({assCode: assCode}, {$set:{"emp_code": req.body.empCode, "password": hashedPassword }})
+                    // locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
             }    
     
     if (canProceed && UserProceed)  {
@@ -1390,7 +1401,7 @@ try {
 
         res.redirect('/branches/employees/'+ brnCode)
     } 
-    else {
+    else {  
         let psitCode = []
         const rePosition = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
              psitCode = fnd_Post
@@ -1414,7 +1425,7 @@ try {
                 resetPW: false,
                 locals: locals
             })
-}
+    }
 
 
 } catch (err) {
