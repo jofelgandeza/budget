@@ -1277,7 +1277,7 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
     console.log(ePosition)
 
     let eShortTitle
-    if (ePosition === "BRN_MGR") {
+    if (ePosition === "BRN_MGR" || ePosition === "BRN_ACT" || ePosition === "BRN_AST") {
         eShortTitle = "BM"
         eUnit = "N/A"
         ePONum = "N/A"

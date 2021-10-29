@@ -27,6 +27,7 @@
                 <% } else { %>
                         <label><%= poView.beg_bal > 0 ? poView.beg_bal : "-"  %></label>
                 <% } %>
+
                 <% if (poView.jan_value > 1000) { %>
                     <label><%= poView.jan_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
                 <% } else { %>
