@@ -18,6 +18,7 @@ const areasRouter = require('./routes/areas.js')
 const unitsRouter = require('./routes/units.js')
 const budgetCOGRouter = require('./routes/centers.js')
 const dedsRouter = require('./routes/deds.js')
+const coasRouter = require('./routes/coas.js')
 
 const passport = require('passport')
 const flash = require('express-flash')
@@ -88,6 +89,8 @@ app.use('/areas', areasRouter)
 app.use('/regions', regionsRouter)
 app.use('/deds', dedsRouter)
 app.use('/admins', adminRouter)
+app.use('/coas', coasRouter)
+
 
 // let locals = {}
 app.get('/', checkAuthenticated, async (req, res) => {

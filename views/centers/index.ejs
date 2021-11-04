@@ -15,6 +15,7 @@
                 </tr>
                 <tr>
                     <th> CENTERS</th>
+                    <th> BEG. BALANCE</th>
                     <th> NEW CLIENT</th>
                     <th> NEW LOAN AMT</th>
                     <th> RE-LOAN CLIENT</th>
@@ -26,6 +27,11 @@
                 <% centers.forEach(center => { %>
                     <tr>
                         <td><%= center.center%> </td>
+                        <% if (center.budget_BegBalCli > 0) { %>
+                            <td><%= center.budget_BegBalCli.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td>-</td>
+                        <% } %>
                         <% if (center.newClient > 0) { %>
                             <td><%= center.newClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
                         <% } else { %>
