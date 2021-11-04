@@ -901,7 +901,7 @@ router.get('/setNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) 
     
     const poCode = req.params.id
     const uniCode = poCode.substr(0,5)
-    const centerStatus = ["For Target","Active"]
+    const centerStatus = ["Active","For Target"]
     const numCenters = 0
     const yuser = req.user
     let fndCenters = [ ]
