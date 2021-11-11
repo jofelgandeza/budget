@@ -757,7 +757,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                                         fndOldCli.save()
                                     }
                                 })
-                                console.log(ctrOldCliBudgDet)
+                                // console.log(ctrOldCliBudgDet)
                             }
         
                             const totalOldAmt = totOldAmtSem1 + totOldAmtSem2
@@ -823,7 +823,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
         
                                 const ctrNewCliBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "NewLoanClient"}, function (err, fndNewCli) {
                                     const foundNewCli = fndNewCli
-                                    console.log(foundNewCli)
+                                    // console.log(foundNewCli)
                                     switch(monthNewLoan1) {
                                         case "January": 
                                             fndNewCli.jan_budg = totNewCliSem1
@@ -873,7 +873,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                                         fndNewCli.save()
                                     }
                                 })
-                                console.log(ctrNewCliBudgDet)
+                                // console.log(ctrNewCliBudgDet)
                             }
         
                             const totalNewAmt = totNewAmtSem1 + totNewAmtSem2
@@ -1103,9 +1103,10 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                         const totalResign = totResign1 + totResign2
     
                         const ctrBudgDet = await Center.findOne({center: centerCode, loan_type: "GLP"}, function (err, fndOldCli) {
-                            // console.log(fndOldCli)
-    
-                            fndOldCli.newClient = totNewCliSem1 + totNewCliSem2 
+                            console.log(totNewCliSem1)
+                            console.log(totNewCliSem2)                            
+                            
+                            fndOldCli.newClient = totNewCliSem1 + totNewCliSem2 //TypeError: Cannot set property 'newClient' of null
                             fndOldCli.newClientAmt = totNewAmtSem1 + totNewAmtSem2
                             fndOldCli.oldClient = totOldCliSem1 + totOldCliSem2
                             fndOldCli.oldClientAmt = totOldAmtSem1 + totOldAmtSem2
@@ -1227,7 +1228,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                                     fndOldCli.save()
                                 }
                             })
-                            console.log(ctrOldCliBudgDet)
+                            // console.log(ctrOldCliBudgDet)
                         }
     
                         const totalOldAmt = totOldAmtSem1 + totOldAmtSem2
@@ -1293,7 +1294,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
     
                             const ctrNewCliBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "NewLoanClient"}, function (err, fndNewCli) {
                                 const foundNewCli = fndNewCli
-                                console.log(foundNewCli)
+                                // console.log(foundNewCli)
                                 switch(monthNewLoan1) {
                                     case "January": 
                                         fndNewCli.jan_budg = totNewCliSem1
@@ -1343,7 +1344,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                                     fndNewCli.save()
                                 }
                             })
-                            console.log(ctrNewCliBudgDet)
+                            // console.log(ctrNewCliBudgDet)
                         }
     
                         const totalNewAmt = totNewAmtSem1 + totNewAmtSem2
