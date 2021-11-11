@@ -1105,7 +1105,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                         const ctrBudgDet = await Center.findOne({center: centerCode, loan_type: "GLP"}, function (err, fndOldCli) {
                             // console.log(fndOldCli)
     
-                            fndOldCli.newClient = totNewCliSem1 + totNewCliSem2
+                            fndOldCli.newClient = totNewCliSem1 + totNewCliSem2 
                             fndOldCli.newClientAmt = totNewAmtSem1 + totNewAmtSem2
                             fndOldCli.oldClient = totOldCliSem1 + totOldCliSem2
                             fndOldCli.oldClientAmt = totOldAmtSem1 + totOldAmtSem2
@@ -1955,7 +1955,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                 foundBegBal.forEach(cntrBegBal => {
                     const walaLang = cntrBegBal.expected_maturity_date
                     const begBalID = cntrBegBal.id
-
+                    // budget_BegBalCli
                     if (cntrBegBal.id === checkedItemId) {
                         delLoanType = cntrBegBal.loan_type
                         delLoanClient = cntrBegBal.beg_client_count
@@ -1963,6 +1963,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                     }
                 })
                 fondCtr.beg_center_month = ""
+                fondCtr.budget_BegBalCli = 0
                 fondCtr.save()
 
             doneReadCenter = true

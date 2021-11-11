@@ -1085,7 +1085,7 @@ router.get('/newCenter/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     
     const poCode = req.params.id
     const uniCode = poCode.substr(0,5)
-    const centerStatus = ["For Target","Active"]
+    const centerStatus = ["Active","For Target"]
     const ctrAdd = ""
     const yuser = req.user
 
@@ -1240,7 +1240,7 @@ router.get('/getCenterForEdit/:id/edit', authUser, authRole(ROLE.PUH), async (re
     const params = req.params.id
     const centerID = params.substr(0,8)
     const center_id = _.trim(params.substr(8,25))
-    const centerStatus = ["For Target","Active"]
+    const centerStatus = ["Active","For Target"]
     let ctrInfo = []
     let ctrAdd = ""
     const yuser = req.user

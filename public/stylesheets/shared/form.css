@@ -220,9 +220,10 @@ th, td {
     border-collapse: collapse;
 }
 
-.table-set-targets td {
+.table-set-targets th tr td  {
     border: none;
     align-items: bottom;
+    padding: 3px 5px;
     /* text-align: right; */
     /* padding: 2px 5px; */
 
