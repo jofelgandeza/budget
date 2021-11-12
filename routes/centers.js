@@ -1104,15 +1104,16 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                         const totalNewClient = totNewCliSem1 + totNewCliSem2
     
                         const ctrBudgDet = await Center.findOne({center: centerCode, loan_type: "GLP"}, function (err, fndOldCli) {
+                            const fondCenter = fndOldCli
                             
-                            fndOldCli.newClient = totalNewClient //TypeError: Cannot set property 'newClient' of null
-                            fndOldCli.newClientAmt = totNewAmtSem1 + totNewAmtSem2
-                            fndOldCli.oldClient = totOldCliSem1 + totOldCliSem2
-                            fndOldCli.oldClientAmt = totOldAmtSem1 + totOldAmtSem2
-                            fndOldCli.resClient = totResign1
-                            fndOldCli.resClient2 = totResign2
+                            fondCenter.newClient = totalNewClient //TypeError: Cannot set property 'newClient' of null
+                            fondCenter.newClientAmt = totNewAmtSem1 + totNewAmtSem2
+                            fondCenter.oldClient = totOldCliSem1 + totOldCliSem2
+                            fondCenter.oldClientAmt = totOldAmtSem1 + totOldAmtSem2
+                            fondCenter.resClient = totResign1
+                            fondCenter.resClient2 = totResign2
     
-                            fndOldCli.save()
+                            fondCenter.save()
                             // To update newClient, NewClientAmt, oldClient, oldClientAmt, resClient, resClient2 in CENTER fields
                         })
 
