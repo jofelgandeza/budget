@@ -1393,7 +1393,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                                         fndNewLoanAmt.nov_budg = totNewAmtSem2
                                         break;
                                     case "December": 
-                                        fndNewLoanAmt.dec_budg = ftotNewAmtSem2
+                                        fndNewLoanAmt.dec_budg = totNewAmtSem2
                                         break;
                                     default:
                                         orderMonth = 0
