@@ -683,12 +683,14 @@ router.get('/employees/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let empCode = ""
     let empName = ""
     let empPostCode = "AREA_MGR"
-    let empPost = ""
+    let empStat = ""
     let empSortKey = ""
     let empPst
     let empAssign = ""
     let empID = ""
     let empUnit = ""
+
+    const empStatus = ["Active","Deactivate"]
 
     fndPositi.forEach(fndPosii => {
         const fndPositionEmp = fndPosii.code
@@ -717,13 +719,14 @@ router.get('/employees/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                 empUnitPOnum = foundEmp.unit + foundEmp.po_number
                 empAss = foundEmp.assign_code
                 branchCode = foundEmp.branch
+                empStat = foundEmp.status
                 let exist = false
 //                console.log(empID)
                 // console.log(empPst)
 
-                const empAssign = _.find(branches, {branch: empAss})
+                empAssign = _.find(branches, {branch: empAss})
 
-                    fondEmploy.push({empID: empID, area: areaCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empAssign.branch_desc})
+                    fondEmploy.push({empID: empID, area: areaCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empAssign.branch_desc, empStat: empStat})
                 empCanProceed = true            
             })
 
@@ -746,6 +749,7 @@ router.get('/employees/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     if (empCanProceed)
         res.render('areas/employee', {
             areaCode: areaCode,
+            empStatus: empStatus,
             fndEmploy: sortedEmp,
             searchOptions: req.query,
             yuser: _user
@@ -1195,6 +1199,8 @@ router.get('/setNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) =>
     
     let numBranchs = 0
     let doneReadPOs = false
+    const brnStatus = ["Active","Deactivate"]
+
     
     try {
         
@@ -1202,6 +1208,7 @@ router.get('/setNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) =>
 
             res.render('areas/setNewBranches', {
                 fondBranchs: foundBranchs,
+                brnStatus: brnStatus,
                 numBranchs: numBranchs,
                 uniCod: unitCode,
                 lonType: loanType,
@@ -1226,7 +1233,7 @@ router.get('/branches/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let fndBranchs = []
     let sortedBranchs = []
     let doneReadarea = false
-
+    let branchStat = ""
     let empName = []
 
     try {
@@ -1247,6 +1254,7 @@ router.get('/branches/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                 branchCode = fndBranchs.branch
                 branchDesc = fndBranchs.branch_desc
                 branchEmp = fndBranchs.emp_code
+                branchStat = fndBranch.status
 
                 // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
                 empName = _.filter(fndEmployee, {'emp_code': branchEmp})
@@ -1255,7 +1263,7 @@ router.get('/branches/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                 } else {
                     employeeName = empName.first_name + " " + _.trim(empName.middle_name).substr(0,1) + ". " + empName.last_name
                 }
-                foundBranch.push({id: id, areaCode: areaCode, branchCode: branchCode, branchDesc: branchDesc, emp_code: branchEmp, empName: empName})
+                foundBranch.push({id: id, areaCode: areaCode, branchCode: branchCode, branchDesc: branchDesc, emp_code: branchEmp, empName: empName, branchStat: branchStat})
 
                 doneReadarea = true
             })
@@ -1291,10 +1299,12 @@ router.get('/branches/:id', authUser, authRole(ROLE.AM), async (req, res) => {
 //GET Branch
 router.get('/newBranch/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     const areaCod = req.params.id
+    const brnStatus = ["Active","Deactivate"]
 
     res.render('areas/newBranch', {
         areaCode: areaCod,
-        branch: new Branch()
+        branch: new Branch(),
+        brnStatus: brnStatus
     })
 })
 
@@ -1307,6 +1317,7 @@ router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) 
     const branch_code = _.trim(req.body.branchCode).toUpperCase()
     const branch_desc = _.trim(req.body.branchDesc).toUpperCase()
     const branch_add = _.trim(req.body.branchAdd).toUpperCase()
+    const branch_status = req.body.brnStat
 
     let branchareaCode = ""
     let fndBranch = [ ]
@@ -1364,6 +1375,7 @@ router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) 
 
     let fondBranch = []
     let branchID = ""
+    const brnStatus = ["Active","Deactivate"]
 
     try {
 
@@ -1375,6 +1387,7 @@ router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) 
 
         res.render('areas/editBranch', { 
             branchID: branchID,
+            brnStatus: brnStatus,
            branch: fondBranch, 
            areaCode: areaCod,
            yuser : _user
@@ -1396,6 +1409,7 @@ router.put('/putEditedBranch/:id', authUser, authRole(ROLE.AM), async function(r
     const param = _.trim(parame.substr(3,25))
     const branch_code = _.trim(req.body.branchCode).toUpperCase()
     const branch_desc = _.trim(req.body.branchDesc).toUpperCase()
+    const branch_status = req.body.brnStat
 
     console.log(req.params.id)
 
@@ -1404,8 +1418,9 @@ router.put('/putEditedBranch/:id', authUser, authRole(ROLE.AM), async function(r
 
             branch = await Branch.findById(param)
 
-            branch.branch = branch_code,
+            branch.branch = branch_code
             branch.branch_desc = branch_desc
+            branch.status = branch_status
         
             await branch.save()
         

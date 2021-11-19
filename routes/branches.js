@@ -1222,6 +1222,7 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.BM), async (req, res) => 
     
     const branchCode = req.params.id
     const _user = req.user
+    const empStatus = ["Active","Deactivate"]
 
 
     try {
@@ -1235,6 +1236,7 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.BM), async (req, res) => 
    
             res.render('branches/newEmployee', { 
                emp: newEmp, 
+               empStatus: empStatus,
                user: newUser,
                posit: fndPost,
                branchCode: branchCode,
@@ -1381,7 +1383,8 @@ try {
             branch: req.body.brnCode,
             area: _user.area,
             region: _user.region,
-            unit: eUnit
+            unit: eUnit,
+            status: "Active"
         })
         
         const newCoa = employee.save()
@@ -1417,6 +1420,7 @@ try {
 
             res.render('branches/newEmployee', { 
                 emp: errEmp, 
+                empStatus: empStatus,
                 user: errUser,
                 posit: psitCode,
                 branchCode: brnCode,
@@ -1449,6 +1453,7 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, r
     let locals = ""
     let possit
     let foundEmploy = []
+    const empStatus = ["Active","Deactivate"]
     const emPosit = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
          pst_Code = fnd_Post
     })
@@ -1460,6 +1465,7 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, r
             foundEmploy = foundEmp
             brnCod = foundEmp.branch
             possit = _.trim(foundEmploy.position_code)
+            empStat = foundEmp.status
            console.log(possit)
         })
         // console.log(employe)
@@ -1467,6 +1473,7 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, r
 
         res.render('branches/editEmployee', {
             branchCode: brnCod,
+            empStatus: empStatus,
             posit: pst_Code,
             user: newUser,
             emp: employe, 
@@ -1499,7 +1506,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
     const brnCode = req.body.brnCode 
     const assCode = brnCode + "-" + assignUnit
     const emPost =  req.body.ayPost
-
+    const empStatus = req.body.empStat
     const eAssCode = assCode
     
     let ePONum = "NA"
@@ -1548,6 +1555,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
             employee.assign_code = eAssCode
             employee.po_number = ePONum
             employee.branch = brnCode
+            employee.status = empStatus
             employee.unit = eUnit
             employee.area = _user.area
             employee.region = _user.region

@@ -19,7 +19,16 @@
         <input type="text" enable name="branchAdd" id="branchAdd" value="<%= branch.address %>">
     </div>
     <div class="form-item-column">
-    
+        <label>Status</label>
+            <select name="brnStat" id="brnStat" >
+                <% brnStatus.forEach(brnStat => { %>
+                    <% if (brnStat === branch.status) { %>
+                       <option selected value="<%= brnStat %>"> <%= brnStat %></option>
+                    <% } else { %>
+                        <option value="<%= brnStat %>"> <%= brnStat %></option>
+                    <% } %>
+                <% }) %>
+            </select>
     </div>
     <div class="form-item-column">
     

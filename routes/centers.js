@@ -632,7 +632,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
         
                             const totalResign = totResign1 + totResign2
         
-                            const ctrBudgDet = await Center.findOne({center: centerCode, loan_type: "GLP"}, function (err, fndOldCli) {
+                            const ctrBudgDet = await Center.findOne({center: centerCode, loan_type: "Group Loan"}, function (err, fndOldCli) {
                                 // console.log(fndOldCli)
         
                                 fndOldCli.newClient = totNewCliSem1 + totNewCliSem2
@@ -1103,9 +1103,9 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                         const totalResign = totResign1 + totResign2
                         const totalNewClient = totNewCliSem1 + totNewCliSem2
     
-                        const ctrBudgDet = await Center.findOne({center: centerCode, loan_type: "GLP"}, function (err, fndOldCli) {
+                        const ctrBudgDet = await Center.findOne({center: centerCode, loan_type: "Group Loan"}, function (err, fndOldCli) {
                             const fondCenter = fndOldCli
-                            
+
                             fondCenter.newClient = totalNewClient //TypeError: Cannot set property 'newClient' of null
                             fondCenter.newClientAmt = totNewAmtSem1 + totNewAmtSem2
                             fondCenter.oldClient = totOldCliSem1 + totOldCliSem2

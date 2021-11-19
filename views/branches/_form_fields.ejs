@@ -16,6 +16,19 @@
         <% } %>
     </div>
     <div class="form-item-column">
+        <label>Status</label>
+        <% if (resetPW) { %>
+        <% } else { %>
+            <select name="empStat" id="empStat" >
+                <% empStatus.forEach(empStat => { %>
+                    <% if (empStat === emp.status) { %>
+                       <option selected value="<%= empStat %>"> <%= empStat %></option>
+                    <% } else { %>
+                        <option value="<%= empStat %>"> <%= empStat %></option>
+                    <%  } %>
+                <% }) %> 
+            </select>
+            <% } %>
     </div>
 </div>
 <div class="form-row">

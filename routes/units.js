@@ -1005,7 +1005,9 @@ router.post('/postNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res
             // } else {
             //     cntrCode = centerPoCode + cntrNum
             // }
-            const cntrLoanType = "GLP"
+            // const cntrLoanType = req.body.cntrLoan
+            // const cntrStat = req.body.centerStat
+            const cntrLoanType = "Group Loan"
             const cntrAdd = ""
             const cntrStat = "Active"
         
@@ -1240,7 +1242,7 @@ router.get('/getCenterForEdit/:id/edit', authUser, authRole(ROLE.PUH), async (re
     const params = req.params.id
     const centerID = params.substr(0,8)
     const center_id = _.trim(params.substr(8,25))
-    const centerStatus = ["Active","For Target"]
+    const centerStatus = ["Active","For Target","Deactivate"]
     let ctrInfo = []
     let ctrAdd = ""
     const yuser = req.user
