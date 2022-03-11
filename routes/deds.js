@@ -701,7 +701,7 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.DED), async (req,
         })
         
         const region = await Region.findOne({region: regionAsignCode}, function (err, fndArea) {
-            areaAsignDesc = fndArea.area_desc
+            areaAsignDesc = fndArea.region_desc
             dedRegions = fndArea
         })
     

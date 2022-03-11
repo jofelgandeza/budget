@@ -2,7 +2,32 @@
 // const _ = require('lodash')
 // const Cleave = require('../public/javascripts/cleave.js')
 //alert('Reply from main.js')
-//const Cleave = require('cleave')
+// const Cleave = require('cleave')
+
+const setTargetBtn = document.querySelector('.btn-setTarget');
+const okBtn = document.querySelector('.ok-btn');
+const popupBox = document.querySelector('popup-overlay');
+
+setTargetBtn.addEventListener('click',() => {
+    alert('Set Target button is clicked!')
+    popupBox.classList.add('active')
+})
+
+// okBtn.addEventListener('click',() => {
+//     popupBox.classList.toggle('active')
+// })
+// function popupWarning() {
+//     alert('Set Target is clicked!');
+//     popupBox.classList.add('active');
+// }
+
+function onClickOkay() {
+    // alert('Set target link was clicked!');
+    // popupBox.classList.toggle('active')
+    // popupBox.classList.toggle('active')
+    document.querySelector('.popup-overlay').classList.toggle('active')
+    // document.getElementById("popup-message").classList.remove("active");
+}
 
 const cleaveNumCli = new Cleave('.targNumCli', {
     numeral: true,
