@@ -654,7 +654,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                 idClientLen = sortedTargets.length
             }
 
-            for(var i=0; i<idClientLen; i++) {
+            for(var i=0; i<idClientLen; i++) {  // Loop to SCAN all Targets regardless of Loan Type
                 
                  loanTyp = sortedTargets[i].loan_type
 
@@ -1036,14 +1036,31 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                         if (sortedTargets[i].semester === "First Half") {
                             monthNewLoan1 = sortedTargets[i].month
 
-                            totBegBal2 = totBegBal2 + sortedTargets[i].numClient
-                            totNewCliSem1 = totNewCliSem1 + sortedTargets[i].numClient
                             totNewAmtSem1 = totNewAmtSem1 + sortedTargets[i].totAmount
+
+                            if ( loanTyp === "Group Loan" || loanTyp === "Agricultural Loan") {
+
+                                totBegBal2 = totBegBal2 + sortedTargets[i].numClient
+                                totNewCliSem1 = totNewCliSem1 + sortedTargets[i].numClient
+
+                            } else { // Non-GLP Loan Products
+                                perLonTypSem1NewCli = perLonTypSem1NewCli + sortedTargets[i].numClient
+                                perLonTypSem1NewAmt = perLonTypSem1NewAmt + sortedTargets[i].totAmount
+
+                            }
                         } else {
                             monthNewLoan2 = sortedTargets[i].month
 
                             totNewCliSem2 = totNewCliSem2 + sortedTargets[i].numClient
                             totNewAmtSem2 = totNewAmtSem2 + sortedTargets[i].totAmount
+
+                            if ( loanTyp === "Group Loan") {
+
+                            } else { // Non-GLP Loan Products
+                                perLonTypSem2NewCli = perLonTypSem2NewCli + sortedTargets[i].numClient
+                                perLonTypSem2NewAmt = perLonTypSem2NewAmt + sortedTargets[i].totAmount
+
+                            }
                         }
 
                     } else {
@@ -1056,11 +1073,26 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                             totOldCliSem1 = totOldCliSem1 + sortedTargets[i].numClient
                             totOldAmtSem1 = totOldAmtSem1 + sortedTargets[i].totAmount
 
+                            if ( loanTyp === "Group Loan") {
+
+                            } else { // Non-GLP Loan Products
+                                perLonTypSem1OldCli = perLonTypSem1OldCli + sortedTargets[i].numClient
+                                perLonTypSem1OldAmt = perLonTypSem1OldAmt + sortedTargets[i].totAmount
+
+                            }
                         } else {
                             monthReLoan2 = sortedTargets[i].month
 
                             totOldCliSem2 = totOldCliSem2 + sortedTargets[i].numClient
                             totOldAmtSem2 = totOldAmtSem2 + sortedTargets[i].totAmount
+
+                            if ( loanTyp === "Group Loan") {
+
+                            } else { // Non-GLP Loan Products
+                                perLonTypSem2OldCli = perLonTypSem2OldCli + sortedTargets[i].numClient
+                                perLonTypSem2OldAmt = perLonTypSem2OldAmt + sortedTargets[i].totAmount
+
+                            }
                         }
                     }
 
@@ -1725,9 +1757,16 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                     canSaveBegBal = false
                     let hasChangedBegBal = false
                     let canDeleteBegBal = false
+                    let centerFound
     
-                    const fndCenter = await Center.findOne({center: centerCode}, function (err, centerFound) {
-            
+                    const fndCenter = await Center.findOne({center: centerCode}, function (err, centrFound) {
+                        centerFound = centrFound
+                    })
+
+                    centerFound = fndCenter
+                    console.log(centerFound)
+
+                        if (!isNull(centerFound)) {
                             const curLoanBeg = centerFound.Loan_beg_bal
                             totBegAmount = _.toNumber(begPrincipal[i]) + _.toNumber(begInterest[i])
                                         
@@ -1786,9 +1825,9 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                 centerFound.save(); 
                             }                           
                             doneReadCenter = true
-                        })
+                        // }
 
-                if (doneReadCenter) { 
+                // if (doneReadCenter) { 
                     if (num_Client === 0 && canDeleteBegBal) {
                         const center = await Center.findOneAndUpdate({center: centerCode}, {$pull: {Loan_beg_bal :{_id: begBalID[i] }}})                        
                     }
@@ -2612,86 +2651,100 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                     const targSemester = target.semester
                     const totLonAmount = target.totAmount
 
-                    if (tarLoanType === loanType) {
+                    // if (tarLoanType === loanType) {
                         if (targSemester === "First Half") {
                             if (target.remarks === "New Loan") {
                                 hasFirstHalfNewLoan = true
 
-                                newLoanCount = newLoanCount + target.numClient   // New Loan Count running Totals
                                 newLoanAmount = newLoanAmount + totLonAmount
 
-                                firstHalfNewLoanCount = firstHalfNewLoanCount + target.numClient
                                 firstHalfNewLoanAmount = firstHalfNewLoanAmount + totLonAmount
 
-                                rNewClient = rNewClient + target.numClient   //
                                 rNewClientAmt = rNewClientAmt + target.numClient //
 
+                                if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan")  {
+                                    newLoanCount = newLoanCount + target.numClient   // New Loan Count running Totals
+                                    firstHalfNewLoanCount = firstHalfNewLoanCount + target.numClient
+
+                                    rNewClient = rNewClient + target.numClient   //
+                                }
                             }
                             else { 
                                 hasFirstHalfReloan = true
 
                                 withReloanMonth = targMonth
-                                oldLoanCount  = oldLoanCount + target.numClient
                                 oldLoanAmount = oldLoanAmount + totLonAmount
                                 targetKeyForUpdet = target.id
 
-                                firstHalfReLoanCount = firstHalfReLoanCount + target.numClient
                                 firstHalfReLoanAmount = firstHalfReLoanAmount + totLonAmount
 
+                                if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan")  {
+                                    oldLoanCount  = oldLoanCount + target.numClient
+                                    firstHalfReLoanCount = firstHalfReLoanCount + target.numClient
+
+                                }
                             }
                         }
                         if (targSemester === "Second Half") {
                             if (target.remarks === "New Loan") {
                                 hasSeconHalfNewLoan = true
 
-                                newLoanCount = newLoanCount + target.numClient   // New Loan Count running Totals
                                 newLoanAmount = newLoanAmount + totLonAmount
 
-                                seconHalfNewLoanCount = seconHalfNewLoanCount + target.numClient
                                 seconHalfNewLoanAmount = seconHalfNewLoanAmount + totLonAmount
 
+                                if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan")  {
+                                    newLoanCount = newLoanCount + target.numClient   // New Loan Count running Totals
+
+                                    seconHalfNewLoanCount = seconHalfNewLoanCount + target.numClient
+                                }
                             }
                             else { 
                                 hasSeconHalfReloan = true
 
                                 withReloanMonth = targMonth
-                                oldLoanCount  = oldLoanCount + target.numClient
                                 oldLoanAmount = oldLoanAmount + totLonAmount
 
-                                seconHalfReLoanCount = seconHalfReLoanCount + target.numClient
                                 seconHalfReLoanAmount = seconHalfReLoanAmount + totLonAmount
+
+                                if (tarLoanType === "Group Loan" || tarLoanType === "Agricultural Loan")  {
+                                    oldLoanCount  = oldLoanCount + target.numClient
+
+                                    seconHalfReLoanCount = seconHalfReLoanCount + target.numClient
+                                }
                             }
                         
                         }
-                    }
+                    // }
 
                 }) // end of forEach() loop
+                if (loanType === "Group Loan" || loanType === "Agricultural Loan") {
 
-                if (semester === "First Half") {
-                    if (remarks === "Re-loan") {
-                        resiClient1 = curLoanTypeCliBegBal - (firstHalfReLoanCount + numClient)
-                        if (hasSeconHalfReloan) {
-                            resiClient2 = (firstHalfNewLoanCount + firstHalfReLoanCount + numClient) - seconHalfReLoanCount
-                        } 
-                    } else { // remarks === 'New Loan'
+                    if (semester === "First Half") {
+                        if (remarks === "Re-loan") {
+                            resiClient1 = curLoanTypeCliBegBal - (firstHalfReLoanCount + numClient)
+                            if (hasSeconHalfReloan) {
+                                resiClient2 = (firstHalfNewLoanCount + firstHalfReLoanCount + numClient) - seconHalfReLoanCount
+                            } 
+                        } else { // remarks === 'New Loan'
+                            if (hasFirstHalfReloan) {
+                                resiClient1 = curLoanTypeCliBegBal - (firstHalfReLoanCount)
+                            }
+                            if (hasSeconHalfReloan) {
+                                resiClient2 = (firstHalfNewLoanCount + firstHalfReLoanCount + numClient) - seconHalfReLoanCount
+                            }
+                        }
+                    }
+
+                    if (semester === "Second Half") {
+                        if (remarks === "Re-loan") {
+                            resiClient2 = (firstHalfNewLoanCount + firstHalfReLoanCount) - (seconHalfReLoanCount + numClient)
+                        }
                         if (hasFirstHalfReloan) {
                             resiClient1 = curLoanTypeCliBegBal - (firstHalfReLoanCount)
                         }
-                        if (hasSeconHalfReloan) {
-                            resiClient2 = (firstHalfNewLoanCount + firstHalfReLoanCount + numClient) - seconHalfReLoanCount
-                        }
                     }
                 }
-
-                if (semester === "Second Half") {
-                    if (remarks === "Re-loan") {
-                            resiClient2 = (firstHalfNewLoanCount + firstHalfReLoanCount) - (seconHalfReLoanCount + numClient)
-                    }
-                    if (hasFirstHalfReloan) {
-                        resiClient1 = curLoanTypeCliBegBal - (firstHalfReLoanCount)
-                    }
-            }
-
                     // if (tarLoanType === loanType && _.trim(target.remarks) === "New Loan" ) {
                     //     if (targMonth === month) {
                     //         hasCurNewLoan = true
@@ -3227,7 +3280,6 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                     center2BudgDet.apr_budg = aprTotCliAmount
                     center2BudgDet.may_budg = mayTotCliAmount
                     center2BudgDet.jun_budg = junTotCliAmount
-                    center2BudgDet.jul_budg = julTotCliAmount
                     center2BudgDet.jul_budg = julTotCliAmount
                     center2BudgDet.aug_budg = augTotCliAmount
                     center2BudgDet.sep_budg = sepTotCliAmount
