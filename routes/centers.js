@@ -114,9 +114,10 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
                             resloanTot = resloanTot + centerLoan.resignClient
                             oClient = oClient + centerLoan.numClient
                         }
-                        rClient = rClient + centerLoan.resignClient
+                        // rClient = rClient + centerLoan.resignClient
                     }
                 })
+                        rClient = rClient + resignClient
 
                 LoanBegBal.forEach(centerBegBal => {
                     if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
@@ -4000,7 +4001,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         let doneReadLoanAmt = false
         let doneReadNumCenters = false
         
-        let fondPONumCenters = []
+        let fndPONumCenters = []
         let fondNewClients = []
         let fondOldClients = []
         let fondResClients = []
@@ -4034,7 +4035,11 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
         // Gets NumberOfCenters from Budg_exec_sum
         
-        const foundCenters = await Center.find({po_code: viewPOCode}, function(err, foundCenters) {
+        const foundCenters = await Center.find({po_code: viewPOCode}, function(err, fdCenters) {
+            const fawndCenter = fdCenters
+        }) 
+
+        if (!isNull(foundCenters)) {
             const fndCenters = foundCenters
                 console.log(fndCenters)
             fndCenters.forEach( fCenters => {
@@ -4127,12 +4132,13 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             })
             doneReadNumCenters = true
 
-        })
+        }
 
         // console.log(foundCenterDet)
-        if (doneReadNumCenters) {
-            const fndPONumCenters = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumberOfCenters"}, function (err, fndTotLonAmt) {
-                fondPONumCenters = fndTotLonAmt
+        // if (doneReadNumCenters) {
+            const fondPONumCenters = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumberOfCenters"}, function (err, fndTotLonAmt) {
+                fndPONumCenters = fndTotLonAmt
+            })
 
                 if (isNull(fondPONumCenters)) { 
                     let newPONumCenters = new Budg_exec_sum({
@@ -4158,8 +4164,6 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
                     fondPONumCenters.save()            
                 }
-            })
-        }
 
         poSumView.push({title: "CENTERS", sortkey: 1, group: 1, isTitle: true})
 
@@ -4370,8 +4374,12 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         // NUMBER OF LOANS GROUP
         poSumView.push({title: "NUMBER OF LOANS", sortkey: 7, group: 1, isTitle: true})
 
-        const newLoanClientView = await Center_budget_det.find({po_code: viewPOCode, view_code: "NewLoanClient"}, function (err, fndNewCli) {
+        const fndNewCli = await Center_budget_det.find({po_code: viewPOCode, view_code: "NewLoanClient"}, function (err, fandNewCli) {
+            const fowndNewCLi = fandNewCli
+            doneReadNLC = true
+        })
 
+        if(!isNull(fndNewCli)) {
             fndNewCli.forEach(NewCli => {
                 jan_newCtotValue = jan_newCtotValue + NewCli.jan_budg
                 feb_newCtotValue = feb_newCtotValue + NewCli.feb_budg
@@ -4395,9 +4403,9 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     sep_value : sep_newCtotValue, oct_value : oct_newCtotValue, nov_value : nov_newCtotValue, dec_value : dec_newCtotValue, tot_value: tot_newCtotValue
                 }) 
             doneReadNLC = true
-        }) //, function (err, fndPOV) {
+        // } //, function (err, fndPOV) {
 
-        if (doneReadNLC) {
+        // if (doneReadNLC) {
             const fndNewLoanCli = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumNewLoanCli"}, function (err, fndTotLonAmt) {
                 fondNewLoanCli = fndTotLonAmt
 
@@ -4429,9 +4437,14 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         }   
 
         begBalOldClient = 0
-        const oldLoanClientView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanClient"}, function (err, fndOldClient) {
+        // let 
 
-            fndOldClient.forEach(OldCli => {
+        const oldLoanClientView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanClient"}, function (err, fondOldClient) {
+            const fndOldClient = fondOldClient
+            doneReadOLC = true
+        })
+        if (!isNull(oldLoanClientView)) {
+            oldLoanClientView.forEach(OldCli => {
                 let begBalOldCli = OldCli.beg_bal
                 // if (!begBalOldCli) {
                 //     begBalOldClient = begBalOldClient + 0
@@ -4453,16 +4466,15 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 dec_oldCtotValue = dec_oldCtotValue + OldCli.dec_budg
             })
 
-        tot_oldCtotValue = jan_oldCtotValue + feb_oldCtotValue + mar_oldCtotValue + apr_oldCtotValue + may_oldCtotValue + jun_oldCtotValue
+            tot_oldCtotValue = jan_oldCtotValue + feb_oldCtotValue + mar_oldCtotValue + apr_oldCtotValue + may_oldCtotValue + jun_oldCtotValue
                         + jul_oldCtotValue + aug_oldCtotValue + sep_oldCtotValue + oct_oldCtotValue + nov_oldCtotValue + dec_oldCtotValue
             
             poSumView.push({title: "Number of Reloan", sortkey: 9, group: 1, isTitle: false, beg_bal: 0, jan_value : jan_oldCtotValue, feb_value : feb_oldCtotValue, mar_value : mar_oldCtotValue, apr_value : apr_oldCtotValue,
                 may_value : may_oldCtotValue, jun_value : jun_oldCtotValue, jul_value : jul_oldCtotValue, aug_value : aug_oldCtotValue,
                 sep_value : sep_oldCtotValue, oct_value : oct_oldCtotValue, nov_value : nov_oldCtotValue, dec_value : dec_oldCtotValue, tot_value: tot_oldCtotValue
             }) 
-            doneReadOLC = true
 
-        }) //, function (err, fndPOV) {
+        } //, function (err, fndPOV) {
 
         if (doneReadOLC) {
 
