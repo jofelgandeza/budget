@@ -36,7 +36,7 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
     const assignCode = IDcode.substr(0,6)
     const yuser = req.user
 
-    console.log(yuser.name)
+    console.log(IDcode)
 
     let poLoanTotals = []
      let poLoanGrandTot = []
@@ -57,6 +57,7 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
      let center = []
      let POData = []
      let loanType = []
+     let ctrResBudgDet = []
 
     let doneCenterRead = false
     let doneLoanTypeRead = false
@@ -68,6 +69,8 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
             POposition = foundedEmp.position_code
         })
         
+        ctrResBudgDet = await Center_budget_det.find({po_code: IDcode, view_code: "ResClientCount"})
+         console.log(ctrResBudgDet)
         loanType = await Loan_type.find()
 
         center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber})
@@ -111,13 +114,13 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
                         } else {
                             oloanTot = oloanTot + centerLoan.totAmount
                             oloanTotCount = oloanTotCount + centerLoan.numClient
-                            resloanTot = resloanTot + centerLoan.resignClient
+                            // resloanTot = resloanTot + centerLoan.resignClient
                             oClient = oClient + centerLoan.numClient
                         }
                         // rClient = rClient + centerLoan.resignClient
                     }
                 })
-                        rClient = rClient + resignClient
+                    // rClient = rClient + resignClient
 
                 LoanBegBal.forEach(centerBegBal => {
                     if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
@@ -128,6 +131,19 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
                 })
                 doneCenterRead = true
             })
+
+            if (!isNull(ctrResBudgDet)) {
+                ctrResBudgDet.forEach(fndResCli => {
+                    if (fndResCli.loan_type === typeLoan ) {
+                        const totalResCnt = fndResCli.jan_budg + fndResCli.feb_budg + fndResCli.mar_budg + fndResCli.apr_budg + fndResCli.may_budg + fndResCli.jun_budg + 
+                            fndResCli.jul_budg + fndResCli.aug_budg + fndResCli.sep_budg + fndResCli.oct_budg + fndResCli.nov_budg + fndResCli.dec_budg 
+                        resloanTot = resloanTot + totalResCnt
+
+                        rClient = rClient + totalResCnt
+                    }
+                })
+            }
+
             let totAmounts = nloanTot + oloanTot 
                 budgEndBal =  (begClientTot +  nloanTotCount) - resloanTot
 
