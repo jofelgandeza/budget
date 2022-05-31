@@ -2622,18 +2622,33 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
 
 
         const newClientCntView = await Budg_exec_sum.find({branch: viewBranchCode, view_code: "NewClients"}, function (err, fndNewCliCnt) {
-            jan_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jan_budg; })
-            feb_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.feb_budg; })
-            mar_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.mar_budg; })
-            apr_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.apr_budg; })
-            may_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.may_budg; })
-            jun_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jun_budg; })
-            jul_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jul_budg; })
-            aug_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.aug_budg; })
-            sep_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.sep_budg; })
-            oct_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.oct_budg; })
-            nov_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.nov_budg; })
-            dec_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.dec_budg; })
+            // jan_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jan_budg; })
+            // feb_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.feb_budg; })
+            // mar_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.mar_budg; })
+            // apr_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.apr_budg; })
+            // may_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.may_budg; })
+            // jun_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jun_budg; })
+            // jul_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jul_budg; })
+            // aug_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.aug_budg; })
+            // sep_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.sep_budg; })
+            // oct_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.oct_budg; })
+            // nov_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.nov_budg; })
+            // dec_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.dec_budg; })
+            fndNewCliCnt.forEach(NewCliCnt => {
+                jan_newCliTot = jan_newCliTot + NewCliCnt.jan_budg
+                feb_newCliTot = feb_newCliTot + NewCliCnt.feb_budg
+                mar_newCliTot = mar_newCliTot + NewCliCnt.mar_budg
+                apr_newCliTot = apr_newCliTot + NewCliCnt.apr_budg
+                may_newCliTot = may_newCliTot + NewCliCnt.may_budg
+                jun_newCliTot = jun_newCliTot + NewCliCnt.jun_budg
+                jul_newCliTot = jul_newCliTot + NewCliCnt.jul_budg
+                aug_newCliTot = aug_newCliTot + NewCliCnt.aug_budg
+                sep_newCliTot = sep_newCliTot + NewCliCnt.sep_budg
+                oct_newCliTot = oct_newCliTot + NewCliCnt.oct_budg
+                nov_newCliTot = nov_newCliTot + NewCliCnt.nov_budg
+                dec_newCliTot = dec_newCliTot + NewCliCnt.dec_budg
+            })
+
 
             nwTotValueClient = jan_newCliTot + feb_newCliTot + mar_newCliTot + apr_newCliTot + may_newCliTot + jun_newCliTot
                 + jul_newCliTot + aug_newCliTot + sep_newCliTot + oct_newCliTot + nov_newCliTot + dec_newCliTot

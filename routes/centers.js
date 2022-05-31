@@ -1364,6 +1364,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
 
                 prevLoanTyp = sortedTargets[i].loan_type
 
+                let totalNewClient = 0
                     if (i == (idClientLen - 1) && hasChangesTarg) {
 
                         //MAKE THE SAVING OF THE CHANGES in center_budget_dets here...
@@ -1375,7 +1376,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                         let totalNewAmt = 0
 
                         const totalResign = totResign1 + totResign2
-                        const totalNewClient = totNewCliSem1 + totNewCliSem2
+                        totalNewClient = totNewCliSem1 + totNewCliSem2
     
                         const ctrBudgDet = await Center.findOne({center: centerCode, loan_type: "Group Loan"}, function (err, fndOldCli) {
                             const fondCenter = fndOldCli

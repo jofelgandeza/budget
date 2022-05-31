@@ -165,8 +165,9 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                 unHeadName = ""
                 poNum = ""
             } 
-
-            foundCenter.forEach(center => {
+            // center
+            // foundCenter.forEach(center => {
+                center.forEach(center => {
                 const poNo = center.po
                 if (poNo === forSortPoNum) { 
                     const lnType = center.loan_code
