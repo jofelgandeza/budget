@@ -70,6 +70,8 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     let doneReadSubTot = false
     let doneReadLoanTot = false
 
+    let ctrResBudgDet = []
+
     unitPosition.forEach(fndPosii => {
         const fndPositionEmp = fndPosii.code
         const fndPositID = fndPosii._id
@@ -97,9 +99,13 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
         const programOfficers = await Employee.find({branch: branchCode, unit: unitLetter, position_code: postProgOfr}, function (err, foundPO){
             foundPOs = foundPO
+            console.log(foundPOs)
             })
 
         const loanType = await Loan_type.find({})
+
+        ctrResBudgDet = await Center_budget_det.find({unit: unitCode, view_code: "ResClientCount"})
+        //  console.log(ctrResBudgDet)
 
         const center = await Center.find({branch: branchCode, unit: unitLetter}) 
 //        const center = await Center.find(searchOptions)
@@ -112,7 +118,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             nClientAmt = _.sumBy(center, function(o) { return o.newClientAmt; });
             oClient = _.sumBy(center, function(o) { return o.oldClient; });
             oClientAmt = _.sumBy(center, function(o) { return o.oldClientAmt; });
-            rClient = _.sumBy(center, function(o) { return o.resClient; });
+            // rClient = _.sumBy(center, function(o) { return o.resClient; });
             rClient2 = _.sumBy(center, function(o) { return o.resClient2; });
             budgBegBal = _.sumBy(center, function(o) { return o.budget_BegBal; });
             budgEndBal = oClient + newClients 
@@ -131,6 +137,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     foundPOs.forEach(uh => {
 
         let poNum = _.trim(uh.po_number)
+        const po_code = uh.assign_code
         let uniCode = poNum
         let unHeadName = uh.first_name + " " + uh.middle_name.substr(0,1) + ". " + uh.last_name
         let forSortPoNum = poNum
@@ -145,18 +152,18 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
         let typeLoan = ""
         let count = 0 
-    
+        let nloanTot = 0
+        let nloanTotCount = 0
+        let oloanTot = 0
+        let oloanTotCount = 0
+        let resloanTot = 0
+        let begLoanTot = 0
+        let begClientTot = 0
+        let bClientAmt = 0
+        let bClientCnt = 0
+
         loanType.forEach(loan_type => {
             typeLoan = loan_type.title
-            let nloanTot = 0
-            let nloanTotCount = 0
-            let oloanTot = 0
-            let oloanTotCount = 0
-            let resloanTot = 0
-            let begLoanTot = 0
-            let begClientTot = 0
-            let bClientAmt = 0
-            let bClientCnt = 0
             lnType = loan_type.loan_type
 
             count = count + 1
@@ -165,52 +172,75 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                 unHeadName = ""
                 poNum = ""
             } 
+            nloanTot = 0
+            nloanTotCount = 0
+            oloanTot = 0
+            oloanTotCount = 0
+            resloanTot = 0
+            begLoanTot = 0
+            begClientTot = 0
+            bClientAmt = 0
+            bClientCnt = 0
+
             // center
             // foundCenter.forEach(center => {
                 center.forEach(center => {
-                const poNo = center.po
-                if (poNo === forSortPoNum) { 
-                    const lnType = center.loan_code
-                    let centerTargets = center.Targets
-                    let LoanBegBal = center.Loan_beg_bal
-//                  let centerLoanBegBal = center.Loan_beg_bal                
-                    // resloanTot = resloanTot + (center.resClient + center.resClient2)
+
+                    const poNo = center.po
+                    if (poNo === forSortPoNum) { 
+                        const lnType = center.loan_code
+                        let centerTargets = center.Targets
+                        let LoanBegBal = center.Loan_beg_bal
             
-                    if (lnType === _.trim(lnType)) {
-                        BudgBegBal = center.budget_BegBal
-                    }
-                    // console.log(resignClient)
-                    // console.log(resloanTot)
-
-                    centerTargets.forEach(centerLoan => {
-                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
-                            const loanRem = centerLoan.remarks
-                            if (_.trim(loanRem) === "New Loan") {
-                                nloanTot = nloanTot + centerLoan.totAmount
-                                nloanTotCount = nloanTotCount + centerLoan.numClient
-                            } else {
-                                oloanTot = oloanTot + centerLoan.totAmount
-                                oloanTotCount = oloanTotCount + centerLoan.numClient
-                                resloanTot = resloanTot + centerLoan.resignClient
-                            }
+                        if (lnType === _.trim(lnType)) {
+                            BudgBegBal = center.budget_BegBal
                         }
-                    })
+                        // console.log(resignClient)
+                        // console.log(resloanTot)
 
-                    LoanBegBal.forEach(centerBegBal => {
-                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
-                            begLoanTot = centerBegBal.beg_amount
-                            begClientTot = centerBegBal.beg_client_count
-                            bClientCnt = bClientCnt + begClientTot
-                            bClientAmt = bClientAmt + begLoanTot
+                        centerTargets.forEach(centerLoan => {
+                            if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
+                                const loanRem = centerLoan.remarks
+                                if (_.trim(loanRem) === "New Loan") {
+                                    nloanTot = nloanTot + centerLoan.totAmount
+                                    nloanTotCount = nloanTotCount + centerLoan.numClient
+                                } else {
+                                    oloanTot = oloanTot + centerLoan.totAmount
+                                    oloanTotCount = oloanTotCount + centerLoan.numClient
+                                    // resloanTot = resloanTot + centerLoan.resignClient
+                                }
+                            }
+                        })
+
+                        LoanBegBal.forEach(centerBegBal => {
+                            if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
+                                begLoanTot = centerBegBal.beg_amount
+                                begClientTot = centerBegBal.beg_client_count
+                                bClientCnt = bClientCnt + begClientTot
+                                bClientAmt = bClientAmt + begLoanTot
+                            }
+                        })
+                    }
+                })
+
+                if (!isNull(ctrResBudgDet)) {
+                    ctrResBudgDet.forEach(fndResCli => {
+                        if (fndResCli.loan_type === typeLoan  && fndResCli.po_code === po_code) {
+                            const totalResCnt = fndResCli.jan_budg + fndResCli.feb_budg + fndResCli.mar_budg + fndResCli.apr_budg + fndResCli.may_budg + fndResCli.jun_budg + 
+                                fndResCli.jul_budg + fndResCli.aug_budg + fndResCli.sep_budg + fndResCli.oct_budg + fndResCli.nov_budg + fndResCli.dec_budg 
+        
+                            resloanTot = resloanTot + totalResCnt
+        
+                            rClient = rClient + totalResCnt
                         }
                     })
                 }
-            })
+        
+        
+    
             let totAmounts = nloanTot + oloanTot 
             let unitBudgEndBal = (begClientTot + nloanTotCount) - resloanTot
             totbudgEndBal = totbudgEndBal + unitBudgEndBal
-
-//            let amtDisburse = oloanTot + oloanTot
             
             unitLoanTotals.push({sortkey: forSortPoNum, po: poNum, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClientCnt,
                 begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: unitBudgEndBal})
@@ -234,7 +264,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
         
             doneReadSubTot = true
     })
-    // console.log(unitLoanTotals)
+    console.log(unitLoanTotals)
 
 // LOOP for getting Different Loan products totals in the branch
     let gtBegBalClient = 0
@@ -242,15 +272,15 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
     loanType.forEach(loan_type => {
         typeLoan = loan_type.title
-        let nloanTot = 0
-        let nloanTotCount = 0
-        let oloanTot = 0
-        let oloanTotCount = 0
-        let resloanTot = 0
-        let begLoanTot = 0
-        let ubegClientTot = 0
-        let bClient = 0
-        let bClientCnt = 0
+         nloanTot = 0
+         nloanTotCount = 0
+         oloanTot = 0
+         oloanTotCount = 0
+         resloanTot = 0
+         begLoanTot = 0
+         ubegClientTot = 0
+         bClient = 0
+         bClientCnt = 0
         const lonType = loan_type.loan_type
 //        let unCode = ""
         unitLoanTotals.forEach(uLoanTots => {
@@ -284,7 +314,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 //    console.log(brnLoanTotals)
 
             brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
-                rClient: rClient + rClient2, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
+                rClient: rClient, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
 
                 sortedPOs = unitLoanTotals.sort( function (a,b) {
                     if ( a.sortkey < b.sortkey ){
@@ -1796,7 +1826,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
 
 
         const newClientCntView = await Budg_exec_sum.find({unit: viewUnitCode, view_code: "NewClients"}, function (err, fndNewCliCnt) {
-
+            const fondNewCliCount = fndNewCliCnt
             // jan_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jan_budg; })
             // feb_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.feb_budg; })
             // mar_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.mar_budg; })
@@ -1810,7 +1840,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
             // nov_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.nov_budg; })
             // dec_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.dec_budg; })
 
-            fndNewCliCnt.forEach(NewCliCnt => {
+            fondNewCliCount.forEach(NewCliCnt => {
                 jan_newCliTot = jan_newCliTot + NewCliCnt.jan_budg
                 feb_newCliTot = feb_newCliTot + NewCliCnt.feb_budg
                 mar_newCliTot = mar_newCliTot + NewCliCnt.mar_budg
@@ -1830,7 +1860,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
             
                 poSumView.push({title: "New Clients", sortkey: 4, group: 2, beg_bal: 0, jan_value : jan_newCliTot, feb_value : feb_newCliTot, mar_value : mar_newCliTot, apr_value : apr_newCliTot,
                     may_value : may_newCliTot, jun_value : jun_newCliTot, jul_value : jul_newCliTot, aug_value : aug_newCliTot,
-                    sep_value : sep_newCliTot, oct_value : oct_newCliTot, nov_value : nov_newCliTot, dec_value : dec_newCliTot, tot_value : dec_newCliTot
+                    sep_value : sep_newCliTot, oct_value : oct_newCliTot, nov_value : nov_newCliTot, dec_value : dec_newCliTot, tot_value : nwTotValueClient
                 }) 
                 doneReadNLCli = true
         }) //, function (err, fndPOV) {
@@ -1994,7 +2024,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
 
        poSumView.push({title: "Resign Clients", sortkey: 6, group: 2, jan_value : jan_resCliTot, feb_value : feb_resCliTot, mar_value : mar_resCliTot, apr_value : apr_resCliTot,
            may_value : may_resCliTot, jun_value : jun_resCliTot, jul_value : jul_resCliTot, aug_value : aug_resCliTot,
-           sep_value : sep_resCliTot, oct_value : oct_resCliTot, nov_value : nov_resCliTot, dec_value : dec_resCliTot, tot_value : dec_resCliTot
+           sep_value : sep_resCliTot, oct_value : oct_resCliTot, nov_value : nov_resCliTot, dec_value : dec_resCliTot, tot_value : olTotValueClient
        }) 
        doneReadNewOldResCli = true
     }

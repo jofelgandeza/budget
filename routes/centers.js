@@ -19,6 +19,7 @@ const User_log = require('../models/user_log')
 const excel = require('exceljs')
 const Cleave = require('../public/javascripts/cleave.js')
 const { lookup } = require('geoip-lite')
+const loan_type = require('../models/loan_type')
 
 
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
@@ -1382,6 +1383,7 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                             const fondCenter = fndOldCli
 
                             fondCenter.newClient = totalNewClient //TypeError: Cannot set property 'newClient' of null
+                                // Cause of error is, loan_type === "GLP", it should be "Group Loan"
                             fondCenter.newClientAmt = totNewAmtSem1 + totNewAmtSem2
                             fondCenter.oldClient = totOldCliSem1 + totOldCliSem2
                             fondCenter.oldClientAmt = totOldAmtSem1 + totOldAmtSem2
@@ -4062,10 +4064,11 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             fndCenters.forEach( fCenters => {
                 let monthNewCenter = ""
                 let fndTarget = []
+                let canAddBegCenter = false
 
                 const fCenter = fCenters.center
                 const monthCenterBegBal = _.trim(fCenters.beg_center_month)
-                    console.log(monthCenterBegBal)
+                    // console.log(monthCenterBegBal)
                 const begBalData = fCenters.Loan_beg_bal
 
                 fndTarget = fCenters.Targets
@@ -4077,9 +4080,20 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                             monthNewCenter = findTarg.month
                         }
                     })
+                    begBalData.forEach( cntrBegBal => {
+                        if (cntrBegBal.loan_type === "Group Loan" || cntrBegBal.loan_type === "Agricultural Loan") {
+                            if (cntrBegBal.beg_client_count > 0) {
+                                // centerCntBegBal = centerCntBegBal + 1 
+                                canAddBegCenter = true
+                            } else {
+                                
+                            }
+                        }
+                    })
 
+                // if (monthCenterBegBal === "" && begBalData.length === 0 && monthNewCenter !=="" ) {
 
-                if (monthCenterBegBal === "" && begBalData.length === 0 && monthNewCenter !=="" ) {
+                if (!canAddBegCenter) {
 
                     switch(monthNewCenter) {
                         case "January":
@@ -4124,7 +4138,11 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     
                 } else {
                     if (begBalData.length > 0) {
-                        centerCntBegBal = centerCntBegBal + 1
+                        if (canAddBegCenter) {
+                            centerCntBegBal = centerCntBegBal + 1                        
+                        } else {
+
+                        }
                     }
                 }
 
@@ -4166,6 +4184,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     newPONumCenters.save()
 
                 } else {
+                    fondPONumCenters.beg_bal = centerCntBegBal
                     fondPONumCenters.jan_budg = jan_centerCount
                     fondPONumCenters.feb_budg = feb_centerCount
                     fondPONumCenters.mar_budg = mar_centerCount
