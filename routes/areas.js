@@ -137,7 +137,9 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
         //     foundPOs = foundPO
             totPOs = foundAreaPOs.length
             // })
-        
+
+        ctrResBudgDet = await Center_budget_det.find({area: areaCode, view_code: "ResClientCount"})
+
         const loanType = await Loan_type.find({})
 
         const center = await Center.find({area: areaCode}) //, function (err, foundCenters) {
@@ -151,7 +153,7 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
                 nClientAmt = _.sumBy(center, function(o) { return o.newClientAmt; });
                 oClient = _.sumBy(center, function(o) { return o.oldClient; });
                 oClientAmt = _.sumBy(center, function(o) { return o.oldClientAmt; });
-                rClient = _.sumBy(center, function(o) { return o.resClient; });
+                // rClient = _.sumBy(center, function(o) { return o.resClient; });
                 rClient2 = _.sumBy(center, function(o) { return o.resClient2; });
                 budgBegBal = _.sumBy(center, function(o) { return o.budget_BegBal; });
                 budgEndBal = oClient + newClients 
@@ -228,7 +230,7 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
                             } else {
                                 oloanTot = oloanTot + centerLoan.totAmount
                                 oloanTotCount = oloanTotCount + centerLoan.numClient
-                                resloanTot = resloanTot + centerLoan.resignClient
+                                // resloanTot = resloanTot + centerLoan.resignClient
                             }
                         }
                     })
@@ -243,6 +245,21 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
                     })
                 }
             })
+
+            if (!isNull(ctrResBudgDet)) {
+                ctrResBudgDet.forEach(fndResCli => {
+                    if (fndResCli.loan_type === typeLoan  && fndResCli.branch === brn_Code) {
+                        const totalResCnt = fndResCli.jan_budg + fndResCli.feb_budg + fndResCli.mar_budg + fndResCli.apr_budg + fndResCli.may_budg + fndResCli.jun_budg + 
+                            fndResCli.jul_budg + fndResCli.aug_budg + fndResCli.sep_budg + fndResCli.oct_budg + fndResCli.nov_budg + fndResCli.dec_budg 
+    
+                        resloanTot = resloanTot + totalResCnt
+    
+                        rClient = rClient + totalResCnt
+                    }
+                })
+            }
+
+
             let totAmounts = nloanTot + oloanTot 
             let areaBudgEndBal = (uBegClientTot + nloanTotCount) - resloanTot
             totbudgEndBal = totbudgEndBal + areaBudgEndBal
@@ -270,6 +287,8 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
 
             doneFoundPO = true
     })
+
+
 
     if (foundAreaBranches.length === 0) {
         doneFoundPO = true
@@ -321,10 +340,10 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
     })
 
 //    console.log(unitLoanTotals)
-//    console.log(brnLoanTotals)
+   console.log(brnLoanTotals)
 
             brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, totCenters: totCenters, totPOs: totPOs, totUnits: totUnits, totBranches: totBranches,
-                rClient: rClient + rClient2, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
+                rClient: rClient, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
 
             console.log(totDisburse)
 
@@ -425,6 +444,12 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     console.log(postAreaMgr)
     try {
 
+        const center = await Center.find({area: areaCode}, function (err, fndCenters) {
+            //        const center = await Center.find(searchOptions)
+                            foundCenter = fndCenters.sort()
+                    })
+            
+            
         const areaManager = await Employee.find({area: areaCode, position_code: postAreaMgr}, function (err, foundBMs){
             foundBranchMgr = foundBMs
 
@@ -434,21 +459,27 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                 areaManager.forEach(manager => {
                     officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
                 })
-            }            
+            } 
         const branMgrs = await Employee.find({area: areaCode, position_code: postManager}, function (err, foundUHs){
             foundAMBranches = foundUHs
-            doneFoundMgr = true
+            // doneFoundMgr = true
             })
 
           const loan_Type= await Loan_type.find({}, function (err, fndLoanTyp) {
             loanType = fndLoanTyp
-            doneReadLonTyp = true
+            // doneReadLonTyp = true
           })
-        const center = await Center.find({area: areaCode}, function (err, fndCenters) {
-//        const center = await Center.find(searchOptions)
-                foundCenter = fndCenters.sort()
 
-            if (fndCenters.length === 0) {
+          if (!isNull(loan_Type)) {
+            doneReadLonTyp = true
+
+          }
+          if (!isNull(branMgrs)) {
+            doneFoundMgr = true
+
+          }
+
+            if (isNull(center)) {
                 doneReadCenter = true
             
             } else {
@@ -458,7 +489,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                     nClientAmt = nClientAmt + fndCtr.newClientAmt
                     oClient = oClient + fndCtr.oldClient
                     oClientAmt = oClientAmt + fndCtr.oldClientAmt
-                    rClient = rClient + fndCtr.resClient
+                    // rClient = rClient + fndCtr.resClient
                     rClient2 = rClient2 + fndCtr.resClient2
                     budgBegBal = budgBegBal + fndCtr.budget_BegBal
     
@@ -475,8 +506,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                 tbudgEndBal = (budgBegBal + newClients) - (rClient + rClient2)
     
                 doneReadCenter = true   
-                }
-        })
+            }
 
         // console.log(newClients)
         // console.log(foundAMBranches)
@@ -544,7 +574,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                                     } else {
                                         oloanTot = oloanTot + centerLoan.totAmount
                                         oloanTotCount = oloanTotCount + centerLoan.numClient
-                                        resloanTot = resloanTot + resignClient
+                                        // resloanTot = resloanTot + resignClient
                                     }
                                 }
                             })
@@ -557,10 +587,23 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                                     bClientAmt = bClientAmt + begLoanTot
                                 }
                             })
-
-
                         }
                     })
+
+                    if (!isNull(ctrResBudgDet)) {
+                        ctrResBudgDet.forEach(fndResCli => {
+                            if (fndResCli.loan_type === typeLoan  && fndResCli.branch === br_Cod) {
+                                const totalResCnt = fndResCli.jan_budg + fndResCli.feb_budg + fndResCli.mar_budg + fndResCli.apr_budg + fndResCli.may_budg + fndResCli.jun_budg + 
+                                    fndResCli.jul_budg + fndResCli.aug_budg + fndResCli.sep_budg + fndResCli.oct_budg + fndResCli.nov_budg + fndResCli.dec_budg 
+            
+                                resloanTot = resloanTot + totalResCnt
+            
+                                rClient = rClient + totalResCnt
+                            }
+                        })
+                    }
+        
+        
                     let totAmounts = nloanTot + oloanTot 
                     let budgEndBal = (oloanTotCount + nloanTotCount + bClientCnt) - resloanTot
         //            let amtDisburse = oloanTot + oloanTot
@@ -1381,7 +1424,7 @@ router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) 
 
         const regForEdit = await Branch.findById(param)  
         branchID = regForEdit.id
-
+        
         fondBranch = regForEdit
         console.log(fondBranch)
 

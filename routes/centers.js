@@ -2265,11 +2265,11 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                     fndCenterDetBegBal = fndVwList
                         console.log(fndCenterDetBegBal)
 
-                        fndCenterDetBegBal.beg_bal = 0
-                        fndCenterDetBegBal.beg_bal_amt = 0
-                        fndCenterDetBegBal.beg_bal_int = 0
+                        fndVwList.beg_bal = 0
+                        fndVwList.beg_bal_amt = 0
+                        fndVwList.beg_bal_int = 0
                         
-                        fndCenterDetBegBal.save();
+                        fndVwList.save();
 
                         doneUpdateOldClient = true
                 })
