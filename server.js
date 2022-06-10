@@ -51,6 +51,7 @@ const User = require('./models/user')
 const Position = require('./models/position')
 const Employee = require('./models/employee')
 const User_log = require('./models/user_log')
+const Setting = require('./models/setting')
 
 // let users = [ ]
 // console.log (users)
@@ -60,6 +61,7 @@ app.use(setUser)
 app.locals.yuser = app.locals.users
 app.locals.posisyon = []
 app.locals.userRole = ROLE
+app.locals.budgetMode = ""
 
 app.use(express.json()) 
 app.use(flash())

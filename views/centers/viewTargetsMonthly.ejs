@@ -1,102 +1,122 @@
-
-<h5 class="page-header">PO Budget Summary per Month</h5>
-<div class="inputAmountContainer2">
-    <label class="accountLabel">TITLE</label>
-    <label>BEG BAL</label>
-    <label>JAN</label>
-    <label>FEB</label>
-    <label>MAR</label>
-    <label>APR</label>
-    <label>MAY</label>
-    <label>JUN</label>
-    <label>JUL</label>
-    <label>AUG</label>
-    <label>SEPT</label>
-    <label>OCT</label>
-    <label>NOV</label>
-    <label>DEC</label>
-    <label>TOTAL</label>
-</div>
-    <% poSumView.forEach(poView => { %>
-        <div class="<%= poView.group == 1 ? "inputAmountContainer1" : "inputAmountContainer2" %>">
-
-            <label class="accountLabel"> <%= poView.title %> </label>
-            <% if (!poView.isTitle) { %>
-                <% if (poView.beg_bal > 1000) { %>
-                    <label><%= poView.beg_bal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                        <label><%= poView.beg_bal > 0 ? poView.beg_bal : "-"  %></label>
-                <% } %>
-
-                <% if (poView.jan_value > 1000) { %>
-                    <label><%= poView.jan_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                        <label><%= poView.jan_value  > 0 ? poView.jan_value : "-"  %></label>
-                <% } %>
-                <% if (poView.feb_value > 1000) { %>
-                    <label><%= poView.feb_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                    <label><%= poView.feb_value > 0 ? poView.feb_value : "-"  %></label>
-                <% } %>
-                <% if (poView.mar_value > 1000) { %>
-                    <label><%= poView.mar_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                    <label><%= poView.mar_value > 0 ? poView.mar_value : "-" %></label>
-                <% } %>
-                <% if (poView.apr_value > 1000) { %>
-                    <label><%= poView.apr_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                    <label><%= poView.apr_value > 0 ? poView.apr_value : "-" %></label>
-                <% } %>
-                <% if (poView.may_value > 1000) { %>
-                    <label><%= poView.may_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                    <label><%= poView.may_value > 0 ? poView.may_value : "-"  %></label>
-                <% } %>
-                <% if (poView.jun_value > 1000) { %>
-                    <label><%= poView.jun_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                    <label><%= poView.jun_value > 0 ? poView.jun_value : "-"  %></label>
-                <% } %>
-                <% if (poView.jul_value > 1000) { %>
-                    <label><%= poView.jul_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                    <label><%= poView.jul_value > 0 ? poView.jul_value : "-"  %></label>
-                <% } %>
-                <% if (poView.aug_value > 1000) { %>
-                    <label><%= poView.aug_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                    <label><%= poView.aug_value > 0 ? poView.aug_value : "-"  %></label>
-                <% } %>
-                <% if (poView.sep_value > 1000) { %>
-                    <label><%= poView.sep_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                    <label><%= poView.sep_value > 0 ? poView.sep_value : "-"  %></label>
-                <% } %>
-                <% if (poView.oct_value > 1000) { %>
-                    <label><%= poView.oct_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                    <label><%= poView.oct_value > 0 ? poView.oct_value : "-"  %></label>
-                <% } %>
-                <% if (poView.nov_value > 1000) { %>
-                    <label><%= poView.nov_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                    <label><%= poView.nov_value > 0 ? poView.nov_value : "-"  %></label>
-                <% } %>
-                <% if (poView.dec_value > 1000) { %>
-                    <label><%= poView.dec_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                    <label><%= poView.dec_value > 0 ? poView.dec_value : "-"  %></label>
-                <% } %>
-                <% if (poView.tot_value > 1000) { %>
-                    <label><%= poView.tot_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
-                <% } else { %>
-                    <label><%= poView.tot_value > 0 ? poView.tot_value : "-"  %></label>
-                <% } %>
-            <% } %>
-        </div>
-        <% }) %>
-    <div>
-        <a class="btn btn-primary" href="/centers/<%= poCode %>">BACK</a>
-        <a class="btn btn-primary" href='/centers/exportToExcel/<%= poCode %>'>EXPORT TO EXCEL</a>
+<!-- <section class="s1"> -->
+    <h5 class="page-header">PO Budget Summary per Month</h5>
+    <div class="inputAmountContainer2">
+        <label class="accountLabel">TITLE</label>
+        <label>BEG BAL</label>
+        <label>JAN</label>
+        <label>FEB</label>
+        <label>MAR</label>
+        <label>APR</label>
+        <label>MAY</label>
+        <label>JUN</label>
+        <label>JUL</label>
+        <label>AUG</label>
+        <label>SEPT</label>
+        <label>OCT</label>
+        <label>NOV</label>
+        <label>DEC</label>
+        <label>TOTAL</label>
     </div>
+        <% poSumView.forEach(poView => { %>
+            <div class="<%= poView.group == 1 ? "inputAmountContainer1" : "inputAmountContainer2" %>">
+    
+                <label class="accountLabel"> <%= poView.title %> </label>
+                <% if (!poView.isTitle) { %>
+                    <% if (poView.beg_bal > 1000) { %>
+                        <label><%= poView.beg_bal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                            <label><%= poView.beg_bal > 0 ? poView.beg_bal : "-"  %></label>
+                    <% } %>
+    
+                    <% if (poView.jan_value > 1000) { %>
+                        <label><%= poView.jan_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                            <label><%= poView.jan_value  > 0 ? poView.jan_value : "-"  %></label>
+                    <% } %>
+                    <% if (poView.feb_value > 1000) { %>
+                        <label><%= poView.feb_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                        <label><%= poView.feb_value > 0 ? poView.feb_value : "-"  %></label>
+                    <% } %>
+                    <% if (poView.mar_value > 1000) { %>
+                        <label><%= poView.mar_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                        <label><%= poView.mar_value > 0 ? poView.mar_value : "-" %></label>
+                    <% } %>
+                    <% if (poView.apr_value > 1000) { %>
+                        <label><%= poView.apr_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                        <label><%= poView.apr_value > 0 ? poView.apr_value : "-" %></label>
+                    <% } %>
+                    <% if (poView.may_value > 1000) { %>
+                        <label><%= poView.may_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                        <label><%= poView.may_value > 0 ? poView.may_value : "-"  %></label>
+                    <% } %>
+                    <% if (poView.jun_value > 1000) { %>
+                        <label><%= poView.jun_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                        <label><%= poView.jun_value > 0 ? poView.jun_value : "-"  %></label>
+                    <% } %>
+                    <% if (poView.jul_value > 1000) { %>
+                        <label><%= poView.jul_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                        <label><%= poView.jul_value > 0 ? poView.jul_value : "-"  %></label>
+                    <% } %>
+                    <% if (poView.aug_value > 1000) { %>
+                        <label><%= poView.aug_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                        <label><%= poView.aug_value > 0 ? poView.aug_value : "-"  %></label>
+                    <% } %>
+                    <% if (poView.sep_value > 1000) { %>
+                        <label><%= poView.sep_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                        <label><%= poView.sep_value > 0 ? poView.sep_value : "-"  %></label>
+                    <% } %>
+                    <% if (poView.oct_value > 1000) { %>
+                        <label><%= poView.oct_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                        <label><%= poView.oct_value > 0 ? poView.oct_value : "-"  %></label>
+                    <% } %>
+                    <% if (poView.nov_value > 1000) { %>
+                        <label><%= poView.nov_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                        <label><%= poView.nov_value > 0 ? poView.nov_value : "-"  %></label>
+                    <% } %>
+                    <% if (poView.dec_value > 1000) { %>
+                        <label><%= poView.dec_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                        <label><%= poView.dec_value > 0 ? poView.dec_value : "-"  %></label>
+                    <% } %>
+                    <% if (poView.tot_value > 1000) { %>
+                        <label><%= poView.tot_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                    <% } else { %>
+                        <label><%= poView.tot_value > 0 ? poView.tot_value : "-"  %></label>
+                    <% } %>
+                <% } %>
+            </div>
+            <% }) %>
+        <div>
+            <a class="btn btn-primary" href="/centers/<%= poCode %>">BACK</a>
+            <a class="btn btn-primary" href='/centers/exportToExcel/<%= poCode %>'>EXPORT TO EXCEL</a>
+            <a class="btn btn-primary" href='/centers/exportToExcel/<%= poCode %>'>POST TARGETS</a>
+        </div>
+
+        <!-- <div class="popup-overlay" id="popup-message">
+            <div class="popup-box-container">
+                <div class="check-container">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="popup-message-container">
+                    <h2>REMINDER!</h2>
+                    <p>Please SET the Beginning Balances first before setting the Targets.</p>
+                </div>
+                <button class="ok-btn" onclick="onClickOkay()"> 
+                    <!-- <a class="btn" onclick="onClickOkay()">Okay</a> -->
+                    <!-- <span>Okay</span>
+                </button>
+            </div>
+
+        </div>
+    
+</section> -->

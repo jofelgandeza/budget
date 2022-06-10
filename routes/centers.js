@@ -9,6 +9,7 @@ const Loan_type = require('../models/loan_type')
 const Center_budget_det = require('../models/center_budget_det')
 const Center_det_budg_view = require('../models/center_det_budg_view')
 const Budg_exec_sum = require('../models/budg_exec_sum')
+const Setting = require('../models/setting')
 const _ = require('lodash')
 const sortArray = require('../public/javascripts/sortArray.js')
 const { forEach, isNull, constant } = require('lodash')
@@ -62,6 +63,8 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
 
     let doneCenterRead = false
     let doneLoanTypeRead = false
+
+    let budget_Mode = ""
 
     try {
 
@@ -217,11 +220,21 @@ router.get('/viewTarget/:id', authUser, authRole("PO", "BM"), async (req, res) =
     let forSortTargets = []
     let sortedTargets = []
 
+    let budget_Mode = ""
 
 //    console.log(POname)
     try {
 
         const loanType = await Loan_type.find({})
+
+        const budg_setting = await Setting.find({}, function (err, foundSettings) {
+            foundSettings.forEach(fndSet =>{
+                budget_Mode = fndSet.status
+            })
+
+        })
+
+        budget_Mode = "Closed"
 
 //        const updateCtrForView = await Center.find()
 
@@ -284,6 +297,7 @@ router.get('/viewTarget/:id', authUser, authRole("PO", "BM"), async (req, res) =
                     poCode: IDcode,
                     centers: forSortTargets,
                     searchOptions: req.query,
+                    budget_Mode: budget_Mode,
                     yuser: yuser   
                 })
             }
@@ -300,6 +314,7 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
      unit_ID = centerCode.substr(0,6)
      poCode = centerCode.substr(0,6)
     const yuser = req.user
+     
     let lnType = []
     let forSortTargets = []
     let sortedTargets = []  
@@ -330,7 +345,18 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
     let totBegBal1 = 0
     let totBegBal2 = 0
 
+    let budget_Mode = ""
+
     try {
+
+        const budg_setting = await Setting.find({}, function (err, foundSettings) {
+            foundSettings.forEach(fndSet =>{
+                budget_Mode = fndSet.status
+            })
+
+        })
+
+        budget_Mode = "Closed"
 
         const loanType = await Loan_type.find({}, function (err, foundLoan) {
             const ewan = foundLoan
@@ -448,6 +474,7 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
                 begBalData: begBalData,
                 ctrBrkDownTots: ctrBrkDownTots,
                 monthSelect: monthSelect,
+                budget_Mode: budget_Mode,
                 yuser: yuser
             });
         }
@@ -4184,6 +4211,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     newPONumCenters.save()
 
                 } else {
+                    fondPONumCenters.title = "Number of Centers"
                     fondPONumCenters.beg_bal = centerCntBegBal
                     fondPONumCenters.jan_budg = jan_centerCount
                     fondPONumCenters.feb_budg = feb_centerCount
@@ -4227,7 +4255,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             
                 poSumView.push({title: "New Clients", sortkey: 4, group: 2, beg_bal: 0, isTitle: false, jan_value : jan_newCliTot, feb_value : feb_newCliTot, mar_value : mar_newCliTot, apr_value : apr_newCliTot,
                     may_value : may_newCliTot, jun_value : jun_newCliTot, jul_value : jul_newCliTot, aug_value : aug_newCliTot,
-                    sep_value : sep_newCliTot, oct_value : oct_newCliTot, nov_value : nov_newCliTot, dec_value : dec_newCliTot, tot_value: tot_newCliTot
+                    sep_value : sep_newCliTot, oct_value : oct_newCliTot, nov_value : nov_newCliTot, dec_value : dec_newCliTot, tot_value: nwTotValueClient
                 }) 
                 doneReadNLCli = true
 
@@ -4245,6 +4273,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                         })
                         newNewClients.save()
                     } else {
+                        fondNewClients.title = "New Clients"
                         fondNewClients.jan_budg = jan_newCliTot
                         fondNewClients.feb_budg = feb_newCliTot
                         fondNewClients.mar_budg = mar_newCliTot
@@ -4387,6 +4416,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     })
                     newNewClients.save()
                 } else {
+                    fondResClients.title = "Resign Clients"
                     fondResClients.jan_budg = jan_resCliTot
                     fondResClients.feb_budg = feb_resCliTot
                     fondResClients.mar_budg = mar_resCliTot
@@ -4401,6 +4431,34 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fondResClients.dec_budg = dec_resCliTot
         
                     fondResClients.save()            
+                }
+            })
+    
+            const fndCliOutreach = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "ClienOutreach"}, function (err, fndTotLonAmt) {
+                fondCliOutReach = fndTotLonAmt
+                if (isNull(fondCliOutReach)) { 
+                    let newCliOutreach = new Budg_exec_sum({
+                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Client Outreach", view_code: "ClienOutreach", sort_key: 5, display_group: 2, beg_bal: 0, jan_budg : jan_totNumClients, 
+                        feb_budg : feb_totNumClients, mar_budg : mar_totNumClients, apr_budg : apr_totNumClients, may_budg : may_totNumClients, jun_budg : jun_totNumClients, jul_budg : jul_totNumClients, 
+                        aug_budg : aug_totNumClients, sep_budg : sep_totNumClients, oct_budg : oct_totNumClients, nov_budg : nov_totNumClients, dec_budg : dec_totNumClients, tot_budg: resTotValueClient                                   
+                    })
+                    newCliOutreach.save()
+                } else {
+                    fondCliOutReach.title = "Client Outreach"
+                    fondCliOutReach.jan_budg = jan_totNumClients
+                    fondCliOutReach.feb_budg = feb_totNumClients
+                    fondCliOutReach.mar_budg = mar_totNumClients
+                    fondCliOutReach.apr_budg = apr_totNumClients
+                    fondCliOutReach.may_budg = may_totNumClients
+                    fondCliOutReach.jun_budg = jun_totNumClients
+                    fondCliOutReach.jul_budg = jul_totNumClients
+                    fondCliOutReach.aug_budg = aug_totNumClients
+                    fondCliOutReach.sep_budg = sep_totNumClients
+                    fondCliOutReach.oct_budg = oct_totNumClients
+                    fondCliOutReach.nov_budg = nov_totNumClients
+                    fondCliOutReach.dec_budg = dec_totNumClients
+        
+                    fondCliOutReach.save()            
                 }
             })
     
@@ -4453,6 +4511,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     })
                     newNewClients.save()
                 } else {
+                    fondNewLoanCli.title = "Number of New Loan"
                     fondNewLoanCli.jan_budg = jan_newCtotValue
                     fondNewLoanCli.feb_budg = feb_newCtotValue
                     fondNewLoanCli.mar_budg = mar_newCtotValue
@@ -4524,6 +4583,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     })
                     newNewClients.save()
                 } else {
+                    fondReLoanCli.title = "Number of Reloan"
                     fondReLoanCli.beg_bal = begBalOldClient
                     fondReLoanCli.jan_budg = jan_oldCtotValue
                     fondReLoanCli.feb_budg = feb_oldCtotValue
@@ -4621,6 +4681,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     })
                     newNewClients.save()
                 } else {
+                    fondNewLoanAmt.title = "Amount of New Loan"
                     fondNewLoanAmt.jan_budg = jan_newAtotValue
                     fondNewLoanAmt.feb_budg = feb_newAtotValue
                     fondNewLoanAmt.mar_budg = mar_newAtotValue
@@ -4693,6 +4754,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                         })
                         newNewClients.save()
                     } else {
+                        fondReLoanAmt.title = "Amount of Reloan"
                         fondReLoanAmt.jan_budg = jan_oldAtotValue
                         fondReLoanAmt.feb_budg = feb_oldAtotValue
                         fondReLoanAmt.mar_budg = mar_oldAtotValue
@@ -5317,6 +5379,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                         })
                         newNewClients.save()
                     } else {
+                        fondMonthlyDisburse.title = "MONTHLY DISBURSEMENT (P)"
                         fondMonthlyDisburse.jan_budg = janTotAmtLoan
                         fondMonthlyDisburse.feb_budg = febTotAmtLoan
                         fondMonthlyDisburse.mar_budg = marTotAmtLoan
@@ -5423,6 +5486,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                         })
                         newNewClients.save()
                     } else {
+                        fondBalFromPrevMo.title = "BAL. FROM PREV. MONTH"
                         fondBalFromPrevMo.jan_budg = janRunBalPrevMon
                         fondBalFromPrevMo.feb_budg = febRunBalPrevMon
                         fondBalFromPrevMo.mar_budg = marRunBalPrevMon

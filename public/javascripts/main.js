@@ -13,14 +13,6 @@ setTargetBtn.addEventListener('click',() => {
     popupBox.classList.add('active')
 })
 
-// okBtn.addEventListener('click',() => {
-//     popupBox.classList.toggle('active')
-// })
-// function popupWarning() {
-//     alert('Set Target is clicked!');
-//     popupBox.classList.add('active');
-// }
-
 function onClickOkay() {
     // alert('Set target link was clicked!');
     // popupBox.classList.toggle('active')

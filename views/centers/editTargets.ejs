@@ -189,7 +189,8 @@
                     <th></th>
                 </tr>
 
-            <form  action="/centers/saveEditTargets/<%= listTitle %>?_method=PUT" method="POST">
+                <form  action="/centers/saveEditTargets/<%= listTitle %>?_method=PUT" method="POST">
+
                     <% for(var i=0; i<newListItems.length; i++) {%>
                         <tr style= "<%= newListItems[i].semester === "First Half" ? "background-color:rgb(2, 93, 116)" : "background-color:rgb(0, 74, 95)" %>" >
                             <td>
@@ -204,8 +205,12 @@
                                 <p><%= newListItems[i].semester %></p>
                             </td>
                             <td>
-                                <input type="number" maxlength = "10" style = "background-color:#025575; text-align: right; padding: 10px 15px; font-size: 18px" name="numClient" id="numClient<%= i %>" onchange ="getTotAmt('<%= newListItems[i].amount %>', 'numClient<%= i %>', '<%= i %>', '<%= newListItems.length %>' )" value= <%= newListItems[i].numClient %> >
-                            </td>
+                                <% if (budget_Mode === "Open") { %>
+                                    <input type="number" maxlength = "10" style = "background-color:#025575; text-align: right; padding: 10px 15px; font-size: 18px" name="numClient" id="numClient<%= i %>" onchange ="getTotAmt('<%= newListItems[i].amount %>', 'numClient<%= i %>', '<%= i %>', '<%= newListItems.length %>' )" value= <%= newListItems[i].numClient %> >
+                                <% } else { %>
+                                    <input disabled type="number" maxlength = "10" style = "background-color:#025575; text-align: right; padding: 10px 15px; font-size: 18px" name="numClient" id="numClient<%= i %>" onchange ="getTotAmt('<%= newListItems[i].amount %>', 'numClient<%= i %>', '<%= i %>', '<%= newListItems.length %>' )" value= <%= newListItems[i].numClient %> >
+                                <% } %>
+                                </td>
                             <td>
                                 <p style="text-align: right;"><%= newListItems[i].amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></p>                        
                             </td>
@@ -226,7 +231,11 @@
                                 <td></td>
                                 <td></td>
                                 <td>
-                                    <button type="submit"  class="btn btn-primary" name="targets" value=<%= listTitle %>>Save Changes Above</button>
+                                    <% if (budget_Mode === "Open") { %>
+                                        <button type="submit"  class="btn btn-primary" name="targets" value=<%= listTitle %> >Save Changes Above</button>
+                                    <% } else { %>
+                                        <a class="btn btn-primary" href="/centers/viewTarget/<%= poCode %>">BACK</a>
+                                    <% } %>
                                 </td>
                                 <td>TOTAL-></td>
                                 <td>      
@@ -241,49 +250,52 @@
                 <tr>
                     <td>------</td>
                 </tr>
-                <tr class="form-item-target">
-                    <form action="/centers/<%= listTitle %>?_method=PUT" method="POST">
-                        <td>New:</td>
-                        <td>
-                            <select name="loanType" id="loanType">
-                                <% loanType.forEach(function(loan_type, index) { %>
-                                        <option label="<%= loan_type.title %>" value="<%= loan_type.title  %>"></option>
-                                <% }) %>
-                            </select>            
-                        </td>
-                        <td>
-                            <select name="month" id="monthID" onchange="getSemester()">
-                                <% monthSelect.forEach(function(month, index) { %> 
-                                        <option label="<%= month %>" value="<%= month  %>"></option>
-                                <% }) %>
-                            </select>            
-                        </td>
-                        <td>
-                            <input type="text" name="semester" id="semesterID" value="First Half" placeholder="Semester">
-                        </td>
-                        <td>
-                            <input type="text" class="targNumCli" name="numClient" placeholder="Number of Clients" required autocomplete="off">
-                        </td>
-                        <td>
-                            <input type="text" class="targetAmt" name="amount" placeholder="Loan Amount" required autocomplete="off">
-                        </td>
-                        <td>
-                            <select name="remarks" id="remarks">
-                                <option value="New Loan">New Loan</option>
-                                <option value="Re-loan">Re-loan</option>
-                            </select>
-                        </td>
-                        <td>
-                            <button type="submit" name="list" value=<%= listTitle %>>+</button>
-                        </td>
-                        <td>
-                            <% if (yuser.role === "BM") { %>
-                                <a class="btn btn-primary" href="/branches/perPOforEdit/<%= poCode.substr(0,3) %>">BACK</a>
-                            <% } else { %>
-                                <a class="btn btn-primary" href="/centers/viewTarget/<%= poCode %>">BACK</a>
 
-                            <% } %>
-                        </td>
-                    </form>
-                </tr>
+                <% if (budget_Mode === "Open") { %>
+                    <tr class="form-item-target">
+                        <form action="/centers/<%= listTitle %>?_method=PUT" method="POST">
+                            <td>New:</td>
+                            <td>
+                                <select name="loanType" id="loanType">
+                                    <% loanType.forEach(function(loan_type, index) { %>
+                                            <option label="<%= loan_type.title %>" value="<%= loan_type.title  %>"></option>
+                                    <% }) %>
+                                </select>            
+                            </td>
+                            <td>
+                                <select name="month" id="monthID" onchange="getSemester()">
+                                    <% monthSelect.forEach(function(month, index) { %> 
+                                            <option label="<%= month %>" value="<%= month  %>"></option>
+                                    <% }) %>
+                                </select>            
+                            </td>
+                            <td>
+                                <input type="text" name="semester" id="semesterID" value="First Half" placeholder="Semester">
+                            </td>
+                            <td>
+                                <input type="text" class="targNumCli" name="numClient" placeholder="Number of Clients" required autocomplete="off">
+                            </td>
+                            <td>
+                                <input type="text" class="targetAmt" name="amount" placeholder="Loan Amount" required autocomplete="off">
+                            </td>
+                            <td>
+                                <select name="remarks" id="remarks">
+                                    <option value="New Loan">New Loan</option>
+                                    <option value="Re-loan">Re-loan</option>
+                                </select>
+                            </td>
+                            <td>
+                                <button type="submit" name="list" value=<%= listTitle %>>+</button>
+                            </td>
+                            <td>
+                                <% if (yuser.role === "BM") { %>
+                                    <a class="btn btn-primary" href="/branches/perPOforEdit/<%= poCode.substr(0,3) %>">BACK</a>
+                                <% } else { %>
+                                    <a class="btn btn-primary" href="/centers/viewTarget/<%= poCode %>">BACK</a>
+    
+                                <% } %>
+                            </td>
+                        </form>                            
+                    </tr>
+                <% } %>
             </table>

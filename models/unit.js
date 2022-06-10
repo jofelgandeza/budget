@@ -70,6 +70,9 @@ const centerTargetSchema = {
         type: String,
         required: true
     },
+    budget_posted: {
+        type: Boolean,
+    },
   });
   
 module.exports = mongoose.model('Unit', unitsSchema)

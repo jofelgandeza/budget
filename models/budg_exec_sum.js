@@ -24,7 +24,11 @@ const mongoose = require('mongoose')
         type: String,
         required: true
     },
-    beg_bal: {
+    title: {
+        type: String,
+        required: true
+    },
+        beg_bal: {
         type: Number,
         required: false
     },

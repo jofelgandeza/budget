@@ -60,7 +60,7 @@
                         <td>
                             <div class="btn-row">
                                 <!-- <a class="btn btn-primary" href="/centers/<%= center.center %>/edit">Target</a> -->
-                                <a class="btn btn-primary" href="/centers/<%= center.center %>/edit">Set Target</a>
+                                <a class="btn btn-primary" href="/centers/<%= center.center %>/edit"> <%= budget_Mode === "Open" ? "Set Target" : "View Target" %> </a>
                                 <a class="btn btn-primary" href="/centers/setBegBal/<%= center.center %>">Beg Bal</a>
                             </div>        
                         </td>

@@ -102,6 +102,9 @@ const centerLoan = {
     budget_BegBal: {
         type: Number,
     },
+    budget_posted: {
+        type: Boolean,
+    },
     newClient: {
         type: Number,
     },

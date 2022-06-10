@@ -49,6 +49,9 @@ const posSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    budget_posted: {
+        type: Boolean,
+    },
   });
   
 module.exports = mongoose.model('Po', posSchema)

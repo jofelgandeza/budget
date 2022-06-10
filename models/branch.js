@@ -53,6 +53,9 @@ const mongoose = require('mongoose')
         type: String,
         required: true
     },
+    budget_posted: {
+        type: Boolean,
+    },
   });
   
 module.exports = mongoose.model('Branch', branchesSchema)
