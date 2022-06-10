@@ -8,6 +8,7 @@ const { model } = require('mongoose')
 const bcrypt = require('bcrypt')
 const { forEach, isNull } = require('lodash')
 const _ = require('lodash')
+const { authUser, authRole } = require('../public/javascripts/basicAuth.js')
 
 const User = require('../models/user')
 const Region = require('../models/region')
@@ -22,6 +23,72 @@ router.get('/', async (req, res) => {
     res.render('admins/index', {
         yuser : logUser
     })
+})
+
+//View BUDGET SETTINGS
+
+router.get('/settings', authUser, authRole("DED"), async (req, res) => {
+
+    const _user = req.user
+    
+    const regDirID = "611d094bdb81bf7f61039616"
+
+    let fndBudgSetting = []
+    
+    try {
+
+        const budg_setting = await Setting.find({}, function (err, foundSettings) {
+            foundSettings.forEach(fndSet =>{
+                budget_Mode = fndSet.status
+            })
+
+        })
+
+
+        const brnEmployees = await Employee.find({position_code: regDirID}, function (err, foundEmployees) {
+            const fndEmployees = foundEmployees
+
+//            const empStatus = fndEmployees.status
+//  - Area ID
+            fndEmployees.forEach(foundEmp =>{
+                empPst = foundEmp.position_code
+                empID = foundEmp._id
+                empName = foundEmp.last_name + ", " + foundEmp.first_name + " " + foundEmp.middle_name.substr(0,1) + "."
+                empCode = foundEmp.emp_code
+                empUnit = foundEmp.unit
+                empUnitPOnum = foundEmp.unit + foundEmp.po_number
+                empAss = foundEmp.assign_code
+                let exist = false
+
+                const empAssign = _.find(regions, {region: empAss})
+                
+                fondEmploy.push({empID: empID, area: areaCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empAssign.region_desc})
+                
+                empCanProceed = true            
+            })
+
+            sortedEmp = fondEmploy.sort( function (a,b) {
+                if ( a.empName < b.empName ){
+                    return -1;
+                  }
+                  if ( a.empName > b.empName ){
+                    return 1;
+                  }
+                   return 0;
+            })        
+    
+            res.render('deds/employee', {
+                ded: "DED",
+                fndEmploy: sortedEmp,
+                searchOptions: req.query,
+                yuser: _user
+            })
+        })
+
+} catch (err) {
+        console.log(err)
+        res.redirect('/')
+    }
 })
 
 router.get('/register', async (req, res) => {

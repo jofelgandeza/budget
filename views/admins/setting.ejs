@@ -1,11 +1,11 @@
-<h2 class="page-header">New Employee Entry</h2>
+<h2 class="page-header">BUDGET MODULE SETTING</h2>
 <form action="/deds/postNewEmp/<%= ded %>" method="POST">
             <%- include('../partials/errorMessage') %>    
             <%- include('_form_fields') %>
 <div class="form-row">
     <div class="form-item-column"></div>
     <div class="form-item-column">
-        <a class="btn btn-primary" href="/deds/employees/<%= ded %>">Cancel</a>
+        <a class="btn btn-primary" href="/admins/settings/<%= ded %>">Cancel</a>
     </div>
     <div class="form-item-column">
         <button class="btn btn-primary" type="submit">Create</button>

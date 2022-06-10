@@ -1591,7 +1591,7 @@ router.delete('/deleteEmp/:id', authUser, authRole(ROLE.PUH), async (req, res) =
 
 // 
 // View UNIT Targets per month ROUTE
-router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
+router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
     const viewUnitCode = req.params.id
     const vwUnitCode = viewUnitCode
@@ -1603,7 +1603,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
     // let foundCenterDet = []
 
     const vwloanType = await Loan_type.find({})
-    // console.log(vwloanType)
+    console.log("Apay madi?")
 
     let poTotLoanAmtArray = []
 
@@ -2831,6 +2831,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
                         })
                         const lonTotAmtExecBudg = await newPoExecSumBudg.save()
                     } else {
+                        fndUnitBudgExecTotLonAmt.title =  "TOTAL AMOUNT OF LOAN"
                         fndUnitBudgExecTotLonAmt.jan_budg = janTotAmtLoan
                         fndUnitBudgExecTotLonAmt.feb_budg = febTotAmtLoan
                         fndUnitBudgExecTotLonAmt.mar_budg = marTotAmtLoan
@@ -2858,6 +2859,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
                         })
                         const lonTotAmtExecBudg = await newPoExecSumBudg.save()
                     } else {
+                        fndUnitBudgExecTotInc.title = "LOAN FEES"
                         fndUnitBudgExecTotInc.jan_budg = jan_totIntAmt
                         fndUnitBudgExecTotInc.feb_budg = feb_totIntAmt
                         fndUnitBudgExecTotInc.mar_budg = mar_totIntAmt
@@ -2912,6 +2914,7 @@ router.get('/viewUnitTargetMon/:id', authUser, authRole(ROLE.PUH), async (req, r
                         })
                         const lonTotAmtExecBudg = await newPoExecSumBudg.save()
                     } else {
+                        fndUnitBuExTotProcFees.title = "PROCESSING FEES"
                         fndUnitBuExTotProcFees.jan_budg = janProcFeeAmt
                         fndUnitBuExTotProcFees.feb_budg = febProcFeeAmt
                         fndUnitBuExTotProcFees.mar_budg = marProcFeeAmt
