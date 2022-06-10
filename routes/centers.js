@@ -356,7 +356,7 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
 
         })
 
-        budget_Mode = "Closed"
+        budget_Mode = "Open"
 
         const loanType = await Loan_type.find({}, function (err, foundLoan) {
             const ewan = foundLoan
