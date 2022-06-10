@@ -234,7 +234,7 @@ router.get('/viewTarget/:id', authUser, authRole("PO", "BM"), async (req, res) =
 
         })
 
-        budget_Mode = "Closed"
+        budget_Mode = "Open"
 
 //        const updateCtrForView = await Center.find()
 
