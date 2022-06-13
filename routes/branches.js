@@ -98,7 +98,6 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 
     try {
 
-
         const branchManager = await Employee.find({branch: branchCode, position_code: postManager}, function (err, foundBMs){
             foundManager = foundBMs
 
@@ -201,9 +200,6 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
                     if (lnType === _.trim(lnType)) {
                         BudgBegBal = center.budget_BegBal
                     }
-                    // console.log(resignClient)
-                    // console.log(resloanTot)
-
                     centerTargets.forEach(centerLoan => {
                         if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
                             const loanRem = centerLoan.remarks
@@ -340,23 +336,6 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
         }
     } 
 
-    // const branchCode = req.params.id
-    // const _user = req.user
-    // let searchOptions = {}
-
-    // if (req.query.title  !=null && req.query.title !== '') {
-    //     searchOptions.description = RegExp(req.query.title, 'i')
-    // }
-    // try {
-
-    //     branchName = "BRANCHES BUDGET MODULE VIEW"
-    //     res.render('branches/index', {
-    //         branchCode: branchCode,
-    //         searchOptions: req.query,
-    //         yuser: _user,
-    //         dateToday: new Date()
-    //     })
-    // } 
     catch (err) {
         console.log(err)
         res.redirect('/')

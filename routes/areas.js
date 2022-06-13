@@ -230,7 +230,7 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
                             } else {
                                 oloanTot = oloanTot + centerLoan.totAmount
                                 oloanTotCount = oloanTotCount + centerLoan.numClient
-                                // resloanTot = resloanTot + centerLoan.resignClient
+                                resloanTot = resloanTot + centerLoan.resignClient
                             }
                         }
                     })
@@ -288,13 +288,9 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
             doneFoundPO = true
     })
 
-
-
     if (foundAreaBranches.length === 0) {
         doneFoundPO = true
     }
-
-    console.log(unitLoanTotals)
 // LOOP for getting Different Loan products totals in the branch
     let gtBegBalClient = 0
     let gtBegBalAmt = 0
@@ -340,7 +336,7 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
     })
 
 //    console.log(unitLoanTotals)
-   console.log(brnLoanTotals)
+//    console.log(brnLoanTotals)
 
             brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, totCenters: totCenters, totPOs: totPOs, totUnits: totUnits, totBranches: totBranches,
                 rClient: rClient, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
@@ -360,20 +356,6 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
 
             })
         }
-
-
-    // if (req.query.title  !=null && req.query.title !== '') {
-    //     searchOptions.description = RegExp(req.query.title, 'i')
-    // }
-    // try {
-
-    //     branchName = "AREA BUDGET MODULE VIEW"
-    //     res.render('areas/index', {
-    //         areaCode: areaCode,
-    //         searchOptions: req.query,
-    //         yuser: _user,
-    //         dateToday: new Date()
-    //     })
 
     } catch (err) {
         console.log(err)
