@@ -2538,6 +2538,20 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
         let nov_totNumClients = 0
         let dec_totNumClients = 0
         
+        let jan_resCliTot = 0
+        let feb_resCliTot = 0
+        let mar_resCliTot = 0
+        let apr_resCliTot = 0
+        let may_resCliTot = 0
+        let jun_resCliTot = 0
+        let jul_resCliTot = 0
+        let aug_resCliTot = 0
+        let sep_resCliTot = 0
+        let oct_resCliTot = 0
+        let nov_resCliTot = 0
+        let dec_resCliTot = 0
+
+
         let doneReadNLC = false
         let doneReadOLC = false
         let doneReadNLA = false
@@ -2700,19 +2714,35 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
 
             const fndUnitBuExTotProcFeeAmt = await Budg_exec_sum.find({branch: viewBranchCode, view_code: "TotProcFee"}, function (err, fndTotProcFeeAmt) {
                 fndUnitBuExTotProcFees = fndTotProcFeeAmt
-                janProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.jan_budg; })
-                febProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.feb_budg; })
-                marProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.mar_budg; })
-                aprProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.apr_budg; })
-                mayProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.may_budg; })
-                junProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.jun_budg; })
-                julProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.jul_budg; })
-                augProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.aug_budg; })
-                sepProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.sep_budg; })
-                octProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.oct_budg; })
-                novProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.nov_budg; })
-                decProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.dec_budg; })
 
+                let janProcFeeAmt = 0
+                let febProcFeeAmt = 0
+                let marProcFeeAmt = 0 
+                let aprProcFeeAmt = 0
+                let mayProcFeeAmt = 0
+                let junProcFeeAmt = 0
+                let julProcFeeAmt = 0
+                let augProcFeeAmt = 0
+                let sepProcFeeAmt = 0
+                let octProcFeeAmt = 0
+                let novProcFeeAmt = 0
+                let decProcFeeAmt = 0
+
+                fndTotProcFeeAmt.forEach( fdTotProcFeeAmt => {
+                    janProcFeeAmt = janProcFeeAmt +  fdTotProcFeeAmt.jan_budg 
+                    febProcFeeAmt = febProcFeeAmt +  fdTotProcFeeAmt.feb_budg 
+                    marProcFeeAmt = marProcFeeAmt +  fdTotProcFeeAmt.mar_budg 
+                    aprProcFeeAmt = aprProcFeeAmt +  fdTotProcFeeAmt.apr_budg 
+                    mayProcFeeAmt = mayProcFeeAmt +  fdTotProcFeeAmt.may_budg 
+                    junProcFeeAmt = junProcFeeAmt +  fdTotProcFeeAmt.jun_budg 
+                    julProcFeeAmt = julProcFeeAmt +  fdTotProcFeeAmt.jul_budg 
+                    augProcFeeAmt = augProcFeeAmt +  fdTotProcFeeAmt.aug_budg 
+                    sepProcFeeAmt = sepProcFeeAmt +  fdTotProcFeeAmt.sep_budg 
+                    octProcFeeAmt = octProcFeeAmt +  fdTotProcFeeAmt.oct_budg 
+                    novProcFeeAmt = novProcFeeAmt +  fdTotProcFeeAmt.nov_budg 
+                    decProcFeeAmt = decProcFeeAmt +  fdTotProcFeeAmt.dec_budg
+    
+                })
 
                 let nloanTotProcFeeAmt = janProcFeeAmt + febProcFeeAmt + marProcFeeAmt + aprProcFeeAmt + mayProcFeeAmt + junProcFeeAmt
                      + julProcFeeAmt + augProcFeeAmt + sepProcFeeAmt + octProcFeeAmt + novProcFeeAmt + decProcFeeAmt
@@ -2827,18 +2857,24 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
 
         const resClientCntView = await Budg_exec_sum.find({branch: viewBranchCode, view_code: "ResignClients"}, function (err, fndResCliCnt) {
 
-            jan_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jan_budg; })
-            feb_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.feb_budg; })
-            mar_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.mar_budg; })
-            apr_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.apr_budg; })
-            may_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.may_budg; })
-            jun_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jun_budg; })
-            jul_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jul_budg; })
-            aug_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.aug_budg; })
-            sep_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.sep_budg; })
-            oct_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.oct_budg; })
-            nov_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.nov_budg; })
-            dec_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.dec_budg; })
+            const fdResCliCnt = fndResCliCnt
+
+            fdResCliCnt.forEach(fondResCliCnt =>{
+
+                jan_resCliTot = jan_resCliTot + fondResCliCnt.jan_budg 
+                feb_resCliTot = feb_resCliTot + fondResCliCnt.feb_budg 
+                mar_resCliTot = mar_resCliTot + fondResCliCnt.mar_budg 
+                apr_resCliTot = apr_resCliTot + fondResCliCnt.apr_budg 
+                may_resCliTot = may_resCliTot + fondResCliCnt.may_budg 
+                jun_resCliTot = jun_resCliTot + fondResCliCnt.jun_budg 
+                jul_resCliTot = jul_resCliTot + fondResCliCnt.jul_budg 
+                aug_resCliTot = aug_resCliTot + fondResCliCnt.aug_budg 
+                sep_resCliTot = sep_resCliTot + fondResCliCnt.sep_budg 
+                oct_resCliTot = oct_resCliTot + fondResCliCnt.oct_budg 
+                nov_resCliTot = nov_resCliTot + fondResCliCnt.nov_budg 
+                dec_resCliTot = dec_resCliTot + fondResCliCnt.dec_budg 
+    
+                })
 
             olTotValueClient = jan_resCliTot + feb_resCliTot + mar_resCliTot + apr_resCliTot + may_resCliTot + jun_resCliTot
                         + jul_resCliTot + aug_resCliTot + sep_resCliTot + oct_resCliTot + nov_resCliTot + dec_resCliTot
@@ -2894,18 +2930,22 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
         poSumView.push({title: "NUMBER OF LOANS", sortkey: 8, group: 1, isTitle: true})
 
         const newLoanClientView = await Budg_exec_sum.find({branch: viewBranchCode, view_code: "NumNewLoanCli"}, function (err, fndNewCli) {
-            jan_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jan_budg; })
-            feb_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.feb_budg; })
-            mar_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.mar_budg; })
-            apr_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.apr_budg; })
-            may_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.may_budg; })
-            jun_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jun_budg; })
-            jul_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jul_budg; })
-            aug_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.aug_budg; })
-            sep_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.sep_budg; })
-            oct_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.oct_budg; })
-            nov_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.nov_budg; })
-            dec_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.dec_budg; })
+            const fondNewLoanCli = fndNewCli
+            fondNewLoanCli.forEach(fdNewLoanCli => {
+                jan_newCtotValue =  jan_newCtotValue + fdNewLoanCli.jan_budg 
+                feb_newCtotValue =  feb_newCtotValue + fdNewLoanCli.feb_budg 
+                mar_newCtotValue =  mar_newCtotValue + fdNewLoanCli.mar_budg 
+                apr_newCtotValue =  apr_newCtotValue + fdNewLoanCli.apr_budg 
+                may_newCtotValue =  may_newCtotValue + fdNewLoanCli.may_budg 
+                jun_newCtotValue =  jun_newCtotValue + fdNewLoanCli.jun_budg 
+                jul_newCtotValue =  jul_newCtotValue + fdNewLoanCli.jul_budg 
+                aug_newCtotValue =  aug_newCtotValue + fdNewLoanCli.aug_budg 
+                sep_newCtotValue =  sep_newCtotValue + fdNewLoanCli.sep_budg 
+                oct_newCtotValue =  oct_newCtotValue + fdNewLoanCli.oct_budg 
+                nov_newCtotValue =  nov_newCtotValue + fdNewLoanCli.nov_budg 
+                dec_newCtotValue =  dec_newCtotValue + fdNewLoanCli.dec_budg
+    
+            })
 
             nwTotValueClient = jan_newCtotValue + feb_newCtotValue + mar_newCtotValue + apr_newCtotValue + may_newCtotValue + jun_newCtotValue
                 + jul_newCtotValue + aug_newCtotValue + sep_newCtotValue + oct_newCtotValue + nov_newCtotValue + dec_newCtotValue
@@ -2917,20 +2957,20 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
             doneReadNLC = true
         }) //, function (err, fndPOV) {
 
-            let jan_totNoOfLoan = jan_reLoanCliTot + jan_newCtotValue
-            let feb_totNoOfLoan = feb_reLoanCliTot + feb_newCtotValue
-            let mar_totNoOfLoan = mar_reLoanCliTot + mar_newCtotValue
-            let apr_totNoOfLoan = apr_reLoanCliTot + apr_newCtotValue
-            let may_totNoOfLoan = may_reLoanCliTot + may_newCtotValue
-            let jun_totNoOfLoan = jun_reLoanCliTot + jun_newCtotValue
-            let jul_totNoOfLoan = jul_reLoanCliTot + jul_newCtotValue
-            let aug_totNoOfLoan = aug_reLoanCliTot + aug_newCtotValue
-            let sep_totNoOfLoan = sep_reLoanCliTot + sep_newCtotValue
-            let oct_totNoOfLoan = oct_reLoanCliTot + oct_newCtotValue
-            let nov_totNoOfLoan = nov_reLoanCliTot + nov_newCtotValue
-            let dec_totNoOfLoan = dec_reLoanCliTot + dec_newCtotValue
-
             if (doneReadNLC && doneReadOLC) {
+                let jan_totNoOfLoan = jan_reLoanCliTot + jan_newCtotValue
+                let feb_totNoOfLoan = feb_reLoanCliTot + feb_newCtotValue
+                let mar_totNoOfLoan = mar_reLoanCliTot + mar_newCtotValue
+                let apr_totNoOfLoan = apr_reLoanCliTot + apr_newCtotValue
+                let may_totNoOfLoan = may_reLoanCliTot + may_newCtotValue
+                let jun_totNoOfLoan = jun_reLoanCliTot + jun_newCtotValue
+                let jul_totNoOfLoan = jul_reLoanCliTot + jul_newCtotValue
+                let aug_totNoOfLoan = aug_reLoanCliTot + aug_newCtotValue
+                let sep_totNoOfLoan = sep_reLoanCliTot + sep_newCtotValue
+                let oct_totNoOfLoan = oct_reLoanCliTot + oct_newCtotValue
+                let nov_totNoOfLoan = nov_reLoanCliTot + nov_newCtotValue
+                let dec_totNoOfLoan = dec_reLoanCliTot + dec_newCtotValue
+
                 let tot_totNoOfLoan = jan_totNoOfLoan + feb_totNoOfLoan + mar_totNoOfLoan + apr_totNoOfLoan + may_totNoOfLoan + jun_totNoOfLoan + jul_totNoOfLoan +
                         aug_totNoOfLoan + sep_totNoOfLoan + oct_totNoOfLoan + nov_totNoOfLoan + dec_totNoOfLoan
 
@@ -2945,18 +2985,22 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
 
         const newLoanAmtView = await Budg_exec_sum.find({branch: viewBranchCode, view_code: "NewLoanAmount"}, function (err, fndNewAmt) {
 
-            jan_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jan_budg; })
-            feb_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.feb_budg; })
-            mar_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.mar_budg; })
-            apr_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.apr_budg; })
-            may_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.may_budg; })
-            jun_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jun_budg; })
-            jul_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jul_budg; })
-            aug_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.aug_budg; })
-            sep_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.sep_budg; })
-            oct_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.oct_budg; })
-            nov_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.nov_budg; })
-            dec_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.dec_budg; })
+            const fndNewLoanAmt = fndNewAmt
+            
+            fndNewLoanAmt.forEach(fdNewLoanAmt => {
+                jan_newAtotValue =  jan_newAtotValue + fdNewLoanAmt.jan_budg
+                feb_newAtotValue =  feb_newAtotValue + fdNewLoanAmt.feb_budg
+                mar_newAtotValue =  mar_newAtotValue + fdNewLoanAmt.mar_budg
+                apr_newAtotValue =  apr_newAtotValue + fdNewLoanAmt.apr_budg
+                may_newAtotValue =  may_newAtotValue + fdNewLoanAmt.may_budg
+                jun_newAtotValue =  jun_newAtotValue + fdNewLoanAmt.jun_budg
+                jul_newAtotValue =  jul_newAtotValue + fdNewLoanAmt.jul_budg
+                aug_newAtotValue =  aug_newAtotValue + fdNewLoanAmt.aug_budg
+                sep_newAtotValue =  sep_newAtotValue + fdNewLoanAmt.sep_budg
+                oct_newAtotValue =  oct_newAtotValue + fdNewLoanAmt.oct_budg
+                nov_newAtotValue =  nov_newAtotValue + fdNewLoanAmt.nov_budg
+                dec_newAtotValue =  dec_newAtotValue + fdNewLoanAmt.dec_budg
+            })
 
             let nwTotValueAmt = jan_newAtotValue + feb_newAtotValue + mar_newAtotValue + apr_newAtotValue + may_newAtotValue + jun_newAtotValue
                     + jul_newAtotValue + aug_newAtotValue + sep_newAtotValue + oct_newAtotValue + nov_newAtotValue + dec_newAtotValue
@@ -2971,19 +3015,23 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
 
         const oldLoanAmtView = await Budg_exec_sum.find({branch: viewBranchCode, view_code: "ReLoanAmount"}, function (err, fndOldAmt) {
 
-            jan_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jan_budg; })
-            feb_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.feb_budg; })
-            mar_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.mar_budg; })
-            apr_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.apr_budg; })
-            may_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.may_budg; })
-            jun_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jun_budg; })
-            jul_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jul_budg; })
-            aug_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.aug_budg; })
-            sep_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.sep_budg; })
-            oct_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.oct_budg; })
-            nov_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.nov_budg; })
-            dec_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.dec_budg; })
+            const fondOldAmt = fndOldAmt
 
+            fondOldAmt.forEach(fdOldAmt => {
+                jan_oldAtotValue = jan_oldAtotValue + fdOldAmt.jan_budg 
+                feb_oldAtotValue = feb_oldAtotValue + fdOldAmt.feb_budg 
+                mar_oldAtotValue = mar_oldAtotValue + fdOldAmt.mar_budg 
+                apr_oldAtotValue = apr_oldAtotValue + fdOldAmt.apr_budg 
+                may_oldAtotValue = may_oldAtotValue + fdOldAmt.may_budg 
+                jun_oldAtotValue = jun_oldAtotValue + fdOldAmt.jun_budg 
+                jul_oldAtotValue = jul_oldAtotValue + fdOldAmt.jul_budg 
+                aug_oldAtotValue = aug_oldAtotValue + fdOldAmt.aug_budg 
+                sep_oldAtotValue = sep_oldAtotValue + fdOldAmt.sep_budg 
+                oct_oldAtotValue = oct_oldAtotValue + fdOldAmt.oct_budg 
+                nov_oldAtotValue = nov_oldAtotValue + fdOldAmt.nov_budg 
+                dec_oldAtotValue = dec_oldAtotValue + fdOldAmt.dec_budg
+    
+            })
             let olTotValueAmt = jan_oldAtotValue + feb_oldAtotValue + mar_oldAtotValue + apr_oldAtotValue + may_oldAtotValue + jun_oldAtotValue
                     + jul_oldAtotValue + aug_oldAtotValue + sep_oldAtotValue + oct_oldAtotValue + nov_oldAtotValue + dec_oldAtotValue
 
