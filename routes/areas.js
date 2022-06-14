@@ -488,7 +488,6 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
 
                 // budgEndBal =  (budgBegBal +  nloanTotCount) - resloanTot
 
-                totBudgEndBal = (budgBegBal + oClient + newClients) - (rClient1 + rClient2)
                 totDisburse = nClientAmt + oClientAmt
                 tbudgEndBal = (budgBegBal + newClients) - (rClient1 + rClient2)
                 
@@ -674,6 +673,8 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                     doneReadLonTyp = true
         
             })
+            totBudgEndBal = (budgBegBal + oClient + newClients) - rClient
+
             brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
                 rClient: rClient, budgBegBal: budgBegBal, budgEndBal: totBudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
 
