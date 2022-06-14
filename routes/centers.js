@@ -105,7 +105,7 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
                 let resignClient = center.resClient + center.resClient2
                 
                 if (lnType === _.trim(lnType)) {
-                    BudgBegBal = center.budget_BegBal
+                    BudgBegBal = center.budget_BegBalCli
                 }
 
                 centerTargets.forEach(centerLoan => {

@@ -392,8 +392,10 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let oClient = 0
     let oClientAmt = 0
     let rClient = 0
+    let rClient1 = 0
     let rClient2 = 0
     let budgEndBal = 0
+    let totBudgEndBal = 0
     let totDisburse = 0
     let budgBegBal = 0
     let tbudgEndBal = 0
@@ -466,14 +468,14 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
             
             } else {
 
-                foundCenter.forEach( fndCtr => {
+                center.forEach( fndCtr => {
                     newClients = newClients + fndCtr.newClient
                     nClientAmt = nClientAmt + fndCtr.newClientAmt
                     oClient = oClient + fndCtr.oldClient
                     oClientAmt = oClientAmt + fndCtr.oldClientAmt
-                    // rClient = rClient + fndCtr.resClient
+                    rClient1 = rClient1 + fndCtr.resClient
                     rClient2 = rClient2 + fndCtr.resClient2
-                    budgBegBal = budgBegBal + fndCtr.budget_BegBal
+                    budgBegBal = budgBegBal + fndCtr.budget_BegBalCli
     
                 })
                 // newClients = _.sumBy(fndCenters, function(o) { return o.newClient; });
@@ -483,10 +485,19 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                 // rClient = _.sumBy(fndCenters, function(o) { return o.resClient; });
                 // rClient2 = _.sumBy(fndCenters, function(o) { return o.resClient2; });
                 // budgBegBal = _.sumBy(fndCenters, function(o) { return o.budget_BegBal; });
-                budgEndBal = oClient + newClients 
+
+                // budgEndBal =  (budgBegBal +  nloanTotCount) - resloanTot
+
+                totBudgEndBal = (budgBegBal + oClient + newClients) - (rClient1 + rClient2)
                 totDisburse = nClientAmt + oClientAmt
-                tbudgEndBal = (budgBegBal + newClients) - (rClient + rClient2)
-    
+                tbudgEndBal = (budgBegBal + newClients) - (rClient1 + rClient2)
+                
+                // console.log("END BALANCE is: " + totBudgEndBal)
+                // console.log("TOTAL NEW LOAN COUNT is: " + newClients)
+                // console.log("TOTAL OLD LOAN COUNT is: " + oClient)
+                // console.log("TOTAL RESCLIENT 1 is: " + rClient1)
+                // console.log("TOTAL RESCLIENT 2 is: " + rClient2)
+
                 doneReadCenter = true   
             }
 
@@ -494,7 +505,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
         // console.log(foundAMBranches)
 
         if (doneReadCenter && doneFoundMgr && doneReadLonTyp) {
-            foundAMBranches.forEach(am => {
+            foundAMBranches.forEach(am => {   // to get Budget Breakdown per Manager
 
                 let brCode = _.trim(am.branch)
                 let br_Cod = brCode
@@ -664,7 +675,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
         
             })
             brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
-                rClient: rClient, budgBegBal: budgBegBal, budgEndBal: budgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
+                rClient: rClient, budgBegBal: budgBegBal, budgEndBal: totBudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
 
             console.log(brnLoanTotals)
 

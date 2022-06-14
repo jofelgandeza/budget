@@ -131,6 +131,7 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
                 doneReadCenter = true
             
             } else {
+                
 
                 newClients = _.sumBy(center, function(o) { return o.newClient; });
                 nClientAmt = _.sumBy(center, function(o) { return o.newClientAmt; });
