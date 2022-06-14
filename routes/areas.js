@@ -478,25 +478,10 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                     budgBegBal = budgBegBal + fndCtr.budget_BegBalCli
     
                 })
-                // newClients = _.sumBy(fndCenters, function(o) { return o.newClient; });
-                // nClientAmt = _.sumBy(fndCenters, function(o) { return o.newClientAmt; });
-                // oClient = _.sumBy(fndCenters, function(o) { return o.oldClient; });
-                // oClientAmt = _.sumBy(fndCenters, function(o) { return o.oldClientAmt; });
-                // rClient = _.sumBy(fndCenters, function(o) { return o.resClient; });
-                // rClient2 = _.sumBy(fndCenters, function(o) { return o.resClient2; });
-                // budgBegBal = _.sumBy(fndCenters, function(o) { return o.budget_BegBal; });
-
-                // budgEndBal =  (budgBegBal +  nloanTotCount) - resloanTot
 
                 totDisburse = nClientAmt + oClientAmt
                 tbudgEndBal = (budgBegBal + newClients) - (rClient1 + rClient2)
                 
-                // console.log("END BALANCE is: " + totBudgEndBal)
-                // console.log("TOTAL NEW LOAN COUNT is: " + newClients)
-                // console.log("TOTAL OLD LOAN COUNT is: " + oClient)
-                // console.log("TOTAL RESCLIENT 1 is: " + rClient1)
-                // console.log("TOTAL RESCLIENT 2 is: " + rClient2)
-
                 doneReadCenter = true   
             }
 
@@ -673,12 +658,12 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                     doneReadLonTyp = true
         
             })
-            totBudgEndBal = (budgBegBal + oClient + newClients) - rClient
+            totBudgEndBal = (gtBegBalClient + oClient + newClients) - rClient
 
             brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
                 rClient: rClient, budgBegBal: budgBegBal, budgEndBal: totBudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
 
-            console.log(brnLoanTotals)
+            console.log(brnLoanGrandTot)
 
         
             res.render('areas/budget', {
