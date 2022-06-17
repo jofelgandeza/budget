@@ -342,7 +342,7 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
             brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, totCenters: totCenters, totPOs: totPOs, totUnits: totUnits, totBranches: totBranches,
                 rClient: rClient, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
 
-            console.log(totDisburse)
+            // console.log(totDisburse)
 
 //            console.log(foundPOunits)
         if ( doneReadCenter && doneFoundPO && doneReadLonTyp) {
@@ -664,9 +664,9 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
             brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
                 rClient: rClient, budgBegBal: budgBegBal, budgEndBal: totBudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
 
-            console.log(brnLoanGrandTot)
+            // console.log(brnLoanGrandTot)
 
-        
+        if (doneReadCenter &&doneFoundPO && doneReadLonTyp) {
             res.render('areas/budget', {
                 listTitle: areaCode,
                 officerName: officerName,
@@ -679,6 +679,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
 
             })
         }
+    }
 
  //   console.log(unitLoanTotals)
 //    console.log(brnLoanTotals)
