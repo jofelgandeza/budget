@@ -3381,24 +3381,31 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
             poSumView.push({title: "LOAN DISBURSEMENT", sortkey: 6, group: 2, isTitle: true})
 
             let ctr = 1
-                vwAreaBranches.forEach( vwBranches => {
-                    const brnDesc = vwBranches.branch_desc
 
+                vwAreaBranches.forEach( vwBranches => {
+
+                    const brnDesc = vwBranches.branch_desc
+                    const brnCode = vwBranches.branch
+                    
                     ctr = ctr + 1
+                    
                     poBudgExecTotReach.forEach(TotCliOutreach => {
-                        centerCntBegBal = centerCntBegBal + TotCliOutreach.beg_bal
-                        jan_TotCliOutReach = jan_TotCliOutReach + TotCliOutreach.jan_budg
-                        feb_TotCliOutReach = feb_TotCliOutReach + TotCliOutreach.feb_budg
-                        mar_TotCliOutReach = mar_TotCliOutReach + TotCliOutreach.mar_budg
-                        apr_TotCliOutReach = apr_TotCliOutReach + TotCliOutreach.apr_budg
-                        may_TotCliOutReach = may_TotCliOutReach + TotCliOutreach.may_budg
-                        jun_TotCliOutReach = jun_TotCliOutReach + TotCliOutreach.jun_budg
-                        jul_TotCliOutReach = jul_TotCliOutReach + TotCliOutreach.jul_budg
-                        aug_TotCliOutReach = aug_TotCliOutReach + TotCliOutreach.aug_budg
-                        sep_TotCliOutReach = sep_TotCliOutReach + TotCliOutreach.sep_budg
-                        oct_TotCliOutReach = oct_TotCliOutReach + TotCliOutreach.oct_budg
-                        nov_TotCliOutReach = nov_TotCliOutReach + TotCliOutreach.nov_budg
-                        dec_TotCliOutReach = dec_TotCliOutReach + TotCliOutreach.dec_budg
+                        if (TotCliOutreach.branch === brnCode) {
+                            centerCntBegBal = centerCntBegBal + TotCliOutreach.beg_bal
+                            jan_TotCliOutReach = jan_TotCliOutReach + TotCliOutreach.jan_budg
+                            feb_TotCliOutReach = feb_TotCliOutReach + TotCliOutreach.feb_budg
+                            mar_TotCliOutReach = mar_TotCliOutReach + TotCliOutreach.mar_budg
+                            apr_TotCliOutReach = apr_TotCliOutReach + TotCliOutreach.apr_budg
+                            may_TotCliOutReach = may_TotCliOutReach + TotCliOutreach.may_budg
+                            jun_TotCliOutReach = jun_TotCliOutReach + TotCliOutreach.jun_budg
+                            jul_TotCliOutReach = jul_TotCliOutReach + TotCliOutreach.jul_budg
+                            aug_TotCliOutReach = aug_TotCliOutReach + TotCliOutreach.aug_budg
+                            sep_TotCliOutReach = sep_TotCliOutReach + TotCliOutreach.sep_budg
+                            oct_TotCliOutReach = oct_TotCliOutReach + TotCliOutreach.oct_budg
+                            nov_TotCliOutReach = nov_TotCliOutReach + TotCliOutreach.nov_budg
+                            dec_TotCliOutReach = dec_TotCliOutReach + TotCliOutreach.dec_budg
+    
+                        }
                     })
                     
                     poSumView.push({title: brnDesc, sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_TotCliOutReach, feb_value: feb_TotCliOutReach, mar_value: mar_TotCliOutReach,
@@ -3409,20 +3416,22 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                     doneReadTotOutreach = true
     
                     poBudgExecTotLonAmt.forEach(TotAmtLon => {
-        
-                        janTotAmtLoan = janTotAmtLoan + TotAmtLon.jan_budg
-                        febTotAmtLoan = febTotAmtLoan + TotAmtLon.feb_budg
-                        marTotAmtLoan = marTotAmtLoan + TotAmtLon.mar_budg
-                        aprTotAmtLoan = aprTotAmtLoan + TotAmtLon.apr_budg
-                        mayTotAmtLoan = mayTotAmtLoan + TotAmtLon.may_budg
-                        junTotAmtLoan = junTotAmtLoan + TotAmtLon.jun_budg
-                        julTotAmtLoan = julTotAmtLoan + TotAmtLon.jul_budg
-                        augTotAmtLoan = augTotAmtLoan + TotAmtLon.aug_budg
-                        sepTotAmtLoan = sepTotAmtLoan + TotAmtLon.sep_budg
-                        octTotAmtLoan = octTotAmtLoan + TotAmtLon.oct_budg
-                        novTotAmtLoan = novTotAmtLoan + TotAmtLon.nov_budg
-                        decTotAmtLoan = decTotAmtLoan + TotAmtLon.dec_budg
                         
+                        if (TotAmtLon.branch === brnCode) { 
+                            janTotAmtLoan = janTotAmtLoan + TotAmtLon.jan_budg
+                            febTotAmtLoan = febTotAmtLoan + TotAmtLon.feb_budg
+                            marTotAmtLoan = marTotAmtLoan + TotAmtLon.mar_budg
+                            aprTotAmtLoan = aprTotAmtLoan + TotAmtLon.apr_budg
+                            mayTotAmtLoan = mayTotAmtLoan + TotAmtLon.may_budg
+                            junTotAmtLoan = junTotAmtLoan + TotAmtLon.jun_budg
+                            julTotAmtLoan = julTotAmtLoan + TotAmtLon.jul_budg
+                            augTotAmtLoan = augTotAmtLoan + TotAmtLon.aug_budg
+                            sepTotAmtLoan = sepTotAmtLoan + TotAmtLon.sep_budg
+                            octTotAmtLoan = octTotAmtLoan + TotAmtLon.oct_budg
+                            novTotAmtLoan = novTotAmtLoan + TotAmtLon.nov_budg
+                            decTotAmtLoan = decTotAmtLoan + TotAmtLon.dec_budg
+                                
+                        }
                     })
     
                     totTotAmtLoan = janTotAmtLoan + febTotAmtLoan + marTotAmtLoan + aprTotAmtLoan + mayTotAmtLoan + junTotAmtLoan + julTotAmtLoan + augTotAmtLoan +
@@ -3435,7 +3444,35 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
     
                     doneReadTotLonAmt = true
     
-            })
+                     centerCntBegBal = 0
+                     jan_TotCliOutReach = 0
+                     feb_TotCliOutReach = 0
+                     mar_TotCliOutReach = 0
+                     apr_TotCliOutReach = 0
+                     may_TotCliOutReach = 0
+                     jun_TotCliOutReach = 0
+                     jul_TotCliOutReach = 0
+                     aug_TotCliOutReach = 0
+                     sep_TotCliOutReach = 0
+                     oct_TotCliOutReach = 0
+                     nov_TotCliOutReach = 0
+                     dec_TotCliOutReach = 0
+                     tot_TotCliOutReach = 0
+        
+                     janTotAmtLoan = 0
+                     febTotAmtLoan = 0
+                     marTotAmtLoan = 0
+                     aprTotAmtLoan = 0
+                     mayTotAmtLoan = 0
+                     junTotAmtLoan = 0
+                     julTotAmtLoan = 0
+                     augTotAmtLoan = 0
+                     sepTotAmtLoan = 0
+                     octTotAmtLoan = 0
+                     novTotAmtLoan = 0
+                     decTotAmtLoan = 0
+            
+                })
 
             poSumView.sort( function (a,b) {
                 if ( a.sortkey < b.sortkey ){
