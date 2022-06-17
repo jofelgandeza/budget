@@ -166,6 +166,7 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
             }
 
             totCenters = foundCenter.length
+            console.log(foundAreaBranches)
 //           foundPOunits -> foundAreaBranches
     foundAreaBranches.forEach(uh => {
 
