@@ -4406,6 +4406,35 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 sep_value : sep_oldClientTot, oct_value : oct_oldClientTot, nov_value : nov_oldClientTot, dec_value : dec_oldClientTot, tot_value : dec_oldClientTot
             }) 
 
+            const fndTotClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "TotClientOutreach"}, function (err, fndTotLonAmt) {
+                fondResClients = fndTotLonAmt
+            })
+                if (isNull(fndTotClients)) { 
+                    let newTotCliOutreach = new Budg_exec_sum({
+                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Client Outreach", view_code: "TotClientOutreach", sort_key: 5, display_group: 2, beg_bal: 0, jan_budg : jan_totNumClients, 
+                        feb_budg : feb_totNumClients, mar_budg : mar_totNumClients, apr_budg : apr_totNumClients, may_budg : may_totNumClients, jun_budg : jun_totNumClients, jul_budg : jul_totNumClients, 
+                        aug_budg : aug_totNumClients, sep_budg : sep_totNumClients, oct_budg : oct_totNumClients, nov_budg : nov_totNumClients, dec_budg : dec_totNumClients, tot_budg: tot_totNumClients                                   
+                    })
+                    newTotCliOutreach.save()
+                } else {
+                    fndTotClients.title = "Client Outreach"
+                    fndTotClients.jan_budg = jan_totNumClients
+                    fndTotClients.feb_budg = feb_totNumClients
+                    fndTotClients.mar_budg = mar_totNumClients
+                    fndTotClients.apr_budg = apr_totNumClients
+                    fndTotClients.may_budg = may_totNumClients
+                    fndTotClients.jun_budg = jun_totNumClients
+                    fndTotClients.jul_budg = jul_totNumClients
+                    fndTotClients.aug_budg = aug_totNumClients
+                    fndTotClients.sep_budg = sep_totNumClients
+                    fndTotClients.oct_budg = oct_totNumClients
+                    fndTotClients.nov_budg = nov_totNumClients
+                    fndTotClients.dec_budg = dec_totNumClients
+                    fndTotClients.tot_budg = tot_totNumClients
+        
+                    fndTotClients.save()            
+                }
+
             const fndResClients = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "ResignClients"}, function (err, fndTotLonAmt) {
                 fondResClients = fndTotLonAmt
                 if (isNull(fondResClients)) { 

@@ -205,9 +205,9 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
                 brn_Code = " "
                 brnMgrName = ""
             } 
-            if (typeLoan === "Individual Loan" && brn_Code === "TUG") {
-                const typeOfLoan = typeLoan
-            }
+            // if (typeLoan === "Individual Loan" && brn_Code === "TUG") {
+            //     const typeOfLoan = typeLoan
+            // }
 
             foundCenter.forEach(center => {
                 const branchCode = center.branch
@@ -2191,6 +2191,7 @@ router.get('/viewAreaTargetMon/:id', authUser, authRole(ROLE.AM), async (req, re
                         octTotAmtLoan = octTotAmtLoan + TotAmtLon.oct_budg
                         novTotAmtLoan = novTotAmtLoan + TotAmtLon.nov_budg
                         decTotAmtLoan = decTotAmtLoan + TotAmtLon.dec_budg
+
                     })
     
                     totTotAmtLoan = janTotAmtLoan + febTotAmtLoan + marTotAmtLoan + aprTotAmtLoan + mayTotAmtLoan + junTotAmtLoan + julTotAmtLoan + augTotAmtLoan +
@@ -3236,7 +3237,7 @@ router.get('/viewAreaTargetMon/:id', authUser, authRole(ROLE.AM), async (req, re
     }
 })
 
-    router.get('/exportToExcel/:id', authUser, authRole(ROLE.AM), (req,res) => {
+router.get('/exportToExcel/:id', authUser, authRole(ROLE.AM), (req,res) => {
 
                     // let dataForExcel = []
                     // dataForExcel = poSumView
@@ -3296,7 +3297,155 @@ router.get('/viewAreaTargetMon/:id', authUser, authRole(ROLE.AM), async (req, re
                     })
                 
 })
+
+// View KRA per Branch & per month ROUTE
+router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) => {
+
+    const viewAreaCode = req.params.id
+    const vwUnitCode = viewAreaCode
+    const yuser = req.user
+
+    let foundPOV = []
+    // let foundCenterDet = []
+
+    const vwloanType = await Loan_type.find({})
+    const vwAreaBranches = await Branch.find({area:viewAreaCode})
+    const poBudgExecTotReach = await Budg_exec_sum.find({area: viewAreaCode, view_code: "TotClientOutreach"})
+    const poBudgExecTotLonAmt = await Budg_exec_sum.find({area: viewAreaCode, view_code: "TotLoanAmt"})
+
+    console.log(vwAreaBranches)
+
+            let begBalOldClient = 0
+                let centerCntBegBal = 0
+                let jan_TotCliOutReach = 0
+                let feb_TotCliOutReach = 0
+                let mar_TotCliOutReach = 0
+                let apr_TotCliOutReach = 0
+                let may_TotCliOutReach = 0
+                let jun_TotCliOutReach = 0
+                let jul_TotCliOutReach = 0
+                let aug_TotCliOutReach = 0
+                let sep_TotCliOutReach = 0
+                let oct_TotCliOutReach = 0
+                let nov_TotCliOutReach = 0
+                let dec_TotCliOutReach = 0
+                let tot_TotCliOutReach = 0
+    
+            let janTotAmtLoan = 0
+            let febTotAmtLoan = 0
+            let marTotAmtLoan = 0
+            let aprTotAmtLoan = 0
+            let mayTotAmtLoan = 0
+            let junTotAmtLoan = 0
+            let julTotAmtLoan = 0
+            let augTotAmtLoan = 0
+            let sepTotAmtLoan = 0
+            let octTotAmtLoan = 0
+            let novTotAmtLoan = 0
+            let decTotAmtLoan = 0
+    
+            let doneReadTotLonAmt = false
+    
+            let doneReadTotOutreach = false
+    
+            let fndUnitBudgExecTotLonAmt = []
+            let fndAreaBudgExecTotOutreach = []
+        
+            poSumView = [ ]
+    
+            try {
+    
+            //  Pre-determine if items is already existed or saved in Budg_exec_sum Collection
+    
+            // const poBudgExecNumCenters = await Budg_exec_sum.find({area: viewAreaCode, view_code: "TotClientOutreach"}, function (err, fndTotCliOutreach) {
+            //         fndAreaBudgExecTotOutreach = fndTotCliOutreach
+            // })
+
+            // const poBudgExecTotLonAmt = await Budg_exec_sum.find({area: viewAreaCode, view_code: "TotLoanAmt"}, function (err, fndTotLonAmt) {
+            //     fndUnitBudgExecTotLonAmt = fndTotLonAmt
+            // })
+
+
+            if (isNull(poBudgExecTotReach)) {
+
+                doneReadTotOutreach = true
+
+            } else {
+                poBudgExecTotReach.forEach(TotCliOutreach => {
+                    centerCntBegBal = centerCntBegBal + TotCliOutreach.beg_bal
+                    jan_TotCliOutReach = jan_TotCliOutReach + TotCliOutreach.jan_budg
+                    feb_TotCliOutReach = feb_TotCliOutReach + TotCliOutreach.feb_budg
+                    mar_TotCliOutReach = mar_TotCliOutReach + TotCliOutreach.mar_budg
+                    apr_TotCliOutReach = apr_TotCliOutReach + TotCliOutreach.apr_budg
+                    may_TotCliOutReach = may_TotCliOutReach + TotCliOutreach.may_budg
+                    jun_TotCliOutReach = jun_TotCliOutReach + TotCliOutreach.jun_budg
+                    jul_TotCliOutReach = jul_TotCliOutReach + TotCliOutreach.jul_budg
+                    aug_TotCliOutReach = aug_TotCliOutReach + TotCliOutreach.aug_budg
+                    sep_TotCliOutReach = sep_TotCliOutReach + TotCliOutreach.sep_budg
+                    oct_TotCliOutReach = oct_TotCliOutReach + TotCliOutreach.oct_budg
+                    nov_TotCliOutReach = nov_TotCliOutReach + TotCliOutreach.nov_budg
+                    dec_TotCliOutReach = dec_TotCliOutReach + TotCliOutreach.dec_budg
+                })
                 
+                poSumView.push({title: "BRANCH NAME", sortkey: 2, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_TotCliOutReach, feb_value: feb_TotCliOutReach, mar_value: mar_TotCliOutReach,
+                    apr_value: apr_TotCliOutReach, may_value: may_TotCliOutReach, jun_value: jun_TotCliOutReach, jul_value: jul_TotCliOutReach, aug_value: aug_TotCliOutReach,
+                    sep_value: sep_TotCliOutReach, oct_value: oct_TotCliOutReach, nov_value: nov_TotCliOutReach, dec_value: dec_TotCliOutReach, tot_value : dec_TotCliOutReach
+                })
+
+                doneReadTotOutreach = true
+
+            }
+
+            if (isNull(poBudgExecTotLonAmt)) {
+
+                doneReadTotLonAmt = true
+
+            } else {
+                poBudgExecTotLonAmt.forEach(TotAmtLon => {
+    
+                    janTotAmtLoan = janTotAmtLoan + TotAmtLon.jan_budg
+                    febTotAmtLoan = febTotAmtLoan + TotAmtLon.feb_budg
+                    marTotAmtLoan = marTotAmtLoan + TotAmtLon.mar_budg
+                    aprTotAmtLoan = aprTotAmtLoan + TotAmtLon.apr_budg
+                    mayTotAmtLoan = mayTotAmtLoan + TotAmtLon.may_budg
+                    junTotAmtLoan = junTotAmtLoan + TotAmtLon.jun_budg
+                    julTotAmtLoan = julTotAmtLoan + TotAmtLon.jul_budg
+                    augTotAmtLoan = augTotAmtLoan + TotAmtLon.aug_budg
+                    sepTotAmtLoan = sepTotAmtLoan + TotAmtLon.sep_budg
+                    octTotAmtLoan = octTotAmtLoan + TotAmtLon.oct_budg
+                    novTotAmtLoan = novTotAmtLoan + TotAmtLon.nov_budg
+                    decTotAmtLoan = decTotAmtLoan + TotAmtLon.dec_budg
+                    
+                })
+
+                totTotAmtLoan = janTotAmtLoan + febTotAmtLoan + marTotAmtLoan + aprTotAmtLoan + mayTotAmtLoan + junTotAmtLoan + julTotAmtLoan + augTotAmtLoan +
+                    sepTotAmtLoan + octTotAmtLoan + novTotAmtLoan + decTotAmtLoan
+
+                poSumView.push({title: "TOTAL AMOUNT OF LOAN", sortkey: 15, group: 2, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
+                    apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
+                    aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan, tot_value : totTotAmtLoan
+                })
+
+                doneReadTotLonAmt = true
+
+            }
+    
+    
+                if (doneReadTotOutreach && doneReadTotLonAmt) { 
+                    // res.json(poSumView)
+        
+                    res.render('areas/viewAreaKRAMon', {
+                        vwAreaCod: viewAreaCode,
+                        poSumView: poSumView,
+                        yuser: yuser   
+                    })
+                }
+        } catch (err) {
+            console.log(err)
+            res.redirect('/areas/'+ viewAreaCode)
+        }
+    })
+    
                 
 
 module.exports = router

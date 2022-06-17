@@ -131,7 +131,7 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
                 doneReadCenter = true
             
             } else {
-                
+
 
                 newClients = _.sumBy(center, function(o) { return o.newClient; });
                 nClientAmt = _.sumBy(center, function(o) { return o.newClientAmt; });
@@ -2868,7 +2868,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
         jan_oldCliTot = begBalOldClient 
             jan_totNumClients = (jan_oldCliTot + jan_newCliTot) - jan_resCliTot
         feb_oldCliTot = jan_totNumClients
-            feb_totNumClients = (feb_oldCliTot + feb_newCliTot) - feb_resCliTot    
+            feb_totNumClients = (feb_oldCliTot + feb_newCliTot) - feb_resCliTot 
         mar_oldCliTot = feb_totNumClients
             mar_totNumClients = (mar_oldCliTot + mar_newCliTot) - mar_resCliTot
         apr_oldCliTot = mar_totNumClients
