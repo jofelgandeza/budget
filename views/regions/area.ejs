@@ -21,7 +21,7 @@
                     <td>
                         <div class="btn-row">
                             <a class="btn btn-primary" href="/regions/getAreaForEdit/<%= regionCode + regArea.id %>/edit">Edit</a>
-                            <%- include('../partials/deleteForm', { url: `/regions/deleteArea/${regArea.id}` }) %>
+                            <%- include('../partials/deleteForm', { url: `/regions/deleteArea/${regionCode + regArea.id}` }) %>
                         </div>        
                     </td>
                 </tr>

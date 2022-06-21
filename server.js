@@ -129,7 +129,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
             res.redirect("/deds")
           }
           else if (req.user.role === "ADMIN") { 
-              res.redirect("/admins") 
+              res.redirect("/admins/" + asignCode) 
             }
     } 
   })

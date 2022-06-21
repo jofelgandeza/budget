@@ -447,22 +447,14 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
             } 
         const branMgrs = await Employee.find({area: areaCode, position_code: postManager}, function (err, foundUHs){
             foundAMBranches = foundUHs
-            // doneFoundMgr = true
+            doneFoundMgr = true
             })
 
           const loan_Type= await Loan_type.find({}, function (err, fndLoanTyp) {
             loanType = fndLoanTyp
-            // doneReadLonTyp = true
+            doneReadLonTyp = true
           })
 
-          if (!isNull(loan_Type)) {
-            doneReadLonTyp = true
-
-          }
-          if (!isNull(branMgrs)) {
-            doneFoundMgr = true
-
-          }
 
             if (isNull(center)) {
                 doneReadCenter = true
@@ -917,7 +909,8 @@ try {
             area: areaCod,
             region: branchRegion,
             unit: "N/A",
-            po_number: "N/A"
+            po_number: "N/A",
+            status: "Active"
         })
         
         const newCoa = employee.save()
@@ -3332,6 +3325,33 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                 let nov_TotCliOutReach = 0
                 let dec_TotCliOutReach = 0
                 let tot_TotCliOutReach = 0
+
+                let jan_TotalCliOutReach = 0
+                let feb_TotalCliOutReach = 0
+                let mar_TotalCliOutReach = 0
+                let apr_TotalCliOutReach = 0
+                let may_TotalCliOutReach = 0
+                let jun_TotalCliOutReach = 0
+                let jul_TotalCliOutReach = 0
+                let aug_TotalCliOutReach = 0
+                let sep_TotalCliOutReach = 0
+                let oct_TotalCliOutReach = 0
+                let nov_TotalCliOutReach = 0
+                let dec_TotalCliOutReach = 0
+
+
+            let janTotalAmtLoan = 0
+            let febTotalAmtLoan = 0
+            let marTotalAmtLoan = 0
+            let aprTotalAmtLoan = 0
+            let mayTotalAmtLoan = 0
+            let junTotalAmtLoan = 0
+            let julTotalAmtLoan = 0
+            let augTotalAmtLoan = 0
+            let sepTotalAmtLoan = 0
+            let octTotalAmtLoan = 0
+            let novTotalAmtLoan = 0
+            let decTotalAmtLoan = 0
     
             let janTotAmtLoan = 0
             let febTotAmtLoan = 0
@@ -3345,14 +3365,12 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
             let octTotAmtLoan = 0
             let novTotAmtLoan = 0
             let decTotAmtLoan = 0
-    
+
+            let totTotalAmtLoan = 0
+
             let doneReadTotLonAmt = false
-    
             let doneReadTotOutreach = false
     
-            let fndUnitBudgExecTotLonAmt = []
-            let fndAreaBudgExecTotOutreach = []
-        
             poSumView = [ ]
     
             try {
@@ -3405,6 +3423,19 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                             nov_TotCliOutReach = nov_TotCliOutReach + TotCliOutreach.nov_budg
                             dec_TotCliOutReach = dec_TotCliOutReach + TotCliOutreach.dec_budg
     
+                            jan_TotalCliOutReach = jan_TotalCliOutReach + TotCliOutreach.jan_budg
+                            feb_TotalCliOutReach = feb_TotalCliOutReach + TotCliOutreach.feb_budg
+                            mar_TotalCliOutReach = mar_TotalCliOutReach + TotCliOutreach.mar_budg
+                            apr_TotalCliOutReach = apr_TotalCliOutReach + TotCliOutreach.apr_budg
+                            may_TotalCliOutReach = may_TotalCliOutReach + TotCliOutreach.may_budg
+                            jun_TotalCliOutReach = jun_TotalCliOutReach + TotCliOutreach.jun_budg
+                            jul_TotalCliOutReach = jul_TotalCliOutReach + TotCliOutreach.jul_budg
+                            aug_TotalCliOutReach = aug_TotalCliOutReach + TotCliOutreach.aug_budg
+                            sep_TotalCliOutReach = sep_TotalCliOutReach + TotCliOutreach.sep_budg
+                            oct_TotalCliOutReach = oct_TotalCliOutReach + TotCliOutreach.oct_budg
+                            nov_TotalCliOutReach = nov_TotalCliOutReach + TotCliOutreach.nov_budg
+                            dec_TotalCliOutReach = dec_TotalCliOutReach + TotCliOutreach.dec_budg
+                
                         }
                     })
                     
@@ -3416,7 +3447,7 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                     doneReadTotOutreach = true
     
                     poBudgExecTotLonAmt.forEach(TotAmtLon => {
-                        
+
                         if (TotAmtLon.branch === brnCode) { 
                             janTotAmtLoan = janTotAmtLoan + TotAmtLon.jan_budg
                             febTotAmtLoan = febTotAmtLoan + TotAmtLon.feb_budg
@@ -3431,6 +3462,18 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                             novTotAmtLoan = novTotAmtLoan + TotAmtLon.nov_budg
                             decTotAmtLoan = decTotAmtLoan + TotAmtLon.dec_budg
                                 
+                            janTotalAmtLoan = janTotalAmtLoan + TotAmtLon.jan_budg
+                            febTotalAmtLoan = febTotalAmtLoan + TotAmtLon.feb_budg
+                            marTotalAmtLoan = marTotalAmtLoan + TotAmtLon.mar_budg
+                            aprTotalAmtLoan = aprTotalAmtLoan + TotAmtLon.apr_budg
+                            mayTotalAmtLoan = mayTotalAmtLoan + TotAmtLon.may_budg
+                            junTotalAmtLoan = junTotalAmtLoan + TotAmtLon.jun_budg
+                            julTotalAmtLoan = julTotalAmtLoan + TotAmtLon.jul_budg
+                            augTotalAmtLoan = augTotalAmtLoan + TotAmtLon.aug_budg
+                            sepTotalAmtLoan = sepTotalAmtLoan + TotAmtLon.sep_budg
+                            octTotalAmtLoan = octTotalAmtLoan + TotAmtLon.oct_budg
+                            novTotalAmtLoan = novTotalAmtLoan + TotAmtLon.nov_budg
+                            decTotalAmtLoan = decTotalAmtLoan + TotAmtLon.dec_budg
                         }
                     })
     
@@ -3474,19 +3517,31 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
             
                 })
 
-            poSumView.sort( function (a,b) {
-                if ( a.sortkey < b.sortkey ){
-                    return -1;
-                }
-                if ( a.sortkey > b.sortkey ){
-                    return 1;
-                }
-                return 0;
-            })
-
                 if (doneReadTotOutreach && doneReadTotLonAmt) { 
-                    // res.json(poSumView)
-        
+
+                    poSumView.push({title: "TOTAL OUTREACH", sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_TotalCliOutReach, feb_value: feb_TotalCliOutReach, mar_value: mar_TotalCliOutReach,
+                        apr_value: apr_TotalCliOutReach, may_value: may_TotalCliOutReach, jun_value: jun_TotalCliOutReach, jul_value: jul_TotalCliOutReach, aug_value: aug_TotalCliOutReach,
+                        sep_value: sep_TotalCliOutReach, oct_value: oct_TotalCliOutReach, nov_value: nov_TotalCliOutReach, dec_value: dec_TotalCliOutReach, tot_value : dec_TotalCliOutReach
+                    })
+
+                    totTotalAmtLoan = janTotalAmtLoan + febTotalAmtLoan + marTotalAmtLoan + aprTotalAmtLoan + mayTotalAmtLoan + junTotalAmtLoan + julTotalAmtLoan + augTotalAmtLoan +
+                    sepTotalAmtLoan + octTotalAmtLoan + novTotalAmtLoan + decTotalAmtLoan
+    
+                    poSumView.push({title: "TOTAL DISBURSEMENT", sortkey: 6 + ctr, group: 2, jan_value : janTotalAmtLoan, feb_value : febTotalAmtLoan, mar_value : marTotalAmtLoan, 
+                        apr_value : aprTotalAmtLoan, may_value : mayTotalAmtLoan, jun_value : junTotalAmtLoan, jul_value : julTotalAmtLoan, 
+                        aug_value : augTotalAmtLoan, sep_value : sepTotalAmtLoan, oct_value : octTotalAmtLoan, nov_value : novTotalAmtLoan, dec_value : decTotalAmtLoan, tot_value : totTotalAmtLoan
+                    })
+    
+                    poSumView.sort( function (a,b) {
+                        if ( a.sortkey < b.sortkey ){
+                            return -1;
+                        }
+                        if ( a.sortkey > b.sortkey ){
+                            return 1;
+                        }
+                        return 0;
+                    })
+            
                     res.render('areas/viewAreaKRAMon', {
                         vwAreaCod: viewAreaCode,
                         poSumView: poSumView,

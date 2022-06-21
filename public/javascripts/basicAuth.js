@@ -15,7 +15,9 @@ function authUser(req, res, next) {
         let params_ID = req.params.id
         let paramsID = ""
 
-        console.log(params_ID)
+        console.log("Eto ba yun ->" + req.user.role)
+        console.log("params-id ->" + params_ID)
+
         if (req.user.role === "PO") {
           paramsID = params_ID.substr(0,6)
         }          
@@ -34,6 +36,11 @@ function authUser(req, res, next) {
         if (req.user.role === "DED") {
           paramsID = params_ID.substr(0,3)
         }          
+        if (req.user.role === "ADMIN") {
+          paramsID = req.params.id
+        }          
+        console.log("paramsID ->" + paramsID)
+
         // console.log(paramsID + ", " + req.user.assCode)
         if (req.user.role !== role || req.user.assCode !== paramsID) {
           if (role2 === "BM") {

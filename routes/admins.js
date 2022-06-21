@@ -6,19 +6,22 @@ const bodyParser = require('body-parser')
 const methodOverride = require('method-override')
 const { model } = require('mongoose')
 const bcrypt = require('bcrypt')
-const { forEach, isNull } = require('lodash')
+const { forEach, isNull, isEmpty } = require('lodash')
 const _ = require('lodash')
 const { authUser, authRole } = require('../public/javascripts/basicAuth.js')
+const { ROLE } = require('../public/javascripts/data.js')
 
 const User = require('../models/user')
 const Region = require('../models/region')
 const Employee = require('../models/employee')
+const Setting = require('../models/setting')
 
 // let LoggedUser = {}
 // app.use(setSysUser)
 
-router.get('/', async (req, res) => {
+router.get('/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => {
     // res.send('Admin Page')
+    console.log("From Index view " + ROLE.ADMIN)
     const logUser = req.user
     res.render('admins/index', {
         yuser : logUser
@@ -27,17 +30,23 @@ router.get('/', async (req, res) => {
 
 //View BUDGET SETTINGS
 
-router.get('/settings', authUser, authRole("DED"), async (req, res) => {
+router.get('/settings/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => {
 
     const _user = req.user
+
+    console.log(ROLE.AM)
     
     const regDirID = "611d094bdb81bf7f61039616"
+
+    const statSelect = ["OPEN","CLOSED"]
 
     let fndBudgSetting = []
     
     try {
 
         const budg_setting = await Setting.find({}, function (err, foundSettings) {
+            fndBudgSetting = foundSettings
+            
             foundSettings.forEach(fndSet =>{
                 budget_Mode = fndSet.status
             })
@@ -45,45 +54,45 @@ router.get('/settings', authUser, authRole("DED"), async (req, res) => {
         })
 
 
-        const brnEmployees = await Employee.find({position_code: regDirID}, function (err, foundEmployees) {
-            const fndEmployees = foundEmployees
+//         const brnEmployees = await Employee.find({position_code: regDirID}, function (err, foundEmployees) {
+//             const fndEmployees = foundEmployees
 
-//            const empStatus = fndEmployees.status
-//  - Area ID
-            fndEmployees.forEach(foundEmp =>{
-                empPst = foundEmp.position_code
-                empID = foundEmp._id
-                empName = foundEmp.last_name + ", " + foundEmp.first_name + " " + foundEmp.middle_name.substr(0,1) + "."
-                empCode = foundEmp.emp_code
-                empUnit = foundEmp.unit
-                empUnitPOnum = foundEmp.unit + foundEmp.po_number
-                empAss = foundEmp.assign_code
-                let exist = false
+// //            const empStatus = fndEmployees.status
+// //  - Area ID
+//             fndEmployees.forEach(foundEmp =>{
+//                 empPst = foundEmp.position_code
+//                 empID = foundEmp._id
+//                 empName = foundEmp.last_name + ", " + foundEmp.first_name + " " + foundEmp.middle_name.substr(0,1) + "."
+//                 empCode = foundEmp.emp_code
+//                 empUnit = foundEmp.unit
+//                 empUnitPOnum = foundEmp.unit + foundEmp.po_number
+//                 empAss = foundEmp.assign_code
+//                 let exist = false
 
-                const empAssign = _.find(regions, {region: empAss})
+//                 const empAssign = _.find(regions, {region: empAss})
                 
-                fondEmploy.push({empID: empID, area: areaCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empAssign.region_desc})
+//                 fondEmploy.push({empID: empID, area: areaCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empAssign.region_desc})
                 
-                empCanProceed = true            
-            })
+//                 empCanProceed = true            
+//             })
 
-            sortedEmp = fondEmploy.sort( function (a,b) {
-                if ( a.empName < b.empName ){
-                    return -1;
-                  }
-                  if ( a.empName > b.empName ){
-                    return 1;
-                  }
-                   return 0;
-            })        
+//             sortedEmp = fondEmploy.sort( function (a,b) {
+//                 if ( a.empName < b.empName ){
+//                     return -1;
+//                   }
+//                   if ( a.empName > b.empName ){
+//                     return 1;
+//                   }
+//                    return 0;
+//             })        
     
-            res.render('deds/employee', {
-                ded: "DED",
-                fndEmploy: sortedEmp,
+            res.render('admins/setting', {
+                admin: "ADMIN",
+                fndSetting: fndBudgSetting,
+                statSelect: statSelect,
                 searchOptions: req.query,
                 yuser: _user
             })
-        })
 
 } catch (err) {
         console.log(err)
@@ -91,7 +100,54 @@ router.get('/settings', authUser, authRole("DED"), async (req, res) => {
     }
 })
 
-router.get('/register', async (req, res) => {
+// saveSettings
+router.post('/saveSettings/:id', async (req, res) => {
+
+const admin = req.params.id
+
+// let setting
+    try {
+        
+        const setting = await Setting.find({})
+            
+            if (!isEmpty(setting)) {
+                console.log(setting)
+        
+                setting.budget_year = req.body.budgYear
+                setting.start_budget_date = req.body.startBudgDet
+                setting.end_budget_date = req.body.endBudgDet
+                setting.status = req.body.budgStatus
+    
+                const saveSetting = setting.save()
+
+                canProceed = true 
+            }
+            else {
+                let newSetting = new Setting({
+                    budget_year: req.body.budgYear,
+                    start_budget_date: req.body.startBudgDet,
+                    end_budget_date: req.body.endBudgDet,
+                    status: req.body.budgStatus
+                })
+                newSetting.save()
+
+                canProceed = true 
+
+            }
+
+        console.log(canProceed) 
+        
+        if (canProceed) {
+            res.redirect('/admins/settings/' + admin)
+        }
+
+    } catch (err) {
+        console.log(err)
+        res.redirect('/admins/settings/' + admin)
+    }
+})  
+
+router.get('/register/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => {
     // res.send('User Registration Page!')
     res.render('admins/register')
 })
@@ -110,7 +166,6 @@ router.post('/saveRegister', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10)
         
         const getExistingUser = await User.findOne({email: eMail}, function (err, foundUser) {
-            // console.log(foundUser)
 
             if (!err) {
                 if (!foundUser) {
@@ -144,12 +199,12 @@ router.post('/saveRegister', async (req, res) => {
 
     } catch (err) {
         console.log(err)
-        res.redirect('/admins//register')
+        res.redirect('/admins/register')
     }
 })  
 
 
-router.get('/region', async (req, res) => {
+router.get('/region', authUser, authRole(ROLE.ADMIN), async (req, res) => {
 
     const brnCode = req.params.id
     const _user = req.user
@@ -218,7 +273,7 @@ router.get('/region', async (req, res) => {
 })
 
 // GET AREAS PER REGION
-router.get('/setRegionAreas/:id', async (req, res) => {
+router.get('/setRegionAreas/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => {
 
     const regionCod = req.params.id
 
@@ -261,7 +316,7 @@ router.get('/setRegionAreas/:id', async (req, res) => {
 })
 
 //
-router.get('/setNewRegions', async (req, res) => {
+router.get('/setNewRegions', authUser, authRole(ROLE.ADMIN), async (req, res) => {
 
     const yuser = req.user
 
@@ -288,7 +343,7 @@ router.get('/setNewRegions', async (req, res) => {
     }
 })
 
-router.get('/newRegion', async (req, res) => {
+router.get('/newRegion', authUser, authRole(ROLE.ADMIN), async (req, res) => {
     // res.send('User Registration Page!')
 
     res.render('admins/newRegion', {
@@ -385,12 +440,12 @@ router.post('/postNewRegions', async (req, res) => {
     }
 })  
 
-router.get('/users', async (req, res) => {
+router.get('/users', authUser, authRole(ROLE.ADMIN), async (req, res) => {
     res.send('System USERS VIEW Page! - ONGOING DEVELOPMENT.')
     // res.render('admins/register')
 })
 
-router.get('/getAccess', async (req, res) => {
+router.get('/getAccess', authUser, authRole(ROLE.ADMIN), async (req, res) => {
     res.send('User access page' + req.user.name)
 })
 // function setSysUser(req, res, next) {

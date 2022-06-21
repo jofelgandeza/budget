@@ -36,13 +36,13 @@
                     <li class="header-nav header-link"> <a href='/regions/areas/<%= yuser.assCode %>'>Area Settings</a></li>
                 <% } %>
                 <%if (yuser.role === "DED") { %>
-                    <li class="header-nav header-link"> <a href='/deds'>Home</a></li>
+                    <li class="header-nav header-link"> <a href='/deds/<%= yuser.assCode %>'>Home</a></li>
                     <li class="header-nav header-link"> <a href='/deds/region/<%= yuser.assCode %>'>Region Settings</a></li>
                 <% } %>
                 <%if (yuser.role === "ADMIN") { %>
-                    <li class="header-nav header-link"> <a href='/admins/register'>Register User</a></li>
-                    <li class="header-nav header-link"><a href='/admins/users'>Users</a></li>
-                    <li class="header-nav header-link"><a href='/admins/employees'>System Settings</a></li>
+                    <li class="header-nav header-link"> <a href='/admins/register/<%= yuser.assCode %>'>Register User</a></li>
+                    <li class="header-nav header-link"><a href='/admins/users/<%= yuser.assCode %>'>Users</a></li>
+                    <li class="header-nav header-link"><a href='/admins/settings/<%= yuser.assCode %>'>System Settings</a></li>
                     <li class="header-nav header-link"> <a href='/'>Home</a></li>
                 <% } %>
 
