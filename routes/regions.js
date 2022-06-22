@@ -121,6 +121,9 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
 
             const empName = areaEmps.first_name + " " + areaEmps.middle_name.substr(0,1) + ". " + areaEmps.last_name
             
+            if (areaEmpPost == postRegDir) {
+                officerName = empName
+            }
             if( areaEmpPost == postRegDir) {
                 foundRegDir.push({assCode: assignCode, emp_name: empName})
             }
@@ -215,8 +218,8 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
             }
 
             foundCenter.forEach(center => {
-                const areaCode = center.area
-                if (areaCode === areaCode) { 
+                const cntrAreaCode = center.area
+                if (cntrAreaCode === areaCode) { 
                     const lnType = center.loan_code
                     let centerTargets = center.Targets
                     let LoanBegBal = center.Loan_beg_bal
