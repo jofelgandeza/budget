@@ -20,102 +20,105 @@
 					</ul>
 				</div>
 
-				<div class="left-column">
-                    <table class="content-table-brnView">
-                        <tr>
-                            <th>PARTICULARS</th>
-                            <th></th>
-                            <th>BUDGET</th>
-                            <th>ACTUAL</th>
-                            <th>%AGE</th>
-                            <th>VARIANCE</th>
-                        </tr>
-                        <tr>
-                            <td class="td-bold">TOTAL DISBURSEMENT</td>
-                        </tr>
-                        <tr class="td-bold">
-                            <td>  AMOUNT OF LOAN</td>
-                            <td></td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>Group Loan</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                        </tr>
-                        <tr>
-                            <td span="2"></td>
-                            <td>Agri Loan</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                        </tr>
-                        <tr>
-                            <td span="2"></td>
-                            <td>Individual Loan</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                        </tr>
-                        <tr>
-                            <td span="2"></td>
-                            <td>Emergency Loan</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                        </tr>
-                        <tr class="td-bold">
-                            <td> NUMBER OF CLIENTS</td>
-                            <td></td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>Group Loan</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                        </tr>
-                        <tr>
-                            <td span="2"></td>
-                            <td>Agri Loan</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                        </tr>
-                        <tr>
-                            <td span="2"></td>
-                            <td>Individual Loan</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                        </tr>
-                        <tr>
-                            <td span="2"></td>
-                            <td>Emergency Loan</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                            <td> -</td>
-                        </tr>
-                    </table>
-				</div>
-
+                    <div class="left-column">
+                        <table class="content-table-brnView">
+                            <tr>
+                                <th>PARTICULARS</th>
+                                <th></th>
+                                <th>BUDGET</th>
+                                <th>ACTUAL</th>
+                                <th>%AGE</th>
+                                <th>VARIANCE</th>
+                            </tr>
+                            <tr>
+                                <td class="td-bold">TOTAL DISBURSEMENT</td>
+                            </tr>
+                                <% loanTots.forEach(loanAmt => {  %>
+                                    <tr>
+                                        <td></td>
+                                        <td><%= loanAmt.loan_type %></td>
+                                        <% if (loanAmt.amtDisburse > 0) { %>
+                                            <td><%= loanAmt.amtDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                        <% } else { %>
+                                            <td style=>-</td>
+                                        <% } %>
+                                        <td> -</td>
+                                        <td> -</td>
+                                        <td> -</td>
+                                    </tr>
+                                <% }) %>
+                                <tr class="td-bold">
+                                    <td> NUMBER OF CLIENTS</td>
+                                </tr>
+                                <% loanTots.forEach(loanCli => {  %>
+                                    <tr>
+                                        <td></td>
+                                        <td><%= loanCli.loan_type %></td>
+                                        <% if (loanCli.budgEndBal > 0) { %>
+                                            <td><%= loanCli.budgEndBal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                        <% } else { %>
+                                            <td style=>-</td>
+                                        <% } %>
+                                        <td> -</td>
+                                        <td> -</td>
+                                        <td> -</td>
+                                    </tr>
+                                <% }) %>
+    
+                                <tr class="td-bold">
+                                    <td>OTHER BUDGETS</td>
+                                </tr>
+                                    <% poGrandTot.forEach( gTot => { %>                                    
+                                        <tr>
+                                            <td></td>
+                                            <td> Number of Areas: </td>
+                                            <% if (gTot.totAreas > 0) { %>
+                                                <td><%= gTot.totAreas.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                            <% } else { %>
+                                                <td style=>-</td>
+                                            <% } %>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td> Number of Branches: </td>
+                                            <% if (gTot.totBranches > 0) { %>
+                                                <td><%= gTot.totBranches.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                            <% } else { %>
+                                                <td style=>-</td>
+                                            <% } %>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td> Number of Units: </td>
+                                            <% if (gTot.totUnits > 0) { %>
+                                                <td><%= gTot.totUnits.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                            <% } else { %>
+                                                <td style=>-</td>
+                                            <% } %>
+                                        </tr>
+                                        
+                                        <tr>
+                                            <td></td>
+                                            <td> Number of POs: </td>
+                                            <% if (gTot.totPOs > 0) { %>
+                                                <td><%= gTot.totPOs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                            <% } else { %>
+                                                <td style=>-</td>
+                                            <% } %>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td> Number of Centers: </td>
+                                            <% if (gTot.totCenters > 0) { %>
+                                                <td><%= gTot.totCenters.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                            <% } else { %>
+                                                <td style=>-</td>
+                                            <% } %>
+                                        </tr>    
+                                    <% }) %>
+                        </table>
+                    </div>
+    
 				<div class="right-column">
 
 					<div id="preview-shadow">

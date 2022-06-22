@@ -47,8 +47,8 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
     let postProgOfr = ""
 
     let unitLoanTotals = []
-    let brnLoanTotals = []
-    let brnLoanGrandTot = []
+    let areaLoanTotals = []
+    let areaLoanGrandTot = []
     let foundCenter = []
     let fndAreaEmps = []
 
@@ -69,6 +69,7 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
     let foundAreaUnits = []
     let foundAreaPOs = []
 
+    let totAreas = 0
     let totBranches = 0
     let totUnits = 0
     let totPOs = 0
@@ -107,6 +108,10 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
         const areaManager = await Employee.find({region: regionCode}, function (err, foundAreaEmp){
             fndAreaEmps = foundAreaEmp
         })
+        const foundRegion = await Region.findOne({region: regionCode})
+            fndRegion = foundRegion
+            console.log(fndRegion)
+
 
         let i = 0
         fndAreaEmps.forEach( areaEmps => {
@@ -133,13 +138,10 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
 
             i = i + 1
         })
-            totBranches = foundAreaBranches.length
-            totUnits = foundAreaUnits.length
-            // })
-        // const programOfficers = await Employee.find({area: areaCode, position_code: postProgOfr}, function (err, foundPO){
-        //     foundPOs = foundPO
-            totPOs = foundAreaPOs.length
-            // })
+        totAreas = foundAreaMgr.length
+        totBranches = foundAreaBranches.length
+        totUnits = foundAreaUnits.length
+        totPOs = foundAreaPOs.length
         
         const loanType = await Loan_type.find({})
 
@@ -167,13 +169,14 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
             }
 
             totCenters = foundCenter.length
+            console.log(foundAreaMgr)
 //           foundPOunits -> foundAreaBranches
-    foundAreaBranches.forEach(uh => {
+    foundAreaMgr.forEach(rd => {
 
-        let brnCode = _.trim(uh.assCode)
-        let brn_Code = brnCode
-        let brnMgrName = uh.emp_name
-        let forSortUnitNum = brn_Code
+        let areaCode = _.trim(rd.assCode)
+        let area_Code = areaCode
+        let areaMgrName = rd.emp_name
+        let forSortUnitNum = area_Code
 
         let nUnitLoanTot = 0
         let nUnitLoanTotCount = 0
@@ -203,16 +206,16 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
 
             count = count + 1
             if (count !== 1) {
-                brn_Code = " "
-                brnMgrName = ""
+                area_Code = " "
+                areaMgrName = ""
             } 
-            if (typeLoan === "Individual Loan" && brn_Code === "TUG") {
+            if (typeLoan === "Individual Loan" && area_Code === "TUG") {
                 const typeOfLoan = typeLoan
             }
 
             foundCenter.forEach(center => {
-                const branchCode = center.branch
-                if (branchCode === brnCode) { 
+                const areaCode = center.area
+                if (areaCode === areaCode) { 
                     const lnType = center.loan_code
                     let centerTargets = center.Targets
                     let LoanBegBal = center.Loan_beg_bal
@@ -251,7 +254,7 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
             totbudgEndBal = totbudgEndBal + areaBudgEndBal
 //            let amtDisburse = oloanTot + oloanTot
             
-            unitLoanTotals.push({sortkey: brn_Code, unit: brn_Code, unitHead: brnMgrName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: uBegClientTot,
+            unitLoanTotals.push({sortkey: area_Code, unit: area_Code, unitHead: areaMgrName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: uBegClientTot,
                 begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: areaBudgEndBal})
 
             nUnitLoanTot = nUnitLoanTot + nloanTot
@@ -268,7 +271,7 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
         let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
         let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
 
-        unitLoanTotals.push({sortkey: forSortUnitNum, unit: brn_Code, unitHead: brnMgrName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
+        unitLoanTotals.push({sortkey: forSortUnitNum, unit: area_Code, unitHead: areaMgrName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
             begClientAmt: begUnitLoanTot, ntotAmount: nUnitLoanTot, onumClient: oUnitLoanTotCount, ototAmount: oUnitLoanTot, resiloanTot: resUnitLoanTot, budgEndBal: budgUnitEndBal})
 
             doneFoundPO = true
@@ -278,8 +281,8 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
         doneFoundPO = true
     }
 
-    console.log(unitLoanTotals)
-// LOOP for getting Different Loan products totals in the branch
+    // console.log(unitLoanTotals)
+// LOOP for getting Different Loan products totals in the area
     let gtBegBalClient = 0
     let gtBegBalAmt = 0
 
@@ -316,7 +319,7 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
         let budgareaEndBal = (ubegClientTot + nloanTotCount) - resloanTot
             tbudgEndBal = tbudgEndBal + budgareaEndBal
 
-        brnLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totareaAmounts, begClientTot: ubegClientTot,
+        areaLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totareaAmounts, begClientTot: ubegClientTot,
             begClientAmt: begLoanTot, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgareaEndBal})
 
             doneReadLonTyp = true
@@ -324,26 +327,22 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
     })
 
 //    console.log(unitLoanTotals)
-//    console.log(brnLoanTotals)
+   console.log(areaLoanTotals)
 
-            brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, totCenters: totCenters, totPOs: totPOs, totUnits: totUnits, totBranches: totBranches,
-                rClient: rClient + rClient2, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
+            areaLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, totCenters: totCenters, totPOs: totPOs, totUnits: totUnits, totBranches: totBranches,
+                totAreas: totAreas, rClient: rClient + rClient2, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
 
             console.log(totDisburse)
 
 //            console.log(foundPOunits)
         if ( doneReadCenter && doneFoundPO && doneReadLonTyp) {
 
-            const foundRegion = await Region.findOne({region: regionCode})
-            fndRegion = foundRegion
-            console.log(fndRegion)
-
             res.render('regions/index', {
                 regionCode: regionCode,
                 regionDesc: fndRegion.region_desc,
                 officerName: officerName,
-                loanTots: brnLoanTotals,
-                poGrandTot: brnLoanGrandTot,
+                loanTots: areaLoanTotals,
+                poGrandTot: areaLoanGrandTot,
                 searchOptions: req.query,
                 yuser: _user,
                 dateToday: new Date()
@@ -360,7 +359,7 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
     //     fndRegion = foundRegion
     //     console.log(fndRegion)
 
-    //     branchName = "REGION BUDGET MODULE VIEW"
+    //     areaName = "REGION BUDGET MODULE VIEW"
     //     res.render('regions/index', {
     //         regionCode: regionCode,
     //         regionDesc: fndRegion.region_desc,
@@ -461,7 +460,7 @@ router.get('/setRegionAreas/:id', authUser, authRole(ROLE.RD), async (req, res) 
     const poNumber = IDcode.substr(5,1)
     const unit_Code = IDcode.substr(0,5)
     const unitCode = IDcode.substr(4,1)
-    const branchCode = IDcode.substr(0,3)
+    const areaCode = IDcode.substr(0,3)
     const yuser = req.user
 
     console.log(IDcode)
@@ -732,7 +731,7 @@ router.get('/employees/:id', authUser, authRole(ROLE.RD), async (req, res) => {
             Areas = fndAreas
         })
         console.log(Areas)
-        const brnEmployees = await Employee.find({position_code: areaMgrID, region: regionCode}, function (err, foundEmployees) {
+        const areaEmployees = await Employee.find({position_code: areaMgrID, region: regionCode}, function (err, foundEmployees) {
             const fndEmployees = foundEmployees
 
            console.log(fndEmployees)
@@ -854,24 +853,24 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.RD), async (req, res) => 
     })
     
 let locals
-//console.log(brnCode)
+//console.log(areaCode)
 let getExistingUser = []
 let canProceed = false
 let UserProceed = false
 
 try {
 
-    const branchEmployees = await Employee.find({position: areaMgrID})
-    console.log(branchEmployees)
+    const areaEmployees = await Employee.find({position: areaMgrID})
+    console.log(areaEmployees)
 
-    const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
+    const sameName = _.find(areaEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
 
-    const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
+    const sameCode = _.find(areaEmployees, {emp_code: nEmpCode})
 
-    const sameAssign = _.find(branchEmployees, {assign_code: empAreaCod})
+    const sameAssign = _.find(areaEmployees, {assign_code: empAreaCod})
     console.log(sameAssign)
 
-    if (branchEmployees.length === 0) {
+    if (areaEmployees.length === 0) {
         if (sameName) {
             locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
             canProceed = false
@@ -990,7 +989,7 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.RD), async (req, r
     let regionAreas = []
      
    try {
-        let brnCod
+        let areaCod
         const emRegion = await Area.find({region: regionCode}, function (err, fnd_Post) {
             regionAreas = fnd_Post
         })
@@ -999,7 +998,7 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.RD), async (req, r
         const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
 //            console.log(foundlist)
             foundEmploy = foundEmp
-            brnCod = foundEmp.branch
+            areaCod = foundEmp.area
         })
         // console.log(employe)
         const newUser = new User()
@@ -1104,7 +1103,7 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.RD), async (req, 
         const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
 //            console.log(foundlist)
             foundEmploy = foundEmp
-            brnCod = foundEmp.branch
+            areaCod = foundEmp.area
             possit = _.trim(foundEmploy.position_code)
            console.log(possit)
            areaAsignCode = foundEmploy.assign_code
@@ -1234,8 +1233,8 @@ router.get('/budget/:id', authUser, authRole(ROLE.RD), async (req, res) => {
     let postProgOfr = ""
 
     let unitLoanTotals = []
-    let brnLoanTotals = []
-    let brnLoanGrandTot = []
+    let areaLoanTotals = []
+    let areaLoanGrandTot = []
     let foundCenter = []
     let loanType = []
 
@@ -1314,11 +1313,11 @@ router.get('/budget/:id', authUser, authRole(ROLE.RD), async (req, res) => {
             doneReadCenter = true   
         }
 
-    foundAMBranches.forEach(uh => {
+    foundAMBranches.forEach(rd => {
 
-        let unCode = _.trim(uh.unit)
+        let unCode = _.trim(rd.unit)
         let uniCode = unCode
-        let unHeadName = uh.first_name + " " + uh.middle_name.substr(0,1) + ". " + uh.last_name
+        let unHeadName = rd.first_name + " " + rd.middle_name.substr(0,1) + ". " + rd.last_name
 
         let nUnitLoanTot = 0
         let nUnitLoanTotCount = 0
@@ -1424,7 +1423,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.RD), async (req, res) => {
         doneFoundPO = true   
     }
 
-// LOOP for getting Different Loan products totals in the branch
+// LOOP for getting Different Loan products totals in the area
     let gtBegBalClient = 0
     let gtBegBalAmt = 0
 
@@ -1460,7 +1459,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.RD), async (req, res) => {
         let totBranchAmounts = nloanTot + oloanTot 
         let budgBranchEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
 
-        brnLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totBranchAmounts, begClientTot: begClientTot,
+        areaLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totBranchAmounts, begClientTot: begClientTot,
             begClientAmt: begLoanTot, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgBranchEndBal})
 
             doneReadLonTyp = true
@@ -1468,9 +1467,9 @@ router.get('/budget/:id', authUser, authRole(ROLE.RD), async (req, res) => {
     })
 
  //   console.log(unitLoanTotals)
-//    console.log(brnLoanTotals)
+//    console.log(areaLoanTotals)
 
-            brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
+            areaLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
                 rClient: rClient, budgBegBal: budgBegBal, budgEndBal: budgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
 
             console.log(totDisburse)
@@ -1480,8 +1479,8 @@ router.get('/budget/:id', authUser, authRole(ROLE.RD), async (req, res) => {
             res.render('regions/budget', {
                 listTitle: regionCode,
                 officerName: officerName,
-                loanTots: brnLoanTotals,
-                poGrandTot: brnLoanGrandTot,
+                loanTots: areaLoanTotals,
+                poGrandTot: areaLoanGrandTot,
                 unitLoanTots: unitLoanTotals,
                 searchOptions: req.query,
                 yuser: _user,
