@@ -12,6 +12,7 @@ const _ = require('lodash')
 const User = require('../models/user')
 const Region = require('../models/region')
 const Area = require('../models/area')
+const Branch = require('../models/branch')
 const Center = require('../models/center')
 const Employee = require('../models/employee')
 const Loan_type = require('../models/loan_type')
@@ -327,12 +328,12 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
     })
 
 //    console.log(unitLoanTotals)
-   console.log(areaLoanTotals)
+//    console.log(areaLoanTotals)
 
             areaLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, totCenters: totCenters, totPOs: totPOs, totUnits: totUnits, totBranches: totBranches,
                 totAreas: totAreas, rClient: rClient + rClient2, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
 
-            console.log(totDisburse)
+            // console.log(totDisburse)
 
 //            console.log(foundPOunits)
         if ( doneReadCenter && doneFoundPO && doneReadLonTyp) {
@@ -372,6 +373,331 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
         res.redirect('/')
     }
 })
+
+
+// View Area per area  - NLO
+router.get('/budget/:id', authUser, authRole(ROLE.RD), async (req, res) => {
+    
+    const regionCode = req.params.id
+    const _user = req.user
+
+    const fndPositi = posisyon
+
+    const areaMgrID = "611d088fdb81bf7f61039615"
+
+    let officerName = ""
+    let postRegDir = ""
+    let postAreaMgr = ""
+    let postManager = ""
+    let postUnitHead = ""
+    let postProgOfr = ""
+
+    let unitLoanTotals = []
+    let areaLoanTotals = []
+    let areaLoanGrandTot = []
+    let foundCenter = []
+    let loanType = []
+
+    let newClients = 0
+    let nClientAmt = 0
+    let oClient = 0
+    let oClientAmt = 0
+    let rClient = 0
+    let rClient2 = 0
+    let budgEndBal = 0
+    let totDisburse = 0
+    let budgBegBal = 0
+    let tbudgEndBal = 0
+    let totbudgEndBal = 0
+
+    let foundRegDir = []
+    let foundAreaMgr = []
+    let foundAreaBranches = []
+    let foundAreaUnits = []
+    let foundAreaPOs = []
+
+    let lnType 
+    // const POdata = await Employee.findOne({assign_code: IDcode})
+    // const POname = POdata.first_name + " " + POdata.middle_name.substr(0,1) + ". " + POdata.last_name
+    // const POposition = POdata.position_code
+
+    let doneReadCenter = false
+    let doneFoundPO = false
+    let doneReadLonTyp = false
+   
+    fndPositi.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii.id
+        if (fndPositionEmp === "REG_DIR") {
+            postRegDir = fndPositID
+        }
+        if (fndPositionEmp === "AREA_MGR") {
+            postAreaMgr = fndPositID
+        }
+        if (fndPositionEmp === "BRN_MGR") {
+            postManager = fndPositID
+        }
+        if (fndPositionEmp === "UNI_HED") {
+            postUnitHead = fndPositID
+        }
+        if (fndPositionEmp === "PRO_OFR") {
+            postProgOfr = fndPositID
+        }
+    })
+
+    try {
+
+        const areaManager = await Employee.find({region: regionCode}, function (err, foundAreaEmp){
+            fndAreaEmps = foundAreaEmp
+        })
+        const foundRegion = await Region.findOne({region: regionCode})
+            fndRegion = foundRegion
+            console.log(fndRegion)
+
+
+        let i = 0
+        fndAreaEmps.forEach( areaEmps => {
+            const areaEmpPost = areaEmps.position_code
+            const assignCode = areaEmps.assign_code
+
+            const empName = areaEmps.first_name + " " + areaEmps.middle_name.substr(0,1) + ". " + areaEmps.last_name
+            
+            if( areaEmpPost == postRegDir) {
+                foundRegDir.push({assCode: assignCode, emp_name: empName})
+            }
+            if( areaEmpPost == postAreaMgr) {
+                foundAreaMgr.push({assCode: assignCode, emp_name: empName})
+            }
+            if(areaEmpPost == postManager) {
+                foundAreaBranches.push({assCode: assignCode, emp_name: empName})
+            }
+            if(areaEmpPost == postUnitHead) {
+                foundAreaUnits.push({assCode: assignCode, emp_name: empName})
+            }
+            if(areaEmpPost == postProgOfr) {
+                foundAreaPOs.push({assCode: assignCode, emp_name: empName})
+            }
+
+            i = i + 1
+        })
+
+         totAreas = foundAreaMgr.length
+         totBranches = foundAreaBranches.length
+         totUnits = foundAreaUnits.length
+         totPOs = foundAreaPOs.length
+         
+         const loanType = await Loan_type.find({})
+ 
+         const center = await Center.find({region: regionCode}) //, function (err, foundCenters) {
+ //        const center = await Center.find(searchOptions)
+             if (center.length === 0) {
+                 doneReadCenter = true
+             
+             } else {
+ 
+                 newClients = _.sumBy(center, function(o) { return o.newClient; });
+                 nClientAmt = _.sumBy(center, function(o) { return o.newClientAmt; });
+                 oClient = _.sumBy(center, function(o) { return o.oldClient; });
+                 oClientAmt = _.sumBy(center, function(o) { return o.oldClientAmt; });
+                 rClient = _.sumBy(center, function(o) { return o.resClient; });
+                 rClient2 = _.sumBy(center, function(o) { return o.resClient2; });
+                 budgBegBal = _.sumBy(center, function(o) { return o.budget_BegBal; });
+                 budgEndBal = oClient + newClients 
+                 totDisburse = nClientAmt + oClientAmt
+                 // tbudgEndBal = (budgBegBal + newClients) - (rClient + rClient2)
+ 
+                 foundCenter = center.sort()
+ 
+                 doneReadCenter = true   
+             }
+ 
+             totCenters = foundCenter.length
+             console.log(foundAreaMgr)
+ //           foundPOunits -> foundAreaBranches
+
+     foundAreaMgr.forEach(rd => {
+ 
+         let areaCode = _.trim(rd.assCode)
+         let area_Code = areaCode
+         let areaMgrName = rd.emp_name
+         let forSortUnitNum = area_Code
+ 
+         let nUnitLoanTot = 0
+         let nUnitLoanTotCount = 0
+         let oUnitLoanTot = 0
+         let oUnitLoanTotCount = 0
+         let resUnitLoanTot = 0
+         let begUnitLoanTot = 0
+         let begUnitClientTot = 0
+         let bUnitClient = 0
+         let bUnitClientCnt = 0
+ 
+         let typeLoan = ""
+         let count = 0 
+     
+         loanType.forEach(loan_type => {
+             typeLoan = loan_type.title
+             let nloanTot = 0
+             let nloanTotCount = 0
+             let oloanTot = 0
+             let oloanTotCount = 0
+             let resloanTot = 0
+             let begLoanTot = 0
+             let uBegClientTot = 0
+             let bClientAmt = 0
+             let bClientCnt = 0
+             lnType = loan_type.loan_type
+ 
+             count = count + 1
+             if (count !== 1) {
+                 area_Code = " "
+                 areaMgrName = ""
+             } 
+             if (typeLoan === "Individual Loan" && area_Code === "TUG") {
+                 const typeOfLoan = typeLoan
+             }
+ 
+             foundCenter.forEach(center => {
+                 const cntrAreaCode = center.area
+                 if (cntrAreaCode === areaCode) { 
+                     const lnType = center.loan_code
+                     let centerTargets = center.Targets
+                     let LoanBegBal = center.Loan_beg_bal
+ //                  let centerLoanBegBal = center.Loan_beg_bal                
+                     let resignClient = center.resClient
+ 
+                     if (lnType === _.trim(lnType)) {
+                         BudgBegBal = center.budget_BegBal
+                     }
+                     centerTargets.forEach(centerLoan => {
+                         if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
+                             const loanRem = centerLoan.remarks
+                             if (_.trim(loanRem) === "New Loan") {
+                                 nloanTot = nloanTot + centerLoan.totAmount
+                                 nloanTotCount = nloanTotCount + centerLoan.numClient
+                             } else {
+                                 oloanTot = oloanTot + centerLoan.totAmount
+                                 oloanTotCount = oloanTotCount + centerLoan.numClient
+                                 resloanTot = resloanTot + centerLoan.resignClient
+                             }
+                         }
+                     })
+ 
+                     LoanBegBal.forEach(centerBegBal => {
+                         if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
+                             begLoanTot = centerBegBal.beg_amount
+                             bClientCnt = centerBegBal.beg_client_count
+                             uBegClientTot = uBegClientTot + bClientCnt
+                             bClientAmt = bClientAmt + begLoanTot
+                         }
+                     })
+                 }
+             })
+             let totAmounts = nloanTot + oloanTot 
+             let areaBudgEndBal = (uBegClientTot + nloanTotCount) - resloanTot
+             totbudgEndBal = totbudgEndBal + areaBudgEndBal
+ //            let amtDisburse = oloanTot + oloanTot
+             
+             unitLoanTotals.push({sortkey: area_Code, unit: area_Code, unitHead: areaMgrName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: uBegClientTot,
+                 begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: areaBudgEndBal})
+ 
+             nUnitLoanTot = nUnitLoanTot + nloanTot
+             nUnitLoanTotCount = nUnitLoanTotCount + nloanTotCount
+             oUnitLoanTot = oUnitLoanTot + oloanTot
+             oUnitLoanTotCount = oUnitLoanTotCount + oloanTotCount
+             resUnitLoanTot = resUnitLoanTot + resloanTot
+             begUnitLoanTot = begUnitLoanTot + begLoanTot
+             begUnitClientTot = begUnitClientTot + uBegClientTot
+             
+         })
+ 
+         typeLoan = "AREA TOTALS"
+         let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
+         let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
+ 
+         unitLoanTotals.push({sortkey: forSortUnitNum, unit: area_Code, unitHead: areaMgrName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
+             begClientAmt: begUnitLoanTot, ntotAmount: nUnitLoanTot, onumClient: oUnitLoanTotCount, ototAmount: oUnitLoanTot, resiloanTot: resUnitLoanTot, budgEndBal: budgUnitEndBal})
+ 
+             doneFoundPO = true
+     })
+ 
+     if (foundAreaBranches.length === 0) {
+         doneFoundPO = true
+     }
+ 
+     // console.log(unitLoanTotals)
+ // LOOP for getting Different Loan products totals in the area
+     let gtBegBalClient = 0
+     let gtBegBalAmt = 0
+ 
+     loanType.forEach(loan_type => {
+         const typeLoan = loan_type.title
+         let nloanTot = 0
+         let nloanTotCount = 0
+         let oloanTot = 0
+         let oloanTotCount = 0
+         let resloanTot = 0
+         let begLoanTot = 0
+         let ubegClientTot = 0
+         let bClient = 0
+         let bClientCnt = 0
+         const lonType = loan_type.loan_type
+ //        let unCode = ""
+         unitLoanTotals.forEach(uLoanTots => {
+             const ulnType = uLoanTots.loan_type
+             if (ulnType === typeLoan) {
+                 nloanTot = nloanTot + uLoanTots.ntotAmount
+                 nloanTotCount = nloanTotCount + uLoanTots.nnumClient
+                 oloanTot = oloanTot + uLoanTots.ototAmount
+                 oloanTotCount = oloanTotCount + uLoanTots.onumClient
+                 resloanTot = resloanTot + uLoanTots.resiloanTot
+                 begLoanTot = begLoanTot + uLoanTots.begClientAmt
+                 ubegClientTot = ubegClientTot + uLoanTots.begClientTot
+ 
+                 gtBegBalClient = gtBegBalClient + uLoanTots.begClientTot
+                 gtBegBalAmt = gtBegBalAmt + uLoanTots.begClientAmt
+             }
+ 
+         })
+         let totareaAmounts = nloanTot + oloanTot 
+         let budgareaEndBal = (ubegClientTot + nloanTotCount) - resloanTot
+             tbudgEndBal = tbudgEndBal + budgareaEndBal
+ 
+         areaLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totareaAmounts, begClientTot: ubegClientTot,
+             begClientAmt: begLoanTot, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgareaEndBal})
+ 
+             doneReadLonTyp = true
+ 
+     })
+ 
+    console.log(unitLoanTotals)
+    // console.log(areaLoanTotals)
+ 
+             areaLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, totCenters: totCenters, totPOs: totPOs, totUnits: totUnits, totBranches: totBranches,
+                 totAreas: totAreas, rClient: rClient + rClient2, budgBegBal: budgBegBal, budgEndBal: tbudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
+ 
+             console.log(totDisburse)
+ 
+ //            console.log(foundAMBranches)
+        if ( doneReadCenter && doneFoundPO && doneReadLonTyp) {
+            res.render('regions/budget', {
+                listTitle: regionCode,
+                officerName: officerName,
+                loanTots: areaLoanTotals,
+                poGrandTot: areaLoanGrandTot,
+                unitLoanTots: unitLoanTotals,
+                searchOptions: req.query,
+                yuser: _user,
+                dateToday: new Date()
+
+            })
+        }
+    } 
+    catch (err) {
+        console.log(err)
+    }
+})
+
 
 // GET AREA for Maintenance
 router.get('/areas/:id', authUser, authRole(ROLE.RD), async (req, res) => {
@@ -1209,287 +1535,6 @@ router.delete('/deleteEmp/:id', authUser, authRole(ROLE.RD), async (req, res) =>
         res.redirect('/regions/employees/'+delRegionCode)
         
     } catch (err) {
-        console.log(err)
-    }
-})
-
-
-// View Area per area  - NLO
-router.get('/budget/:id', authUser, authRole(ROLE.RD), async (req, res) => {
-    
-    const regionCode = req.params.id
-    const _user = req.user
-
-    const fndPositi = posisyon
-
-    const areaMgrID = "611d088fdb81bf7f61039615"
-
-    let foundBranchMgr = []
-    let foundAMBranches = []
-    let foundPO = []
-    let officerName = ""
-    let postManager = ""
-    let postUnitHead = ""
-    let postProgOfr = ""
-
-    let unitLoanTotals = []
-    let areaLoanTotals = []
-    let areaLoanGrandTot = []
-    let foundCenter = []
-    let loanType = []
-
-    let newClients = 0
-    let nClientAmt = 0
-    let oClient = 0
-    let oClientAmt = 0
-    let rClient = 0
-    let rClient2 = 0
-    let budgEndBal = 0
-    let totDisburse = 0
-    let budgBegBal = 0
-    let tbudgEndBal = 0
-
-    let lnType 
-    // const POdata = await Employee.findOne({assign_code: IDcode})
-    // const POname = POdata.first_name + " " + POdata.middle_name.substr(0,1) + ". " + POdata.last_name
-    // const POposition = POdata.position_code
-
-    let doneReadCenter = false
-    let doneFoundPO = false
-    let doneReadLonTyp = false
-   
-    fndPositi.forEach(fndPosii => {
-        const fndPositionEmp = fndPosii.code
-        const fndPositID = fndPosii.id
-        if (fndPositionEmp === "AREA_MGR") {
-            postManager = fndPositID
-        }
-        if (fndPositionEmp === "UNI_HED") {
-            postUnitHead = fndPositID
-        }
-        if (fndPositionEmp === "PRO_OFR") {
-            postProgOfr = fndPositID
-        }
-    })
-
-    try {
-
-        const areaManager = await Employee.find({region: regionCode, position_code: areaMgrID}, function (err, foundBMs){
-            foundBranchMgr = foundBMs
-
-           })
-        
-           if (areaManager) {
-                areaManager.forEach(manager => {
-                    officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
-                })
-            }            
-        const branMgrs = await Employee.find({region: regionCode, position_code: areaMgrID}, function (err, foundUHs){
-            foundAMBranches = foundUHs
-            })
-
-         loanType = await Loan_type.find({})
-
-        const center = await Center.find({region: regionCode}, function (err, foundCenters) {
-//        const center = await Center.find(searchOptions)
-
-            newClients = _.sumBy(foundCenters, function(o) { return o.newClient; });
-            nClientAmt = _.sumBy(foundCenters, function(o) { return o.newClientAmt; });
-            oClient = _.sumBy(foundCenters, function(o) { return o.oldClient; });
-            oClientAmt = _.sumBy(foundCenters, function(o) { return o.oldClientAmt; });
-            rClient = _.sumBy(foundCenters, function(o) { return o.resClient; });
-            rClient2 = _.sumBy(foundCenters, function(o) { return o.resClient2; });
-            budgBegBal = _.sumBy(foundCenters, function(o) { return o.budget_BegBal; });
-            budgEndBal = oClient + newClients 
-            totDisburse = nClientAmt + oClientAmt
-            tbudgEndBal = (budgBegBal + newClients) - (rClient + rClient2)
-
-            foundCenter = foundCenters.sort()
-
-            doneReadCenter = true   
-    })
-        if (center) {
-        } else {
-            doneReadCenter = true   
-        }
-
-    foundAMBranches.forEach(rd => {
-
-        let unCode = _.trim(rd.unit)
-        let uniCode = unCode
-        let unHeadName = rd.first_name + " " + rd.middle_name.substr(0,1) + ". " + rd.last_name
-
-        let nUnitLoanTot = 0
-        let nUnitLoanTotCount = 0
-        let oUnitLoanTot = 0
-        let oUnitLoanTotCount = 0
-        let resUnitLoanTot = 0
-        let begUnitLoanTot = 0
-        let begUnitClientTot = 0
-        let bUnitClient = 0
-        let bUnitClientCnt = 0
-
-        let typeLoan = ""
-        let count = 0 
-    
-        loanType.forEach(loan_type => {
-            typeLoan = loan_type.title
-            let nloanTot = 0
-            let nloanTotCount = 0
-            let oloanTot = 0
-            let oloanTotCount = 0
-            let resloanTot = 0
-            let begLoanTot = 0
-            let begClientTot = 0
-            let bClientAmt = 0
-            let bClientCnt = 0
-            lnType = loan_type.loan_type
-
-            count = count + 1
-            if (count !== 1) {
-                uniCode = " "
-                unHeadName = ""
-            } 
-
-            foundCenter.forEach(center => {
-                const unitCode = center.unit
-                if (unitCode === unCode) { 
-                    const lnType = center.loan_code
-                    let centerTargets = center.Targets
-                    let LoanBegBal = center.Loan_beg_bal
-//                  let centerLoanBegBal = center.Loan_beg_bal                
-                    let resignClient = center.resClient
-            
-                    if (lnType === _.trim(lnType)) {
-                        BudgBegBal = center.budget_BegBal
-                    }
-                    // console.log(resignClient)
-                    // console.log(resloanTot)
-
-                    centerTargets.forEach(centerLoan => {
-                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
-                            const loanRem = centerLoan.remarks
-                            if (_.trim(loanRem) === "New Loan") {
-                                nloanTot = nloanTot + centerLoan.totAmount
-                                nloanTotCount = nloanTotCount + centerLoan.numClient
-                            } else {
-                                oloanTot = oloanTot + centerLoan.totAmount
-                                oloanTotCount = oloanTotCount + centerLoan.numClient
-                                resloanTot = resloanTot + resignClient
-                            }
-                        }
-                    })
-
-                    LoanBegBal.forEach(centerBegBal => {
-                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
-                            begLoanTot = centerBegBal.beg_amount
-                            begClientTot = centerBegBal.beg_client_count
-                            bClientCnt = bClientCnt + begClientTot
-                            bClientAmt = bClientAmt + begLoanTot
-                        }
-                    })
-                }
-            })
-            let totAmounts = nloanTot + oloanTot 
-            let budgEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
-//            let amtDisburse = oloanTot + oloanTot
-            
-            unitLoanTotals.push({unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClientCnt,
-                begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: budgEndBal})
-
-            nUnitLoanTot = nUnitLoanTot + nloanTot
-            nUnitLoanTotCount = nUnitLoanTotCount + nloanTotCount
-            oUnitLoanTot = oUnitLoanTot + oloanTot
-            oUnitLoanTotCount = oUnitLoanTotCount + oloanTotCount
-            resUnitLoanTot = resUnitLoanTot + resloanTot
-            begUnitLoanTot = begUnitLoanTot + begLoanTot
-            begUnitClientTot = begUnitClientTot + begClientTot
-            
-        })
-
-        typeLoan = "BRANCH TOTALS"
-        let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
-        let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
-
-        unitLoanTotals.push({unit: uniCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
-            begClientAmt: begUnitLoanTot, ntotAmount: nUnitLoanTot, onumClient: oUnitLoanTotCount, ototAmount: oUnitLoanTot, resiloanTot: resUnitLoanTot, budgEndBal: budgUnitEndBal})
-
-            doneFoundPO = true
-    })
-
-    if (foundAMBranches.length === 0) {
-
-    } else {
-        doneFoundPO = true   
-    }
-
-// LOOP for getting Different Loan products totals in the area
-    let gtBegBalClient = 0
-    let gtBegBalAmt = 0
-
-    loanType.forEach(loan_type => {
-        const typeLoan = loan_type.title
-        let nloanTot = 0
-        let nloanTotCount = 0
-        let oloanTot = 0
-        let oloanTotCount = 0
-        let resloanTot = 0
-        let begLoanTot = 0
-        let begClientTot = 0
-        let bClient = 0
-        let bClientCnt = 0
-        const lonType = loan_type.loan_type
-//        let unCode = ""
-        unitLoanTotals.forEach(uLoanTots => {
-            const ulnType = uLoanTots.loan_type
-            if (ulnType === typeLoan) {
-                nloanTot = nloanTot + uLoanTots.ntotAmount
-                nloanTotCount = nloanTotCount + uLoanTots.nnumClient
-                oloanTot = oloanTot + uLoanTots.ototAmount
-                oloanTotCount = oloanTotCount + uLoanTots.onumClient
-                resloanTot = resloanTot + uLoanTots.resiloanTot
-                begLoanTot = begLoanTot + uLoanTots.begClientAmt
-                begClientTot = begClientTot + uLoanTots.begClientTot
-
-                gtBegBalClient = gtBegBalClient + uLoanTots.begClientTot
-                gtBegBalAmt = gtBegBalAmt + uLoanTots.begClientAmt
-            }
-
-        })
-        let totBranchAmounts = nloanTot + oloanTot 
-        let budgBranchEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
-
-        areaLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totBranchAmounts, begClientTot: begClientTot,
-            begClientAmt: begLoanTot, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgBranchEndBal})
-
-            doneReadLonTyp = true
-
-    })
-
- //   console.log(unitLoanTotals)
-//    console.log(areaLoanTotals)
-
-            areaLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
-                rClient: rClient, budgBegBal: budgBegBal, budgEndBal: budgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
-
-            console.log(totDisburse)
-
-//            console.log(foundAMBranches)
-        if ( doneReadCenter && doneFoundPO && doneReadLonTyp) {
-            res.render('regions/budget', {
-                listTitle: regionCode,
-                officerName: officerName,
-                loanTots: areaLoanTotals,
-                poGrandTot: areaLoanGrandTot,
-                unitLoanTots: unitLoanTotals,
-                searchOptions: req.query,
-                yuser: _user,
-                dateToday: new Date()
-
-            })
-        }
-    } 
-    catch (err) {
         console.log(err)
     }
 })
@@ -2937,6 +2982,385 @@ router.get('/exportToExcel/:id', authUser, authRole(ROLE.RD), (req,res) => {
     })
 
 })
+
+// View KRA per Branch & per month ROUTE
+router.get('/viewRegionKRAMon/:id', authUser, authRole(ROLE.RD), async (req, res) => {
+
+    const viewRegionCode = req.params.id
+    const vwUnitCode = viewRegionCode
+    const yuser = req.user
+
+    let foundPOV = []
+    // let foundCenterDet = []
+
+    const vwloanType = await Loan_type.find({})
+    const vwRegionBranches = await Branch.find({region:viewRegionCode})
+    const vwRegionAreas = await Area.find({region:viewRegionCode})
+    const poBudgExecTotReach = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotClientOutreach"})
+    const poBudgExecTotLonAmt = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotLoanAmt"})
+
+    console.log(vwRegionAreas)
+
+            let begBalOldClient = 0
+                let centerCntBegBal = 0
+                let jan_TotCliOutReach = 0
+                let feb_TotCliOutReach = 0
+                let mar_TotCliOutReach = 0
+                let apr_TotCliOutReach = 0
+                let may_TotCliOutReach = 0
+                let jun_TotCliOutReach = 0
+                let jul_TotCliOutReach = 0
+                let aug_TotCliOutReach = 0
+                let sep_TotCliOutReach = 0
+                let oct_TotCliOutReach = 0
+                let nov_TotCliOutReach = 0
+                let dec_TotCliOutReach = 0
+                let tot_TotCliOutReach = 0
+
+                let jan_TotalCliOutReach = 0
+                let feb_TotalCliOutReach = 0
+                let mar_TotalCliOutReach = 0
+                let apr_TotalCliOutReach = 0
+                let may_TotalCliOutReach = 0
+                let jun_TotalCliOutReach = 0
+                let jul_TotalCliOutReach = 0
+                let aug_TotalCliOutReach = 0
+                let sep_TotalCliOutReach = 0
+                let oct_TotalCliOutReach = 0
+                let nov_TotalCliOutReach = 0
+                let dec_TotalCliOutReach = 0
+
+
+            let janTotalAmtLoan = 0
+            let febTotalAmtLoan = 0
+            let marTotalAmtLoan = 0
+            let aprTotalAmtLoan = 0
+            let mayTotalAmtLoan = 0
+            let junTotalAmtLoan = 0
+            let julTotalAmtLoan = 0
+            let augTotalAmtLoan = 0
+            let sepTotalAmtLoan = 0
+            let octTotalAmtLoan = 0
+            let novTotalAmtLoan = 0
+            let decTotalAmtLoan = 0
+    
+                let jan_areaTotCliOutReach = 0
+                let feb_areaTotCliOutReach = 0
+                let mar_areaTotCliOutReach = 0
+                let apr_areaTotCliOutReach = 0
+                let may_areaTotCliOutReach = 0
+                let jun_areaTotCliOutReach = 0
+                let jul_areaTotCliOutReach = 0
+                let aug_areaTotCliOutReach = 0
+                let sep_areaTotCliOutReach = 0
+                let oct_areaTotCliOutReach = 0
+                let nov_areaTotCliOutReach = 0
+                let dec_areaTotCliOutReach = 0
+
+
+            let janAreaTotAmtLoan = 0
+            let febAreaTotAmtLoan = 0
+            let marAreaTotAmtLoan = 0
+            let aprAreaTotAmtLoan = 0
+            let mayAreaTotAmtLoan = 0
+            let junAreaTotAmtLoan = 0
+            let julAreaTotAmtLoan = 0
+            let augAreaTotAmtLoan = 0
+            let sepAreaTotAmtLoan = 0
+            let octAreaTotAmtLoan = 0
+            let novAreaTotAmtLoan = 0
+            let decAreaTotAmtLoan = 0
+    
+            let janTotAmtLoan = 0
+            let febTotAmtLoan = 0
+            let marTotAmtLoan = 0
+            let aprTotAmtLoan = 0
+            let mayTotAmtLoan = 0
+            let junTotAmtLoan = 0
+            let julTotAmtLoan = 0
+            let augTotAmtLoan = 0
+            let sepTotAmtLoan = 0
+            let octTotAmtLoan = 0
+            let novTotAmtLoan = 0
+            let decTotAmtLoan = 0
+
+            let totTotalAmtLoan = 0
+            let totTotAmtLoan = 0
+            let totAreaTotAmtLoan = 0
+
+            let doneReadTotLonAmt = false
+            let doneReadTotOutreach = false
+    
+            poSumView = [ ]
+    
+            try {
+    
+            //  Pre-determine if items is already existed or saved in Budg_exec_sum Collection
+    
+            // const poBudgExecNumCenters = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotClientOutreach"}, function (err, fndTotCliOutreach) {
+            //         fndAreaBudgExecTotOutreach = fndTotCliOutreach
+            // })
+
+            // const poBudgExecTotLonAmt = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotLoanAmt"}, function (err, fndTotLonAmt) {
+            //     fndUnitBudgExecTotLonAmt = fndTotLonAmt
+            // })
+            if (isNull(poBudgExecTotReach)) {
+
+                doneReadTotOutreach = true
+            }
+
+            if (isNull(poBudgExecTotLonAmt)) {
+
+                doneReadTotLonAmt = true
+            }
+
+            let loopCtr = 20
+
+            poSumView.push({title: "OUTREACH", sortkey: 1, group: 1, isTitle: true})
+
+            poSumView.push({title: "LOAN DISBURSEMENT", sortkey: loopCtr, group: 2, isTitle: true})
+
+            let ctr = 1
+
+                vwRegionAreas.forEach( vwAreas => {
+
+                    const areaDesc = vwAreas.area_desc
+                    const areaCode = vwAreas.area
+                    
+                    ctr = ctr + 1
+
+                    poSumView.push({title: areaDesc, sortkey: ctr, group: 2, isTitle: true})
+                    
+                    poSumView.push({title: areaDesc, sortkey: loopCtr + ctr, group: 2, isTitle: true})
+
+                    vwRegionBranches.forEach(vwBranches => {
+
+                        const branchDesc = vwBranches.branch_desc
+                        const branchCode = vwBranches.branch
+
+                        ctr = ctr + 1
+
+                        if (vwBranches.area === areaCode) {
+
+                            poBudgExecTotReach.forEach(TotCliOutreach => {
+
+                                if (TotCliOutreach.branch === branchCode) {
+                                    centerCntBegBal = centerCntBegBal + TotCliOutreach.beg_bal
+                                    jan_TotCliOutReach = jan_TotCliOutReach + TotCliOutreach.jan_budg
+                                    feb_TotCliOutReach = feb_TotCliOutReach + TotCliOutreach.feb_budg
+                                    mar_TotCliOutReach = mar_TotCliOutReach + TotCliOutreach.mar_budg
+                                    apr_TotCliOutReach = apr_TotCliOutReach + TotCliOutreach.apr_budg
+                                    may_TotCliOutReach = may_TotCliOutReach + TotCliOutreach.may_budg
+                                    jun_TotCliOutReach = jun_TotCliOutReach + TotCliOutreach.jun_budg
+                                    jul_TotCliOutReach = jul_TotCliOutReach + TotCliOutreach.jul_budg
+                                    aug_TotCliOutReach = aug_TotCliOutReach + TotCliOutreach.aug_budg
+                                    sep_TotCliOutReach = sep_TotCliOutReach + TotCliOutreach.sep_budg
+                                    oct_TotCliOutReach = oct_TotCliOutReach + TotCliOutreach.oct_budg
+                                    nov_TotCliOutReach = nov_TotCliOutReach + TotCliOutreach.nov_budg
+                                    dec_TotCliOutReach = dec_TotCliOutReach + TotCliOutreach.dec_budg
+    
+                                    jan_areaTotCliOutReach = jan_areaTotCliOutReach + TotCliOutreach.jan_budg
+                                    feb_areaTotCliOutReach = feb_areaTotCliOutReach + TotCliOutreach.feb_budg
+                                    mar_areaTotCliOutReach = mar_areaTotCliOutReach + TotCliOutreach.mar_budg
+                                    apr_areaTotCliOutReach = apr_areaTotCliOutReach + TotCliOutreach.apr_budg
+                                    may_areaTotCliOutReach = may_areaTotCliOutReach + TotCliOutreach.may_budg
+                                    jun_areaTotCliOutReach = jun_areaTotCliOutReach + TotCliOutreach.jun_budg
+                                    jul_areaTotCliOutReach = jul_areaTotCliOutReach + TotCliOutreach.jul_budg
+                                    aug_areaTotCliOutReach = aug_areaTotCliOutReach + TotCliOutreach.aug_budg
+                                    sep_areaTotCliOutReach = sep_areaTotCliOutReach + TotCliOutreach.sep_budg
+                                    oct_areaTotCliOutReach = oct_areaTotCliOutReach + TotCliOutreach.oct_budg
+                                    nov_areaTotCliOutReach = nov_areaTotCliOutReach + TotCliOutreach.nov_budg
+                                    dec_areaTotCliOutReach = dec_areaTotCliOutReach + TotCliOutreach.dec_budg
+            
+                                    jan_TotalCliOutReach = jan_TotalCliOutReach + TotCliOutreach.jan_budg
+                                    feb_TotalCliOutReach = feb_TotalCliOutReach + TotCliOutreach.feb_budg
+                                    mar_TotalCliOutReach = mar_TotalCliOutReach + TotCliOutreach.mar_budg
+                                    apr_TotalCliOutReach = apr_TotalCliOutReach + TotCliOutreach.apr_budg
+                                    may_TotalCliOutReach = may_TotalCliOutReach + TotCliOutreach.may_budg
+                                    jun_TotalCliOutReach = jun_TotalCliOutReach + TotCliOutreach.jun_budg
+                                    jul_TotalCliOutReach = jul_TotalCliOutReach + TotCliOutreach.jul_budg
+                                    aug_TotalCliOutReach = aug_TotalCliOutReach + TotCliOutreach.aug_budg
+                                    sep_TotalCliOutReach = sep_TotalCliOutReach + TotCliOutreach.sep_budg
+                                    oct_TotalCliOutReach = oct_TotalCliOutReach + TotCliOutreach.oct_budg
+                                    nov_TotalCliOutReach = nov_TotalCliOutReach + TotCliOutreach.nov_budg
+                                    dec_TotalCliOutReach = dec_TotalCliOutReach + TotCliOutreach.dec_budg
+                        
+                                }
+                            })
+                            
+                            poSumView.push({title: branchDesc, sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_TotCliOutReach, feb_value: feb_TotCliOutReach, mar_value: mar_TotCliOutReach,
+                                apr_value: apr_TotCliOutReach, may_value: may_TotCliOutReach, jun_value: jun_TotCliOutReach, jul_value: jul_TotCliOutReach, aug_value: aug_TotCliOutReach,
+                                sep_value: sep_TotCliOutReach, oct_value: oct_TotCliOutReach, nov_value: nov_TotCliOutReach, dec_value: dec_TotCliOutReach, tot_value : dec_TotCliOutReach
+                            })
+            
+                            doneReadTotOutreach = true
+            
+                            poBudgExecTotLonAmt.forEach(TotAmtLon => {
+        
+                                if (TotAmtLon.branch === branchCode) { 
+                                    janTotAmtLoan = janTotAmtLoan + TotAmtLon.jan_budg
+                                    febTotAmtLoan = febTotAmtLoan + TotAmtLon.feb_budg
+                                    marTotAmtLoan = marTotAmtLoan + TotAmtLon.mar_budg
+                                    aprTotAmtLoan = aprTotAmtLoan + TotAmtLon.apr_budg
+                                    mayTotAmtLoan = mayTotAmtLoan + TotAmtLon.may_budg
+                                    junTotAmtLoan = junTotAmtLoan + TotAmtLon.jun_budg
+                                    julTotAmtLoan = julTotAmtLoan + TotAmtLon.jul_budg
+                                    augTotAmtLoan = augTotAmtLoan + TotAmtLon.aug_budg
+                                    sepTotAmtLoan = sepTotAmtLoan + TotAmtLon.sep_budg
+                                    octTotAmtLoan = octTotAmtLoan + TotAmtLon.oct_budg
+                                    novTotAmtLoan = novTotAmtLoan + TotAmtLon.nov_budg
+                                    decTotAmtLoan = decTotAmtLoan + TotAmtLon.dec_budg
+                                        
+                                    janAreaTotAmtLoan = janAreaTotAmtLoan + TotAmtLon.jan_budg
+                                    febAreaTotAmtLoan = febAreaTotAmtLoan + TotAmtLon.feb_budg
+                                    marAreaTotAmtLoan = marAreaTotAmtLoan + TotAmtLon.mar_budg
+                                    aprAreaTotAmtLoan = aprAreaTotAmtLoan + TotAmtLon.apr_budg
+                                    mayAreaTotAmtLoan = mayAreaTotAmtLoan + TotAmtLon.may_budg
+                                    junAreaTotAmtLoan = junAreaTotAmtLoan + TotAmtLon.jun_budg
+                                    julAreaTotAmtLoan = julAreaTotAmtLoan + TotAmtLon.jul_budg
+                                    augAreaTotAmtLoan = augAreaTotAmtLoan + TotAmtLon.aug_budg
+                                    sepAreaTotAmtLoan = sepAreaTotAmtLoan + TotAmtLon.sep_budg
+                                    octAreaTotAmtLoan = octAreaTotAmtLoan + TotAmtLon.oct_budg
+                                    novAreaTotAmtLoan = novAreaTotAmtLoan + TotAmtLon.nov_budg
+                                    decAreaTotAmtLoan = decAreaTotAmtLoan + TotAmtLon.dec_budg
+                                    
+                                    janTotalAmtLoan = janTotalAmtLoan + TotAmtLon.jan_budg
+                                    febTotalAmtLoan = febTotalAmtLoan + TotAmtLon.feb_budg
+                                    marTotalAmtLoan = marTotalAmtLoan + TotAmtLon.mar_budg
+                                    aprTotalAmtLoan = aprTotalAmtLoan + TotAmtLon.apr_budg
+                                    mayTotalAmtLoan = mayTotalAmtLoan + TotAmtLon.may_budg
+                                    junTotalAmtLoan = junTotalAmtLoan + TotAmtLon.jun_budg
+                                    julTotalAmtLoan = julTotalAmtLoan + TotAmtLon.jul_budg
+                                    augTotalAmtLoan = augTotalAmtLoan + TotAmtLon.aug_budg
+                                    sepTotalAmtLoan = sepTotalAmtLoan + TotAmtLon.sep_budg
+                                    octTotalAmtLoan = octTotalAmtLoan + TotAmtLon.oct_budg
+                                    novTotalAmtLoan = novTotalAmtLoan + TotAmtLon.nov_budg
+                                    decTotalAmtLoan = decTotalAmtLoan + TotAmtLon.dec_budg
+                                    
+                                }
+                            })
+            
+                            totTotAmtLoan = janTotAmtLoan + febTotAmtLoan + marTotAmtLoan + aprTotAmtLoan + mayTotAmtLoan + junTotAmtLoan + julTotAmtLoan + augTotAmtLoan +
+                                sepTotAmtLoan + octTotAmtLoan + novTotAmtLoan + decTotAmtLoan
+            
+                            poSumView.push({title: branchDesc, sortkey: loopCtr + ctr, group: 2, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
+                                apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
+                                aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan, tot_value : totTotAmtLoan
+                            })
+            
+                            doneReadTotLonAmt = true
+            
+                             centerCntBegBal = 0
+                             jan_TotCliOutReach = 0
+                             feb_TotCliOutReach = 0
+                             mar_TotCliOutReach = 0
+                             apr_TotCliOutReach = 0
+                             may_TotCliOutReach = 0
+                             jun_TotCliOutReach = 0
+                             jul_TotCliOutReach = 0
+                             aug_TotCliOutReach = 0
+                             sep_TotCliOutReach = 0
+                             oct_TotCliOutReach = 0
+                             nov_TotCliOutReach = 0
+                             dec_TotCliOutReach = 0
+                             tot_TotCliOutReach = 0
+                
+                             janTotAmtLoan = 0
+                             febTotAmtLoan = 0
+                             marTotAmtLoan = 0
+                             aprTotAmtLoan = 0
+                             mayTotAmtLoan = 0
+                             junTotAmtLoan = 0
+                             julTotAmtLoan = 0
+                             augTotAmtLoan = 0
+                             sepTotAmtLoan = 0
+                             octTotAmtLoan = 0
+                             novTotAmtLoan = 0
+                             decTotAmtLoan = 0
+    
+                        }
+                
+                    }) // End of regionBranches loop
+
+                    poSumView.push({title: "AREA TOTAL: " + areaCode, sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_areaTotCliOutReach, feb_value: feb_areaTotCliOutReach, mar_value: mar_areaTotCliOutReach,
+                        apr_value: apr_areaTotCliOutReach, may_value: may_areaTotCliOutReach, jun_value: jun_areaTotCliOutReach, jul_value: jul_areaTotCliOutReach, aug_value: aug_areaTotCliOutReach,
+                        sep_value: sep_areaTotCliOutReach, oct_value: oct_areaTotCliOutReach, nov_value: nov_areaTotCliOutReach, dec_value: dec_areaTotCliOutReach, tot_value : dec_areaTotCliOutReach
+                    })
+    
+                    totAreaTotAmtLoan = janAreaTotAmtLoan + febAreaTotAmtLoan + marAreaTotAmtLoan + aprAreaTotAmtLoan + mayAreaTotAmtLoan + junAreaTotAmtLoan + julAreaTotAmtLoan + augAreaTotAmtLoan +
+                        sepAreaTotAmtLoan + octAreaTotAmtLoan + novAreaTotAmtLoan + decAreaTotAmtLoan
+
+                    poSumView.push({title: "AREA TOTAL: " + areaCode, sortkey: loopCtr + ctr, group: 2, jan_value : janAreaTotAmtLoan, feb_value : febAreaTotAmtLoan, mar_value : marAreaTotAmtLoan, 
+                        apr_value : aprAreaTotAmtLoan, may_value : mayAreaTotAmtLoan, jun_value : junAreaTotAmtLoan, jul_value : julAreaTotAmtLoan, 
+                        aug_value : augAreaTotAmtLoan, sep_value : sepAreaTotAmtLoan, oct_value : octAreaTotAmtLoan, nov_value : novAreaTotAmtLoan, dec_value : decAreaTotAmtLoan, tot_value : totAreaTotAmtLoan
+                    })
+
+                    jan_areaTotCliOutReach = 0
+                    feb_areaTotCliOutReach = 0
+                    mar_areaTotCliOutReach = 0
+                    apr_areaTotCliOutReach = 0
+                    may_areaTotCliOutReach = 0
+                    jun_areaTotCliOutReach = 0
+                    jul_areaTotCliOutReach = 0
+                    aug_areaTotCliOutReach = 0
+                    sep_areaTotCliOutReach = 0
+                    oct_areaTotCliOutReach = 0
+                    nov_areaTotCliOutReach = 0
+                    dec_areaTotCliOutReach = 0    
+    
+                    janAreaTotAmtLoan = 0
+                    febAreaTotAmtLoan = 0
+                    marAreaTotAmtLoan = 0
+                    aprAreaTotAmtLoan = 0
+                    mayAreaTotAmtLoan = 0
+                    junAreaTotAmtLoan = 0
+                    julAreaTotAmtLoan = 0
+                    augAreaTotAmtLoan = 0
+                    sepAreaTotAmtLoan = 0
+                    octAreaTotAmtLoan = 0
+                    novAreaTotAmtLoan = 0
+                    decAreaTotAmtLoan = 0
+                    
+
+                }) // End of regionAreas loop
+
+                if (doneReadTotOutreach && doneReadTotLonAmt) { 
+
+                    poSumView.push({title: "TOTAL OUTREACH", sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_TotalCliOutReach, feb_value: feb_TotalCliOutReach, mar_value: mar_TotalCliOutReach,
+                        apr_value: apr_TotalCliOutReach, may_value: may_TotalCliOutReach, jun_value: jun_TotalCliOutReach, jul_value: jul_TotalCliOutReach, aug_value: aug_TotalCliOutReach,
+                        sep_value: sep_TotalCliOutReach, oct_value: oct_TotalCliOutReach, nov_value: nov_TotalCliOutReach, dec_value: dec_TotalCliOutReach, tot_value : dec_TotalCliOutReach
+                    })
+
+                    totTotalAmtLoan = janTotalAmtLoan + febTotalAmtLoan + marTotalAmtLoan + aprTotalAmtLoan + mayTotalAmtLoan + junTotalAmtLoan + julTotalAmtLoan + augTotalAmtLoan +
+                    sepTotalAmtLoan + octTotalAmtLoan + novTotalAmtLoan + decTotalAmtLoan
+    
+                    poSumView.push({title: "TOTAL DISBURSEMENT", sortkey: loopCtr + ctr, group: 2, jan_value : janTotalAmtLoan, feb_value : febTotalAmtLoan, mar_value : marTotalAmtLoan, 
+                        apr_value : aprTotalAmtLoan, may_value : mayTotalAmtLoan, jun_value : junTotalAmtLoan, jul_value : julTotalAmtLoan, 
+                        aug_value : augTotalAmtLoan, sep_value : sepTotalAmtLoan, oct_value : octTotalAmtLoan, nov_value : novTotalAmtLoan, dec_value : decTotalAmtLoan, tot_value : totTotalAmtLoan
+                    })
+    
+                    poSumView.sort( function (a,b) {
+                        if ( a.sortkey < b.sortkey ){
+                            return -1;
+                        }
+                        if ( a.sortkey > b.sortkey ){
+                            return 1;
+                        }
+                        return 0;
+                    })
+            
+                    res.render('regions/viewRegionKRAMon', {
+                        vwAreaCod: viewRegionCode,
+                        poSumView: poSumView,
+                        yuser: yuser   
+                    })
+                }
+        } catch (err) {
+            console.log(err)
+            res.redirect('/regions/'+ viewRegionCode)
+        }
+    })
+    
 
 
 router.get('/users', async (req, res) => {
