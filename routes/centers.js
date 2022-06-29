@@ -4241,6 +4241,9 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                                 case "January":
                                     jan_newAtotValue = jan_newAtotValue + targTotAmt
                                     jan_newCliTot = jan_newCliTot + targNumClient
+
+                                    jan_newAtotValue = jan_newAtotValue + targTotAmt
+                                    jan_newCliTot = jan_newCliTot + targNumClient
                                     break;
                                 case "February":
                                     feb_newAtotValue = feb_newAtotValue + targTotAmt
@@ -4411,6 +4414,24 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                         }
                     }
                 }
+                // const forSaveOLA = await Center_budget_det.findOne({po_code: viewPOCode, view_code: "OldLoanAmt"})
+                // // const forSaveOLA = forSaveOldLoanAmt
+                // if(!isNull(forSaveOLA)) {
+                //     forSaveOLA.jan_budg = jan_oldAtotValue
+                //     forSaveOLA.feb_budg = feb_oldAtotValue
+                //     forSaveOLA.mar_budg = mar_oldAtotValue
+                //     forSaveOLA.apr_budg = apr_oldAtotValue
+                //     forSaveOLA.may_budg = may_oldAtotValue
+                //     forSaveOLA.jun_budg = jun_oldAtotValue
+                //     forSaveOLA.jul_budg = jul_oldAtotValue
+                //     forSaveOLA.aug_budg = aug_oldAtotValue
+                //     forSaveOLA.sep_budg = sep_oldAtotValue
+                //     forSaveOLA.oct_budg = oct_oldAtotValue
+                //     forSaveOLA.nov_budg = nov_oldAtotValue
+                //     forSaveOLA.dec_budg = dec_oldAtotValue
+                    
+                //     forSaveOLA.save()
+                // }
 
             })
             
@@ -4431,25 +4452,6 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 apr_value: apr_centerCount, may_value: may_centerCount, jun_value: jun_centerCount, jul_value: jul_centerCount, aug_value: aug_centerCount,
                 sep_value: sep_centerCount, oct_value: oct_centerCount, nov_value: nov_centerCount, dec_value: dec_centerCount, tot_value : dec_centerCount
             })
-
-            const forSaveOLA = await Center_budget_det.findOne({po_code: viewPOCode, view_code: "OldLoanAmt"})
-                // const forSaveOLA = forSaveOldLoanAmt
-                if(!isNull(forSaveOLA)) {
-                    forSaveOLA.jan_budg = jan_oldAtotValue
-                    forSaveOLA.feb_budg = feb_oldAtotValue
-                    forSaveOLA.mar_budg = mar_oldAtotValue
-                    forSaveOLA.apr_budg = apr_oldAtotValue
-                    forSaveOLA.may_budg = may_oldAtotValue
-                    forSaveOLA.jun_budg = jun_oldAtotValue
-                    forSaveOLA.jul_budg = jul_oldAtotValue
-                    forSaveOLA.aug_budg = aug_oldAtotValue
-                    forSaveOLA.sep_budg = sep_oldAtotValue
-                    forSaveOLA.oct_budg = oct_oldAtotValue
-                    forSaveOLA.nov_budg = nov_oldAtotValue
-                    forSaveOLA.dec_budg = dec_oldAtotValue
-                    
-                    forSaveOLA.save()
-                }
 
             doneReadNumCenters = true
 
