@@ -4146,6 +4146,61 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
             let dec_centerCount = 0
             let tot_centerCount = 0
 
+            let jan_cntrNewCliTot = 0  
+            let feb_cntrNewCliTot = 0
+            let mar_cntrNewCliTot = 0
+            let apr_cntrNewCliTot = 0
+            let may_cntrNewCliTot = 0
+            let jun_cntrNewCliTot = 0
+            let jul_cntrNewCliTot = 0
+            let aug_cntrNewCliTot = 0
+            let sep_cntrNewCliTot = 0
+            let oct_cntrNewCliTot = 0
+            let nov_cntrNewCliTot = 0
+            let dec_cntrNewCliTot = 0
+            let tot_cntrNewCliTot = 0
+
+            let jan_cntrOldClientTot = 0  
+            let feb_cntrOldClientTot = 0
+            let mar_cntrOldClientTot = 0
+            let apr_cntrOldClientTot = 0
+            let may_cntrOldClientTot = 0
+            let jun_cntrOldClientTot = 0
+            let jul_cntrOldClientTot = 0
+            let aug_cntrOldClientTot = 0
+            let sep_cntrOldClientTot = 0
+            let oct_cntrOldClientTot = 0
+            let nov_cntrOldClientTot = 0
+            let dec_cntrOldClientTot = 0
+            let tot_cntrOldClientTot = 0    
+
+            let jan_cntrNewAtotValue = 0  
+            let feb_cntrNewAtotValue = 0
+            let mar_cntrNewAtotValue = 0
+            let apr_cntrNewAtotValue = 0
+            let may_cntrNewAtotValue = 0
+            let jun_cntrNewAtotValue = 0
+            let jul_cntrNewAtotValue = 0
+            let aug_cntrNewAtotValue = 0
+            let sep_cntrNewAtotValue = 0
+            let oct_cntrNewAtotValue = 0
+            let nov_cntrNewAtotValue = 0
+            let dec_cntrNewAtotValue = 0
+            let tot_cntrNewAtotValue = 0
+                let jan_cntrOldAtotValue = 0  
+                let feb_cntrOldAtotValue = 0
+                let mar_cntrOldAtotValue = 0
+                let apr_cntrOldAtotValue = 0
+                let may_cntrOldAtotValue = 0
+                let jun_cntrOldAtotValue = 0
+                let jul_cntrOldAtotValue = 0
+                let aug_cntrOldAtotValue = 0
+                let sep_cntrOldAtotValue = 0
+                let oct_cntrOldAtotValue = 0
+                let nov_cntrOldAtotValue = 0
+                let dec_cntrOldAtotValue = 0
+                let tot_cntrOldAtotValue = 0        
+
         let doneReadNLC = false
         let doneReadOLC = false
         let doneReadNLA = false
@@ -4188,6 +4243,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
     try {
 
+        const cntrTargLonTyp = loanTypes
+        console.log(cntrTargLonTyp)
         // const vwloanType = await Loan_type.find({})
 
         // const foundCenterDet = await Center_budget_det.find({po_code: viewPOCode})
@@ -4225,130 +4282,344 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     let i = 0
                     let targTotAmt = 0
 
-                    fndTarget.forEach( findTarg => {
-                        monthTarget = findTarg.month
-                        targTotAmt = findTarg.totAmount
-                        targNumClient = findTarg.numClient
-
-                        if (findTarg.remarks === "New Loan" && i == 0) {
-                            i = i + 1
-                            monthNewCenter = monthTarget
-                        }
-
-                        if (findTarg.remarks === "New Loan") {
-
-                            switch(monthTarget) {
-                                case "January":
-                                    jan_newAtotValue = jan_newAtotValue + targTotAmt
-                                    jan_newCliTot = jan_newCliTot + targNumClient
-
-                                    jan_newAtotValue = jan_newAtotValue + targTotAmt
-                                    jan_newCliTot = jan_newCliTot + targNumClient
-                                    break;
-                                case "February":
-                                    feb_newAtotValue = feb_newAtotValue + targTotAmt
-                                    feb_newCliTot = feb_newCliTot + targNumClient
-                                    break;
-                                case "March":
-                                    mar_newAtotValue = mar_newAtotValue + targTotAmt
-                                    mar_newCliTot = mar_newCliTot + targNumClient
-                                    break;
-                                case "April":
-                                    apr_newAtotValue = apr_newAtotValue + targTotAmt
-                                    apr_newCliTot = apr_newCliTot + targNumClient
-                                    break;
-                                case "May":
-                                    may_newAtotValue = may_newAtotValue + targTotAmt
-                                    may_newCliTot = may_newCliTot + targNumClient
-                                    break;
-                                case "June":
-                                    jun_newAtotValue = jun_newAtotValue + targTotAmt
-                                    jun_newCliTot = jun_newCliTot + targNumClient
-                                    break;
-                                case "July":
-                                    jul_newAtotValue = jul_newAtotValue + targTotAmt
-                                    jul_newCliTot = jul_newCliTot + targNumClient
-                                    break;
-                                case "August":
-                                    aug_newAtotValue = aug_newAtotValue + targTotAmt
-                                    aug_newCliTot = aug_newCliTot + targNumClient
-                                    break;
-                                case "September":
-                                    sep_newAtotValue = sep_newAtotValue + targTotAmt
-                                    sep_newCliTot = sep_newCliTot + targNumClient
-                                    break;
-                                case "October":
-                                    oct_newAtotValue = oct_newAtotValue + targTotAmt
-                                    oct_newCliTot = oct_newCliTot + targNumClient
-                                    break;
-                                case "November":
-                                    nov_newAtotValue = nov_newAtotValue + targTotAmt
-                                    nov_newCliTot = nov_newCliTot + targNumClient
-                                    break;
-                                case "December":
-                                    dec_newAtotValue = dec_newAtotValue + targTotAmt
-                                    dec_newCliTot = dec_newCliTot + targNumClient
-                                    break;
-                                default:
-                                    let jan_ctrCount = 0
+                    cntrTargLonTyp.forEach(loan_type => {
+                        const typeLoan = loan_type.title
+                        const loanCode = loan_type.loan_type
+                    
+                        jan_cntrNewCliTot = 0  
+                        feb_cntrNewCliTot = 0
+                        mar_cntrNewCliTot = 0
+                        apr_cntrNewCliTot = 0
+                        may_cntrNewCliTot = 0
+                        jun_cntrNewCliTot = 0
+                        jul_cntrNewCliTot = 0
+                        aug_cntrNewCliTot = 0
+                        sep_cntrNewCliTot = 0
+                        oct_cntrNewCliTot = 0
+                        nov_cntrNewCliTot = 0
+                        dec_cntrNewCliTot = 0
+                        tot_cntrNewCliTot = 0
+            
+                        jan_cntrOldClientTot = 0  
+                        feb_cntrOldClientTot = 0
+                        mar_cntrOldClientTot = 0
+                        apr_cntrOldClientTot = 0
+                        may_cntrOldClientTot = 0
+                        jun_cntrOldClientTot = 0
+                        jul_cntrOldClientTot = 0
+                        aug_cntrOldClientTot = 0
+                        sep_cntrOldClientTot = 0
+                        oct_cntrOldClientTot = 0
+                        nov_cntrOldClientTot = 0
+                        dec_cntrOldClientTot = 0
+                        tot_cntrOldClientTot = 0    
+            
+                        jan_cntrNewAtotValue = 0  
+                        feb_cntrNewAtotValue = 0
+                        mar_cntrNewAtotValue = 0
+                        apr_cntrNewAtotValue = 0
+                        may_cntrNewAtotValue = 0
+                        jun_cntrNewAtotValue = 0
+                        jul_cntrNewAtotValue = 0
+                        aug_cntrNewAtotValue = 0
+                        sep_cntrNewAtotValue = 0
+                        oct_cntrNewAtotValue = 0
+                        nov_cntrNewAtotValue = 0
+                        dec_cntrNewAtotValue = 0
+                        tot_cntrNewAtotValue = 0
+                            jan_cntrOldAtotValue = 0  
+                            feb_cntrOldAtotValue = 0
+                            mar_cntrOldAtotValue = 0
+                            apr_cntrOldAtotValue = 0
+                            may_cntrOldAtotValue = 0
+                            jun_cntrOldAtotValue = 0
+                            jul_cntrOldAtotValue = 0
+                            aug_cntrOldAtotValue = 0
+                            sep_cntrOldAtotValue = 0
+                            oct_cntrOldAtotValue = 0
+                            nov_cntrOldAtotValue = 0
+                            dec_cntrOldAtotValue = 0
+                            tot_cntrOldAtotValue = 0        
+                    
+                        fndTarget.forEach( findTarg => {
+                            monthTarget = findTarg.month
+                            targTotAmt = findTarg.totAmount
+                            targNumClient = findTarg.numClient
+                            targLonType = findTarg.loan_type
+                            
+                            if (targLonType === "Group Loan" || targLonType === "Agricultural Loan") {
+                                if (findTarg.remarks === "New Loan" && i == 0) {
+                                    i = i + 1
+                                    monthNewCenter = monthTarget
+                                }    
                             }
-                        }
-                        if (findTarg.remarks === "Re-loan") {
-
-                            switch(monthTarget) {
-                                case "January":
-                                    jan_oldAtotValue = jan_oldAtotValue + targTotAmt
-                                    jan_oldClientTot = jan_oldClientTot + targNumClient
-                                    break;
-                                case "February":
-                                    feb_oldAtotValue = feb_oldAtotValue + targTotAmt
-                                    feb_oldClientTot = feb_oldClientTot + targNumClient
-                                    break;
-                                case "March":
-                                    mar_oldAtotValue = mar_oldAtotValue + targTotAmt
-                                    mar_oldClientTot = mar_oldClientTot + targNumClient
-                                    break;
-                                case "April":
-                                    apr_oldAtotValue = apr_oldAtotValue + targTotAmt
-                                    apr_oldClientTot = apr_oldClientTot + targNumClient
-                                    break;
-                                case "May":
-                                    may_oldAtotValue = may_oldAtotValue + targTotAmt
-                                    may_oldClientTot = may_oldClientTot + targNumClient
-                                    break;
-                                case "June":
-                                    jun_oldAtotValue = jun_oldAtotValue + targTotAmt
-                                    jun_oldClientTot = jun_oldClientTot + targNumClient
-                                    break;
-                                case "July":
-                                    jul_oldAtotValue = jul_oldAtotValue + targTotAmt
-                                    jul_oldClientTot = jul_oldClientTot + targNumClient
-                                    break;
-                                case "August":
-                                    aug_oldAtotValue = aug_oldAtotValue + targTotAmt
-                                    aug_oldClientTot = aug_oldClientTot + targNumClient
-                                    break;
-                                case "September":
-                                    sep_oldAtotValue = sep_oldAtotValue + targTotAmt
-                                    sep_oldClientTot = sep_oldClientTot + targNumClient
-                                    break;
-                                case "October":
-                                    oct_oldAtotValue = oct_oldAtotValue + targTotAmt
-                                    oct_oldClientTot = oct_oldClientTot + targNumClient
-                                    break;
-                                case "November":
-                                    nov_oldAtotValue = nov_oldAtotValue + targTotAmt
-                                    nov_oldClientTot = nov_oldClientTot + targNumClient
-                                    break;
-                                case "December":
-                                    dec_oldAtotValue = dec_oldAtotValue + targTotAmt
-                                    dec_oldClientTot = dec_oldClientTot + targNumClient
-                                    break;
-                                default:
-                                    let jan_ctrCount = 0
+                            if (targLonType === typeLoan) {
+                                if (findTarg.remarks === "New Loan") {
+    
+                                    switch(monthTarget) {
+                                        case "January":
+                                            jan_cntrNewAtotValue = jan_cntrNewAtotValue + targTotAmt
+                                            jan_cntrNewCliTot = jan_cntrNewCliTot + targNumClient
+        
+                                            // jan_newAtotValue = jan_newAtotValue + targTotAmt
+                                            // jan_newCliTot = jan_newCliTot + targNumClient
+                                            break;
+                                        case "February":
+                                            feb_cntrNewAtotValue = feb_cntrNewAtotValue + targTotAmt
+                                            feb_cntrNewCliTot = feb_cntrNewCliTot + targNumClient
+        
+                                            // feb_newAtotValue = feb_newAtotValue + targTotAmt
+                                            // feb_newCliTot = feb_newCliTot + targNumClient
+                                            // break;
+                                        case "March":
+                                            mar_cntrNewAtotValue = mar_cntrNewAtotValue + targTotAmt
+                                            mar_cntrNewCliTot = mar_cntrNewCliTot + targNumClient
+        
+                                            // mar_newAtotValue = mar_newAtotValue + targTotAmt
+                                            // mar_newCliTot = mar_newCliTot + targNumClient
+                                            // break;
+                                        case "April":
+                                            apr_cntrNewAtotValue = apr_cntrNewAtotValue + targTotAmt
+                                            apr_cntrNewCliTot = apr_cntrNewCliTot + targNumClient
+        
+                                            // apr_newAtotValue = apr_newAtotValue + targTotAmt
+                                            // apr_newCliTot = apr_newCliTot + targNumClient
+                                            break;
+                                        case "May":
+                                            may_cntrNewAtotValue = may_cntrNewAtotValue + targTotAmt
+                                            may_cntrNewCliTot = may_cntrNewCliTot + targNumClient
+        
+                                            // may_newAtotValue = may_newAtotValue + targTotAmt
+                                            // may_newCliTot = may_newCliTot + targNumClient
+                                            break;
+                                        case "June":
+                                            jun_cntrNewAtotValue = jun_cntrNewAtotValue + targTotAmt
+                                            jun_cntrNewCliTot = jun_cntrNewCliTot + targNumClient
+        
+                                            // jun_newAtotValue = jun_newAtotValue + targTotAmt
+                                            // jun_newCliTot = jun_newCliTot + targNumClient
+                                            break;
+                                        case "July":
+                                            jul_cntrNewAtotValue = jul_cntrNewAtotValue + targTotAmt
+                                            jul_cntrNewCliTot = jul_cntrNewCliTot + targNumClient
+        
+                                            // jul_newAtotValue = jul_newAtotValue + targTotAmt
+                                            // jul_newCliTot = jul_newCliTot + targNumClient
+                                            break;
+                                        case "August":
+                                            aug_cntrNewAtotValue = aug_cntrNewAtotValue + targTotAmt
+                                            aug_cntrNewCliTot = aug_cntrNewCliTot + targNumClient
+        
+                                            // aug_newAtotValue = aug_newAtotValue + targTotAmt
+                                            // aug_newCliTot = aug_newCliTot + targNumClient
+                                            break;
+                                        case "September":
+                                            sep_cntrNewAtotValue = sep_cntrNewAtotValue + targTotAmt
+                                            sep_cntrNewCliTot = sep_cntrNewCliTot + targNumClient
+        
+                                            // sep_newAtotValue = sep_newAtotValue + targTotAmt
+                                            // sep_newCliTot = sep_newCliTot + targNumClient
+                                            break;
+                                        case "October":
+                                            oct_cntrNewAtotValue = oct_cntrNewAtotValue + targTotAmt
+                                            oct_cntrNewCliTot = oct_cntrNewCliTot + targNumClient
+        
+                                            // oct_newAtotValue = oct_newAtotValue + targTotAmt
+                                            // oct_newCliTot = oct_newCliTot + targNumClient
+                                            break;
+                                        case "November":
+                                            nov_cntrNewAtotValue = nov_cntrNewAtotValue + targTotAmt
+                                            nov_cntrNewCliTot = nov_cntrNewCliTot + targNumClient
+        
+                                            // nov_newAtotValue = nov_newAtotValue + targTotAmt
+                                            // nov_newCliTot = nov_newCliTot + targNumClient
+                                            break;
+                                        case "December":
+                                            dec_cntrNewAtotValue = dec_cntrNewAtotValue + targTotAmt
+                                            dec_cntrNewCliTot = dec_cntrNewCliTot + targNumClient
+        
+                                            // dec_newAtotValue = dec_newAtotValue + targTotAmt
+                                            // dec_newCliTot = dec_newCliTot + targNumClient
+                                            break;
+                                        default:
+                                            let jan_ctrCount = 0
+                                    }
+                                }
+                                if (findTarg.remarks === "Re-loan") {
+        
+                                    switch(monthTarget) {
+                                        case "January":
+                                            jan_cntrOldAtotValue = jan_cntrOldAtotValue + targTotAmt
+                                            jan_cntrOldClientTot = jan_cntrOldClientTot + targNumClient
+        
+                                            // jan_oldAtotValue = jan_oldAtotValue + targTotAmt
+                                            // jan_oldClientTot = jan_oldClientTot + targNumClient
+                                            break;
+                                        case "February":
+                                            feb_cntrOldAtotValue = feb_cntrOldAtotValue + targTotAmt
+                                            feb_cntrOldClientTot = feb_cntrOldClientTot + targNumClient
+        
+                                            // feb_oldAtotValue = feb_oldAtotValue + targTotAmt
+                                            // feb_oldClientTot = feb_oldClientTot + targNumClient
+                                            break;
+                                        case "March":
+                                            mar_cntrOldAtotValue = mar_cntrOldAtotValue + targTotAmt
+                                            mar_cntrOldClientTot = mar_cntrOldClientTot + targNumClient
+        
+                                            // mar_oldAtotValue = mar_oldAtotValue + targTotAmt
+                                            // mar_oldClientTot = mar_oldClientTot + targNumClient
+                                            break;
+                                        case "April":
+                                            apr_cntrOldAtotValue = apr_cntrOldAtotValue + targTotAmt
+                                            apr_cntrOldClientTot = apr_cntrOldClientTot + targNumClient
+        
+                                            // apr_oldAtotValue = apr_oldAtotValue + targTotAmt
+                                            // apr_oldClientTot = apr_oldClientTot + targNumClient
+                                            break;
+                                        case "May":
+                                            may_cntrOldAtotValue = may_cntrOldAtotValue + targTotAmt
+                                            may_cntrOldClientTot = may_cntrOldClientTot + targNumClient
+        
+                                            // may_oldAtotValue = may_oldAtotValue + targTotAmt
+                                            // may_oldClientTot = may_oldClientTot + targNumClient
+                                            break;
+                                        case "June":
+                                            jun_cntrOldAtotValue = jun_cntrOldAtotValue + targTotAmt
+                                            jun_cntrOldClientTot = jun_cntrOldClientTot + targNumClient
+        
+                                            // jun_oldAtotValue = jun_oldAtotValue + targTotAmt
+                                            // jun_oldClientTot = jun_oldClientTot + targNumClient
+                                            break;
+                                        case "July":
+                                            jul_cntrOldAtotValue = jul_cntrOldAtotValue + targTotAmt
+                                            jul_cntrOldClientTot = jul_cntrOldClientTot + targNumClient
+        
+                                            // jul_oldAtotValue = jul_oldAtotValue + targTotAmt
+                                            // jul_oldClientTot = jul_oldClientTot + targNumClient
+                                            break;
+                                        case "August":
+                                            aug_cntrOldAtotValue = aug_cntrOldAtotValue + targTotAmt
+                                            aug_cntrOldClientTot = aug_cntrOldClientTot + targNumClient
+        
+                                            // aug_oldAtotValue = aug_oldAtotValue + targTotAmt
+                                            // aug_oldClientTot = aug_oldClientTot + targNumClient
+                                            break;
+                                        case "September":
+                                            sep_cntrOldAtotValue = sep_cntrOldAtotValue + targTotAmt
+                                            sep_cntrOldClientTot = sep_cntrOldClientTot + targNumClient
+        
+                                            // sep_oldAtotValue = sep_oldAtotValue + targTotAmt
+                                            // sep_oldClientTot = sep_oldClientTot + targNumClient
+                                            break;
+                                        case "October":
+                                            oct_cntrOldAtotValue = oct_cntrOldAtotValue + targTotAmt
+                                            oct_cntrOldClientTot = oct_cntrOldClientTot + targNumClient
+        
+                                            // oct_oldAtotValue = oct_oldAtotValue + targTotAmt
+                                            // oct_oldClientTot = oct_oldClientTot + targNumClient
+                                            break;
+                                        case "November":
+                                            nov_cntrOldAtotValue = nov_cntrOldAtotValue + targTotAmt
+                                            nov_cntrOldClientTot = nov_cntrOldClientTot + targNumClient
+        
+                                            // nov_oldAtotValue = nov_oldAtotValue + targTotAmt
+                                            // nov_oldClientTot = nov_oldClientTot + targNumClient
+                                            break;
+                                        case "December":
+                                            dec_cntrOldAtotValue = dec_cntrOldAtotValue + targTotAmt
+                                            dec_cntrOldClientTot = dec_cntrOldClientTot + targNumClient
+        
+                                            // dec_oldAtotValue = dec_oldAtotValue + targTotAmt
+                                            // dec_oldClientTot = dec_oldClientTot + targNumClient
+                                            break;
+                                        default:
+                                            let jan_ctrCount = 0
+                                    }
+                                }
+    
                             }
-                        }
+                        })
+
+                        // const forSaveNLC = await Center_budget_det.findOne({center: fCenter, view_code: "NewLoanClient", loan_type: typeLoan})
+                        // // const forSaveNLC = forSaveOldLoanAmt
+                        // if(!isNull(forSaveNLC)) {
+                        //     forSaveNLC.jan_budg = jan_cntrNewCliTot
+                        //     forSaveNLC.feb_budg = feb_cntrNewCliTot
+                        //     forSaveNLC.mar_budg = mar_cntrNewCliTot
+                        //     forSaveNLC.apr_budg = apr_cntrNewCliTot
+                        //     forSaveNLC.may_budg = may_cntrNewCliTot
+                        //     forSaveNLC.jun_budg = jun_cntrNewCliTot
+                        //     forSaveNLC.jul_budg = jul_cntrNewCliTot
+                        //     forSaveNLC.aug_budg = aug_cntrNewCliTot
+                        //     forSaveNLC.sep_budg = sep_cntrNewCliTot
+                        //     forSaveNLC.oct_budg = oct_cntrNewCliTot
+                        //     forSaveNLC.nov_budg = nov_cntrNewCliTot
+                        //     forSaveNLC.dec_budg = dec_cntrNewCliTot
+                        
+                        //     forSaveNLC.save()
+                        // }
+    
+                        // const forSaveOLC = Center_budget_det.findOne({center: fCenter, view_code: "OldLoanClient", loan_type: typeLoan})
+                        // // const forSaveOLC = forSaveOldLoanAmt
+                        // if(!isNull(forSaveOLC)) {
+                        //     forSaveOLC.jan_budg = jan_cntrOldClientTot
+                        //     forSaveOLC.feb_budg = feb_cntrOldClientTot
+                        //     forSaveOLC.mar_budg = mar_cntrOldClientTot
+                        //     forSaveOLC.apr_budg = apr_cntrOldClientTot
+                        //     forSaveOLC.may_budg = may_cntrOldClientTot
+                        //     forSaveOLC.jun_budg = jun_cntrOldClientTot
+                        //     forSaveOLC.jul_budg = jul_cntrOldClientTot
+                        //     forSaveOLC.aug_budg = aug_cntrOldClientTot
+                        //     forSaveOLC.sep_budg = sep_cntrOldClientTot
+                        //     forSaveOLC.oct_budg = oct_cntrOldClientTot
+                        //     forSaveOLC.nov_budg = nov_cntrOldClientTot
+                        //     forSaveOLC.dec_budg = dec_cntrOldClientTot
+                        
+                        //     forSaveOLC.save()
+                        // }
+    
+                        // const forSaveNLA = Center_budget_det.findOne({center: fCenter, view_code: "NewLoanAmt", loan_type: typeLoan})
+                        // // const forSaveNLA = forSaveOldLoanAmt
+                        // if(!isNull(forSaveNLA)) {
+                        //     forSaveNLA.jan_budg = jan_cntrNewAtotValue
+                        //     forSaveNLA.feb_budg = feb_cntrNewAtotValue
+                        //     forSaveNLA.mar_budg = mar_cntrNewAtotValue
+                        //     forSaveNLA.apr_budg = apr_cntrNewAtotValue
+                        //     forSaveNLA.may_budg = may_cntrNewAtotValue
+                        //     forSaveNLA.jun_budg = jun_cntrNewAtotValue
+                        //     forSaveNLA.jul_budg = jul_cntrNewAtotValue
+                        //     forSaveNLA.aug_budg = aug_cntrNewAtotValue
+                        //     forSaveNLA.sep_budg = sep_cntrNewAtotValue
+                        //     forSaveNLA.oct_budg = oct_cntrNewAtotValue
+                        //     forSaveNLA.nov_budg = nov_cntrNewAtotValue
+                        //     forSaveNLA.dec_budg = dec_cntrNewAtotValue
+                        
+                        //     forSaveNLA.save()
+                        // }
+    
+                        // const forSaveOLA = Center_budget_det.findOne({center: fCenter, view_code: "OldLoanAmt", loan_type: typeLoan})
+                        // // const forSaveOLA = forSaveOldLoanAmt
+                        // if(!isNull(forSaveOLA)) {
+                        //     forSaveOLA.jan_budg = jan_cntrOldAtotValue
+                        //     forSaveOLA.feb_budg = feb_cntrOldAtotValue
+                        //     forSaveOLA.mar_budg = mar_cntrOldAtotValue
+                        //     forSaveOLA.apr_budg = apr_cntrOldAtotValue
+                        //     forSaveOLA.may_budg = may_cntrOldAtotValue
+                        //     forSaveOLA.jun_budg = jun_cntrOldAtotValue
+                        //     forSaveOLA.jul_budg = jul_cntrOldAtotValue
+                        //     forSaveOLA.aug_budg = aug_cntrOldAtotValue
+                        //     forSaveOLA.sep_budg = sep_cntrOldAtotValue
+                        //     forSaveOLA.oct_budg = oct_cntrOldAtotValue
+                        //     forSaveOLA.nov_budg = nov_cntrOldAtotValue
+                        //     forSaveOLA.dec_budg = dec_cntrOldAtotValue
+                        
+                        //     forSaveOLA.save()
+                        // }
+                        
                     })
+
+
+                        
                     begBalData.forEach( cntrBegBal => {
                         if (cntrBegBal.loan_type === "Group Loan" || cntrBegBal.loan_type === "Agricultural Loan") {
                             if (cntrBegBal.beg_client_count > 0) {
@@ -4360,78 +4631,60 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                         }
                     })
 
-                // if (monthCenterBegBal === "" && begBalData.length === 0 && monthNewCenter !=="" ) {
+                    // if (monthCenterBegBal === "" && begBalData.length === 0 && monthNewCenter !=="" ) {
 
-                if (!canAddBegCenter) {
+                    if (!canAddBegCenter) {
 
-                    switch(monthNewCenter) {
-                        case "January":
-                            jan_centerCount = jan_centerCount + 1
-                            break;
-                        case "February":
-                            feb_centerCount = feb_centerCount + 1
-                            break;
-                        case "March":
-                            mar_centerCount = mar_centerCount + 1
-                            break;
-                        case "April":
-                            apr_centerCount = apr_centerCount + 1
-                            break;
-                        case "May":
-                            may_centerCount = may_centerCount + 1
-                            break;
-                        case "June":
-                            jun_centerCount = jun_centerCount + 1
-                            break;
-                        case "July":
-                            jul_centerCount = jul_centerCount + 1
-                            break;
-                        case "August":
-                            aug_centerCount = aug_centerCount + 1
-                            break;
-                        case "September":
-                            sep_centerCount = sep_centerCount + 1
-                            break;
-                        case "October":
-                            oct_centerCount = oct_centerCount + 1
-                            break;
-                        case "November":
-                            nov_centerCount = nov_centerCount + 1
-                            break;git 
-                        case "December":
-                            dec_centerCount = dec_centerCount + 1
-                            break;
-                        default:
-                            let jan_ctrCount = 0
-                    }
+                        switch(monthNewCenter) {
+                            case "January":
+                                jan_centerCount = jan_centerCount + 1
+                                break;
+                            case "February":
+                                feb_centerCount = feb_centerCount + 1
+                                break;
+                            case "March":
+                                mar_centerCount = mar_centerCount + 1
+                                break;
+                            case "April":
+                                apr_centerCount = apr_centerCount + 1
+                                break;
+                            case "May":
+                                may_centerCount = may_centerCount + 1
+                                break;
+                            case "June":
+                                jun_centerCount = jun_centerCount + 1
+                                break;
+                            case "July":
+                                jul_centerCount = jul_centerCount + 1
+                                break;
+                            case "August":
+                                aug_centerCount = aug_centerCount + 1
+                                break;
+                            case "September":
+                                sep_centerCount = sep_centerCount + 1
+                                break;
+                            case "October":
+                                oct_centerCount = oct_centerCount + 1
+                                break;
+                            case "November":
+                                nov_centerCount = nov_centerCount + 1
+                                break;git 
+                            case "December":
+                                dec_centerCount = dec_centerCount + 1
+                                break;
+                            default:
+                                let jan_ctrCount = 0
+                        }
                     
-                } else {
-                    if (begBalData.length > 0) {
-                        if (canAddBegCenter) {
-                            centerCntBegBal = centerCntBegBal + 1                        
-                        } else {
-
+                    } else {
+                        if (begBalData.length > 0) {
+                            if (canAddBegCenter) {
+                                centerCntBegBal = centerCntBegBal + 1                        
+                            } else {
+                                
+                            }
                         }
                     }
-                }
-                // const forSaveOLA = await Center_budget_det.findOne({po_code: viewPOCode, view_code: "OldLoanAmt"})
-                // // const forSaveOLA = forSaveOldLoanAmt
-                // if(!isNull(forSaveOLA)) {
-                //     forSaveOLA.jan_budg = jan_oldAtotValue
-                //     forSaveOLA.feb_budg = feb_oldAtotValue
-                //     forSaveOLA.mar_budg = mar_oldAtotValue
-                //     forSaveOLA.apr_budg = apr_oldAtotValue
-                //     forSaveOLA.may_budg = may_oldAtotValue
-                //     forSaveOLA.jun_budg = jun_oldAtotValue
-                //     forSaveOLA.jul_budg = jul_oldAtotValue
-                //     forSaveOLA.aug_budg = aug_oldAtotValue
-                //     forSaveOLA.sep_budg = sep_oldAtotValue
-                //     forSaveOLA.oct_budg = oct_oldAtotValue
-                //     forSaveOLA.nov_budg = nov_oldAtotValue
-                //     forSaveOLA.dec_budg = dec_oldAtotValue
-                    
-                //     forSaveOLA.save()
-                // }
 
             })
             
@@ -4801,9 +5054,9 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     sep_value : sep_newCtotValue, oct_value : oct_newCtotValue, nov_value : nov_newCtotValue, dec_value : dec_newCtotValue, tot_value: tot_newCtotValue
                 }) 
             doneReadNLC = true
-        // } //, function (err, fndPOV) {
+            // } //, function (err, fndPOV) {
 
-        // if (doneReadNLC) {
+            // if (doneReadNLC) {
             const fndNewLoanCli = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumNewLoanCli"}, function (err, fndTotLonAmt) {
                 fondNewLoanCli = fndTotLonAmt
 
@@ -4873,10 +5126,6 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 sep_value : sep_oldCtotValue, oct_value : oct_oldCtotValue, nov_value : nov_oldCtotValue, dec_value : dec_oldCtotValue, tot_value: tot_oldCtotValue
             }) 
 
-        } //, function (err, fndPOV) {
-
-        if (doneReadOLC) {
-
             const fndReLoanCli = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NumReLoanCli"}, function (err, fndTotLonAmt) {
                 fondReLoanCli = fndTotLonAmt
                 if (isNull(fondReLoanCli)) { 
@@ -4906,8 +5155,9 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fondReLoanCli.save()            
                 }
             })
-    
-        }
+            doneReadOLC = true
+        } //, function (err, fndPOV) {
+
         let jan_totNoOfLoan = jan_oldCtotValue + jan_newCtotValue
         let feb_totNoOfLoan = feb_oldCtotValue + feb_newCtotValue
         let mar_totNoOfLoan = mar_oldCtotValue + mar_newCtotValue
@@ -4934,21 +5184,11 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
         
         const newLoanAmtView = await Center_budget_det.find({po_code: viewPOCode, view_code: "NewLoanAmt"}, function (err, fndNewAmt) {
-        
-            // jan_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jan_budg; })
-            // feb_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.feb_budg; })
-            // mar_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.mar_budg; })
-            // apr_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.apr_budg; })
-            // may_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.may_budg; })
-            // jun_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jun_budg; })
-            // jul_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jul_budg; })
-            // aug_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.aug_budg; })
-            // sep_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.sep_budg; })
-            // oct_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.oct_budg; })
-            // nov_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.nov_budg; })
-            // dec_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.dec_budg; })
             const fondNewLnAmts = fndNewAmt
-            fondNewLnAmts.forEach(NewAmt => {
+        })
+
+        if (!isNull(newLoanAmtView)) {
+            newLoanAmtView.forEach(NewAmt => {
                 jan_newAtotValue = jan_newAtotValue + NewAmt.jan_budg
                 feb_newAtotValue = feb_newAtotValue + NewAmt.feb_budg
                 mar_newAtotValue = mar_newAtotValue + NewAmt.mar_budg
@@ -4962,7 +5202,6 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 nov_newAtotValue = nov_newAtotValue + NewAmt.nov_budg
                 dec_newAtotValue = dec_newAtotValue + NewAmt.dec_budg
             })
-
             tot_newAtotValue = jan_newAtotValue + feb_newAtotValue + mar_newAtotValue + apr_newAtotValue + may_newAtotValue + jun_newAtotValue
                     + jul_newAtotValue + aug_newAtotValue + sep_newAtotValue + oct_newAtotValue + nov_newAtotValue + dec_newAtotValue
 
@@ -4970,11 +5209,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 may_value : may_newAtotValue, jun_value : jun_newAtotValue, jul_value : jul_newAtotValue, aug_value : aug_newAtotValue,
                 sep_value : sep_newAtotValue, oct_value : oct_newAtotValue, nov_value : nov_newAtotValue, dec_value : dec_newAtotValue, tot_value: tot_newAtotValue
             }) 
-            doneReadNLA = true
 
-        }) //, function (err, fndPOV) {
-        
-        if (doneReadNLA) {
+
             const fndNewLoanAmt = await Budg_exec_sum.findOne({po: viewPOCode, view_code: "NewLoanAmount"}, function (err, fndTotLonAmt) {
                 fondNewLoanAmt = fndTotLonAmt
                 if (isNull(fondNewLoanAmt)) { 
@@ -5003,9 +5239,31 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fondNewLoanAmt.save()            
                 }
             })       
+            doneReadNLA = true
         }
 
-        if (doneReadNumCenters) { 
+        // if (doneReadNumCenters) { 
+                
+            // const oldLoanAmtView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanAmt"}, function (err, fndNewAmt) {
+            //     const fondNewLnAmts = fndNewAmt
+            // })
+    
+            if (!isNull(oldLoanAmtView)) {
+                oldLoanAmtView.forEach(OldAmt => {
+                    jan_oldAtotValue = jan_oldAtotValue + OldAmt.jan_budg
+                    feb_oldAtotValue = feb_oldAtotValue + OldAmt.feb_budg
+                    mar_oldAtotValue = mar_oldAtotValue + OldAmt.mar_budg
+                    apr_oldAtotValue = apr_oldAtotValue + OldAmt.apr_budg
+                    may_oldAtotValue = may_oldAtotValue + OldAmt.may_budg
+                    jun_oldAtotValue = jun_oldAtotValue + OldAmt.jun_budg
+                    jul_oldAtotValue = jul_oldAtotValue + OldAmt.jul_budg
+                    aug_oldAtotValue = aug_oldAtotValue + OldAmt.aug_budg
+                    sep_oldAtotValue = sep_oldAtotValue + OldAmt.sep_budg
+                    oct_oldAtotValue = oct_oldAtotValue + OldAmt.oct_budg
+                    nov_oldAtotValue = nov_oldAtotValue + OldAmt.nov_budg
+                    dec_oldAtotValue = dec_oldAtotValue + OldAmt.dec_budg
+                })
+
                 
 
                 tot_oldAtotValue = jan_oldAtotValue + feb_oldAtotValue + mar_oldAtotValue + apr_oldAtotValue + may_oldAtotValue + jun_oldAtotValue
