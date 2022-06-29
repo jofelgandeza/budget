@@ -1518,10 +1518,10 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
 
     const assignUnit = _.trim(req.body.poUnit) + _.trim(req.body.poNumber)
     const brnCode = req.body.brnCode 
-    const assCode = brnCode + "-" + assignUnit
+    let assCode = ""
+
     const emPost =  req.body.ayPost
     const empStatus = req.body.empStat
-    const eAssCode = assCode
     
     let ePONum = "NA"
     let eUnit = "NA"
@@ -1536,10 +1536,15 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
             const eMName = _.trim(req.body.mName).toUpperCase()
             const nName =  eLName + ", " + eFName + " " + eMName
         
-        
+            if (ePosition === "BRN_MGR") {
+            }
+                
             if (ePosition === "BRN_MGR" || ePosition === "BRN_ACT" || ePosition === "BRN_AST") {
                 eUnit = "NA"
                 ePONum = "NA"
+                assCode = brnCode
+            } else {
+                assCode = brnCode + "-" + assignUnit
             }
             if (ePosition === "UNI_HED") {
                 eUnit = req.body.poUnit
@@ -1549,10 +1554,11 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
                 eUnit = req.body.poUnit
                 ePONum = req.body.poNumber    
             } 
-    
-            console.log(req.params.id)
-    let employee
-    let empPost
+        const eAssCode = assCode
+        console.log(req.params.id)
+        let employee
+        let empPost
+
         try {
             const mPost = await Position.findOne({_id: emPost}, function (err, fndEmPost) {
                 empPost = fndEmPost.code
@@ -1582,7 +1588,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
             if (ePosition === "UNI_HED") {
                 const unAssignCode = await Unit.findOneAndUpdate({"unit_code": eAssCode}, {$set:{"emp_code": eCode}})
             } 
-            const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": eCode, "region": req.user.region, "area": req.user.area }})
+            const userAssignCode = await User.findOneAndUpdate({"emp_code": eCode}, {$set:{"name": nName, "assCode": eAssCode, "region": req.user.region, "area": req.user.area, "short_title": eShortTitle }})
           
             res.redirect('/branches/employees/'+ brnCode)
 
