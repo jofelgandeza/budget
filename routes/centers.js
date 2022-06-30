@@ -227,11 +227,16 @@ router.get('/viewTarget/:id', authUser, authRole("PO", "BM"), async (req, res) =
     let sortedTargets = []
 
     let budget_Mode = ""
+    let targCenters = []
 
 //    console.log(POname)
     try {
 
         // const loanType = await Loan_type.find({})
+        // center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber}, function (err, fndPOCenters) {
+        //     targCenters = fndPOCenters
+        //     // console.log(poCenters)
+        // })
 
         const budg_setting = await Setting.find({}, function (err, foundSettings) {
             foundSettings.forEach(fndSet =>{
@@ -244,7 +249,7 @@ router.get('/viewTarget/:id', authUser, authRole("PO", "BM"), async (req, res) =
 
 //        const updateCtrForView = await Center.find()
 
-        const center = poCenters  //await Center.find({branch: branchCode, unit: unitCode, po: poNumber})
+        const center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber})
    
         if (center.length === 0) {
             doneCenterRead = true
@@ -1389,6 +1394,10 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
 
                         if ((targLength == 1) || (totalTargClients == 0 && i > 0) ) {
 
+                            
+
+                        const curResTarcenter =  await Center.findOneAndUpdate({"center": centerCode}, {$set:{"newClient": 0, "newClientAmt": 0, "oldClient": 0, "oldClientAmt": 0, "resClient":0, "resClient2":0 }})
+                                                        
                             const ctrResCliBudgDet = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "ResClientCount"}, function (err, fndResCli) {
     
                                 if (!isNull(fndResCli)) {
@@ -4253,7 +4262,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         
         // const newLoanAmtView = await Center_budget_det.find({po_code: viewPOCode, view_code: "NewLoanAmt", client_count_included:true})
 
-        const oldLoanAmtView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanAmt", client_count_included:true})
+        const oldLoanAmtView = await Center_budget_det.find({po_code: viewPOCode, view_code: "OldLoanAmt"})
 
         const foundCenters = await Center.find({po_code: viewPOCode}, function(err, fdCenters) {
             const fawndCenter = fdCenters
