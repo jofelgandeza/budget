@@ -253,7 +253,7 @@ router.get('/viewTarget/:id', authUser, authRole("PO", "BM"), async (req, res) =
 
         const center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber})
    
-        if (center.length === 0) {
+        if (center.length == 0) {
             doneCenterRead = true
         
         } else {
