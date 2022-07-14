@@ -870,27 +870,26 @@ router.post('/postNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) =>
     const area_code = _.trim(req.body.areaCode).toUpperCase()
     const area_desc = _.trim(req.body.areaDesc).toUpperCase()
 
-    const regionAreas = await Area.find({area:area_code})
-
+    let doneReadArea = false
     let fndArea = [ ]
     try {
         
-        // const getExisArea = await Area.findOne({area: area_code}, function (err, foundArea) {
-        //     fndArea = foundArea
-        // })
+        // const regionAreas = await Area.find({area:area_code})
+        const getExisArea = await Area.findOne({area: area_code}, function (err, foundArea) {
+            fndArea = foundArea
 
-        console.log(regionAreas)
-
-        if (isNull(fndArea)) {
-            canProceed = true 
-        } else {
-            canProceed = false
-            locals = {errorMessage: "Area Code already exists!"}
-        }
+            if (isNull(fndArea)) {
+                canProceed = true 
+            } else {
+                canProceed = false
+                locals = {errorMessage: "Area Code already exists!"}
+            }
+            doneReadArea = true
+        })
 
         console.log(canProceed)
         
-        if (canProceed) {
+        if (doneReadArea && canProceed) {
             let nArea  = new Area({
 
                 area: area_code,
@@ -1187,10 +1186,10 @@ let getExistingUser = []
 let canProceed = false
 let UserProceed = false
 
-try {
+const areaEmployees = await Employee.find({position: areaMgrID})
+console.log(areaEmployees)
 
-    const areaEmployees = await Employee.find({position: areaMgrID})
-    console.log(areaEmployees)
+try {
 
     const sameName = _.find(areaEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
 
@@ -1199,7 +1198,9 @@ try {
     const sameAssign = _.find(areaEmployees, {assign_code: empAreaCod})
     console.log(sameAssign)
 
-    if (areaEmployees.length === 0) {
+    if (areaEmployees.length == 0) {
+        canProceed = true
+    } else {
         if (sameName) {
             locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
             canProceed = false
@@ -1213,9 +1214,6 @@ try {
             } else {
                 canProceed = true
             }
-
-    } else {
-        canProceed = true
     }
 
         const hashedPassword = await bcrypt.hash(req.body.password, 10)

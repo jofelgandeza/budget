@@ -1324,6 +1324,7 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
     
     const assCode = brnCode + "-" + assignUnit
     const empCod = req.body.empCode
+    const empStatus = ["Active","Deactivate"]
 
 
 let locals
@@ -1331,20 +1332,22 @@ let locals
 let getExistingUser = []
 let canProceed = false
 let UserProceed = false
+let foundBranchEmp = []
 
 try {
 
-    const branchEmployees = await Employee.find({branch: brnCode})
-    console.log(branchEmployees)
+    const branchEmployees = await Employee.find({branch: brnCode}, function (err, fndBranchEmp) {
+        foundBranchEmp = fndBranchEmp
+    })
 
-    const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
+    if (foundBranchEmp.length > 0) {
+        const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
 
-    const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
-
-    const sameAssign = _.find(branchEmployees, {assign_code: assCode})
-    console.log(sameAssign)
-
-    if (branchEmployees) {
+        const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
+    
+        const sameAssign = _.find(branchEmployees, {assign_code: assCode})
+        console.log(sameAssign)
+        
         if (sameName) {
             locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
             canProceed = false
