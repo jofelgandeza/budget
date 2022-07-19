@@ -265,12 +265,19 @@
                             <td>
                                 <select name="month" id="monthID" onchange="getSemester()">
                                     <% monthSelect.forEach(function(month, index) { %> 
-                                            <option label="<%= month %>" value="<%= month  %>"></option>
+                                            <!-- <option label="<%= month %>" value="<%= month  %>"></option> -->
+                                            <% if (month === defMonSelect) { %>
+                                                <option selected value="<%= month %>"> <%= month %></option>
+                                             <% } else { %>
+                                                 <option value="<%= month %>"> <%= month %></option>
+                                             <%  } %>
+                             
+                                            
                                     <% }) %>
                                 </select>            
                             </td>
                             <td>
-                                <input type="text" name="semester" id="semesterID" value="First Half" placeholder="Semester">
+                                <input type="text" name="semester" id="semesterID" value = "<%= defaultPeriod %>"" placeholder="Semester">
                             </td>
                             <td>
                                 <input type="text" class="targNumCli" name="numClient" placeholder="Number of Clients" required autocomplete="off">
