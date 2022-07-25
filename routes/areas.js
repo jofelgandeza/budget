@@ -29,6 +29,8 @@ const region = require('../models/region')
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
 
 let poSumView = []
+let areaKRASumView = []
+let areaKRAperLnTyp = []
 
 // authUser, authRole("BM", "ADMIN"), 
 // console.log(ROLE)
@@ -3247,8 +3249,26 @@ router.get('/exportToExcel/:id', authUser, authRole(ROLE.AM), (req,res) => {
                 
                     let workbook = new excel.Workbook();
                     let worksheet = workbook.addWorksheet("Area_Exec_Sum");
+                    let worksheet1 = workbook.addWorksheet("Area_Exec_Sum2");
                 
-                    worksheet.columns = [
+                    worksheet1.columns = [
+                        { header: "DESCRIPTION", key: "title", width: 20 },
+                        { header: "BEG. BALANCE", key: "beg_bal", width: 20 },
+                        { header: "JANUARY", key: "jan_value", width: 12, style: { numFmt: '#,##0' } },
+                        { header: "FEBRUARY", key: "feb_value", width: 12, style: { numFmt: '#,##0' } },
+                        { header: "MARCH", key: "mar_value", width: 12, style: { numFmt: '#,##0' } },
+                        { header: "APRIL", key: "apr_value", width: 12, style: { numFmt: '#,##0' } },
+                        { header: "MAY", key: "may_value", width: 12, style: { numFmt: '#,##0' } },
+                        { header: "JUNE", key: "jun_value", width: 12, style: { numFmt: '#,##0' } },
+                        { header: "JULY", key: "jul_value", width: 12, style: { numFmt: '#,##0' } },
+                        { header: "AUGUST", key: "aug_value", width: 12, style: { numFmt: '#,##0' } },
+                        { header: "SEPTEMBER", key: "sep_value", width: 12, style: { numFmt: '#,##0' } },
+                        { header: "OCTOBER", key: "oct_value", width: 12, style: { numFmt: '#,##0' } },
+                        { header: "NOVEMBER", key: "nov_value", width: 12, style: { numFmt: '#,##0' } },
+                        { header: "DECEMBER", key: "dec_value", width: 12, style: { numFmt: '#,##0' } },
+                        { header: "TOTAL", key: "tot_value", width: 12, style: { numFmt: '#,##0' } },
+                      ];
+                      worksheet.columns = [
                       { header: "DESCRIPTION", key: "title", width: 20 },
                       { header: "BEG. BALANCE", key: "beg_bal", width: 20 },
                       { header: "JANUARY", key: "jan_value", width: 12, style: { numFmt: '#,##0' } },
@@ -3268,6 +3288,7 @@ router.get('/exportToExcel/:id', authUser, authRole(ROLE.AM), (req,res) => {
                 
                     // Add Array Rows
                     worksheet.addRows(dataForExcel)
+                    worksheet1.addRows(dataForExcel)
                 
                     worksheet.getRow(1).font = { size: 14, bold: true}
                     worksheet.getRow(2).font = { size: 12, bold: true}
@@ -3278,6 +3299,15 @@ router.get('/exportToExcel/:id', authUser, authRole(ROLE.AM), (req,res) => {
                     worksheet.getRow(22).font = { size: 12, bold: true}
                     worksheet.getRow(29).font = { size: 12, bold: true}
                 
+                    worksheet1.getRow(1).font = { size: 14, bold: true}
+                    worksheet1.getRow(2).font = { size: 12, bold: true}
+                    worksheet1.getRow(4).font = { size: 12, bold: true}
+                    worksheet1.getRow(9).font = { size: 12, bold: true}
+                    worksheet1.getRow(13).font = { size: 12, bold: true}
+                    worksheet1.getRow(17).font = { size: 12, bold: true}
+                    worksheet1.getRow(22).font = { size: 12, bold: true}
+                    worksheet1.getRow(29).font = { size: 12, bold: true}
+
                     res.setHeader(
                       "Content-Type",
                       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -3305,26 +3335,17 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
 
     const vwloanType = await Loan_type.find({})
     const vwAreaBranches = await Branch.find({area:viewAreaCode})
+    
+    const areaCtrBudgDet = await Center_budget_det.find({area: viewAreaCode})
+
+    // const areaCtrBudgTotLonAmt = await Center_budget_det.find({area: viewAreaCode, view_code: "TotLoanAmt"})
+
     const poBudgExecTotReach = await Budg_exec_sum.find({area: viewAreaCode, view_code: "TotClientOutreach"})
     const poBudgExecTotLonAmt = await Budg_exec_sum.find({area: viewAreaCode, view_code: "TotLoanAmt"})
 
-    console.log(vwAreaBranches)
+    // console.log(vwAreaBranches)
 
-            let begBalOldClient = 0
                 let centerCntBegBal = 0
-                let jan_TotCliOutReach = 0
-                let feb_TotCliOutReach = 0
-                let mar_TotCliOutReach = 0
-                let apr_TotCliOutReach = 0
-                let may_TotCliOutReach = 0
-                let jun_TotCliOutReach = 0
-                let jul_TotCliOutReach = 0
-                let aug_TotCliOutReach = 0
-                let sep_TotCliOutReach = 0
-                let oct_TotCliOutReach = 0
-                let nov_TotCliOutReach = 0
-                let dec_TotCliOutReach = 0
-                let tot_TotCliOutReach = 0
 
                 let jan_TotalCliOutReach = 0
                 let feb_TotalCliOutReach = 0
@@ -3339,198 +3360,1292 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                 let nov_TotalCliOutReach = 0
                 let dec_TotalCliOutReach = 0
 
+                let jan_TotalAmtDisburse = 0
+                let feb_TotalAmtDisburse = 0
+                let mar_TotalAmtDisburse = 0
+                let apr_TotalAmtDisburse = 0
+                let may_TotalAmtDisburse = 0
+                let jun_TotalAmtDisburse = 0
+                let jul_TotalAmtDisburse = 0
+                let aug_TotalAmtDisburse = 0
+                let sep_TotalAmtDisburse = 0
+                let oct_TotalAmtDisburse = 0
+                let nov_TotalAmtDisburse = 0
+                let dec_TotalAmtDisburse = 0
 
-            let janTotalAmtLoan = 0
-            let febTotalAmtLoan = 0
-            let marTotalAmtLoan = 0
-            let aprTotalAmtLoan = 0
-            let mayTotalAmtLoan = 0
-            let junTotalAmtLoan = 0
-            let julTotalAmtLoan = 0
-            let augTotalAmtLoan = 0
-            let sepTotalAmtLoan = 0
-            let octTotalAmtLoan = 0
-            let novTotalAmtLoan = 0
-            let decTotalAmtLoan = 0
+            let jan_brnTotAmtDisburse = 0
+            let feb_brnTotAmtDisburse = 0
+            let mar_brnTotAmtDisburse = 0
+            let apr_brnTotAmtDisburse = 0
+            let may_brnTotAmtDisburse = 0
+            let jun_brnTotAmtDisburse = 0
+            let jul_brnTotAmtDisburse = 0
+            let aug_brnTotAmtDisburse = 0
+            let sep_brnTotAmtDisburse = 0
+            let oct_brnTotAmtDisburse = 0
+            let nov_brnTotAmtDisburse = 0
+            let dec_brnTotAmtDisburse = 0
     
-            let janTotAmtLoan = 0
-            let febTotAmtLoan = 0
-            let marTotAmtLoan = 0
-            let aprTotAmtLoan = 0
-            let mayTotAmtLoan = 0
-            let junTotAmtLoan = 0
-            let julTotAmtLoan = 0
-            let augTotAmtLoan = 0
-            let sepTotAmtLoan = 0
-            let octTotAmtLoan = 0
-            let novTotAmtLoan = 0
-            let decTotAmtLoan = 0
+            let jan_brnNewLoanAmt = 0
+            let feb_brnNewLoanAmt = 0
+            let mar_brnNewLoanAmt = 0
+            let apr_brnNewLoanAmt = 0
+            let may_brnNewLoanAmt = 0
+            let jun_brnNewLoanAmt = 0
+            let jul_brnNewLoanAmt = 0
+            let aug_brnNewLoanAmt = 0
+            let sep_brnNewLoanAmt = 0
+            let oct_brnNewLoanAmt = 0
+            let nov_brnNewLoanAmt = 0
+            let dec_brnNewLoanAmt = 0
 
-            let totTotalAmtLoan = 0
+            let jan_brnOldLoanAmt = 0
+            let feb_brnOldLoanAmt = 0
+            let mar_brnOldLoanAmt = 0
+            let apr_brnOldLoanAmt = 0
+            let may_brnOldLoanAmt = 0
+            let jun_brnOldLoanAmt = 0
+            let jul_brnOldLoanAmt = 0
+            let aug_brnOldLoanAmt = 0
+            let sep_brnOldLoanAmt = 0
+            let oct_brnOldLoanAmt = 0
+            let nov_brnOldLoanAmt = 0
+            let dec_brnOldLoanAmt = 0
+
+            let tot_brnTotAmtDisburse = 0
+
+                let jan_TotOldClient = 0
+                let feb_TotOldClient = 0
+                let mar_TotOldClient = 0
+                let apr_TotOldClient = 0
+                let may_TotOldClient = 0
+                let jun_TotOldClient = 0
+                let jul_TotOldClient = 0
+                let aug_TotOldClient = 0
+                let sep_TotOldClient = 0
+                let oct_TotOldClient = 0
+                let nov_TotOldClient = 0
+                let dec_TotOldClient = 0
+
+                let jan_TotNewClient = 0
+                let feb_TotNewClient = 0
+                let mar_TotNewClient = 0
+                let apr_TotNewClient = 0
+                let may_TotNewClient = 0
+                let jun_TotNewClient = 0
+                let jul_TotNewClient = 0
+                let aug_TotNewClient = 0
+                let sep_TotNewClient = 0
+                let oct_TotNewClient = 0
+                let nov_TotNewClient = 0
+                let dec_TotNewClient = 0
+
+                let jan_TotResClient = 0
+                let feb_TotResClient = 0
+                let mar_TotResClient = 0
+                let apr_TotResClient = 0
+                let may_TotResClient = 0
+                let jun_TotResClient = 0
+                let jul_TotResClient = 0
+                let aug_TotResClient = 0
+                let sep_TotResClient = 0
+                let oct_TotResClient = 0
+                let nov_TotResClient = 0
+                let dec_TotResClient = 0
+
+                let jan_TotNewLoanAmt = 0
+                let feb_TotNewLoanAmt = 0
+                let mar_TotNewLoanAmt = 0
+                let apr_TotNewLoanAmt = 0
+                let may_TotNewLoanAmt = 0
+                let jun_TotNewLoanAmt = 0
+                let jul_TotNewLoanAmt = 0
+                let aug_TotNewLoanAmt = 0
+                let sep_TotNewLoanAmt = 0
+                let oct_TotNewLoanAmt = 0
+                let nov_TotNewLoanAmt = 0
+                let dec_TotNewLoanAmt = 0
+
+                let jan_TotOldLoanAmt = 0
+                let feb_TotOldLoanAmt = 0
+                let mar_TotOldLoanAmt = 0
+                let apr_TotOldLoanAmt = 0
+                let may_TotOldLoanAmt = 0
+                let jun_TotOldLoanAmt = 0
+                let jul_TotOldLoanAmt = 0
+                let aug_TotOldLoanAmt = 0
+                let sep_TotOldLoanAmt = 0
+                let oct_TotOldLoanAmt = 0
+                let nov_TotOldLoanAmt = 0
+                let dec_TotOldLoanAmt = 0
+
+            let jan_vwLonTypNewCli = 0
+            let feb_vwLonTypNewCli = 0
+            let mar_vwLonTypNewCli = 0
+            let apr_vwLonTypNewCli = 0
+            let may_vwLonTypNewCli = 0
+            let jun_vwLonTypNewCli = 0
+            let jul_vwLonTypNewCli = 0
+            let aug_vwLonTypNewCli = 0
+            let sep_vwLonTypNewCli = 0
+            let oct_vwLonTypNewCli = 0
+            let nov_vwLonTypNewCli = 0
+            let dec_vwLonTypNewCli = 0
+
+            let jan_vwLonTypOldCli = 0
+            let feb_vwLonTypOldCli = 0
+            let mar_vwLonTypOldCli = 0
+            let apr_vwLonTypOldCli = 0
+            let may_vwLonTypOldCli = 0
+            let jun_vwLonTypOldCli = 0
+            let jul_vwLonTypOldCli = 0
+            let aug_vwLonTypOldCli = 0
+            let sep_vwLonTypOldCli = 0
+            let oct_vwLonTypOldCli = 0
+            let nov_vwLonTypOldCli = 0
+            let dec_vwLonTypOldCli = 0
+
+            let jan_vwLonTypNewAmt = 0
+            let feb_vwLonTypNewAmt = 0
+            let mar_vwLonTypNewAmt = 0
+            let apr_vwLonTypNewAmt = 0
+            let may_vwLonTypNewAmt = 0
+            let jun_vwLonTypNewAmt = 0
+            let jul_vwLonTypNewAmt = 0
+            let aug_vwLonTypNewAmt = 0
+            let sep_vwLonTypNewAmt = 0
+            let oct_vwLonTypNewAmt = 0
+            let nov_vwLonTypNewAmt = 0
+            let dec_vwLonTypNewAmt = 0
+
+            let jan_vwLonTypOldAmt = 0
+            let feb_vwLonTypOldAmt = 0
+            let mar_vwLonTypOldAmt = 0
+            let apr_vwLonTypOldAmt = 0
+            let may_vwLonTypOldAmt = 0
+            let jun_vwLonTypOldAmt = 0
+            let jul_vwLonTypOldAmt = 0
+            let aug_vwLonTypOldAmt = 0
+            let sep_vwLonTypOldAmt = 0
+            let oct_vwLonTypOldAmt = 0
+            let nov_vwLonTypOldAmt = 0
+            let dec_vwLonTypOldAmt = 0
+
+            let jan_vwLonTypResCli = 0
+            let feb_vwLonTypResCli = 0
+            let mar_vwLonTypResCli = 0
+            let apr_vwLonTypResCli = 0
+            let may_vwLonTypResCli = 0
+            let jun_vwLonTypResCli = 0
+            let jul_vwLonTypResCli = 0
+            let aug_vwLonTypResCli = 0
+            let sep_vwLonTypResCli = 0
+            let oct_vwLonTypResCli = 0
+            let nov_vwLonTypResCli = 0
+            let dec_vwLonTypResCli = 0
+                let tot_vwLonTypNewCli = 0
+                let tot_vwLonTypOldCli = 0
+                let tot_vwLonTypNewAmt = 0
+                let tot_vwLonTypOldAmt = 0
+
+                let jan_brnOldCliTot = 0
+                let feb_brnOldCliTot = 0
+                let mar_brnOldCliTot = 0
+                let apr_brnOldCliTot = 0
+                let may_brnOldCliTot = 0
+                let jun_brnOldCliTot = 0
+                let jul_brnOldCliTot = 0
+                let aug_brnOldCliTot = 0
+                let sep_brnOldCliTot = 0
+                let oct_brnOldCliTot = 0
+                let nov_brnOldCliTot = 0
+                let dec_brnOldCliTot = 0
+    
+                let jan_brnNewCliTot = 0
+                let feb_brnNewCliTot = 0
+                let mar_brnNewCliTot = 0
+                let apr_brnNewCliTot = 0
+                let may_brnNewCliTot = 0
+                let jun_brnNewCliTot = 0
+                let jul_brnNewCliTot = 0
+                let aug_brnNewCliTot = 0
+                let sep_brnNewCliTot = 0
+                let oct_brnNewCliTot = 0
+                let nov_brnNewCliTot = 0
+                let dec_brnNewCliTot = 0
+    
+                let jan_totNumClients = 0 
+                let feb_totNumClients = 0
+                let mar_totNumClients = 0
+                let apr_totNumClients = 0
+                let may_totNumClients = 0
+                let jun_totNumClients = 0
+                let jul_totNumClients = 0
+                let aug_totNumClients = 0
+                let sep_totNumClients = 0
+                let oct_totNumClients = 0
+                let nov_totNumClients = 0
+                let dec_totNumClients = 0
+
+                let lnTypBegBalOldClient = 0
+                let branBegBalOldClient = 0
 
             let doneReadTotLonAmt = false
             let doneReadTotOutreach = false
-    
+            let doneReadBranLnType = false
+            let doneReadLnType = false
+            let ctr = 20
+            let ctrPerLonType = 20
+            let ctrAreaOutReach = 1
+            let ctrAreaDisb = 10
+            let totalCtr = 2
+            let ctrPerLonTypGrp = 1
+
             poSumView = [ ]
+
+            let areaPerLnTypView = []
     
             try {
-    
-            //  Pre-determine if items is already existed or saved in Budg_exec_sum Collection
-    
-            // const poBudgExecNumCenters = await Budg_exec_sum.find({area: viewAreaCode, view_code: "TotClientOutreach"}, function (err, fndTotCliOutreach) {
-            //         fndAreaBudgExecTotOutreach = fndTotCliOutreach
-            // })
-
-            // const poBudgExecTotLonAmt = await Budg_exec_sum.find({area: viewAreaCode, view_code: "TotLoanAmt"}, function (err, fndTotLonAmt) {
-            //     fndUnitBudgExecTotLonAmt = fndTotLonAmt
-            // })
-            if (isNull(poBudgExecTotReach)) {
-
-                doneReadTotOutreach = true
-            }
-
-            if (isNull(poBudgExecTotLonAmt)) {
-
-                doneReadTotLonAmt = true
-            }
-
-            poSumView.push({title: "OUTREACH", sortkey: 1, group: 1, isTitle: true})
-
-            poSumView.push({title: "LOAN DISBURSEMENT", sortkey: 6, group: 2, isTitle: true})
-
-            let ctr = 1
-
-                vwAreaBranches.forEach( vwBranches => {
-
-                    const brnDesc = vwBranches.branch_desc
-                    const brnCode = vwBranches.branch
-                    
-                    ctr = ctr + 1
-                    
-                    poBudgExecTotReach.forEach(TotCliOutreach => {
-                        if (TotCliOutreach.branch === brnCode) {
-                            centerCntBegBal = centerCntBegBal + TotCliOutreach.beg_bal
-                            jan_TotCliOutReach = jan_TotCliOutReach + TotCliOutreach.jan_budg
-                            feb_TotCliOutReach = feb_TotCliOutReach + TotCliOutreach.feb_budg
-                            mar_TotCliOutReach = mar_TotCliOutReach + TotCliOutreach.mar_budg
-                            apr_TotCliOutReach = apr_TotCliOutReach + TotCliOutreach.apr_budg
-                            may_TotCliOutReach = may_TotCliOutReach + TotCliOutreach.may_budg
-                            jun_TotCliOutReach = jun_TotCliOutReach + TotCliOutreach.jun_budg
-                            jul_TotCliOutReach = jul_TotCliOutReach + TotCliOutreach.jul_budg
-                            aug_TotCliOutReach = aug_TotCliOutReach + TotCliOutreach.aug_budg
-                            sep_TotCliOutReach = sep_TotCliOutReach + TotCliOutreach.sep_budg
-                            oct_TotCliOutReach = oct_TotCliOutReach + TotCliOutreach.oct_budg
-                            nov_TotCliOutReach = nov_TotCliOutReach + TotCliOutreach.nov_budg
-                            dec_TotCliOutReach = dec_TotCliOutReach + TotCliOutreach.dec_budg
-    
-                            jan_TotalCliOutReach = jan_TotalCliOutReach + TotCliOutreach.jan_budg
-                            feb_TotalCliOutReach = feb_TotalCliOutReach + TotCliOutreach.feb_budg
-                            mar_TotalCliOutReach = mar_TotalCliOutReach + TotCliOutreach.mar_budg
-                            apr_TotalCliOutReach = apr_TotalCliOutReach + TotCliOutreach.apr_budg
-                            may_TotalCliOutReach = may_TotalCliOutReach + TotCliOutreach.may_budg
-                            jun_TotalCliOutReach = jun_TotalCliOutReach + TotCliOutreach.jun_budg
-                            jul_TotalCliOutReach = jul_TotalCliOutReach + TotCliOutreach.jul_budg
-                            aug_TotalCliOutReach = aug_TotalCliOutReach + TotCliOutreach.aug_budg
-                            sep_TotalCliOutReach = sep_TotalCliOutReach + TotCliOutreach.sep_budg
-                            oct_TotalCliOutReach = oct_TotalCliOutReach + TotCliOutreach.oct_budg
-                            nov_TotalCliOutReach = nov_TotalCliOutReach + TotCliOutreach.nov_budg
-                            dec_TotalCliOutReach = dec_TotalCliOutReach + TotCliOutreach.dec_budg
                 
-                        }
-                    })
-                    
-                    poSumView.push({title: brnDesc, sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_TotCliOutReach, feb_value: feb_TotCliOutReach, mar_value: mar_TotCliOutReach,
-                        apr_value: apr_TotCliOutReach, may_value: may_TotCliOutReach, jun_value: jun_TotCliOutReach, jul_value: jul_TotCliOutReach, aug_value: aug_TotCliOutReach,
-                        sep_value: sep_TotCliOutReach, oct_value: oct_TotCliOutReach, nov_value: nov_TotCliOutReach, dec_value: dec_TotCliOutReach, tot_value : dec_TotCliOutReach
-                    })
-    
+                console.log(poBudgExecTotReach)
+
+                if (isNull(poBudgExecTotReach)) {
+
                     doneReadTotOutreach = true
-    
-                    poBudgExecTotLonAmt.forEach(TotAmtLon => {
+                }
 
-                        if (TotAmtLon.branch === brnCode) { 
-                            janTotAmtLoan = janTotAmtLoan + TotAmtLon.jan_budg
-                            febTotAmtLoan = febTotAmtLoan + TotAmtLon.feb_budg
-                            marTotAmtLoan = marTotAmtLoan + TotAmtLon.mar_budg
-                            aprTotAmtLoan = aprTotAmtLoan + TotAmtLon.apr_budg
-                            mayTotAmtLoan = mayTotAmtLoan + TotAmtLon.may_budg
-                            junTotAmtLoan = junTotAmtLoan + TotAmtLon.jun_budg
-                            julTotAmtLoan = julTotAmtLoan + TotAmtLon.jul_budg
-                            augTotAmtLoan = augTotAmtLoan + TotAmtLon.aug_budg
-                            sepTotAmtLoan = sepTotAmtLoan + TotAmtLon.sep_budg
-                            octTotAmtLoan = octTotAmtLoan + TotAmtLon.oct_budg
-                            novTotAmtLoan = novTotAmtLoan + TotAmtLon.nov_budg
-                            decTotAmtLoan = decTotAmtLoan + TotAmtLon.dec_budg
-                                
-                            janTotalAmtLoan = janTotalAmtLoan + TotAmtLon.jan_budg
-                            febTotalAmtLoan = febTotalAmtLoan + TotAmtLon.feb_budg
-                            marTotalAmtLoan = marTotalAmtLoan + TotAmtLon.mar_budg
-                            aprTotalAmtLoan = aprTotalAmtLoan + TotAmtLon.apr_budg
-                            mayTotalAmtLoan = mayTotalAmtLoan + TotAmtLon.may_budg
-                            junTotalAmtLoan = junTotalAmtLoan + TotAmtLon.jun_budg
-                            julTotalAmtLoan = julTotalAmtLoan + TotAmtLon.jul_budg
-                            augTotalAmtLoan = augTotalAmtLoan + TotAmtLon.aug_budg
-                            sepTotalAmtLoan = sepTotalAmtLoan + TotAmtLon.sep_budg
-                            octTotalAmtLoan = octTotalAmtLoan + TotAmtLon.oct_budg
-                            novTotalAmtLoan = novTotalAmtLoan + TotAmtLon.nov_budg
-                            decTotalAmtLoan = decTotalAmtLoan + TotAmtLon.dec_budg
-                        }
-                    })
-    
-                    totTotAmtLoan = janTotAmtLoan + febTotAmtLoan + marTotAmtLoan + aprTotAmtLoan + mayTotAmtLoan + junTotAmtLoan + julTotAmtLoan + augTotAmtLoan +
-                        sepTotAmtLoan + octTotAmtLoan + novTotAmtLoan + decTotAmtLoan
-    
-                    poSumView.push({title: brnDesc, sortkey: 6 + ctr, group: 2, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
-                        apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
-                        aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan, tot_value : totTotAmtLoan
-                    })
-    
+                if (isNull(poBudgExecTotLonAmt)) {
+
                     doneReadTotLonAmt = true
+                }
+
+                poSumView.push({title: "AREA OUTREACH", sortkey: 1, group: 1, isTitle: true})
+
+                poSumView.push({title: "AREA DISBURSEMENT", sortkey: ctrAreaDisb , group: 2, isTitle: true})
+
+                vwAreaBranches.forEach ( areaBranch => {         //SCAN the Branches
+                    const brnDesc = areaBranch.branch_desc
+                    const brnCode = areaBranch.branch
+
+                    vwloanType.forEach( lonType => {            // SCAN the Loan Types
+
+                        const scanvwloanType = lonType.title
+                        ctr = ctr + 1
+
+                        // poSumView.push({title: scanvwloanType, sortkey: ctrPerLonType , group: 2, isTitle: true})
+
+                        ctrPerLonType = ctrPerLonType + 1
+
+                        if (ctrPerLonTypGrp == 1) {
+                            ctrPerLonTypGrp = 2
+                        } else {
+                            ctrPerLonTypGrp = 1
+                        }
     
-                     centerCntBegBal = 0
-                     jan_TotCliOutReach = 0
-                     feb_TotCliOutReach = 0
-                     mar_TotCliOutReach = 0
-                     apr_TotCliOutReach = 0
-                     may_TotCliOutReach = 0
-                     jun_TotCliOutReach = 0
-                     jul_TotCliOutReach = 0
-                     aug_TotCliOutReach = 0
-                     sep_TotCliOutReach = 0
-                     oct_TotCliOutReach = 0
-                     nov_TotCliOutReach = 0
-                     dec_TotCliOutReach = 0
-                     tot_TotCliOutReach = 0
+                        areaCtrBudgDet.forEach(areaBudgetDets => {      // SCAN Center_Budget_dets for the Area
+    
+                            const areaViewCode = areaBudgetDets.view_code
+                            const areaLnType = areaBudgetDets.loan_type
+                            const areaBranCode = areaBudgetDets.branch
+    
+                            if (areaBranCode === brnCode && areaLnType === scanvwloanType) {
+    
+                                switch (areaViewCode) {
+                                    case "NewLoanClient":
+                                        jan_vwLonTypNewCli = jan_vwLonTypNewCli + areaBudgetDets.jan_budg
+                                        feb_vwLonTypNewCli = feb_vwLonTypNewCli + areaBudgetDets.feb_budg
+                                        mar_vwLonTypNewCli = mar_vwLonTypNewCli + areaBudgetDets.mar_budg
+                                        apr_vwLonTypNewCli = apr_vwLonTypNewCli + areaBudgetDets.apr_budg
+                                        may_vwLonTypNewCli = may_vwLonTypNewCli + areaBudgetDets.may_budg
+                                        jun_vwLonTypNewCli = jun_vwLonTypNewCli + areaBudgetDets.jun_budg
+                                        jul_vwLonTypNewCli = jul_vwLonTypNewCli + areaBudgetDets.jul_budg
+                                        aug_vwLonTypNewCli = aug_vwLonTypNewCli + areaBudgetDets.aug_budg
+                                        sep_vwLonTypNewCli = sep_vwLonTypNewCli + areaBudgetDets.sep_budg
+                                        oct_vwLonTypNewCli = oct_vwLonTypNewCli + areaBudgetDets.oct_budg
+                                        nov_vwLonTypNewCli = nov_vwLonTypNewCli + areaBudgetDets.nov_budg
+                                        dec_vwLonTypNewCli = dec_vwLonTypNewCli + areaBudgetDets.dec_budg                        
         
-                     janTotAmtLoan = 0
-                     febTotAmtLoan = 0
-                     marTotAmtLoan = 0
-                     aprTotAmtLoan = 0
-                     mayTotAmtLoan = 0
-                     junTotAmtLoan = 0
-                     julTotAmtLoan = 0
-                     augTotAmtLoan = 0
-                     sepTotAmtLoan = 0
-                     octTotAmtLoan = 0
-                     novTotAmtLoan = 0
-                     decTotAmtLoan = 0
-            
-                })
+                                        jan_brnNewCliTot = jan_brnNewCliTot + areaBudgetDets.jan_budg
+                                        feb_brnNewCliTot = feb_brnNewCliTot + areaBudgetDets.feb_budg
+                                        mar_brnNewCliTot = mar_brnNewCliTot + areaBudgetDets.mar_budg
+                                        apr_brnNewCliTot = apr_brnNewCliTot + areaBudgetDets.apr_budg
+                                        may_brnNewCliTot = may_brnNewCliTot + areaBudgetDets.may_budg
+                                        jun_brnNewCliTot = jun_brnNewCliTot + areaBudgetDets.jun_budg
+                                        jul_brnNewCliTot = jul_brnNewCliTot + areaBudgetDets.jul_budg
+                                        aug_brnNewCliTot = aug_brnNewCliTot + areaBudgetDets.aug_budg
+                                        sep_brnNewCliTot = sep_brnNewCliTot + areaBudgetDets.sep_budg
+                                        oct_brnNewCliTot = oct_brnNewCliTot + areaBudgetDets.oct_budg
+                                        nov_brnNewCliTot = nov_brnNewCliTot + areaBudgetDets.nov_budg
+                                        dec_brnNewCliTot = dec_brnNewCliTot + areaBudgetDets.dec_budg                        
+        
+                                        jan_TotNewClient = jan_TotNewClient + areaBudgetDets.jan_budg
+                                        feb_TotNewClient = feb_TotNewClient + areaBudgetDets.feb_budg
+                                        mar_TotNewClient = mar_TotNewClient + areaBudgetDets.mar_budg
+                                        apr_TotNewClient = apr_TotNewClient + areaBudgetDets.apr_budg
+                                        may_TotNewClient = may_TotNewClient + areaBudgetDets.may_budg
+                                        jun_TotNewClient = jun_TotNewClient + areaBudgetDets.jun_budg
+                                        jul_TotNewClient = jul_TotNewClient + areaBudgetDets.jul_budg
+                                        aug_TotNewClient = aug_TotNewClient + areaBudgetDets.aug_budg
+                                        sep_TotNewClient = sep_TotNewClient + areaBudgetDets.sep_budg
+                                        oct_TotNewClient = oct_TotNewClient + areaBudgetDets.oct_budg
+                                        nov_TotNewClient = nov_TotNewClient + areaBudgetDets.nov_budg
+                                        dec_TotNewClient = dec_TotNewClient + areaBudgetDets.dec_budg                        
+                                        break;
+                                    case "OldLoanClient":
+                                        lnTypBegBalOldClient = lnTypBegBalOldClient + areaBudgetDets.beg_bal
+                                        branBegBalOldClient = branBegBalOldClient + areaBudgetDets.beg_bal
+                                        jan_vwLonTypOldCli = jan_vwLonTypOldCli + areaBudgetDets.jan_budg
+                                        feb_vwLonTypOldCli = feb_vwLonTypOldCli + areaBudgetDets.feb_budg
+                                        mar_vwLonTypOldCli = mar_vwLonTypOldCli + areaBudgetDets.mar_budg
+                                        apr_vwLonTypOldCli = apr_vwLonTypOldCli + areaBudgetDets.apr_budg
+                                        may_vwLonTypOldCli = may_vwLonTypOldCli + areaBudgetDets.may_budg
+                                        jun_vwLonTypOldCli = jun_vwLonTypOldCli + areaBudgetDets.jun_budg
+                                        jul_vwLonTypOldCli = jul_vwLonTypOldCli + areaBudgetDets.jul_budg
+                                        aug_vwLonTypOldCli = aug_vwLonTypOldCli + areaBudgetDets.aug_budg
+                                        sep_vwLonTypOldCli = sep_vwLonTypOldCli + areaBudgetDets.sep_budg
+                                        oct_vwLonTypOldCli = oct_vwLonTypOldCli + areaBudgetDets.oct_budg
+                                        nov_vwLonTypOldCli = nov_vwLonTypOldCli + areaBudgetDets.nov_budg
+                                        dec_vwLonTypOldCli = dec_vwLonTypOldCli + areaBudgetDets.dec_budg                        
+        
+                                        jan_TotOldClient = jan_TotOldClient + areaBudgetDets.jan_budg
+                                        feb_TotOldClient = feb_TotOldClient + areaBudgetDets.feb_budg
+                                        mar_TotOldClient = mar_TotOldClient + areaBudgetDets.mar_budg
+                                        apr_TotOldClient = apr_TotOldClient + areaBudgetDets.apr_budg
+                                        may_TotOldClient = may_TotOldClient + areaBudgetDets.may_budg
+                                        jun_TotOldClient = jun_TotOldClient + areaBudgetDets.jun_budg
+                                        jul_TotOldClient = jul_TotOldClient + areaBudgetDets.jul_budg
+                                        aug_TotOldClient = aug_TotOldClient + areaBudgetDets.aug_budg
+                                        sep_TotOldClient = sep_TotOldClient + areaBudgetDets.sep_budg
+                                        oct_TotOldClient = oct_TotOldClient + areaBudgetDets.oct_budg
+                                        nov_TotOldClient = nov_TotOldClient + areaBudgetDets.nov_budg
+                                        dec_TotOldClient = dec_TotOldClient + areaBudgetDets.dec_budg
+                                    
+                                        break;
+                                    case "NewLoanAmt":
+                                        jan_vwLonTypNewAmt = jan_vwLonTypNewAmt + areaBudgetDets.jan_budg
+                                        feb_vwLonTypNewAmt = feb_vwLonTypNewAmt + areaBudgetDets.feb_budg
+                                        mar_vwLonTypNewAmt = mar_vwLonTypNewAmt + areaBudgetDets.mar_budg
+                                        apr_vwLonTypNewAmt = apr_vwLonTypNewAmt + areaBudgetDets.apr_budg
+                                        may_vwLonTypNewAmt = may_vwLonTypNewAmt + areaBudgetDets.may_budg
+                                        jun_vwLonTypNewAmt = jun_vwLonTypNewAmt + areaBudgetDets.jun_budg
+                                        jul_vwLonTypNewAmt = jul_vwLonTypNewAmt + areaBudgetDets.jul_budg
+                                        aug_vwLonTypNewAmt = aug_vwLonTypNewAmt + areaBudgetDets.aug_budg
+                                        sep_vwLonTypNewAmt = sep_vwLonTypNewAmt + areaBudgetDets.sep_budg
+                                        oct_vwLonTypNewAmt = oct_vwLonTypNewAmt + areaBudgetDets.oct_budg
+                                        nov_vwLonTypNewAmt = nov_vwLonTypNewAmt + areaBudgetDets.nov_budg
+                                        dec_vwLonTypNewAmt = dec_vwLonTypNewAmt + areaBudgetDets.dec_budg                        
+        
+                                        jan_brnNewLoanAmt = jan_brnNewLoanAmt + areaBudgetDets.jan_budg
+                                        feb_brnNewLoanAmt = feb_brnNewLoanAmt + areaBudgetDets.feb_budg
+                                        mar_brnNewLoanAmt = mar_brnNewLoanAmt + areaBudgetDets.mar_budg
+                                        apr_brnNewLoanAmt = apr_brnNewLoanAmt + areaBudgetDets.apr_budg
+                                        may_brnNewLoanAmt = may_brnNewLoanAmt + areaBudgetDets.may_budg
+                                        jun_brnNewLoanAmt = jun_brnNewLoanAmt + areaBudgetDets.jun_budg
+                                        jul_brnNewLoanAmt = jul_brnNewLoanAmt + areaBudgetDets.jul_budg
+                                        aug_brnNewLoanAmt = aug_brnNewLoanAmt + areaBudgetDets.aug_budg
+                                        sep_brnNewLoanAmt = sep_brnNewLoanAmt + areaBudgetDets.sep_budg
+                                        oct_brnNewLoanAmt = oct_brnNewLoanAmt + areaBudgetDets.oct_budg
+                                        nov_brnNewLoanAmt = nov_brnNewLoanAmt + areaBudgetDets.nov_budg
+                                        dec_brnNewLoanAmt = dec_brnNewLoanAmt + areaBudgetDets.dec_budg                       
 
-                if (doneReadTotOutreach && doneReadTotLonAmt) { 
+                                        jan_TotNewLoanAmt = jan_TotNewLoanAmt + areaBudgetDets.jan_budg
+                                        feb_TotNewLoanAmt = feb_TotNewLoanAmt + areaBudgetDets.feb_budg
+                                        mar_TotNewLoanAmt = mar_TotNewLoanAmt + areaBudgetDets.mar_budg
+                                        apr_TotNewLoanAmt = apr_TotNewLoanAmt + areaBudgetDets.apr_budg
+                                        may_TotNewLoanAmt = may_TotNewLoanAmt + areaBudgetDets.may_budg
+                                        jun_TotNewLoanAmt = jun_TotNewLoanAmt + areaBudgetDets.jun_budg
+                                        jul_TotNewLoanAmt = jul_TotNewLoanAmt + areaBudgetDets.jul_budg
+                                        aug_TotNewLoanAmt = aug_TotNewLoanAmt + areaBudgetDets.aug_budg
+                                        sep_TotNewLoanAmt = sep_TotNewLoanAmt + areaBudgetDets.sep_budg
+                                        oct_TotNewLoanAmt = oct_TotNewLoanAmt + areaBudgetDets.oct_budg
+                                        nov_TotNewLoanAmt = nov_TotNewLoanAmt + areaBudgetDets.nov_budg
+                                        dec_TotNewLoanAmt = dec_TotNewLoanAmt + areaBudgetDets.dec_budg
+                                    
+                                        break;
+                                    case "OldLoanAmt":
+                                        jan_vwLonTypOldAmt = jan_vwLonTypOldAmt + areaBudgetDets.jan_budg
+                                        feb_vwLonTypOldAmt = feb_vwLonTypOldAmt + areaBudgetDets.feb_budg
+                                        mar_vwLonTypOldAmt = mar_vwLonTypOldAmt + areaBudgetDets.mar_budg
+                                        apr_vwLonTypOldAmt = apr_vwLonTypOldAmt + areaBudgetDets.apr_budg
+                                        may_vwLonTypOldAmt = may_vwLonTypOldAmt + areaBudgetDets.may_budg
+                                        jun_vwLonTypOldAmt = jun_vwLonTypOldAmt + areaBudgetDets.jun_budg
+                                        jul_vwLonTypOldAmt = jul_vwLonTypOldAmt + areaBudgetDets.jul_budg
+                                        aug_vwLonTypOldAmt = aug_vwLonTypOldAmt + areaBudgetDets.aug_budg
+                                        sep_vwLonTypOldAmt = sep_vwLonTypOldAmt + areaBudgetDets.sep_budg
+                                        oct_vwLonTypOldAmt = oct_vwLonTypOldAmt + areaBudgetDets.oct_budg
+                                        nov_vwLonTypOldAmt = nov_vwLonTypOldAmt + areaBudgetDets.nov_budg
+                                        dec_vwLonTypOldAmt = dec_vwLonTypOldAmt + areaBudgetDets.dec_budg                        
+        
+                                        jan_brnOldLoanAmt = jan_brnOldLoanAmt + areaBudgetDets.jan_budg
+                                        feb_brnOldLoanAmt = feb_brnOldLoanAmt + areaBudgetDets.feb_budg
+                                        mar_brnOldLoanAmt = mar_brnOldLoanAmt + areaBudgetDets.mar_budg
+                                        apr_brnOldLoanAmt = apr_brnOldLoanAmt + areaBudgetDets.apr_budg
+                                        may_brnOldLoanAmt = may_brnOldLoanAmt + areaBudgetDets.may_budg
+                                        jun_brnOldLoanAmt = jun_brnOldLoanAmt + areaBudgetDets.jun_budg
+                                        jul_brnOldLoanAmt = jul_brnOldLoanAmt + areaBudgetDets.jul_budg
+                                        aug_brnOldLoanAmt = aug_brnOldLoanAmt + areaBudgetDets.aug_budg
+                                        sep_brnOldLoanAmt = sep_brnOldLoanAmt + areaBudgetDets.sep_budg
+                                        oct_brnOldLoanAmt = oct_brnOldLoanAmt + areaBudgetDets.oct_budg
+                                        nov_brnOldLoanAmt = nov_brnOldLoanAmt + areaBudgetDets.nov_budg
+                                        dec_brnOldLoanAmt = dec_brnOldLoanAmt + areaBudgetDets.dec_budg                       
 
-                    poSumView.push({title: "TOTAL OUTREACH", sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_TotalCliOutReach, feb_value: feb_TotalCliOutReach, mar_value: mar_TotalCliOutReach,
-                        apr_value: apr_TotalCliOutReach, may_value: may_TotalCliOutReach, jun_value: jun_TotalCliOutReach, jul_value: jul_TotalCliOutReach, aug_value: aug_TotalCliOutReach,
-                        sep_value: sep_TotalCliOutReach, oct_value: oct_TotalCliOutReach, nov_value: nov_TotalCliOutReach, dec_value: dec_TotalCliOutReach, tot_value : dec_TotalCliOutReach
-                    })
-
-                    totTotalAmtLoan = janTotalAmtLoan + febTotalAmtLoan + marTotalAmtLoan + aprTotalAmtLoan + mayTotalAmtLoan + junTotalAmtLoan + julTotalAmtLoan + augTotalAmtLoan +
-                    sepTotalAmtLoan + octTotalAmtLoan + novTotalAmtLoan + decTotalAmtLoan
+                                        jan_TotOldLoanAmt = jan_TotOldLoanAmt + areaBudgetDets.jan_budg
+                                        feb_TotOldLoanAmt = feb_TotOldLoanAmt + areaBudgetDets.feb_budg
+                                        mar_TotOldLoanAmt = mar_TotOldLoanAmt + areaBudgetDets.mar_budg
+                                        apr_TotOldLoanAmt = apr_TotOldLoanAmt + areaBudgetDets.apr_budg
+                                        may_TotOldLoanAmt = may_TotOldLoanAmt + areaBudgetDets.may_budg
+                                        jun_TotOldLoanAmt = jun_TotOldLoanAmt + areaBudgetDets.jun_budg
+                                        jul_TotOldLoanAmt = jul_TotOldLoanAmt + areaBudgetDets.jul_budg
+                                        aug_TotOldLoanAmt = aug_TotOldLoanAmt + areaBudgetDets.aug_budg
+                                        sep_TotOldLoanAmt = sep_TotOldLoanAmt + areaBudgetDets.sep_budg
+                                        oct_TotOldLoanAmt = oct_TotOldLoanAmt + areaBudgetDets.oct_budg
+                                        nov_TotOldLoanAmt = nov_TotOldLoanAmt + areaBudgetDets.nov_budg
+                                        dec_TotOldLoanAmt = dec_TotOldLoanAmt + areaBudgetDets.dec_budg
+                                    
+                                        break;
+                                    case "ResClientCount":
+                                        jan_vwLonTypResCli = jan_vwLonTypResCli + areaBudgetDets.jan_budg
+                                        feb_vwLonTypResCli = feb_vwLonTypResCli + areaBudgetDets.feb_budg
+                                        mar_vwLonTypResCli = mar_vwLonTypResCli + areaBudgetDets.mar_budg
+                                        apr_vwLonTypResCli = apr_vwLonTypResCli + areaBudgetDets.apr_budg
+                                        may_vwLonTypResCli = may_vwLonTypResCli + areaBudgetDets.may_budg
+                                        jun_vwLonTypResCli = jun_vwLonTypResCli + areaBudgetDets.jun_budg
+                                        jul_vwLonTypResCli = jul_vwLonTypResCli + areaBudgetDets.jul_budg
+                                        aug_vwLonTypResCli = aug_vwLonTypResCli + areaBudgetDets.aug_budg
+                                        sep_vwLonTypResCli = sep_vwLonTypResCli + areaBudgetDets.sep_budg
+                                        oct_vwLonTypResCli = oct_vwLonTypResCli + areaBudgetDets.oct_budg
+                                        nov_vwLonTypResCli = nov_vwLonTypResCli + areaBudgetDets.nov_budg
+                                        dec_vwLonTypResCli = dec_vwLonTypResCli + areaBudgetDets.dec_budg                        
+        
+                                        jan_TotResClient = jan_TotResClient + areaBudgetDets.jan_budg
+                                        feb_TotResClient = feb_TotResClient + areaBudgetDets.feb_budg
+                                        mar_TotResClient = mar_TotResClient + areaBudgetDets.mar_budg
+                                        apr_TotResClient = apr_TotResClient + areaBudgetDets.apr_budg
+                                        may_TotResClient = may_TotResClient + areaBudgetDets.may_budg
+                                        jun_TotResClient = jun_TotResClient + areaBudgetDets.jun_budg
+                                        jul_TotResClient = jul_TotResClient + areaBudgetDets.jul_budg
+                                        aug_TotResClient = aug_TotResClient + areaBudgetDets.aug_budg
+                                        sep_TotResClient = sep_TotResClient + areaBudgetDets.sep_budg
+                                        oct_TotResClient = oct_TotResClient + areaBudgetDets.oct_budg
+                                        nov_TotResClient = nov_TotResClient + areaBudgetDets.nov_budg
+                                        dec_TotResClient = dec_TotResClient + areaBudgetDets.dec_budg
+                                        break;
+                                    default:
+                                        month = ""
+                                        break;
+                                }    
     
-                    poSumView.push({title: "TOTAL DISBURSEMENT", sortkey: 6 + ctr, group: 2, jan_value : janTotalAmtLoan, feb_value : febTotalAmtLoan, mar_value : marTotalAmtLoan, 
-                        apr_value : aprTotalAmtLoan, may_value : mayTotalAmtLoan, jun_value : junTotalAmtLoan, jul_value : julTotalAmtLoan, 
-                        aug_value : augTotalAmtLoan, sep_value : sepTotalAmtLoan, oct_value : octTotalAmtLoan, nov_value : novTotalAmtLoan, dec_value : decTotalAmtLoan, tot_value : totTotalAmtLoan
+                            }
+            
+                        })
+
+                        const totNewLonAmt = jan_vwLonTypNewAmt + feb_vwLonTypNewAmt + mar_vwLonTypNewAmt + apr_vwLonTypNewAmt + may_vwLonTypNewAmt + jun_vwLonTypNewAmt
+                            + jul_vwLonTypNewAmt + aug_vwLonTypNewAmt + sep_vwLonTypNewAmt + oct_vwLonTypNewAmt + nov_vwLonTypNewAmt + dec_vwLonTypNewAmt
+                        
+                        if (totNewLonAmt > 0) {
+                            areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "New Client", sortkey: ctrPerLonType, group: ctrPerLonTypGrp, jan_value : jan_vwLonTypNewCli, feb_value : feb_vwLonTypNewCli, mar_value : mar_vwLonTypNewCli, 
+                                apr_value : apr_vwLonTypNewCli, may_value : may_vwLonTypNewCli, jun_value : jun_vwLonTypNewCli, jul_value : jul_vwLonTypNewCli, 
+                                aug_value : aug_vwLonTypNewCli, sep_value : sep_vwLonTypNewCli, oct_value : oct_vwLonTypNewCli, nov_value : nov_vwLonTypNewCli, dec_value : dec_vwLonTypNewCli, tot_value : tot_vwLonTypNewCli
+                            })
+        
+                            areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "New Amount", sortkey: ctrPerLonType, group: ctrPerLonTypGrp, jan_value : jan_vwLonTypNewAmt, feb_value : feb_vwLonTypNewAmt, mar_value : mar_vwLonTypNewAmt, 
+                                apr_value : apr_vwLonTypNewAmt, may_value : may_vwLonTypNewAmt, jun_value : jun_vwLonTypNewAmt, jul_value : jul_vwLonTypNewAmt, 
+                                aug_value : aug_vwLonTypNewAmt, sep_value : sep_vwLonTypNewAmt, oct_value : oct_vwLonTypNewAmt, nov_value : nov_vwLonTypNewAmt, dec_value : dec_vwLonTypNewAmt, tot_value : tot_vwLonTypNewAmt
+                            })
+
+                        }
+
+                        const totOldLonAmt = jan_vwLonTypOldAmt + feb_vwLonTypOldAmt + mar_vwLonTypOldAmt + apr_vwLonTypOldAmt + may_vwLonTypOldAmt + jun_vwLonTypOldAmt
+                            + jul_vwLonTypOldAmt + aug_vwLonTypOldAmt + sep_vwLonTypOldAmt + oct_vwLonTypOldAmt + nov_vwLonTypOldAmt + dec_vwLonTypOldAmt
+                        
+                        if (totOldLonAmt > 0) {
+                            areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "Old Client", sortkey: ctrPerLonType, group: ctrPerLonTypGrp, beg_bal: lnTypBegBalOldClient, jan_value : jan_vwLonTypOldCli, feb_value : feb_vwLonTypOldCli, mar_value : mar_vwLonTypOldCli, 
+                                apr_value : apr_vwLonTypOldCli, may_value : may_vwLonTypOldCli, jun_value : jun_vwLonTypOldCli, jul_value : jul_vwLonTypOldCli, 
+                                aug_value : aug_vwLonTypOldCli, sep_value : sep_vwLonTypOldCli, oct_value : oct_vwLonTypOldCli, nov_value : nov_vwLonTypOldCli, dec_value : dec_vwLonTypOldCli, tot_value : tot_vwLonTypOldCli
+                            })
+        
+                            areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "Old Amount", sortkey: ctrPerLonType, group: ctrPerLonTypGrp, jan_value : jan_vwLonTypOldAmt, feb_value : feb_vwLonTypOldAmt, mar_value : mar_vwLonTypOldAmt, 
+                                apr_value : apr_vwLonTypOldAmt, may_value : may_vwLonTypOldAmt, jun_value : jun_vwLonTypOldAmt, jul_value : jul_vwLonTypOldAmt, 
+                                aug_value : aug_vwLonTypOldAmt, sep_value : sep_vwLonTypOldAmt, oct_value : oct_vwLonTypOldAmt, nov_value : nov_vwLonTypOldAmt, dec_value : dec_vwLonTypOldAmt, tot_value : tot_vwLonTypOldAmt
+                            })
+
+                            areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "Resign Clients", sortkey: ctrPerLonType, group: ctrPerLonTypGrp, jan_value : jan_vwLonTypResCli, feb_value : feb_vwLonTypResCli, mar_value : mar_vwLonTypResCli, 
+                                apr_value : apr_vwLonTypResCli, may_value : may_vwLonTypResCli, jun_value : jun_vwLonTypResCli, jul_value : jul_vwLonTypResCli, 
+                                aug_value : aug_vwLonTypResCli, sep_value : sep_vwLonTypResCli, oct_value : oct_vwLonTypResCli, nov_value : nov_vwLonTypResCli, dec_value : dec_vwLonTypResCli, tot_value : dec_vwLonTypResCli
+                            })
+                        } 
+
+
+                        lnTypBegBalOldClient = 0
+                        jan_vwLonTypNewCli = 0
+                        feb_vwLonTypNewCli = 0
+                        mar_vwLonTypNewCli = 0
+                        apr_vwLonTypNewCli = 0
+                        may_vwLonTypNewCli = 0
+                        jun_vwLonTypNewCli = 0
+                        jul_vwLonTypNewCli = 0
+                        aug_vwLonTypNewCli = 0
+                        sep_vwLonTypNewCli = 0
+                        oct_vwLonTypNewCli = 0
+                        nov_vwLonTypNewCli = 0
+                        dec_vwLonTypNewCli = 0
+            
+                        jan_vwLonTypOldCli = 0
+                        feb_vwLonTypOldCli = 0
+                        mar_vwLonTypOldCli = 0
+                        apr_vwLonTypOldCli = 0
+                        may_vwLonTypOldCli = 0
+                        jun_vwLonTypOldCli = 0
+                        jul_vwLonTypOldCli = 0
+                        aug_vwLonTypOldCli = 0
+                        sep_vwLonTypOldCli = 0
+                        oct_vwLonTypOldCli = 0
+                        nov_vwLonTypOldCli = 0
+                        dec_vwLonTypOldCli = 0
+            
+                        jan_vwLonTypNewAmt = 0
+                        feb_vwLonTypNewAmt = 0
+                        mar_vwLonTypNewAmt = 0
+                        apr_vwLonTypNewAmt = 0
+                        may_vwLonTypNewAmt = 0
+                        jun_vwLonTypNewAmt = 0
+                        jul_vwLonTypNewAmt = 0
+                        aug_vwLonTypNewAmt = 0
+                        sep_vwLonTypNewAmt = 0
+                        oct_vwLonTypNewAmt = 0
+                        nov_vwLonTypNewAmt = 0
+                        dec_vwLonTypNewAmt = 0
+            
+                        jan_vwLonTypOldAmt = 0
+                        feb_vwLonTypOldAmt = 0
+                        mar_vwLonTypOldAmt = 0
+                        apr_vwLonTypOldAmt = 0
+                        may_vwLonTypOldAmt = 0
+                        jun_vwLonTypOldAmt = 0
+                        jul_vwLonTypOldAmt = 0
+                        aug_vwLonTypOldAmt = 0
+                        sep_vwLonTypOldAmt = 0
+                        oct_vwLonTypOldAmt = 0
+                        nov_vwLonTypOldAmt = 0
+                        dec_vwLonTypOldAmt = 0
+            
+                        jan_vwLonTypResCli = 0
+                        feb_vwLonTypResCli = 0
+                        mar_vwLonTypResCli = 0
+                        apr_vwLonTypResCli = 0
+                        may_vwLonTypResCli = 0
+                        jun_vwLonTypResCli = 0
+                        jul_vwLonTypResCli = 0
+                        aug_vwLonTypResCli = 0
+                        sep_vwLonTypResCli = 0
+                        oct_vwLonTypResCli = 0
+                        nov_vwLonTypResCli = 0
+                        dec_vwLonTypResCli = 0
+                            tot_vwLonTypNewCli = 0
                     })
+    
+                        jan_oldCliTot = branBegBalOldClient 
+                            jan_totNumClients = (jan_oldCliTot + jan_brnNewCliTot) - jan_vwLonTypResCli
+                        feb_oldCliTot = jan_totNumClients
+                            feb_totNumClients = (feb_oldCliTot + feb_brnNewCliTot) - feb_vwLonTypResCli    
+                        mar_oldCliTot = feb_totNumClients
+                            mar_totNumClients = (mar_oldCliTot + mar_brnNewCliTot) - mar_vwLonTypResCli
+                        apr_oldCliTot = mar_totNumClients
+                            apr_totNumClients = (apr_oldCliTot + apr_brnNewCliTot) - apr_vwLonTypResCli
+                        may_oldCliTot = apr_totNumClients
+                            may_totNumClients = (may_oldCliTot + may_brnNewCliTot) - may_vwLonTypResCli
+                        jun_oldCliTot = may_totNumClients
+                            jun_totNumClients = (jun_oldCliTot + jun_brnNewCliTot) - jun_vwLonTypResCli
+                        jul_oldCliTot = jun_totNumClients
+                            jul_totNumClients = (jul_oldCliTot + jul_brnNewCliTot) - jul_vwLonTypResCli
+                        aug_oldCliTot = jul_totNumClients
+                            aug_totNumClients = (aug_oldCliTot + aug_brnNewCliTot) - aug_vwLonTypResCli
+                        sep_oldCliTot = aug_totNumClients
+                            sep_totNumClients = (sep_oldCliTot + sep_brnNewCliTot) - sep_vwLonTypResCli
+                        oct_oldCliTot = sep_totNumClients
+                            oct_totNumClients = (oct_oldCliTot + oct_brnNewCliTot) - oct_vwLonTypResCli
+                        nov_oldCliTot = oct_totNumClients
+                            nov_totNumClients = (nov_oldCliTot + nov_brnNewCliTot) - nov_vwLonTypResCli
+                        dec_oldCliTot = nov_totNumClients
+                            dec_totNumClients = (dec_oldCliTot + dec_brnNewCliTot) - dec_vwLonTypResCli
+                        
+                            jan_brnTotAmtDisburse = jan_brnNewLoanAmt + jan_brnOldLoanAmt
+                            feb_brnTotAmtDisburse = feb_brnNewLoanAmt + feb_brnOldLoanAmt
+                            mar_brnTotAmtDisburse = mar_brnNewLoanAmt + mar_brnOldLoanAmt
+                            apr_brnTotAmtDisburse = apr_brnNewLoanAmt + apr_brnOldLoanAmt
+                            may_brnTotAmtDisburse = may_brnNewLoanAmt + may_brnOldLoanAmt
+                            jun_brnTotAmtDisburse = jun_brnNewLoanAmt + jun_brnOldLoanAmt
+                            jul_brnTotAmtDisburse = jul_brnNewLoanAmt + jul_brnOldLoanAmt
+                            aug_brnTotAmtDisburse = aug_brnNewLoanAmt + aug_brnOldLoanAmt
+                            sep_brnTotAmtDisburse = sep_brnNewLoanAmt + sep_brnOldLoanAmt
+                            oct_brnTotAmtDisburse = oct_brnNewLoanAmt + oct_brnOldLoanAmt
+                            nov_brnTotAmtDisburse = nov_brnNewLoanAmt + nov_brnOldLoanAmt
+                            dec_brnTotAmtDisburse = dec_brnNewLoanAmt + dec_brnOldLoanAmt
+                        
+                            ctrAreaOutReach = ctrAreaOutReach + 1
+                            ctrAreaDisb = ctrAreaDisb + 1
+
+                        poSumView.push({area: viewAreaCode, branch: brnDesc, loan_type:"", title: brnDesc, sortkey: ctrAreaOutReach, group: 1, beg_bal: branBegBalOldClient, jan_value : jan_totNumClients, feb_value : feb_totNumClients, mar_value : mar_totNumClients, 
+                            apr_value : apr_totNumClients, may_value : may_totNumClients, jun_value : jun_totNumClients, jul_value : jul_totNumClients, aug_value : aug_totNumClients,
+                            sep_value : sep_totNumClients, oct_value : oct_totNumClients, nov_value : nov_totNumClients, dec_value : dec_totNumClients, tot_value : dec_totNumClients
+                        }) 
+                        poSumView.push({area: viewAreaCode, branch: brnDesc, loan_type:"", title: brnDesc, sortkey: ctrAreaDisb, group: 2, beg_bal: 0, jan_value : jan_brnTotAmtDisburse, feb_value : feb_brnTotAmtDisburse, mar_value : mar_brnTotAmtDisburse, 
+                            apr_value : apr_brnTotAmtDisburse, may_value : may_brnTotAmtDisburse, jun_value : jun_brnTotAmtDisburse, jul_value : jul_brnTotAmtDisburse, aug_value : aug_brnTotAmtDisburse,
+                            sep_value : sep_brnTotAmtDisburse, oct_value : oct_brnTotAmtDisburse, nov_value : nov_brnTotAmtDisburse, dec_value : dec_brnTotAmtDisburse, tot_value : dec_brnTotAmtDisburse
+                        }) 
+
+                        jan_TotalCliOutReach = jan_TotalCliOutReach + jan_totNumClients
+                        feb_TotalCliOutReach = feb_TotalCliOutReach + feb_totNumClients
+                        mar_TotalCliOutReach = mar_TotalCliOutReach + mar_totNumClients
+                        apr_TotalCliOutReach = apr_TotalCliOutReach + apr_totNumClients
+                        may_TotalCliOutReach = may_TotalCliOutReach + may_totNumClients
+                        jun_TotalCliOutReach = jun_TotalCliOutReach + jun_totNumClients
+                        jul_TotalCliOutReach = jul_TotalCliOutReach + jul_totNumClients
+                        aug_TotalCliOutReach = aug_TotalCliOutReach + aug_totNumClients
+                        sep_TotalCliOutReach = sep_TotalCliOutReach + sep_totNumClients
+                        oct_TotalCliOutReach = oct_TotalCliOutReach + oct_totNumClients
+                        nov_TotalCliOutReach = nov_TotalCliOutReach + nov_totNumClients
+                        dec_TotalCliOutReach = dec_TotalCliOutReach + dec_totNumClients
+        
+                        jan_TotalAmtDisburse = jan_TotalAmtDisburse + jan_brnTotAmtDisburse
+                        feb_TotalAmtDisburse = feb_TotalAmtDisburse + feb_brnTotAmtDisburse
+                        mar_TotalAmtDisburse = mar_TotalAmtDisburse + mar_brnTotAmtDisburse
+                        apr_TotalAmtDisburse = apr_TotalAmtDisburse + apr_brnTotAmtDisburse
+                        may_TotalAmtDisburse = may_TotalAmtDisburse + may_brnTotAmtDisburse
+                        jun_TotalAmtDisburse = jun_TotalAmtDisburse + jun_brnTotAmtDisburse
+                        jul_TotalAmtDisburse = jul_TotalAmtDisburse + jul_brnTotAmtDisburse
+                        aug_TotalAmtDisburse = aug_TotalAmtDisburse + aug_brnTotAmtDisburse
+                        sep_TotalAmtDisburse = sep_TotalAmtDisburse + sep_brnTotAmtDisburse
+                        oct_TotalAmtDisburse = oct_TotalAmtDisburse + oct_brnTotAmtDisburse
+                        nov_TotalAmtDisburse = nov_TotalAmtDisburse + nov_brnTotAmtDisburse
+                        dec_TotalAmtDisburse = dec_TotalAmtDisburse + dec_brnTotAmtDisburse
+
+                        branBegBalOldClient = 0
+                        jan_brnNewLoanAmt = 0
+                        feb_brnNewLoanAmt = 0
+                        mar_brnNewLoanAmt = 0
+                        apr_brnNewLoanAmt = 0
+                        may_brnNewLoanAmt = 0
+                        jun_brnNewLoanAmt = 0
+                        jul_brnNewLoanAmt = 0
+                        aug_brnNewLoanAmt = 0
+                        sep_brnNewLoanAmt = 0
+                        oct_brnNewLoanAmt = 0
+                        nov_brnNewLoanAmt = 0
+                        dec_brnNewLoanAmt = 0
+            
+                        jan_brnOldLoanAmt = 0
+                        feb_brnOldLoanAmt = 0
+                        mar_brnOldLoanAmt = 0
+                        apr_brnOldLoanAmt = 0
+                        may_brnOldLoanAmt = 0
+                        jun_brnOldLoanAmt = 0
+                        jul_brnOldLoanAmt = 0
+                        aug_brnOldLoanAmt = 0
+                        sep_brnOldLoanAmt = 0
+                        oct_brnOldLoanAmt = 0
+                        nov_brnOldLoanAmt = 0
+                        dec_brnOldLoanAmt = 0
+
+                        jan_brnOldCliTot = 0
+                        feb_brnOldCliTot = 0
+                        mar_brnOldCliTot = 0
+                        apr_brnOldCliTot = 0
+                        may_brnOldCliTot = 0
+                        jun_brnOldCliTot = 0
+                        jul_brnOldCliTot = 0
+                        aug_brnOldCliTot = 0
+                        sep_brnOldCliTot = 0
+                        oct_brnOldCliTot = 0
+                        nov_brnOldCliTot = 0
+                        dec_brnOldCliTot = 0
+
+                        jan_brnNewCliTot = 0
+                        feb_brnNewCliTot = 0
+                        mar_brnNewCliTot = 0
+                        apr_brnNewCliTot = 0
+                        may_brnNewCliTot = 0
+                        jun_brnNewCliTot = 0
+                        jul_brnNewCliTot = 0
+                        aug_brnNewCliTot = 0
+                        sep_brnNewCliTot = 0
+                        oct_brnNewCliTot = 0
+                        nov_brnNewCliTot = 0
+                        dec_brnNewCliTot = 0
+            
+                        jan_totNumClients = 0 
+                        feb_totNumClients = 0
+                        mar_totNumClients = 0
+                        apr_totNumClients = 0
+                        may_totNumClients = 0
+                        jun_totNumClients = 0
+                        jul_totNumClients = 0
+                        aug_totNumClients = 0
+                        sep_totNumClients = 0
+                        oct_totNumClients = 0
+                        nov_totNumClients = 0
+                        dec_totNumClients = 0        
+
+                })                
+
+                        poSumView.push({area: viewAreaCode, branch: "", loan_type:"", title: "TOTAL OUTREACH", sortkey: ctrAreaOutReach, group: 1, beg_bal: branBegBalOldClient, jan_value : jan_TotalCliOutReach, feb_value : feb_TotalCliOutReach, mar_value : mar_TotalCliOutReach, 
+                            apr_value : apr_TotalCliOutReach, may_value : may_TotalCliOutReach, jun_value : jun_TotalCliOutReach, jul_value : jul_TotalCliOutReach, aug_value : aug_TotalCliOutReach,
+                            sep_value : sep_TotalCliOutReach, oct_value : oct_TotalCliOutReach, nov_value : nov_TotalCliOutReach, dec_value : dec_TotalCliOutReach, tot_value : dec_TotalCliOutReach
+                        }) 
+                        poSumView.push({area: viewAreaCode, branch: "", loan_type:"", title: "TOTAL DISBURSEMENT", sortkey: ctrAreaDisb, group: 2, beg_bal: 0, jan_value : jan_TotalAmtDisburse, feb_value : feb_TotalAmtDisburse, mar_value : mar_TotalAmtDisburse, 
+                            apr_value : apr_TotalAmtDisburse, may_value : may_TotalAmtDisburse, jun_value : jun_TotalAmtDisburse, jul_value : jul_TotalAmtDisburse, aug_value : aug_TotalAmtDisburse,
+                            sep_value : sep_TotalAmtDisburse, oct_value : oct_TotalAmtDisburse, nov_value : nov_TotalAmtDisburse, dec_value : dec_TotalAmtDisburse, tot_value : dec_TotalAmtDisburse
+                        }) 
+                
+                    // console.log(poSumView)                        
+    
+                    let jan_lonTypBranResCli = 0
+                    let feb_lonTypBranResCli = 0
+                    let mar_lonTypBranResCli = 0
+                    let apr_lonTypBranResCli = 0
+                    let may_lonTypBranResCli = 0
+                    let jun_lonTypBranResCli = 0
+                    let jul_lonTypBranResCli = 0
+                    let aug_lonTypBranResCli = 0
+                    let sep_lonTypBranResCli = 0
+                    let oct_lonTypBranResCli = 0
+                    let nov_lonTypBranResCli = 0
+                    let dec_lonTypBranResCli = 0
+    
+                    let jan_brLnTypCliTot = 0
+                    let feb_brLnTypCliTot = 0
+                    let mar_brLnTypCliTot = 0
+                    let apr_brLnTypCliTot = 0
+                    let may_brLnTypCliTot = 0
+                    let jun_brLnTypCliTot = 0
+                    let jul_brLnTypCliTot = 0
+                    let aug_brLnTypCliTot = 0
+                    let sep_brLnTypCliTot = 0
+                    let oct_brLnTypCliTot = 0
+                    let nov_brLnTypCliTot = 0
+                    let dec_brLnTypCliTot = 0
+
+                    console.log(areaPerLnTypView)
+                    
+                    let scanvwloanType = ""
+                    let brnCode = ""
+                    let ctrPerLonType2 = ctrPerLonType
+
+                    poSumView.push({title: "PER LOAN TYPE", sortkey: ctrAreaDisb, group: 1, isTitle: true})
+
+                    let budgPerLonTyp = []
+
+                    vwloanType.forEach( lonType => {            // SCAN the Loan Types
+
+                        scanvwloanType = lonType.title
+                        const scanVwLoanCode = lonType.loan_type
+                        ctr = ctr + 1
+
+                        poSumView.push({title: scanvwloanType, sortkey: ctrPerLonType2 , group: 2, isTitle: true})
+
+                        // budgPerLonTyp = areaPerLnTypView.find({loan_type: scanvwloanType})
+
+                        // console.log(scanvwloanType)
+                        
+                        ctrPerLonType = ctrPerLonType2 + 1
+
+                        let jan_perLnTypTotAmt = 0
+                        let feb_perLnTypTotAmt = 0
+                        let mar_perLnTypTotAmt = 0
+                        let apr_perLnTypTotAmt = 0
+                        let may_perLnTypTotAmt = 0
+                        let jun_perLnTypTotAmt = 0
+                        let jul_perLnTypTotAmt = 0
+                        let aug_perLnTypTotAmt = 0
+                        let sep_perLnTypTotAmt = 0
+                        let oct_perLnTypTotAmt = 0
+                        let nov_perLnTypTotAmt = 0
+                        let dec_perLnTypTotAmt = 0
+                
+                        let jan_perLnTypTotReach = 0
+                        let feb_perLnTypTotReach = 0
+                        let mar_perLnTypTotReach = 0
+                        let apr_perLnTypTotReach = 0
+                        let may_perLnTypTotReach = 0
+                        let jun_perLnTypTotReach = 0
+                        let jul_perLnTypTotReach = 0
+                        let aug_perLnTypTotReach = 0
+                        let sep_perLnTypTotReach = 0
+                        let oct_perLnTypTotReach = 0
+                        let nov_perLnTypTotReach = 0
+                        let dec_perLnTypTotReach = 0
+
+                        vwAreaBranches.forEach ( areaBranch => {         //SCAN the Branches
+                            const brnDesc = areaBranch.branch_desc
+                            brnCode = areaBranch.branch
+
+                            // console.log(brnDesc)
+
+
+                            let jan_perBranTotCliOutReach = 0
+                            let feb_perBranTotCliOutReach = 0
+                            let mar_perBranTotCliOutReach = 0
+                            let apr_perBranTotCliOutReach = 0
+                            let may_perBranTotCliOutReach = 0
+                            let jun_perBranTotCliOutReach = 0
+                            let jul_perBranTotCliOutReach = 0
+                            let aug_perBranTotCliOutReach = 0
+                            let sep_perBranTotCliOutReach = 0
+                            let oct_perBranTotCliOutReach = 0
+                            let nov_perBranTotCliOutReach = 0
+                            let dec_perBranTotCliOutReach = 0
+                            let tot_perBranTotCliOutReach = 0
+
+                            let jan_perLnTypBrTotAmt = 0
+                            let feb_perLnTypBrTotAmt = 0
+                            let mar_perLnTypBrTotAmt = 0
+                            let apr_perLnTypBrTotAmt = 0
+                            let may_perLnTypBrTotAmt = 0
+                            let jun_perLnTypBrTotAmt = 0
+                            let jul_perLnTypBrTotAmt = 0
+                            let aug_perLnTypBrTotAmt = 0
+                            let sep_perLnTypBrTotAmt = 0
+                            let oct_perLnTypBrTotAmt = 0
+                            let nov_perLnTypBrTotAmt = 0
+                            let dec_perLnTypBrTotAmt = 0
+        
+                            let jan_lonTypBranNewCli = 0
+                            let feb_lonTypBranNewCli = 0
+                            let mar_lonTypBranNewCli = 0
+                            let apr_lonTypBranNewCli = 0
+                            let may_lonTypBranNewCli = 0
+                            let jun_lonTypBranNewCli = 0
+                            let jul_lonTypBranNewCli = 0
+                            let aug_lonTypBranNewCli = 0
+                            let sep_lonTypBranNewCli = 0
+                            let oct_lonTypBranNewCli = 0
+                            let nov_lonTypBranNewCli = 0
+                            let dec_lonTypBranNewCli = 0
+                    
+                            let jan_lonTypBranNewAmt = 0
+                            let feb_lonTypBranNewAmt = 0
+                            let mar_lonTypBranNewAmt = 0
+                            let apr_lonTypBranNewAmt = 0
+                            let may_lonTypBranNewAmt = 0
+                            let jun_lonTypBranNewAmt = 0
+                            let jul_lonTypBranNewAmt = 0
+                            let aug_lonTypBranNewAmt = 0
+                            let sep_lonTypBranNewAmt = 0
+                            let oct_lonTypBranNewAmt = 0
+                            let nov_lonTypBranNewAmt = 0
+                            let dec_lonTypBranNewAmt = 0
+        
+                            let jan_lonTypBranBegBal = 0
+                            let jan_lonTypBranOldAmt = 0
+                            let feb_lonTypBranOldAmt = 0
+                            let mar_lonTypBranOldAmt = 0
+                            let apr_lonTypBranOldAmt = 0
+                            let may_lonTypBranOldAmt = 0
+                            let jun_lonTypBranOldAmt = 0
+                            let jul_lonTypBranOldAmt = 0
+                            let aug_lonTypBranOldAmt = 0
+                            let sep_lonTypBranOldAmt = 0
+                            let oct_lonTypBranOldAmt = 0
+                            let nov_lonTypBranOldAmt = 0
+                            let dec_lonTypBranOldAmt = 0
+
+                            areaPerLnTypView.forEach( areaBrnLontyp => {
+                                const areaLonTyp = areaBrnLontyp.loan_type 
+                                const areaBranCod = areaBrnLontyp.branch
+                                const areaViewCod = areaBrnLontyp.title
+
+
+                                if ( areaLonTyp === scanvwloanType && areaBranCod === brnCode) {
+
+                                    switch (areaViewCod) {
+                                        case "New Client":
+                                            jan_lonTypBranNewCli = areaBrnLontyp.jan_value
+                                            feb_lonTypBranNewCli = areaBrnLontyp.feb_value
+                                            mar_lonTypBranNewCli = areaBrnLontyp.mar_value
+                                            apr_lonTypBranNewCli = areaBrnLontyp.apr_value
+                                            may_lonTypBranNewCli = areaBrnLontyp.may_value
+                                            jun_lonTypBranNewCli = areaBrnLontyp.jun_value
+                                            jul_lonTypBranNewCli = areaBrnLontyp.jul_value
+                                            aug_lonTypBranNewCli = areaBrnLontyp.aug_value
+                                            sep_lonTypBranNewCli = areaBrnLontyp.sep_value
+                                            oct_lonTypBranNewCli = areaBrnLontyp.oct_value
+                                            nov_lonTypBranNewCli = areaBrnLontyp.nov_value
+                                            dec_lonTypBranNewCli = areaBrnLontyp.dec_value
+                        
+                                            break;
+                                        case "Old Client":
+                                            jan_lonTypBranBegBal = areaBrnLontyp.beg_bal
+                                            break;
+                                        case "New Amount":
+                                            jan_lonTypBranNewAmt = areaBrnLontyp.jan_value
+                                            feb_lonTypBranNewAmt = areaBrnLontyp.feb_value
+                                            mar_lonTypBranNewAmt = areaBrnLontyp.mar_value
+                                            apr_lonTypBranNewAmt = areaBrnLontyp.apr_value
+                                            may_lonTypBranNewAmt = areaBrnLontyp.may_value
+                                            jun_lonTypBranNewAmt = areaBrnLontyp.jun_value
+                                            jul_lonTypBranNewAmt = areaBrnLontyp.jul_value
+                                            aug_lonTypBranNewAmt = areaBrnLontyp.aug_value
+                                            sep_lonTypBranNewAmt = areaBrnLontyp.sep_value
+                                            oct_lonTypBranNewAmt = areaBrnLontyp.oct_value
+                                            nov_lonTypBranNewAmt = areaBrnLontyp.nov_value
+                                            dec_lonTypBranNewAmt = areaBrnLontyp.dec_value
+
+                                            break;
+                                        case "Old Amount":
+                                            jan_lonTypBranOldAmt = areaBrnLontyp.jan_value
+                                            feb_lonTypBranOldAmt = areaBrnLontyp.feb_value
+                                            mar_lonTypBranOldAmt = areaBrnLontyp.mar_value
+                                            apr_lonTypBranOldAmt = areaBrnLontyp.apr_value
+                                            may_lonTypBranOldAmt = areaBrnLontyp.may_value
+                                            jun_lonTypBranOldAmt = areaBrnLontyp.jun_value
+                                            jul_lonTypBranOldAmt = areaBrnLontyp.jul_value
+                                            aug_lonTypBranOldAmt = areaBrnLontyp.aug_value
+                                            sep_lonTypBranOldAmt = areaBrnLontyp.sep_value
+                                            oct_lonTypBranOldAmt = areaBrnLontyp.oct_value
+                                            nov_lonTypBranOldAmt = areaBrnLontyp.nov_value
+                                            dec_lonTypBranOldAmt = areaBrnLontyp.dec_value
+
+                                            break;
+                                        case "Resign Clients":
+
+                                            jan_lonTypBranResCli = areaBrnLontyp.jan_value
+                                            feb_lonTypBranResCli = areaBrnLontyp.feb_value
+                                            mar_lonTypBranResCli = areaBrnLontyp.mar_value
+                                            apr_lonTypBranResCli = areaBrnLontyp.apr_value
+                                            may_lonTypBranResCli = areaBrnLontyp.may_value
+                                            jun_lonTypBranResCli = areaBrnLontyp.jun_value
+                                            jul_lonTypBranResCli = areaBrnLontyp.jul_value
+                                            aug_lonTypBranResCli = areaBrnLontyp.aug_value
+                                            sep_lonTypBranResCli = areaBrnLontyp.sep_value
+                                            oct_lonTypBranResCli = areaBrnLontyp.oct_value
+                                            nov_lonTypBranResCli = areaBrnLontyp.nov_value
+                                            dec_lonTypBranResCli = areaBrnLontyp.dec_value
+                                            break;
+                                        default:
+                                            areaNon = 0
+
+                                    }                                    
+                                }
+                            })
+
+                            jan_brLnTypCliTot = jan_lonTypBranBegBal 
+                                jan_perBranTotCliOutReach = (jan_brLnTypCliTot + jan_lonTypBranNewCli) - jan_lonTypBranResCli
+
+                            feb_brLnTypCliTot = jan_perBranTotCliOutReach
+                                feb_perBranTotCliOutReach = (feb_brLnTypCliTot + feb_lonTypBranNewCli) - feb_lonTypBranResCli    
+
+                            mar_brLnTypCliTot = feb_perBranTotCliOutReach
+                                mar_perBranTotCliOutReach = (mar_brLnTypCliTot + mar_lonTypBranNewCli) - mar_lonTypBranResCli
+
+                            apr_brLnTypCliTot = mar_perBranTotCliOutReach
+                                apr_perBranTotCliOutReach = (apr_brLnTypCliTot + apr_lonTypBranNewCli) - apr_lonTypBranResCli
+
+                            may_brLnTypCliTot = apr_perBranTotCliOutReach
+                                may_perBranTotCliOutReach = (may_brLnTypCliTot + may_lonTypBranNewCli) - may_lonTypBranResCli
+
+                            jun_brLnTypCliTot = may_perBranTotCliOutReach
+                                jun_perBranTotCliOutReach = (jun_brLnTypCliTot + jun_lonTypBranNewCli) - jun_lonTypBranResCli
+
+                            jul_brLnTypCliTot = jun_perBranTotCliOutReach
+                                jul_perBranTotCliOutReach = (jul_brLnTypCliTot + jul_lonTypBranNewCli) - jul_lonTypBranResCli
+
+                            aug_brLnTypCliTot = jul_perBranTotCliOutReach
+                                aug_perBranTotCliOutReach = (aug_brLnTypCliTot + aug_lonTypBranNewCli) - aug_lonTypBranResCli
+
+                            sep_brLnTypCliTot = aug_perBranTotCliOutReach
+                                sep_perBranTotCliOutReach = (sep_brLnTypCliTot + sep_lonTypBranNewCli) - sep_lonTypBranResCli
+
+                            oct_brLnTypCliTot = sep_perBranTotCliOutReach
+                                oct_perBranTotCliOutReach = (oct_brLnTypCliTot + oct_lonTypBranNewCli) - oct_lonTypBranResCli
+
+                            nov_brLnTypCliTot = oct_perBranTotCliOutReach
+                                nov_perBranTotCliOutReach = (nov_brLnTypCliTot + nov_lonTypBranNewCli) - nov_lonTypBranResCli
+
+                            dec_brLnTypCliTot = nov_perBranTotCliOutReach
+                                dec_perBranTotCliOutReach = (dec_brLnTypCliTot + dec_lonTypBranNewCli) - dec_lonTypBranResCli
+                        
+                            jan_perLnTypBrTotAmt = jan_lonTypBranNewAmt + jan_lonTypBranOldAmt
+                            feb_perLnTypBrTotAmt = feb_lonTypBranNewAmt + feb_lonTypBranOldAmt
+                            mar_perLnTypBrTotAmt = mar_lonTypBranNewAmt + mar_lonTypBranOldAmt
+                            apr_perLnTypBrTotAmt = apr_lonTypBranNewAmt + apr_lonTypBranOldAmt
+                            may_perLnTypBrTotAmt = may_lonTypBranNewAmt + may_lonTypBranOldAmt
+                            jun_perLnTypBrTotAmt = jun_lonTypBranNewAmt + jun_lonTypBranOldAmt
+                            jul_perLnTypBrTotAmt = jul_lonTypBranNewAmt + jul_lonTypBranOldAmt
+                            aug_perLnTypBrTotAmt = aug_lonTypBranNewAmt + aug_lonTypBranOldAmt
+                            sep_perLnTypBrTotAmt = sep_lonTypBranNewAmt + sep_lonTypBranOldAmt
+                            oct_perLnTypBrTotAmt = oct_lonTypBranNewAmt + oct_lonTypBranOldAmt
+                            nov_perLnTypBrTotAmt = nov_lonTypBranNewAmt + nov_lonTypBranOldAmt
+                            dec_perLnTypBrTotAmt = dec_lonTypBranNewAmt + dec_lonTypBranOldAmt
+
+                            jan_perLnTypTotAmt = jan_perLnTypTotAmt + jan_perLnTypBrTotAmt
+                            feb_perLnTypTotAmt = feb_perLnTypTotAmt + feb_perLnTypBrTotAmt
+                            mar_perLnTypTotAmt = mar_perLnTypTotAmt + mar_perLnTypBrTotAmt
+                            apr_perLnTypTotAmt = apr_perLnTypTotAmt + apr_perLnTypBrTotAmt
+                            may_perLnTypTotAmt = may_perLnTypTotAmt + may_perLnTypBrTotAmt
+                            jun_perLnTypTotAmt = jun_perLnTypTotAmt + jun_perLnTypBrTotAmt
+                            jul_perLnTypTotAmt = jul_perLnTypTotAmt + jul_perLnTypBrTotAmt
+                            aug_perLnTypTotAmt = aug_perLnTypTotAmt + aug_perLnTypBrTotAmt
+                            sep_perLnTypTotAmt = sep_perLnTypTotAmt + sep_perLnTypBrTotAmt
+                            oct_perLnTypTotAmt = oct_perLnTypTotAmt + oct_perLnTypBrTotAmt
+                            nov_perLnTypTotAmt = nov_perLnTypTotAmt + nov_perLnTypBrTotAmt
+                            dec_perLnTypTotAmt = dec_perLnTypTotAmt + dec_perLnTypBrTotAmt
+                            
+                            jan_perLnTypTotReach = jan_perLnTypTotReach + jan_perBranTotCliOutReach
+                            feb_perLnTypTotReach = feb_perLnTypTotReach + feb_perBranTotCliOutReach
+                            mar_perLnTypTotReach = mar_perLnTypTotReach + mar_perBranTotCliOutReach
+                            apr_perLnTypTotReach = apr_perLnTypTotReach + apr_perBranTotCliOutReach
+                            may_perLnTypTotReach = may_perLnTypTotReach + may_perBranTotCliOutReach
+                            jun_perLnTypTotReach = jun_perLnTypTotReach + jun_perBranTotCliOutReach
+                            jul_perLnTypTotReach = jul_perLnTypTotReach + jul_perBranTotCliOutReach
+                            aug_perLnTypTotReach = aug_perLnTypTotReach + aug_perBranTotCliOutReach
+                            sep_perLnTypTotReach = sep_perLnTypTotReach + sep_perBranTotCliOutReach
+                            oct_perLnTypTotReach = oct_perLnTypTotReach + oct_perBranTotCliOutReach
+                            nov_perLnTypTotReach = nov_perLnTypTotReach + nov_perBranTotCliOutReach
+                            dec_perLnTypTotReach = dec_perLnTypTotReach + dec_perBranTotCliOutReach
+                            
+                            ctrPerLonType = ctrPerLonType + 1
+
+                            poSumView.push({loan_type: scanvwloanType, branch: brnDesc, title: brnDesc, sortkey: ctrPerLonType , group: 1, beg_bal: 0, jan_value : jan_perBranTotCliOutReach, feb_value : feb_perBranTotCliOutReach, mar_value : mar_perBranTotCliOutReach, 
+                                apr_value : apr_perBranTotCliOutReach, may_value : may_perBranTotCliOutReach, jun_value : jun_perBranTotCliOutReach, jul_value : jul_perBranTotCliOutReach, aug_value : aug_perBranTotCliOutReach,
+                                sep_value : sep_perBranTotCliOutReach, oct_value : oct_perBranTotCliOutReach, nov_value : nov_perBranTotCliOutReach, dec_value : dec_perBranTotCliOutReach, tot_value : dec_perBranTotCliOutReach
+                            }) 
+                            ctrPerLonType2 = ctrPerLonType + 5
+
+                            poSumView.push({loan_type: scanvwloanType, branch: brnDesc, title: brnDesc, sortkey: ctrPerLonType2, group: 1, beg_bal: 0, jan_value : jan_perLnTypBrTotAmt, feb_value : feb_perLnTypBrTotAmt, mar_value : mar_perLnTypBrTotAmt, 
+                                apr_value : apr_perLnTypBrTotAmt, may_value : may_perLnTypBrTotAmt, jun_value : jun_perLnTypBrTotAmt, jul_value : jul_perLnTypBrTotAmt, aug_value : aug_perLnTypBrTotAmt,
+                                sep_value : sep_perLnTypBrTotAmt, oct_value : oct_perLnTypBrTotAmt, nov_value : nov_perLnTypBrTotAmt, dec_value : dec_perLnTypBrTotAmt, tot_value : dec_perLnTypBrTotAmt
+                            }) 
+
+                        })
+
+                        poSumView.push({loan_type: scanvwloanType, branch: "", title: scanVwLoanCode + " Outreach", sortkey: ctrPerLonType , group: 1, beg_bal: 0, jan_value : jan_perLnTypTotReach, feb_value : feb_perLnTypTotReach, mar_value : mar_perLnTypTotReach, 
+                            apr_value : apr_perLnTypTotReach, may_value : may_perLnTypTotReach, jun_value : jun_perLnTypTotReach, jul_value : jul_perLnTypTotReach, aug_value : aug_perLnTypTotReach,
+                            sep_value : sep_perLnTypTotReach, oct_value : oct_perLnTypTotReach, nov_value : nov_perLnTypTotReach, dec_value : dec_perLnTypTotReach, tot_value : dec_perLnTypTotReach
+                        }) 
+                        ctrPerLonType2 = ctrPerLonType + 5
+
+                        poSumView.push({loan_type: scanvwloanType, branch: "", title: scanVwLoanCode + " Disb. Amount", sortkey: ctrPerLonType2, group: 1, beg_bal: 0, jan_value : jan_perLnTypTotAmt, feb_value : feb_perLnTypTotAmt, mar_value : mar_perLnTypTotAmt, 
+                            apr_value : apr_perLnTypTotAmt, may_value : may_perLnTypTotAmt, jun_value : jun_perLnTypTotAmt, jul_value : jul_perLnTypTotAmt, aug_value : aug_perLnTypTotAmt,
+                            sep_value : sep_perLnTypTotAmt, oct_value : oct_perLnTypTotAmt, nov_value : nov_perLnTypTotAmt, dec_value : dec_perLnTypTotAmt, tot_value : dec_perLnTypTotAmt
+                        }) 
+
+                    })
+                
+                    // console.log(poSumView)
+                // poSumView.push({title: "AREA OUTREACH", sortkey: 1, group: 1, isTitle: true})
+
+                // poSumView.push({title: "AREA DISBURSEMENT", sortkey: totalCtr, group: 2, isTitle: true})
+
+
+                // vwloanType.forEach( lonType => {
+
+                //     const scanvwloanType = lonType.title
+                //     totalCtr = totalCtr + 1
+        
+                //     vwAreaBranches.forEach( vwBranches => {
+
+                //         const brnDesc = vwBranches.branch_desc
+                //         const brnCode = vwBranches.branch
+                        
+                //         doneReadTotOutreach = false
+                //         doneReadTotLonAmt = false
+
+                //         ctr = ctr + 10
+                        
+                //         poBudgExecTotReach.forEach(TotCliOutreach => {
+
+                //             if (TotCliOutreach.branch === brnCode && TotCliOutreach.loan_type === scanvwloanType) {
+                //                 centerCntBegBal = centerCntBegBal + TotCliOutreach.beg_bal
+                //                 jan_TotCliOutReach = jan_TotCliOutReach + TotCliOutreach.jan_budg
+                //                 feb_TotCliOutReach = feb_TotCliOutReach + TotCliOutreach.feb_budg
+                //                 mar_TotCliOutReach = mar_TotCliOutReach + TotCliOutreach.mar_budg
+                //                 apr_TotCliOutReach = apr_TotCliOutReach + TotCliOutreach.apr_budg
+                //                 may_TotCliOutReach = may_TotCliOutReach + TotCliOutreach.may_budg
+                //                 jun_TotCliOutReach = jun_TotCliOutReach + TotCliOutreach.jun_budg
+                //                 jul_TotCliOutReach = jul_TotCliOutReach + TotCliOutreach.jul_budg
+                //                 aug_TotCliOutReach = aug_TotCliOutReach + TotCliOutreach.aug_budg
+                //                 sep_TotCliOutReach = sep_TotCliOutReach + TotCliOutreach.sep_budg
+                //                 oct_TotCliOutReach = oct_TotCliOutReach + TotCliOutreach.oct_budg
+                //                 nov_TotCliOutReach = nov_TotCliOutReach + TotCliOutreach.nov_budg
+                //                 dec_TotCliOutReach = dec_TotCliOutReach + TotCliOutreach.dec_budg
+
+                //                 jan_vwLoanTotCliReach = jan_vwLoanTotCliReach + TotCliOutreach.jan_budg
+                //                 feb_vwLoanTotCliReach = feb_vwLoanTotCliReach + TotCliOutreach.feb_budg
+                //                 mar_vwLoanTotCliReach = mar_vwLoanTotCliReach + TotCliOutreach.mar_budg
+                //                 apr_vwLoanTotCliReach = apr_vwLoanTotCliReach + TotCliOutreach.apr_budg
+                //                 may_vwLoanTotCliReach = may_vwLoanTotCliReach + TotCliOutreach.may_budg
+                //                 jun_vwLoanTotCliReach = jun_vwLoanTotCliReach + TotCliOutreach.jun_budg
+                //                 jul_vwLoanTotCliReach = jul_vwLoanTotCliReach + TotCliOutreach.jul_budg
+                //                 aug_vwLoanTotCliReach = aug_vwLoanTotCliReach + TotCliOutreach.aug_budg
+                //                 sep_vwLoanTotCliReach = sep_vwLoanTotCliReach + TotCliOutreach.sep_budg
+                //                 oct_vwLoanTotCliReach = oct_vwLoanTotCliReach + TotCliOutreach.oct_budg
+                //                 nov_vwLoanTotCliReach = nov_vwLoanTotCliReach + TotCliOutreach.nov_budg
+                //                 dec_vwLoanTotCliReach = dec_vwLoanTotCliReach + TotCliOutreach.dec_budg
+            
+                //                 jan_TotalCliOutReach = jan_TotalCliOutReach + TotCliOutreach.jan_budg
+                //                 feb_TotalCliOutReach = feb_TotalCliOutReach + TotCliOutreach.feb_budg
+                //                 mar_TotalCliOutReach = mar_TotalCliOutReach + TotCliOutreach.mar_budg
+                //                 apr_TotalCliOutReach = apr_TotalCliOutReach + TotCliOutreach.apr_budg
+                //                 may_TotalCliOutReach = may_TotalCliOutReach + TotCliOutreach.may_budg
+                //                 jun_TotalCliOutReach = jun_TotalCliOutReach + TotCliOutreach.jun_budg
+                //                 jul_TotalCliOutReach = jul_TotalCliOutReach + TotCliOutreach.jul_budg
+                //                 aug_TotalCliOutReach = aug_TotalCliOutReach + TotCliOutreach.aug_budg
+                //                 sep_TotalCliOutReach = sep_TotalCliOutReach + TotCliOutreach.sep_budg
+                //                 oct_TotalCliOutReach = oct_TotalCliOutReach + TotCliOutreach.oct_budg
+                //                 nov_TotalCliOutReach = nov_TotalCliOutReach + TotCliOutreach.nov_budg
+                //                 dec_TotalCliOutReach = dec_TotalCliOutReach + TotCliOutreach.dec_budg
+                    
+                //             }
+                //             doneReadTotOutreach = true
+                //         })
+
+                //             poSumView.push({loan_type: scanvwloanType, title: brnDesc, sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_TotCliOutReach, feb_value: feb_TotCliOutReach, mar_value: mar_TotCliOutReach,
+                //                 apr_value: apr_TotCliOutReach, may_value: may_TotCliOutReach, jun_value: jun_TotCliOutReach, jul_value: jul_TotCliOutReach, aug_value: aug_TotCliOutReach,
+                //                 sep_value: sep_TotCliOutReach, oct_value: oct_TotCliOutReach, nov_value: nov_TotCliOutReach, dec_value: dec_TotCliOutReach, tot_value : dec_TotCliOutReach
+                //             })
+                
+                //         poBudgExecTotLonAmt.forEach(TotAmtLon => {
+    
+                //             if (TotAmtLon.branch === brnCode && TotAmtLon.loan_type === scanvwloanType) { 
+                //                 janTotAmtLoan = janTotAmtLoan + TotAmtLon.jan_budg
+                //                 febTotAmtLoan = febTotAmtLoan + TotAmtLon.feb_budg
+                //                 marTotAmtLoan = marTotAmtLoan + TotAmtLon.mar_budg
+                //                 aprTotAmtLoan = aprTotAmtLoan + TotAmtLon.apr_budg
+                //                 mayTotAmtLoan = mayTotAmtLoan + TotAmtLon.may_budg
+                //                 junTotAmtLoan = junTotAmtLoan + TotAmtLon.jun_budg
+                //                 julTotAmtLoan = julTotAmtLoan + TotAmtLon.jul_budg
+                //                 augTotAmtLoan = augTotAmtLoan + TotAmtLon.aug_budg
+                //                 sepTotAmtLoan = sepTotAmtLoan + TotAmtLon.sep_budg
+                //                 octTotAmtLoan = octTotAmtLoan + TotAmtLon.oct_budg
+                //                 novTotAmtLoan = novTotAmtLoan + TotAmtLon.nov_budg
+                //                 decTotAmtLoan = decTotAmtLoan + TotAmtLon.dec_budg
+                                    
+                //                 jan_vwLoanTotAmt = jan_vwLoanTotAmt + TotAmtLon.jan_budg
+                //                 feb_vwLoanTotAmt = feb_vwLoanTotAmt + TotAmtLon.feb_budg
+                //                 mar_vwLoanTotAmt = mar_vwLoanTotAmt + TotAmtLon.mar_budg
+                //                 apr_vwLoanTotAmt = apr_vwLoanTotAmt + TotAmtLon.apr_budg
+                //                 may_vwLoanTotAmt = may_vwLoanTotAmt + TotAmtLon.may_budg
+                //                 jun_vwLoanTotAmt = jun_vwLoanTotAmt + TotAmtLon.jun_budg
+                //                 jul_vwLoanTotAmt = jul_vwLoanTotAmt + TotAmtLon.jul_budg
+                //                 aug_vwLoanTotAmt = aug_vwLoanTotAmt + TotAmtLon.aug_budg
+                //                 sep_vwLoanTotAmt = sep_vwLoanTotAmt + TotAmtLon.sep_budg
+                //                 oct_vwLoanTotAmt = oct_vwLoanTotAmt + TotAmtLon.oct_budg
+                //                 nov_vwLoanTotAmt = nov_vwLoanTotAmt + TotAmtLon.nov_budg
+                //                 dec_vwLoanTotAmt = dec_vwLoanTotAmt + TotAmtLon.dec_budg
+                                
+                //                 janTotalAmtLoan = janTotalAmtLoan + TotAmtLon.jan_budg
+                //                 febTotalAmtLoan = febTotalAmtLoan + TotAmtLon.feb_budg
+                //                 marTotalAmtLoan = marTotalAmtLoan + TotAmtLon.mar_budg
+                //                 aprTotalAmtLoan = aprTotalAmtLoan + TotAmtLon.apr_budg
+                //                 mayTotalAmtLoan = mayTotalAmtLoan + TotAmtLon.may_budg
+                //                 junTotalAmtLoan = junTotalAmtLoan + TotAmtLon.jun_budg
+                //                 julTotalAmtLoan = julTotalAmtLoan + TotAmtLon.jul_budg
+                //                 augTotalAmtLoan = augTotalAmtLoan + TotAmtLon.aug_budg
+                //                 sepTotalAmtLoan = sepTotalAmtLoan + TotAmtLon.sep_budg
+                //                 octTotalAmtLoan = octTotalAmtLoan + TotAmtLon.oct_budg
+                //                 novTotalAmtLoan = novTotalAmtLoan + TotAmtLon.nov_budg
+                //                 decTotalAmtLoan = decTotalAmtLoan + TotAmtLon.dec_budg
+                //             }
+                //             doneReadTotLonAmt = true
+                //         })
+                        
+
+                //             totTotAmtLoan = janTotAmtLoan + febTotAmtLoan + marTotAmtLoan + aprTotAmtLoan + mayTotAmtLoan + junTotAmtLoan + julTotAmtLoan + augTotAmtLoan +
+                //                 sepTotAmtLoan + octTotAmtLoan + novTotAmtLoan + decTotAmtLoan
+        
+                //             poSumView.push({loan_type: scanvwloanType, title: brnDesc, sortkey: 6 + ctr, group: 2, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
+                //                 apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
+                //                 aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan, tot_value : totTotAmtLoan
+                //             })
+        
+                //          centerCntBegBal = 0
+                //          jan_TotCliOutReach = 0
+                //          feb_TotCliOutReach = 0
+                //          mar_TotCliOutReach = 0
+                //          apr_TotCliOutReach = 0
+                //          may_TotCliOutReach = 0
+                //          jun_TotCliOutReach = 0
+                //          jul_TotCliOutReach = 0
+                //          aug_TotCliOutReach = 0
+                //          sep_TotCliOutReach = 0
+                //          oct_TotCliOutReach = 0
+                //          nov_TotCliOutReach = 0
+                //          dec_TotCliOutReach = 0
+                //          tot_TotCliOutReach = 0
+            
+                //          janTotAmtLoan = 0
+                //          febTotAmtLoan = 0
+                //          marTotAmtLoan = 0
+                //          aprTotAmtLoan = 0
+                //          mayTotAmtLoan = 0
+                //          junTotAmtLoan = 0
+                //          julTotAmtLoan = 0
+                //          augTotAmtLoan = 0
+                //          sepTotAmtLoan = 0
+                //          octTotAmtLoan = 0
+                //          novTotAmtLoan = 0
+                //          decTotAmtLoan = 0
+
+                //          doneReadBranLnType = true
+                
+                //     })
+                        
+                //     poSumView.push({loan_type: scanvwloanType, title: scanvwloanType , sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_vwLoanTotCliReach, feb_value: feb_vwLoanTotCliReach, mar_value: mar_vwLoanTotCliReach,
+                //         apr_value: apr_vwLoanTotCliReach, may_value: may_vwLoanTotCliReach, jun_value: jun_vwLoanTotCliReach, jul_value: jul_vwLoanTotCliReach, aug_value: aug_vwLoanTotCliReach,
+                //         sep_value: sep_vwLoanTotCliReach, oct_value: oct_vwLoanTotCliReach, nov_value: nov_vwLoanTotCliReach, dec_value: dec_vwLoanTotCliReach, tot_value : dec_vwLoanTotCliReach
+                //     })
+        
+                //     poSumView.push({loan_type: scanvwloanType, title: scanvwloanType, sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_vwLoanTotAmt, feb_value: feb_vwLoanTotAmt, mar_value: mar_vwLoanTotAmt,
+                //         apr_value: apr_vwLoanTotAmt, may_value: may_vwLoanTotAmt, jun_value: jun_vwLoanTotAmt, jul_value: jul_vwLoanTotAmt, aug_value: aug_vwLoanTotAmt,
+                //         sep_value: sep_vwLoanTotAmt, oct_value: oct_vwLoanTotAmt, nov_value: nov_vwLoanTotAmt, dec_value: dec_vwLoanTotAmt, tot_value : dec_vwLoanTotAmt
+                //     })
+
+                //     jan_vwLoanTotCliReach = 0
+                //     feb_vwLoanTotCliReach = 0
+                //     mar_vwLoanTotCliReach = 0
+                //     apr_vwLoanTotCliReach = 0
+                //     may_vwLoanTotCliReach = 0
+                //     jun_vwLoanTotCliReach = 0
+                //     jul_vwLoanTotCliReach = 0
+                //     aug_vwLoanTotCliReach = 0
+                //     sep_vwLoanTotCliReach = 0
+                //     oct_vwLoanTotCliReach = 0
+                //     nov_vwLoanTotCliReach = 0
+                //     dec_vwLoanTotCliReach = 0
+                //     tot_vwLoanTotCliReach = 0
+                    
+                //     jan_vwLoanTotAmt = 0
+                //     feb_vwLoanTotAmt = 0
+                //     mar_vwLoanTotAmt = 0
+                //     apr_vwLoanTotAmt = 0
+                //     may_vwLoanTotAmt = 0
+                //     jun_vwLoanTotAmt = 0
+                //     jul_vwLoanTotAmt = 0
+                //     aug_vwLoanTotAmt = 0
+                //     sep_vwLoanTotAmt = 0
+                //     oct_vwLoanTotAmt = 0
+                //     nov_vwLoanTotAmt = 0
+                //     dec_vwLoanTotAmt = 0
+
+                //     doneReadLnType = true
+                // })
+
+                // if (doneReadLnType) { 
+
+                //     poSumView.push({title: "TOTAL OUTREACH", sortkey: totalCtr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_TotalCliOutReach, feb_value: feb_TotalCliOutReach, mar_value: mar_TotalCliOutReach,
+                //         apr_value: apr_TotalCliOutReach, may_value: may_TotalCliOutReach, jun_value: jun_TotalCliOutReach, jul_value: jul_TotalCliOutReach, aug_value: aug_TotalCliOutReach,
+                //         sep_value: sep_TotalCliOutReach, oct_value: oct_TotalCliOutReach, nov_value: nov_TotalCliOutReach, dec_value: dec_TotalCliOutReach, tot_value : dec_TotalCliOutReach
+                //     })
+
+                //     totTotalAmtLoan = janTotalAmtLoan + febTotalAmtLoan + marTotalAmtLoan + aprTotalAmtLoan + mayTotalAmtLoan + junTotalAmtLoan + julTotalAmtLoan + augTotalAmtLoan +
+                //     sepTotalAmtLoan + octTotalAmtLoan + novTotalAmtLoan + decTotalAmtLoan
+    
+                //     poSumView.push({title: "TOTAL DISBURSEMENT", sortkey: totalCtr, group: 2, jan_value : janTotalAmtLoan, feb_value : febTotalAmtLoan, mar_value : marTotalAmtLoan, 
+                //         apr_value : aprTotalAmtLoan, may_value : mayTotalAmtLoan, jun_value : junTotalAmtLoan, jul_value : julTotalAmtLoan, 
+                //         aug_value : augTotalAmtLoan, sep_value : sepTotalAmtLoan, oct_value : octTotalAmtLoan, nov_value : novTotalAmtLoan, dec_value : decTotalAmtLoan, tot_value : totTotalAmtLoan
+                //     })
+
+                //     // console.log(poSumView)
     
                     poSumView.sort( function (a,b) {
                         if ( a.sortkey < b.sortkey ){
@@ -3547,14 +4662,92 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                         poSumView: poSumView,
                         yuser: yuser   
                     })
-                }
+                // }
         } catch (err) {
             console.log(err)
             res.redirect('/areas/'+ viewAreaCode)
         }
     })
     
-                
+
+    router.get('/expKRAtoExcel/:id', authUser, authRole(ROLE.AM), (req,res) => {
+
+        // let dataForExcel = []
+        // dataForExcel = poSumView
+
+        const dataForExcel = poSumView.map(unitExecSum => {
+            return [unitExecSum.title, unitExecSum.beg_bal, unitExecSum.jan_value, unitExecSum.feb_value, unitExecSum.mar_value,
+                unitExecSum.apr_value, unitExecSum.may_value, unitExecSum.jun_value, unitExecSum.jul_value, unitExecSum.aug_value,
+                unitExecSum.sep_value, unitExecSum.oct_value, unitExecSum.nov_value, unitExecSum.dec_value, unitExecSum.tot_value]
+        });
+    
+        console.log(dataForExcel)
+    
+        let workbook = new excel.Workbook();
+        let worksheet = workbook.addWorksheet("Area_KRA_Sum");
+        let worksheet1 = workbook.addWorksheet("Area_KRA_Sum2");
+    
+        worksheet1.columns = [
+            { header: "DESCRIPTION", key: "title", width: 20 },
+            { header: "BEG. BALANCE", key: "beg_bal", width: 20 },
+            { header: "JANUARY", key: "jan_value", width: 12, style: { numFmt: '#,##0' } },
+            { header: "FEBRUARY", key: "feb_value", width: 12, style: { numFmt: '#,##0' } },
+            { header: "MARCH", key: "mar_value", width: 12, style: { numFmt: '#,##0' } },
+            { header: "APRIL", key: "apr_value", width: 12, style: { numFmt: '#,##0' } },
+            { header: "MAY", key: "may_value", width: 12, style: { numFmt: '#,##0' } },
+            { header: "JUNE", key: "jun_value", width: 12, style: { numFmt: '#,##0' } },
+            { header: "JULY", key: "jul_value", width: 12, style: { numFmt: '#,##0' } },
+            { header: "AUGUST", key: "aug_value", width: 12, style: { numFmt: '#,##0' } },
+            { header: "SEPTEMBER", key: "sep_value", width: 12, style: { numFmt: '#,##0' } },
+            { header: "OCTOBER", key: "oct_value", width: 12, style: { numFmt: '#,##0' } },
+            { header: "NOVEMBER", key: "nov_value", width: 12, style: { numFmt: '#,##0' } },
+            { header: "DECEMBER", key: "dec_value", width: 12, style: { numFmt: '#,##0' } },
+            { header: "TOTAL", key: "tot_value", width: 12, style: { numFmt: '#,##0' } },
+          ];
+          worksheet.columns = [
+          { header: "DESCRIPTION", key: "title", width: 20 },
+          { header: "BEG. BALANCE", key: "beg_bal", width: 20 },
+          { header: "JANUARY", key: "jan_value", width: 12, style: { numFmt: '#,##0' } },
+          { header: "FEBRUARY", key: "feb_value", width: 12, style: { numFmt: '#,##0' } },
+          { header: "MARCH", key: "mar_value", width: 12, style: { numFmt: '#,##0' } },
+          { header: "APRIL", key: "apr_value", width: 12, style: { numFmt: '#,##0' } },
+          { header: "MAY", key: "may_value", width: 12, style: { numFmt: '#,##0' } },
+          { header: "JUNE", key: "jun_value", width: 12, style: { numFmt: '#,##0' } },
+          { header: "JULY", key: "jul_value", width: 12, style: { numFmt: '#,##0' } },
+          { header: "AUGUST", key: "aug_value", width: 12, style: { numFmt: '#,##0' } },
+          { header: "SEPTEMBER", key: "sep_value", width: 12, style: { numFmt: '#,##0' } },
+          { header: "OCTOBER", key: "oct_value", width: 12, style: { numFmt: '#,##0' } },
+          { header: "NOVEMBER", key: "nov_value", width: 12, style: { numFmt: '#,##0' } },
+          { header: "DECEMBER", key: "dec_value", width: 12, style: { numFmt: '#,##0' } },
+          { header: "TOTAL", key: "tot_value", width: 12, style: { numFmt: '#,##0' } },
+        ];
+    
+        // Add Array Rows
+        worksheet.addRows(dataForExcel)
+        worksheet1.addRows(dataForExcel)
+    
+        worksheet.getRow(1).font = { size: 14, bold: true}
+        worksheet.getRow(2).font = { size: 12, bold: true}
+        worksheet.getRow(6).font = { size: 12, bold: true}
+        worksheet.getRow(7).font = { size: 12, bold: true}
+        worksheet.getRow(13).font = { size: 12, bold: true}
+        worksheet.getRow(11).font = { size: 12, bold: true}
+
+        res.setHeader(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+        res.setHeader(
+          "Content-Disposition",
+          "attachment; filename=" + req.params.id+" - Area_KRA_Sum.xlsx"
+        );
+    
+        workbook.xlsx.write(res).then(function () {
+          res.status(200).end()
+        })
+    
+})
+   
 
 module.exports = router
 //   function areYouSureDelete() {
