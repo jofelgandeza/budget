@@ -29,6 +29,7 @@ const begMonthSelect = ["January","February", "March", "April", "May", "June"];
 let poSumView = []
 let poCenters = []
 let loanTypes = []
+let budgetYear = ""
 
 router.get('/:id', authUser, authRole("PO"), async (req, res) => {
 
@@ -67,6 +68,10 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
 
     let budget_Mode = ""
 
+    budgetYear = budget_Year[0].budget_year
+
+    console.log(budgetYear)
+
     try {
 
         POdata = await Employee.findOne({assign_code: assignCode}, function (err, foundedEmp) {
@@ -75,7 +80,7 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
         })
         
         ctrResBudgDet = await Center_budget_det.find({po_code: IDcode, view_code: "ResClientCount"})
-         console.log(ctrResBudgDet)
+        //  console.log(ctrResBudgDet)
          
         loanTypes = await Loan_type.find()
 
@@ -85,7 +90,7 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
         })
    
         let totDisburseAmt = 0
-        console.log(center)
+        // console.log(center)
 
         if (poCenters.length == 0) {
             doneCenterRead = true
@@ -116,7 +121,7 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
                 }
 
                 centerTargets.forEach(centerLoan => {
-                    if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
+                    if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) { // && centerLoan.target_year === budgetYear) {
                         const loanRem = centerLoan.remarks
                         if (_.trim(loanRem) === "New Loan") {
                             nloanTot = nloanTot + centerLoan.totAmount
@@ -252,22 +257,24 @@ router.get('/viewTarget/:id', authUser, authRole("PO", "BM"), async (req, res) =
 
 //        const updateCtrForView = await Center.find()
 
-        const center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber})
+        const center = await Center.find({branch: branchCode, unit: unitCode, po: poNumber}, function (err, foundPOctr) {
+
+        })
    
         if (center.length == 0) {
             doneCenterRead = true
         
         } else {
-            nClient = _.sumBy(center, function(o) { return o.newClient; });
-            nClientAmt = _.sumBy(center, function(o) { return o.newClientAmt; });
-            oClient = _.sumBy(center, function(o) { return o.oldClient; });
-            oClientAmt = _.sumBy(center, function(o) { return o.oldClientAmt; });
-            rClient = _.sumBy(center, function(o) { return o.resClient; });
-            rClient2 = _.sumBy(center, function(o) { return o.resClient2; });
-            budgBegBal = _.sumBy(center, function(o) { return o.budget_BegBal; });
-            budgBegBalCli = _.sumBy(center, function(o) { return o.budget_BegBalCli; });
-            // tbudgEndBal = (oClient + nClient) - rClient
-            totDisburse = nClientAmt + oClientAmt
+            // nClient = _.sumBy(center, function(o) { return o.newClient; });
+            // nClientAmt = _.sumBy(center, function(o) { return o.newClientAmt; });
+            // oClient = _.sumBy(center, function(o) { return o.oldClient; });
+            // oClientAmt = _.sumBy(center, function(o) { return o.oldClientAmt; });
+            // rClient = _.sumBy(center, function(o) { return o.resClient; });
+            // rClient2 = _.sumBy(center, function(o) { return o.resClient2; });
+            // budgBegBal = _.sumBy(center, function(o) { return o.budget_BegBal; });
+            // budgBegBalCli = _.sumBy(center, function(o) { return o.budget_BegBalCli; });
+            // // tbudgEndBal = (oClient + nClient) - rClient
+            // totDisburse = nClientAmt + oClientAmt
 
             foundCenter = center
             doneCenterRead = true
@@ -321,7 +328,7 @@ router.get('/viewTarget/:id', authUser, authRole("PO", "BM"), async (req, res) =
         }
 })
 
-// Edit Targets
+// Edit Targets of a particular CENTER
 router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
 
      centerCode = req.params.id
@@ -329,11 +336,9 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
      poCode = centerCode.substr(0,6)
     const yuser = req.user
      
-    let lnType = []
     let forSortTargets = []
     let sortedTargets = []  
     let doneRedEditCenter = false
-    let doneSortData = false
     let ctrBrkDownTots = []
     let totCntrBudgAmt = 0
     let begBalData = []
@@ -348,13 +353,7 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
     let totOldCliSem2 = 0
     let totOldAmtSem2 = 0
 
-    let totResignSem1 = 0
-    let totResignSem2 = 0
-
     let totLoanAmount = 0
-    let totNumCli = 0
-    let totLoanAmtSem1 = 0
-    let totLoanAmtSem2 = 0
         
     let totBegBal1 = 0
     let totBegBal2 = 0
@@ -364,6 +363,9 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
     let lastMonSelect = ""
     let defaultPeriod = ""
     let ctrLonTypSelect = []
+    let doneReadCenters = false
+
+    ctrLonTypSelect = await Loan_type.find({})
 
     try {
 
@@ -382,20 +384,29 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
 //        console.log(loanType)
         const Editcenter = await Center.findOne({center: req.params.id}, function (err, foundlist) {
             centerLoanType = foundlist.loan_type
-
+            
             const ctrTarget = foundlist.Targets
-            ctrTarget.forEach(centerTarget =>{
-                lastMonSelect = centerTarget.month
-                if (lastMonSelect === "January" || lastMonSelect === "February" || lastMonSelect === "March" || lastMonSelect === "April" || lastMonSelect === "May" || lastMonSelect === "June") {
-                    defaultPeriod = "First Half"
-                } else  {
-                    defaultPeriod = "Second Half"
+            if (ctrTarget.length == 0) {
+                defaultPeriod = "First Half"
 
-                }
-            })
+            } else {
+                ctrTarget.forEach(centerTarget =>{
+                    lastMonSelect = centerTarget.month
+                    // if (centerTarget.target_year === budgetYear) {
+                        if (lastMonSelect === "January" || lastMonSelect === "February" || lastMonSelect === "March" || lastMonSelect === "April" || lastMonSelect === "May" || lastMonSelect === "June") {
+                            defaultPeriod = "First Half"
+                        } else  {
+                            defaultPeriod = "Second Half"
+        
+                        }    
+                    // }
+                })
+    
+            }
+            doneReadCenters = true
         })
 
-        if (Editcenter.length !== 0) {
+        if (doneReadCenters && Editcenter.length !== 0) {
 
             if (centerLoanType === "Group Loan") {
                 ctrLonTypSelect = await Loan_type.find({glp_topUp:true}, function (err, foundLoan) {
@@ -417,15 +428,22 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
                 const begClient = listBeg.beg_client_count
                 const begPrincipal = listBeg.beg_principal
                 const begInterest = listBeg.beg_interest
-                if (begLonType === "Group Loan" || begLonType === "Agricultural Loan") {
-                    totBegBal1 = begClient
+
+                if (listBeg.target_year === budgetYear) { 
+
+                    if (begLonType === "Group Loan" || begLonType === "Agricultural Loan") {
+                        totBegBal1 = begClient
+                    }
+    
+                    begBalData.push({begLonType: begLonType, begClient: begClient, begPrincipal: begPrincipal, begInterest: begInterest })
+    
                 }
 
-                begBalData.push({begLonType: begLonType, begClient: begClient, begPrincipal: begPrincipal, begInterest: begInterest })
              })
             
             Editcenter.Targets.forEach( list => {
                 const _id = list._id
+                const targYear = list.target_year
                 const loan_type = list.loan_type
                 const month = list.month
                 const semester = list.semester
@@ -441,6 +459,7 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
                     strLoanAmount = strAmount
                  }
 
+                //  if (targYear === budgetYear) {  // IF TARGET year is egual to the Budget Year 
                     totCntrBudgAmt = totCntrBudgAmt + totAmount
                     totLoanAmount = totLoanAmount + totAmount
 
@@ -448,9 +467,9 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
 
                     // const sortKey = _.toString(list.dispView) + list.loan_type + semester + list.remarks + _.toString(list.monthOrder) + strLoanAmount
 
-                forSortTargets.push({_id: _id, sortKey: sortKey, loan_type: loan_type, month: month, semester: semester, numClient: numClient, amount: amount, totAmount: totAmount, remarks: remarks})
+                    forSortTargets.push({_id: _id, sortKey: sortKey, loan_type: loan_type, month: month, semester: semester, numClient: numClient, amount: amount, totAmount: totAmount, remarks: remarks})
 
-                //  if (loan_type === "Group Loan" || loan_type === "Agricultural Loan") {
+                    //  if (loan_type === "Group Loan" || loan_type === "Agricultural Loan") {
                     if (semester === "First Half") {
 
                         if (remarks === "New Loan") {
@@ -486,6 +505,9 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
                             
                         }
                     }    
+
+                //  }
+
                 //  }
 
 
@@ -503,7 +525,10 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
 
 
         } else {
-            doneRedEditCenter = true
+            if (doneReadCenters) {
+                doneRedEditCenter = true
+
+            }
         }
         console.log(ctrBrkDownTots)
         sortedTargets = forSortTargets.sort( function (a,b) {
@@ -515,6 +540,7 @@ router.get('/:id/edit', authUser, authRole("PO", "BM"), async (req, res) => {
               }
                return 0;
         })
+        console.log(ctrLonTypSelect)
 
         if (doneRedEditCenter) {
             res.render("centers/editTargets", {
@@ -553,6 +579,8 @@ router.get('/setBegBals/:id', authUser, authRole("PO", "BM"), async (req, res) =
    let totCntrBudgPrin = 0
    let totCntrBudgInt = 0
    let begBalData = []
+
+//    budgetYear
    try {
 
        let LonType = " "
@@ -572,25 +600,27 @@ router.get('/setBegBals/:id', authUser, authRole("PO", "BM"), async (req, res) =
                const begBal = listBeg.Loan_beg_bal
                let begBalID = ""
                let begMonth = ""
-                LonType = listBeg.loan_type === "AGL" ? "Agricultural Loan" : "Group Loan"
 
-               const ctrBegBal = begBal.find(cBeg => cBeg.loan_type === LonType)
-                if (!ctrBegBal) {
-                    ctrBegBalCli = 0
-                } else {
-                    ctrBegBalCli = ctrBegBal.beg_client_count
-                    begPrincipal = ctrBegBal.beg_principal
-                    begInterest = ctrBegBal.beg_interest
-                    begBalID = ctrBegBal._id
-                    begMonth = ctrBegBal.expected_maturity_date
-                    totCntrBudgPrin = totCntrBudgPrin + begPrincipal
-                    totCntrBudgCli = totCntrBudgCli + ctrBegBalCli
-                    totCntrBudgInt = totCntrBudgInt + begInterest
+            //    if (listBeg.target_year === budgetYear) {
+                    LonType = listBeg.loan_type === "AGL" ? "Agricultural Loan" : "Group Loan"
 
-                }
+                   const ctrBegBal = begBal.find(cBeg => cBeg.loan_type === LonType)
+                    if (!ctrBegBal) {
+                        ctrBegBalCli = 0
+                    } else {
+                        ctrBegBalCli = ctrBegBal.beg_client_count
+                        begPrincipal = ctrBegBal.beg_principal
+                        begInterest = ctrBegBal.beg_interest
+                        begBalID = ctrBegBal._id
+                        begMonth = ctrBegBal.expected_maturity_date
+                        totCntrBudgPrin = totCntrBudgPrin + begPrincipal
+                        totCntrBudgCli = totCntrBudgCli + ctrBegBalCli
+                        totCntrBudgInt = totCntrBudgInt + begInterest
 
+                    }
+                   begBalData.push({_id: begBalID, center: CenterBegBal, begMonth: begMonth, begLonType: LonType, begClient: ctrBegBalCli, begPrincipal: _.toString(begPrincipal), begInterest: begInterest })
 
-               begBalData.push({_id: begBalID, center: CenterBegBal, begMonth: begMonth, begLonType: LonType, begClient: ctrBegBalCli, begPrincipal: _.toString(begPrincipal), begInterest: begInterest })
+            //    }
             })
            
            doneRedEditCenter = true
@@ -738,9 +768,11 @@ router.put('/saveEditTargets/:id', authUser, authRole("PO", "BM"), async functio
                 ctrBegBals.forEach( listBeg => {
                     const begLonType = listBeg.loan_type
                     const begClient = listBeg.beg_client_count
+                    const targYear = listBeg.target_year
                     const begPrincipal = listBeg.beg_principal
                     const begInterest = listBeg.beg_interest
-                    if (begLonType === loan_type) {
+
+                    if (begLonType === loan_type) { // && targYear === budgetYear ) {
                         ctrBegBalCli = begClient
                     }
     
@@ -1364,6 +1396,7 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                         
                             if (curLoanBeg.length === 0  && num_Client > 0) {
                                 let item = {
+                                    target_year: budgetYear,
                                     loan_type: loanTyp,
                                     beg_amount: totBegAmount,
                                     beg_interest: begInterest[i],
@@ -1436,7 +1469,7 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                     console.log(fndBegBalCli)
                                     if (isNull(ctrBegBalCli)) {
                                         let OLDCtrCliBudg = new Center_budget_det({
-                                            region: req.user.region, area: req.user.area, branch: branchCode, unit: unit_ID, po: poNumber, po_code: poCode, center: centerCode,
+                                            region: req.user.region, area: req.user.area, branch: branchCode, unit: unit_ID, po: poNumber, po_code: poCode, center: centerCode, target_year: budgetYear,
                                             view_type: "PUH", loan_type: loanTyp, beg_bal: num_Client, beg_bal_amt: begPrincipal[i], beg_bal_int: begInterest[i], client_count_included: true, view_code: "OldLoanClient", 
                                             jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                                             })
@@ -1444,6 +1477,7 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                             OLDCtrCliBudg.save()
                 
                                     } else {
+                                        fndBegBalCli.target_year =  budgetYear,
                                         fndBegBalCli.beg_bal = num_Client
                                         fndBegBalCli.beg_bal_amt = begPrincipal[i]
                                         fndBegBalCli.beg_bal_int = begInterest[i]
@@ -1458,10 +1492,10 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                 const ctrBudgDetBBalAmt = await Center_budget_det.findOne({center: centerCode, loan_type: loanTyp, view_code: "OldLoanAmt"}, function (err, fndBegBalAmt) {
                                     const ctrBudgDetBegBalAmt = fndBegBalAmt
                                     console.log(fndBegBalAmt)
-                
+
                                     if (isNull(ctrBudgDetBegBalAmt)) {
                                         let OLFCtrAMTBudg = new Center_budget_det({
-                                            region: req.user.region, area: req.user.area, branch: branchCode, unit: unit_ID, po: poNumber, po_code: poCode, center: centerCode,
+                                            region: req.user.region, area: req.user.area, branch: branchCode, unit: unit_ID, po: poNumber, po_code: poCode, center: centerCode, target_year: budgetYear,
                                             view_type: "PUH", loan_type: loanTyp, beg_bal: num_Client, beg_bal_amt: begPrincipal[i], beg_bal_int: begInterest[i], client_count_included: true, view_code: "OldLoanAmt", 
                                             jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                                         })
@@ -1469,6 +1503,7 @@ router.put('/saveBegBals/:id', authUser, authRole("PO"), async function(req, res
                                         OLFCtrAMTBudg.save()
                 
                                     } else {
+                                        fndBegBalAmt.target_year =  budgetYear,
                                         fndBegBalAmt.beg_bal = num_Client
                                         fndBegBalAmt.beg_bal_amt = begPrincipal[i]
                                         fndBegBalAmt.beg_bal_int = begInterest[i]
@@ -1661,6 +1696,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
               console.log(curLoanBeg)
 
               item = {
+                target_year: budgetYear,
                 loan_type: begLoanType,
                 beg_amount: bBalAmt,
                 beg_interest: begBalInterest,
@@ -1710,7 +1746,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                 console.log(fndBegBalCli)
                 if (isNull(ctrBegBalCli)) {
                     let OLDCtrCliBudg = new Center_budget_det({
-                        region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                        region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode, target_year: budgetYear,
                         view_type: "PUH", loan_type: begLoanType, beg_bal: bClientCnt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanClient", 
                         jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                         })
@@ -1718,6 +1754,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                         OLDCtrCliBudg.save()
 
                 } else {
+                    fndBegBalCli.target_year =  budgetYear,
                     fndBegBalCli.beg_bal = bClientCnt
                     fndBegBalCli.beg_bal_amt = begBalPrinc
                     fndBegBalCli.beg_bal_int = begBalInterest
@@ -1735,7 +1772,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
 
                 if (isNull(ctrBudgDetBegBalAmt)) {
                     let OLFCtrAMTBudg = new Center_budget_det({
-                        region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                        region: _user.region, area: _user.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode, target_year: budgetYear,
                         view_type: "PUH", loan_type: begLoanType, beg_bal: bBalAmt, beg_bal_amt: begBalPrinc, beg_bal_int: begBalInterest, client_count_included: true, view_code: "OldLoanAmt", 
                         jan_budg: 0, feb_budg: 0, mar_budg: 0, apr_budg: 0, may_budg: 0, jun_budg: 0, jul_budg: 0, aug_budg: 0, sep_budg: 0, oct_budg: 0, nov_budg: 0, dec_budg: 0
                     })
@@ -1743,6 +1780,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                     OLFCtrAMTBudg.save()
 
                 } else {
+                    fndBegBalAmt.target_year =  budgetYear,
                     fndBegBalAmt.beg_bal = bBalAmt
                     fndBegBalAmt.beg_bal_amt = begBalPrinc
                     fndBegBalAmt.beg_bal_int = begBalInterest
@@ -1814,6 +1852,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                         delLoanAmt = cntrBegBal.beg_amount
                     }
                 })
+                fondCtr.target_year = budgetYear
                 fondCtr.beg_center_month = ""
                 fondCtr.budget_BegBalCli = 0
                 fondCtr.save()
@@ -1823,13 +1862,14 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
 
         const center = await Center.findOneAndUpdate({center: listName}, {$pull: {Loan_beg_bal :{_id: checkedItemId }}})
         
-        console.log(delLoanType)
+        // console.log(delLoanType)
            if (doneReadCenter) {
                 // Updating Loan Beginning Balances to center_budget_dets.. 
                 const centerBudgDetFound = await Center_budget_det.findOne({center: centerCode, loan_type: delLoanType, view_code: "OldLoanClient"}, function(err, fndVwList){ 
                     fndCenterDetBegBal = fndVwList
                         console.log(fndCenterDetBegBal)
-
+                        
+                        fndVwList.target_year = budgetYear
                         fndVwList.beg_bal = 0
                         fndVwList.beg_bal_amt = 0
                         fndVwList.beg_bal_int = 0
@@ -1844,6 +1884,7 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                     fndCBDBegAmt = foundBegAmtList
                         console.log(foundBegAmtList)
 
+                        foundBegAmtList.target_year = budgetYear
                         foundBegAmtList.beg_bal = 0
                         foundBegAmtList.beg_bal_amt = 0
                         foundBegAmtList.beg_bal_int = 0
@@ -1855,7 +1896,10 @@ router.put("/putBegBal/:id", authUser, authRole("PO"), async function(req, res){
                 const centerResCliFound = await Center_budget_det.findOne({center: centerCode, loan_type: delLoanType, view_code: "ResClientCount"}, function(err, fndVwList){ 
                     fndResCliBegBal = fndVwList
                         console.log(fndResCliBegBal)
+                        if (!isNull(fndResCliBegBal.target_year)) {
+                            fndResCliBegBal.target_year = budgetYear
 
+                        }
                         fndResCliBegBal.jan_budg = 0
                         fndResCliBegBal.feb_budg = 0
                         fndResCliBegBal.mar_budg = 0
@@ -1966,7 +2010,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
             console.log(centerFound)
 
         const loanViewOrder = await Loan_type.findOne({title: _.trim(loanType)}, function(err, foundloanView) {
-            if (!err) {
+            if (!isNull(foundloanView)) {
                 const finView = foundloanView.display_order
                 fnView = finView
         } else {
@@ -2390,6 +2434,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
             }           
         
             item = {
+                target_year: budgetYear,
                 loan_type: loanType,
                 month: month,
                 semester: semester,
@@ -2470,7 +2515,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
 
         if (isNull(centerBudg1Det)) { 
             let newCtrCliBudg = new Center_budget_det({
-                region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode, target_year: budgetYear,
                 view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: centerView1Code,
                 beg_bal: 0, beg_bal_amt: 0, beg_bal_int: 0,
                 jan_budg: janLoanCliBudg, feb_budg: febLoanCliBudg, mar_budg: marLoanCliBudg, apr_budg: aprLoanCliBudg,
@@ -2593,6 +2638,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                 default:
                     orderMonth = 0
             }           
+            centerBudg1Det.target_year = budgetYear
 
             await centerBudg1Det.save()
         }
@@ -2600,7 +2646,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
         if (isNull(center2BudgDet)) { 
             // if (remarks === "Re-loan") {
                 let oldCtrAmtBudg = new Center_budget_det({
-                    region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                    region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode, target_year: budgetYear,
                     view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: centerView2Code,
                     jan_budg: janLoanBudg, feb_budg: febLoanBudg, mar_budg: marLoanBudg, apr_budg: aprLoanBudg,
                     may_budg: mayLoanBudg, jun_budg: junLoanBudg, jul_budg: julLoanBudg, aug_budg: augLoanBudg,
@@ -2725,6 +2771,8 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                     orderMonth = 0
             }           
             
+            center2BudgDet.target_year = budgetYear
+                        
             await center2BudgDet.save()
         
         }
@@ -2806,7 +2854,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
             if (centerView1Code === "OldLoanClient" && canSaveResign) {
                         
                 let newCntrCliResBudg = new Center_budget_det({
-                    region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                    region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode, target_year: budgetYear,
                     view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: "ResClientCount",
                     jan_budg: janResCliBudg, feb_budg: febResCliBudg, mar_budg: marResCliBudg, apr_budg: aprResCliBudg,
                     may_budg: mayResCliBudg, jun_budg: junResCliBudg, jul_budg: julResCliBudg, aug_budg: augResCliBudg,
@@ -2822,7 +2870,7 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
 
                 if (isNull(centerResBudgDet)) { 
                     let newResCliBudg = new Center_budget_det({
-                        region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode,
+                        region: yuser.region, area: yuser.area, branch: branchCode, unit: unitCode, po: poNumber, po_code: poCode, center: centerCode, target_year: budgetYear,
                         view_type: "PUH", loan_type: loanType, client_count_included: clientCountIncluded, view_code: "ResClientCount",
                         jan_budg: janResCliBudg, feb_budg: febResCliBudg, mar_budg: marResCliBudg, apr_budg: aprResCliBudg,
                         may_budg: mayResCliBudg, jun_budg: junResCliBudg, jul_budg: julResCliBudg, aug_budg: augResCliBudg,
@@ -2844,7 +2892,9 @@ router.put("/:id", authUser, authRole("PO"), async function(req, res){
                         centerResBudgDet.nov_budg = novResCliBudg
                         centerResBudgDet.dec_budg = decResCliBudg                
 
-                    await centerResBudgDet.save()
+                        centerResBudgDet.target_year = budgetYear
+            
+                        await centerResBudgDet.save()
                 }
 
 
@@ -3920,7 +3970,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
             if (isNull(fondPONumCenters)) { 
                 let newPONumCenters = new Budg_exec_sum({
-                    region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of Centers", view_code: "NumberOfCenters", sort_key: 2, display_group: 1, beg_bal: centerCntBegBal, jan_budg : jan_centerCount, 
+                    region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, target_year: budgetYear,
+                    title: "Number of Centers", view_code: "NumberOfCenters", sort_key: 2, display_group: 1, beg_bal: centerCntBegBal, jan_budg : jan_centerCount, 
                     feb_budg : feb_centerCount, mar_budg : mar_centerCount, apr_budg : apr_centerCount, may_budg : may_centerCount, jun_budg : jun_centerCount, jul_budg : jul_centerCount, 
                     aug_budg : aug_centerCount, sep_budg : sep_centerCount, oct_budg : oct_centerCount, nov_budg : nov_centerCount, dec_budg : dec_centerCount                                        
                 })
@@ -3941,6 +3992,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 fondPONumCenters.oct_budg = oct_centerCount
                 fondPONumCenters.nov_budg = nov_centerCount
                 fondPONumCenters.dec_budg = dec_centerCount
+                fondPONumCenters.target_year =  budgetYear
 
                 fondPONumCenters.save()            
             }
@@ -4176,7 +4228,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         
                     if (isNull(fondNewClients)) { 
                         let newNewClients = new Budg_exec_sum({
-                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "New Clients", view_code: "NewClients", sort_key: 4, display_group: 2, beg_bal: 0, jan_budg : jan_newCliTot, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, target_year: budgetYear,
+                            title: "New Clients", view_code: "NewClients", sort_key: 4, display_group: 2, beg_bal: 0, jan_budg : jan_newCliTot, 
                             feb_budg : feb_newCliTot, mar_budg : mar_newCliTot, apr_budg : apr_newCliTot, may_budg : may_newCliTot, jun_budg : jun_newCliTot, jul_budg : jul_newCliTot, 
                             aug_budg : aug_newCliTot, sep_budg : sep_newCliTot, oct_budg : oct_newCliTot, nov_budg : nov_newCliTot, dec_budg : dec_newCliTot, tot_budg: tot_newCliTot
                         })
@@ -4197,6 +4250,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                         fondNewClients.dec_budg = dec_newCliTot
                         fondNewClients.tot_budg = tot_newCliTot
             
+                        fondNewClients.target_year = budgetYear
                         fondNewClients.save()            
                     }
                 })
@@ -4344,6 +4398,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fndTotClients.dec_budg = dec_totNumClients
                     fndTotClients.tot_budg = tot_totNumClients
         
+                    fndTotClients.target_year = budgetYear
+
                     fndTotClients.save()            
                 }
 
@@ -4351,7 +4407,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 fondResClients = fndTotLonAmt
                 if (isNull(fondResClients)) { 
                     let newNewClients = new Budg_exec_sum({
-                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Resign Clients", view_code: "ResignClients", sort_key: 5, display_group: 2, beg_bal: 0, jan_budg : jan_resCliTot, 
+                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, target_year: budgetYear,
+                        title: "Resign Clients", view_code: "ResignClients", sort_key: 5, display_group: 2, beg_bal: 0, jan_budg : jan_resCliTot, 
                         feb_budg : feb_resCliTot, mar_budg : mar_resCliTot, apr_budg : apr_resCliTot, may_budg : may_resCliTot, jun_budg : jun_resCliTot, jul_budg : jul_resCliTot, 
                         aug_budg : aug_resCliTot, sep_budg : sep_resCliTot, oct_budg : oct_resCliTot, nov_budg : nov_resCliTot, dec_budg : dec_resCliTot, tot_budg: resTotValueClient                                   
                     })
@@ -4371,6 +4428,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fondResClients.nov_budg = nov_resCliTot
                     fondResClients.dec_budg = dec_resCliTot
         
+                    fondResClients.target_year = budgetYear
+
                     fondResClients.save()            
                 }
             })
@@ -4379,7 +4438,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 fondCliOutReach = fndTotLonAmt
                 if (isNull(fondCliOutReach)) { 
                     let newCliOutreach = new Budg_exec_sum({
-                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Client Outreach", view_code: "ClienOutreach", sort_key: 5, display_group: 2, beg_bal: 0, jan_budg : jan_totNumClients, 
+                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, target_year: budgetYear,
+                        title: "Client Outreach", view_code: "ClienOutreach", sort_key: 5, display_group: 2, beg_bal: 0, jan_budg : jan_totNumClients, 
                         feb_budg : feb_totNumClients, mar_budg : mar_totNumClients, apr_budg : apr_totNumClients, may_budg : may_totNumClients, jun_budg : jun_totNumClients, jul_budg : jul_totNumClients, 
                         aug_budg : aug_totNumClients, sep_budg : sep_totNumClients, oct_budg : oct_totNumClients, nov_budg : nov_totNumClients, dec_budg : dec_totNumClients, tot_budg: resTotValueClient                                   
                     })
@@ -4399,6 +4459,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fondCliOutReach.nov_budg = nov_totNumClients
                     fondCliOutReach.dec_budg = dec_totNumClients
         
+                    fondCliOutReach.target_year = budgetYear
                     fondCliOutReach.save()            
                 }
             })
@@ -4446,7 +4507,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
 
                 if (isNull(fondNewLoanCli)) { 
                     let newNewClients = new Budg_exec_sum({
-                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of New Loan", view_code: "NumNewLoanCli", sort_key: 8, display_group: 1, beg_bal: 0, jan_budg : jan_newCtotValue, 
+                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, target_year: budgetYear,
+                        title: "Number of New Loan", view_code: "NumNewLoanCli", sort_key: 8, display_group: 1, beg_bal: 0, jan_budg : jan_newCtotValue, 
                         feb_budg : feb_newCtotValue, mar_budg : mar_newCtotValue, apr_budg : apr_newCtotValue, may_budg : may_newCtotValue, jun_budg : jun_newCtotValue, jul_budg : jul_newCtotValue, 
                         aug_budg : aug_newCtotValue, sep_budg : sep_newCtotValue, oct_budg : oct_newCtotValue, nov_budg : nov_newCtotValue, dec_budg : dec_newCtotValue, tot_budg: tot_newCtotValue                                       
                     })
@@ -4467,6 +4529,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fondNewLoanCli.dec_budg = dec_newCtotValue
                     fondNewLoanCli.tot_budg = tot_newCtotValue
         
+                    fondNewLoanCli.target_year = budgetYear
                     fondNewLoanCli.save()            
                 }
             })
@@ -4510,7 +4573,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 fondReLoanCli = fndTotLonAmt
                 if (isNull(fondReLoanCli)) { 
                     let newNewClients = new Budg_exec_sum({
-                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Number of Reloan", view_code: "NumReLoanCli", sort_key: 9, display_group: 1, beg_bal: begBalOldClient, jan_budg : jan_oldCtotValue, 
+                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, target_year: budgetYear,
+                        title: "Number of Reloan", view_code: "NumReLoanCli", sort_key: 9, display_group: 1, beg_bal: begBalOldClient, jan_budg : jan_oldCtotValue, 
                         feb_budg : feb_oldCtotValue, mar_budg : mar_oldCtotValue, apr_budg : apr_oldCtotValue, may_budg : may_oldCtotValue, jun_budg : jun_oldCtotValue, jul_budg : jul_oldCtotValue, 
                         aug_budg : aug_oldCtotValue, sep_budg : sep_oldCtotValue, oct_budg : oct_oldCtotValue, nov_budg : nov_oldCtotValue, dec_budg : dec_oldCtotValue, tot_budg: tot_oldCtotValue                                      
                     })
@@ -4531,7 +4595,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fondReLoanCli.nov_budg = nov_oldCtotValue
                     fondReLoanCli.dec_budg = dec_oldCtotValue
                     fondReLoanCli.tot_budg = tot_oldCtotValue
-        
+
+                    fondReLoanCli.target_year = budgetYear
                     fondReLoanCli.save()            
                 }
             })
@@ -4591,7 +4656,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                 fondNewLoanAmt = fndTotLonAmt
                 if (isNull(fondNewLoanAmt)) { 
                     let newNewClients = new Budg_exec_sum({
-                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Amount of New Loan", view_code: "NewLoanAmount", sort_key: 12, display_group: 2, beg_bal: 0, jan_budg : jan_newAtotValue, 
+                        region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, target_year: budgetYear,
+                        title: "Amount of New Loan", view_code: "NewLoanAmount", sort_key: 12, display_group: 2, beg_bal: 0, jan_budg : jan_newAtotValue, 
                         feb_budg : feb_newAtotValue, mar_budg : mar_newAtotValue, apr_budg : apr_newAtotValue, may_budg : may_newAtotValue, jun_budg : jun_newAtotValue, jul_budg : jul_newAtotValue, 
                         aug_budg : aug_newAtotValue, sep_budg : sep_newAtotValue, oct_budg : oct_newAtotValue, nov_budg : nov_newAtotValue, dec_budg : dec_newAtotValue, tot_budg : tot_newAtotValue                                       
                     })
@@ -4612,6 +4678,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fondNewLoanAmt.dec_budg = dec_newAtotValue
                     fondNewLoanAmt.tot_budg = tot_newAtotValue
                     
+                    fondNewLoanAmt.target_year = budgetYear
                     fondNewLoanAmt.save()            
                 }
             })       
@@ -4654,7 +4721,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
         
                     if (isNull(fondReLoanAmt)) { 
                         let newNewClients = new Budg_exec_sum({
-                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "Amount of Reloan", view_code: "ReLoanAmount", sort_key: 13, display_group: 2, beg_bal: 0, jan_budg : jan_oldAtotValue, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, target_year: budgetYear,
+                            title: "Amount of Reloan", view_code: "ReLoanAmount", sort_key: 13, display_group: 2, beg_bal: 0, jan_budg : jan_oldAtotValue, 
                             feb_budg : feb_oldAtotValue, mar_budg : mar_oldAtotValue, apr_budg : apr_oldAtotValue, may_budg : may_oldAtotValue, jun_budg : jun_oldAtotValue, jul_budg : jul_oldAtotValue, 
                             aug_budg : aug_oldAtotValue, sep_budg : sep_oldAtotValue, oct_budg : oct_oldAtotValue, nov_budg : nov_oldAtotValue, dec_budg : dec_oldAtotValue, tot_budg : tot_oldAtotValue                                      
                         })
@@ -4675,6 +4743,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                         fondReLoanAmt.dec_budg = dec_oldAtotValue
                         fondReLoanAmt.tot_budg = tot_oldAtotValue
             
+                        fondReLoanAmt.target_year = budgetYear
                         fondReLoanAmt.save()            
                     }
                 })
@@ -5281,7 +5350,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fondMonthlyDisburse = fndTotLonAmt
                     if (isNull(fondMonthlyDisburse)) { 
                         let newNewClients = new Budg_exec_sum({
-                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "MONTHLY DISBURSEMENT (P)", view_code: "MonthlyDisbAmt", sort_key: 16, display_group: 1, beg_bal: 0, jan_budg : janTotAmtLoan, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, target_year: budgetYear,
+                            title: "MONTHLY DISBURSEMENT (P)", view_code: "MonthlyDisbAmt", sort_key: 16, display_group: 1, beg_bal: 0, jan_budg : janTotAmtLoan, 
                             feb_budg : febTotAmtLoan, mar_budg : marTotAmtLoan, apr_budg : aprTotAmtLoan, may_budg : mayTotAmtLoan, jun_budg : junTotAmtLoan, jul_budg : julTotAmtLoan, 
                             aug_budg : augTotAmtLoan, sep_budg : sepTotAmtLoan, oct_budg : octTotAmtLoan, nov_budg : novTotAmtLoan, dec_budg : decTotAmtLoan, tot_budg : totTotAmtLoan
                         })
@@ -5302,6 +5372,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                         fondMonthlyDisburse.dec_budg = decTotAmtLoan
                         fondMonthlyDisburse.tot_budg = totTotAmtLoan
             
+                        fondMonthlyDisburse.target_year = budgetYear
                         fondMonthlyDisburse.save()            
                     }
                 })
@@ -5388,7 +5459,8 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                     fondBalFromPrevMo = fndTotLonAmt
                     if (isNull(fondBalFromPrevMo)) { 
                         let newNewClients = new Budg_exec_sum({
-                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, title: "BAL. FROM PREV. MONTH", view_code: "BalFromPrevMon", sort_key: 17, display_group: 1, beg_bal: 0, jan_budg : janRunBalPrevMon, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: viewPOCode, target_year: budgetYear,
+                            title: "BAL. FROM PREV. MONTH", view_code: "BalFromPrevMon", sort_key: 17, display_group: 1, beg_bal: 0, jan_budg : janRunBalPrevMon, 
                             feb_budg : febRunBalPrevMon, mar_budg : marRunBalPrevMon, apr_budg : aprRunBalPrevMon, may_budg : mayRunBalPrevMon, jun_budg : junRunBalPrevMon, jul_budg : julRunBalPrevMon, 
                             aug_budg : augRunBalPrevMon, sep_budg : sepRunBalPrevMon, oct_budg : octRunBalPrevMon, nov_budg : novRunBalPrevMon, dec_budg : decRunBalPrevMon                                        
                         })
@@ -5408,6 +5480,7 @@ router.get('/viewTargetsMonthly/:id', authUser, authRole("PO", "ADMIN"), async (
                         fondBalFromPrevMo.nov_budg = novRunBalPrevMon
                         fondBalFromPrevMo.dec_budg = decRunBalPrevMon
             
+                        fondBalFromPrevMo.target_year = budgetYear
                         fondBalFromPrevMo.save()            
                     }
                 })

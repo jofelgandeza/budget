@@ -27,6 +27,7 @@ const monthSelect = ["January","February", "March", "April", "May", "June", "Jul
 
 let unitPosition = []
 let poSumView = []
+let budgetYear = ""
 
 // View UNIT's Buget  - TUG-A
 router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
@@ -86,9 +87,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
         }
     })
 
-   console.log(postManager)
-   console.log(postUnitHead)
-   console.log(postProgOfr)
+   budgetYear = budget_Year[0].budget_year
 
     try {
 
@@ -1763,6 +1762,7 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
                 unitBudgExecViews.forEach( TotNumCenter => {
 
                     const areaVwCode = TotNumCenter.view_code
+                    
     
                     switch(areaVwCode) {
                         case "NumberOfCenters":
@@ -1818,7 +1818,9 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
                             break;
         
                         case "NumReLoanCli":
-                                
+                            // if () {
+
+                            // }                                
                             begBalOldClient = begBalOldClient + TotNumCenter.beg_bal
                             jan_oldCliTot = jan_oldCliTot + TotNumCenter.jan_budg
                             feb_oldCliTot = feb_oldCliTot + TotNumCenter.feb_budg
@@ -2742,7 +2744,8 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
 
                     if (isNull(fndUnitBudgExecTotLonAmt)) { 
                         let newPoExecSumBudg = new Budg_exec_sum({
-                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: "Unit", title: "TOTAL AMOUNT OF LOAN", view_code: "TotLoanAmt", jan_budg : janTotAmtLoan, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: "Unit", target_year: budgetYear,
+                            title: "TOTAL AMOUNT OF LOAN", view_code: "TotLoanAmt", jan_budg : janTotAmtLoan, 
                             feb_budg : febTotAmtLoan, mar_budg : marTotAmtLoan, apr_budg : aprTotAmtLoan, may_budg : mayTotAmtLoan, jun_budg : junTotAmtLoan, jul_budg : julTotAmtLoan, 
                             aug_budg : augTotAmtLoan, sep_budg : sepTotAmtLoan, oct_budg : octTotAmtLoan, nov_budg : novTotAmtLoan, dec_budg : decTotAmtLoan                                        
                         })
@@ -2762,6 +2765,7 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
                         fndUnitBudgExecTotLonAmt.nov_budg = novTotAmtLoan
                         fndUnitBudgExecTotLonAmt.dec_budg = decTotAmtLoan
             
+                        fndUnitBudgExecTotLonAmt.target_year =  budgetYear
                         await fndUnitBudgExecTotLonAmt.save()            
                     }
 
@@ -2771,7 +2775,7 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
 
                     if (isNull(fndUnitBudgExecTotInc)) { 
                         let newPoExecSumBudg = new Budg_exec_sum({
-                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: "Unit", title: "LOAN FEES", view_code: "TotProjInc", jan_budg : jan_totIntAmt, 
+                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: "Unit", target_year: budgetYear, title: "LOAN FEES", view_code: "TotProjInc", jan_budg : jan_totIntAmt, 
                             feb_budg : feb_totIntAmt, mar_budg : mar_totIntAmt, apr_budg : apr_totIntAmt, may_budg : may_totIntAmt, jun_budg : jun_totIntAmt, jul_budg : jul_totIntAmt, 
                             aug_budg : aug_totIntAmt, sep_budg : sep_totIntAmt, oct_budg : oct_totIntAmt, nov_budg : nov_totIntAmt, dec_budg : dec_totIntAmt, tot_budg: nloanTotIntAmt                                  
                         })
@@ -2792,6 +2796,7 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
                         fndUnitBudgExecTotInc.dec_budg = dec_totIntAmt
                         fndUnitBudgExecTotInc.tot_budg = nloanTotIntAmt
             
+                        fndUnitBudgExecTotInc.target_year =  budgetYear
                         await fndUnitBudgExecTotInc.save()            
                     }
 
@@ -2825,7 +2830,8 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
         
                     if (isNull(fndUnitBuExTotProcFees)) { 
                         let newPoExecSumBudg = new Budg_exec_sum({
-                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: "Unit", title: "PROCESSING FEES", view_code: "TotProcFee", jan_budg : janProcFeeAmt, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: "Unit", target_year: budgetYear,
+                            title: "PROCESSING FEES", view_code: "TotProcFee", jan_budg : janProcFeeAmt, 
                             feb_budg : febProcFeeAmt, mar_budg : marProcFeeAmt, apr_budg : aprProcFeeAmt, 
                             may_budg : mayProcFeeAmt, jun_budg : junProcFeeAmt, jul_budg : julProcFeeAmt, 
                             aug_budg : augProcFeeAmt, sep_budg : sepProcFeeAmt, oct_budg : octProcFeeAmt, 
@@ -2848,6 +2854,7 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
                         fndUnitBuExTotProcFees.dec_budg = decProcFeeAmt
                         fndUnitBuExTotProcFees.dec_budg = nloanTotProcFeeAmt
             
+                        fndUnitBuExTotProcFees.target_year =  budgetYear
                         await fndUnitBuExTotProcFees.save()            
                     }
                     if (nloanTotIntAmt > 0) {

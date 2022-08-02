@@ -27,6 +27,10 @@ const budgetSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    target_year: {
+        type: String,
+        required: true
+    },
     january: {
         type: Number,
         required: false

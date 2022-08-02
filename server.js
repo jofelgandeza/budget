@@ -62,6 +62,7 @@ app.locals.yuser = app.locals.users
 app.locals.posisyon = []
 app.locals.userRole = ROLE
 app.locals.budgetMode = ""
+app.locals.budget_Year = ""
 
 app.use(express.json()) 
 app.use(flash())
@@ -112,7 +113,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
         //   activity: "Login",
         //   activity_desc: "User logged-in.",
         // })
-        
+
         //   const saveLogUser = loggedUser.save()
 
         const asignCode = _.trim(req.user.assCode)        
@@ -169,6 +170,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
     if (req.user == null) {
       users = await User.find()
       posisyon = await Position.find({})
+      budget_Year = await Setting.find()
     }
       next()
   }

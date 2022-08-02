@@ -18,6 +18,8 @@ const { ROLE } = require('../public/javascripts/data.js')
 
 // let LoggedUser = {}
 // app.use(setSysUser)
+let budgetYear = ""
+
 
 router.get('/', async (req, res) => {
     // res.send('Admin Page')
@@ -42,6 +44,8 @@ router.get('/region/:id', async (req, res) => {
     let doneReadRegion = false
 
     let empName = []
+
+    budgetYear = budget_Year[0].budget_year
 
     try {
 

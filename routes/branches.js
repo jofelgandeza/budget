@@ -28,6 +28,8 @@ const { ROLE } = require('../public/javascripts/data.js')
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
 
 let poSumView = []
+let budgetYear = ""
+
 
 // authUser, authRole("BM", "ADMIN"), 
 // console.log(ROLE)
@@ -95,6 +97,8 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
             postProgOfr = fndPositID
         }
     })
+
+    budgetYear = budget_Year[0].budget_year
 
     try {
 

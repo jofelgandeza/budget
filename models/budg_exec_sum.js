@@ -1,5 +1,9 @@
 const mongoose = require('mongoose')
   const centerBudgDetSchema = new mongoose.Schema({
+    target_year: {
+        type: String,
+        required: true
+    },
     region: {
         type: String,
         required: true

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 
 const centerTargetSchema = {
+    target_year: String,
     loan_type: String,
     month: String,
     semester: String,
@@ -15,6 +16,7 @@ const centerTargetSchema = {
     resignClient: Number
   };
 const centerLoanBegBal = {
+    target_year: String,
     loan_type: String, 
     beg_amount: Number,
     beg_interest: Number,

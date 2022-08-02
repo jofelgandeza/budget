@@ -251,7 +251,7 @@
                     <td>------</td>
                 </tr>
 
-                <% if (budget_Mode === "Open") { %>
+                <% if (budget_Mode !== "Closed") { %>
                     <tr class="form-item-target">
                         <form action="/centers/<%= listTitle %>?_method=PUT" method="POST">
                             <td>New:</td>
