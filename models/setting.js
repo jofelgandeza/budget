@@ -6,12 +6,10 @@ const mongoose = require('mongoose')
         required: true
     },
     start_budget_date: {
-        type: Date,
-        required: true
+        type: String,
     },
     end_budget_date: {
-        type: Date,
-        required: true
+        type: String,
     },
     status: {
         type: String,
