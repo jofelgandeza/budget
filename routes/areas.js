@@ -32,7 +32,7 @@ const monthSelect = ["January","February", "March", "April", "May", "June", "Jul
 let poSumView = []
 let LonType = []
 let AreaEmp = []
-// let budgetYear = ""
+let budgetYear = ""
 
 // authUser, authRole("BM", "ADMIN"), 
 // console.log(ROLE)
@@ -107,8 +107,14 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
             postProgOfr = fndPositID
         }
     })
+    
+    if (!isNull(budget_Year)) {
+        budgetYear = budget_Year[0].budget_year
 
-    budgetYear = budget_Year[0].budget_year
+    }
+    console.log(budgetYear)
+
+    console.log(budget_Year)
 
     try {
 
@@ -3590,7 +3596,7 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                                             nov_vwLonTypNewCli = nov_vwLonTypNewCli + areaBudgetDets.nov_budg
                                             dec_vwLonTypNewCli = dec_vwLonTypNewCli + areaBudgetDets.dec_budg                        
             
-                                        if (areaLnType === "Group Loan" || areaLnType === "Agricultural Loan") {
+                                        // if (areaLnType === "Group Loan" || areaLnType === "Agricultural Loan") {
                                             jan_brnNewCliTot = jan_brnNewCliTot + areaBudgetDets.jan_budg
                                             feb_brnNewCliTot = feb_brnNewCliTot + areaBudgetDets.feb_budg
                                             mar_brnNewCliTot = mar_brnNewCliTot + areaBudgetDets.mar_budg
@@ -3616,7 +3622,7 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                                             oct_TotNewClient = oct_TotNewClient + areaBudgetDets.oct_budg
                                             nov_TotNewClient = nov_TotNewClient + areaBudgetDets.nov_budg
                                             dec_TotNewClient = dec_TotNewClient + areaBudgetDets.dec_budg                        
-                                        }
+                                        // }
 
                                         break;
                                     case "OldLoanClient":
