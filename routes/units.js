@@ -12,6 +12,8 @@ const Center_budget_det = require('../models/center_budget_det')
 const Budg_exec_sum = require('../models/budg_exec_sum')
 const Unit = require('../models/unit')
 const Po = require('../models/po')
+const Setting = require('../models/setting')
+
 const _ = require('lodash')
 const Cleave = require('../public/javascripts/cleave.js')
 const { forEach, isNull } = require('lodash')
@@ -73,6 +75,8 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
     let ctrResBudgDet = []
 
+    const budget_Year = await Setting.find({})
+
     unitPosition.forEach(fndPosii => {
         const fndPositionEmp = fndPosii.code
         const fndPositID = fndPosii._id
@@ -86,6 +90,8 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             postProgOfr = fndPositID
         }
     })
+
+
 
    budgetYear = budget_Year[0].budget_year
 

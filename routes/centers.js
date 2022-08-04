@@ -67,6 +67,9 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
     let doneLoanTypeRead = false
 
     let budget_Mode = ""
+    
+    const budget_Year = await Setting.find({})
+
 
     budgetYear = budget_Year[0].budget_year
 

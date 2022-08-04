@@ -13,6 +13,7 @@ const Unit = require('../models/unit')
 const Po = require('../models/po')
 const User = require('../models/user')
 const Budg_exec_sum = require('../models/budg_exec_sum')
+const Setting = require('../models/setting')
 
 const bcrypt = require('bcrypt')
 const { forEach, isNull } = require('lodash')
@@ -83,6 +84,8 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
     let doneReadCenter = false
     let doneFoundPO = false
     let doneReadLonTyp = false
+
+    const budget_Year = await Setting.find({})
    
     fndPositi.forEach(fndPosii => {
         const fndPositionEmp = fndPosii.code

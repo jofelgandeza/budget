@@ -17,6 +17,7 @@ const Center = require('../models/center')
 const Employee = require('../models/employee')
 const Loan_type = require('../models/loan_type')
 const Budg_exec_sum = require('../models/budg_exec_sum')
+const Setting = require('../models/setting')
 
 
 const { authUser, authRole } = require('../public/javascripts/basicAuth.js')
@@ -25,7 +26,7 @@ const { ROLE } = require('../public/javascripts/data.js')
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
 
 let poSumView = []
-let budgetYear = ""
+// let budgetYear = ""
 
 // let LoggedUser = {}
 // app.use(setSysUser)
@@ -84,7 +85,9 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
     let doneReadCenter = false
     let doneFoundPO = false
     let doneReadLonTyp = false
-   
+
+    const budget_Year = await Setting.find({})
+
     fndPositi.forEach(fndPosii => {
         const fndPositionEmp = fndPosii.code
         const fndPositID = fndPosii.id

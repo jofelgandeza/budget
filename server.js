@@ -170,7 +170,7 @@ app.get('/', checkAuthenticated, async (req, res) => {
     if (req.user == null) {
       users = await User.find()
       posisyon = await Position.find({})
-      budget_Year = await Setting.find()
+      budget_Year = await Setting.find({})
     }
       next()
   }

@@ -13,6 +13,7 @@ const Area = require('../models/area')
 const Region = require('../models/region')
 const User = require('../models/user')
 const Budg_exec_sum = require('../models/budg_exec_sum')
+const Setting = require('../models/setting')
 
 const bcrypt = require('bcrypt')
 const { forEach, isNull } = require('lodash')
@@ -31,7 +32,7 @@ const monthSelect = ["January","February", "March", "April", "May", "June", "Jul
 let poSumView = []
 let LonType = []
 let AreaEmp = []
-let budgetYear = ""
+// let budgetYear = ""
 
 // authUser, authRole("BM", "ADMIN"), 
 // console.log(ROLE)
@@ -88,6 +89,8 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
     let doneFoundPO = false
     let doneReadLonTyp = false
    
+    const budget_Year = await Setting.find({})
+
     fndPositi.forEach(fndPosii => {
         const fndPositionEmp = fndPosii.code
         const fndPositID = fndPosii.id
@@ -413,8 +416,9 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let doneReadCenter = false
     let doneFoundMgr = false
     let doneReadLonTyp = false
+    let doneFoundPO = false
 
-    console.log(fndPositi)
+    // console.log(fndPositi)
    
     fndPositi.forEach(fndPosii => {
         const fndPositionEmp = fndPosii.code
@@ -430,56 +434,75 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
         }
     })
 
-    console.log(postAreaMgr)
+    // console.log(postAreaMgr)
     try {
 
         const center = await Center.find({area: areaCode}, function (err, fndCenters) {
             //        const center = await Center.find(searchOptions)
-                            foundCenter = fndCenters.sort()
+                    foundCenter = fndCenters.sort()
+
+                    fndCenters.forEach( fndCtr => {
+                        newClients = newClients + fndCtr.newClient
+                        nClientAmt = nClientAmt + fndCtr.newClientAmt
+                        oClient = oClient + fndCtr.oldClient
+                        oClientAmt = oClientAmt + fndCtr.oldClientAmt
+                        rClient1 = rClient1 + fndCtr.resClient
+                        rClient2 = rClient2 + fndCtr.resClient2
+                        budgBegBal = budgBegBal + fndCtr.budget_BegBalCli
+                
                     })
             
+                    totDisburse = nClientAmt + oClientAmt
+                    tbudgEndBal = (budgBegBal + newClients) - (rClient1 + rClient2)
+                            
+                    doneReadCenter = true   
+        })
             
-        const areaManager = await Employee.find({area: areaCode, position_code: postAreaMgr}, function (err, foundBMs){
-            foundBranchMgr = foundBMs
+            
+        const areaManager = await Employee.find({area: areaCode}) 
+            // foundBranchMgr = foundBMs
 
-           })
-        
-           if (areaManager) {
-                areaManager.forEach(manager => {
-                    officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
-                })
-            } 
-        const branMgrs = await Employee.find({area: areaCode, position_code: postManager}, function (err, foundUHs){
-            foundAMBranches = foundUHs
-            doneFoundMgr = true
+        if (!isNull(areaManager)) {
+            areaManager.forEach( foundAMs =>{
+                const positCode = _.trim(foundAMs.position_code)
+
+                if (positCode === postAreaMgr) {
+                    officerName = foundAMs.first_name + " " + foundAMs.middle_name.substr(0,1) + ". " + foundAMs.last_name
+                }
+    
+                if (positCode === branchMgrID) {
+                    foundAMBranches.push({branch: foundAMs.branch, last_name: foundAMs.last_name, first_name: foundAMs.first_name, middle_name: foundAMs.middle_name, 
+                        assign_code: foundAMs.assign_code, position_code : positCode})
+                }
+    
             })
+
+            doneFoundMgr = true 
+
+        }
+        
+        //    if (areaManager) {
+        //         areaManager.forEach(manager => {
+        //             officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
+        //         })
+        //     } 
+        // const branMgrs = await Employee.find({area: areaCode, position_code: postManager}, function (err, foundUHs){
+        //     foundAMBranches = foundUHs
+        //     doneFoundMgr = true
+        //     })
 
             if (isNull(center)) {
                 doneReadCenter = true
             
             } else {
 
-                center.forEach( fndCtr => {
-                    newClients = newClients + fndCtr.newClient
-                    nClientAmt = nClientAmt + fndCtr.newClientAmt
-                    oClient = oClient + fndCtr.oldClient
-                    oClientAmt = oClientAmt + fndCtr.oldClientAmt
-                    rClient1 = rClient1 + fndCtr.resClient
-                    rClient2 = rClient2 + fndCtr.resClient2
-                    budgBegBal = budgBegBal + fndCtr.budget_BegBalCli
-    
-                })
-
-                totDisburse = nClientAmt + oClientAmt
-                tbudgEndBal = (budgBegBal + newClients) - (rClient1 + rClient2)
-                
-                doneReadCenter = true   
             }
 
         // console.log(newClients)
-        // console.log(foundAMBranches)
+        console.log(foundAMBranches)
 
         if (doneReadCenter && doneFoundMgr) {
+
             foundAMBranches.forEach(am => {   // to get Budget Breakdown per Manager
 
                 let brCode = _.trim(am.branch)
@@ -524,7 +547,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                             const lnType = center.loan_code
                             let centerTargets = center.Targets
                             let LoanBegBal = center.Loan_beg_bal
-        //                  let centerLoanBegBal = center.Loan_beg_bal                
+                        //  let centerLoanBegBal = center.Loan_beg_bal                
                             let resignClient = center.resClient
                     
                             if (lnType === _.trim(lnType)) {
@@ -599,12 +622,6 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                     doneFoundPO = true
             })
         
-            if (foundAMBranches.length === 0) {
-        
-            } else {
-                doneFoundPO = true   
-            }
-
             console.log(unitLoanTotals)
         
         // LOOP for getting Different Loan products totals in the branch
@@ -656,7 +673,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
 
             // console.log(brnLoanGrandTot)
 
-        if (doneReadCenter &&doneFoundPO && doneReadLonTyp) {
+        if (doneFoundPO && doneReadLonTyp) {
             res.render('areas/budget', {
                 listTitle: areaCode,
                 officerName: officerName,
@@ -3559,76 +3576,83 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
     
                                 switch (areaViewCode) {
                                     case "NewLoanClient":
-                                        jan_vwLonTypNewCli = jan_vwLonTypNewCli + areaBudgetDets.jan_budg
-                                        feb_vwLonTypNewCli = feb_vwLonTypNewCli + areaBudgetDets.feb_budg
-                                        mar_vwLonTypNewCli = mar_vwLonTypNewCli + areaBudgetDets.mar_budg
-                                        apr_vwLonTypNewCli = apr_vwLonTypNewCli + areaBudgetDets.apr_budg
-                                        may_vwLonTypNewCli = may_vwLonTypNewCli + areaBudgetDets.may_budg
-                                        jun_vwLonTypNewCli = jun_vwLonTypNewCli + areaBudgetDets.jun_budg
-                                        jul_vwLonTypNewCli = jul_vwLonTypNewCli + areaBudgetDets.jul_budg
-                                        aug_vwLonTypNewCli = aug_vwLonTypNewCli + areaBudgetDets.aug_budg
-                                        sep_vwLonTypNewCli = sep_vwLonTypNewCli + areaBudgetDets.sep_budg
-                                        oct_vwLonTypNewCli = oct_vwLonTypNewCli + areaBudgetDets.oct_budg
-                                        nov_vwLonTypNewCli = nov_vwLonTypNewCli + areaBudgetDets.nov_budg
-                                        dec_vwLonTypNewCli = dec_vwLonTypNewCli + areaBudgetDets.dec_budg                        
-        
-                                        jan_brnNewCliTot = jan_brnNewCliTot + areaBudgetDets.jan_budg
-                                        feb_brnNewCliTot = feb_brnNewCliTot + areaBudgetDets.feb_budg
-                                        mar_brnNewCliTot = mar_brnNewCliTot + areaBudgetDets.mar_budg
-                                        apr_brnNewCliTot = apr_brnNewCliTot + areaBudgetDets.apr_budg
-                                        may_brnNewCliTot = may_brnNewCliTot + areaBudgetDets.may_budg
-                                        jun_brnNewCliTot = jun_brnNewCliTot + areaBudgetDets.jun_budg
-                                        jul_brnNewCliTot = jul_brnNewCliTot + areaBudgetDets.jul_budg
-                                        aug_brnNewCliTot = aug_brnNewCliTot + areaBudgetDets.aug_budg
-                                        sep_brnNewCliTot = sep_brnNewCliTot + areaBudgetDets.sep_budg
-                                        oct_brnNewCliTot = oct_brnNewCliTot + areaBudgetDets.oct_budg
-                                        nov_brnNewCliTot = nov_brnNewCliTot + areaBudgetDets.nov_budg
-                                        dec_brnNewCliTot = dec_brnNewCliTot + areaBudgetDets.dec_budg                        
-        
-                                        jan_TotNewClient = jan_TotNewClient + areaBudgetDets.jan_budg
-                                        feb_TotNewClient = feb_TotNewClient + areaBudgetDets.feb_budg
-                                        mar_TotNewClient = mar_TotNewClient + areaBudgetDets.mar_budg
-                                        apr_TotNewClient = apr_TotNewClient + areaBudgetDets.apr_budg
-                                        may_TotNewClient = may_TotNewClient + areaBudgetDets.may_budg
-                                        jun_TotNewClient = jun_TotNewClient + areaBudgetDets.jun_budg
-                                        jul_TotNewClient = jul_TotNewClient + areaBudgetDets.jul_budg
-                                        aug_TotNewClient = aug_TotNewClient + areaBudgetDets.aug_budg
-                                        sep_TotNewClient = sep_TotNewClient + areaBudgetDets.sep_budg
-                                        oct_TotNewClient = oct_TotNewClient + areaBudgetDets.oct_budg
-                                        nov_TotNewClient = nov_TotNewClient + areaBudgetDets.nov_budg
-                                        dec_TotNewClient = dec_TotNewClient + areaBudgetDets.dec_budg                        
+
+                                            jan_vwLonTypNewCli = jan_vwLonTypNewCli + areaBudgetDets.jan_budg
+                                            feb_vwLonTypNewCli = feb_vwLonTypNewCli + areaBudgetDets.feb_budg
+                                            mar_vwLonTypNewCli = mar_vwLonTypNewCli + areaBudgetDets.mar_budg
+                                            apr_vwLonTypNewCli = apr_vwLonTypNewCli + areaBudgetDets.apr_budg
+                                            may_vwLonTypNewCli = may_vwLonTypNewCli + areaBudgetDets.may_budg
+                                            jun_vwLonTypNewCli = jun_vwLonTypNewCli + areaBudgetDets.jun_budg
+                                            jul_vwLonTypNewCli = jul_vwLonTypNewCli + areaBudgetDets.jul_budg
+                                            aug_vwLonTypNewCli = aug_vwLonTypNewCli + areaBudgetDets.aug_budg
+                                            sep_vwLonTypNewCli = sep_vwLonTypNewCli + areaBudgetDets.sep_budg
+                                            oct_vwLonTypNewCli = oct_vwLonTypNewCli + areaBudgetDets.oct_budg
+                                            nov_vwLonTypNewCli = nov_vwLonTypNewCli + areaBudgetDets.nov_budg
+                                            dec_vwLonTypNewCli = dec_vwLonTypNewCli + areaBudgetDets.dec_budg                        
+            
+                                        if (areaLnType === "Group Loan" || areaLnType === "Agricultural Loan") {
+                                            jan_brnNewCliTot = jan_brnNewCliTot + areaBudgetDets.jan_budg
+                                            feb_brnNewCliTot = feb_brnNewCliTot + areaBudgetDets.feb_budg
+                                            mar_brnNewCliTot = mar_brnNewCliTot + areaBudgetDets.mar_budg
+                                            apr_brnNewCliTot = apr_brnNewCliTot + areaBudgetDets.apr_budg
+                                            may_brnNewCliTot = may_brnNewCliTot + areaBudgetDets.may_budg
+                                            jun_brnNewCliTot = jun_brnNewCliTot + areaBudgetDets.jun_budg
+                                            jul_brnNewCliTot = jul_brnNewCliTot + areaBudgetDets.jul_budg
+                                            aug_brnNewCliTot = aug_brnNewCliTot + areaBudgetDets.aug_budg
+                                            sep_brnNewCliTot = sep_brnNewCliTot + areaBudgetDets.sep_budg
+                                            oct_brnNewCliTot = oct_brnNewCliTot + areaBudgetDets.oct_budg
+                                            nov_brnNewCliTot = nov_brnNewCliTot + areaBudgetDets.nov_budg
+                                            dec_brnNewCliTot = dec_brnNewCliTot + areaBudgetDets.dec_budg                        
+            
+                                            jan_TotNewClient = jan_TotNewClient + areaBudgetDets.jan_budg
+                                            feb_TotNewClient = feb_TotNewClient + areaBudgetDets.feb_budg
+                                            mar_TotNewClient = mar_TotNewClient + areaBudgetDets.mar_budg
+                                            apr_TotNewClient = apr_TotNewClient + areaBudgetDets.apr_budg
+                                            may_TotNewClient = may_TotNewClient + areaBudgetDets.may_budg
+                                            jun_TotNewClient = jun_TotNewClient + areaBudgetDets.jun_budg
+                                            jul_TotNewClient = jul_TotNewClient + areaBudgetDets.jul_budg
+                                            aug_TotNewClient = aug_TotNewClient + areaBudgetDets.aug_budg
+                                            sep_TotNewClient = sep_TotNewClient + areaBudgetDets.sep_budg
+                                            oct_TotNewClient = oct_TotNewClient + areaBudgetDets.oct_budg
+                                            nov_TotNewClient = nov_TotNewClient + areaBudgetDets.nov_budg
+                                            dec_TotNewClient = dec_TotNewClient + areaBudgetDets.dec_budg                        
+                                        }
+
                                         break;
                                     case "OldLoanClient":
-                                        
-                                        totBegBalOldClient = totBegBalOldClient + areaBudgetDets.beg_bal
-                                        lnTypBegBalOldClient = lnTypBegBalOldClient + areaBudgetDets.beg_bal
-                                        branBegBalOldClient = branBegBalOldClient + areaBudgetDets.beg_bal
-
-                                        jan_vwLonTypOldCli = jan_vwLonTypOldCli + areaBudgetDets.jan_budg
-                                        feb_vwLonTypOldCli = feb_vwLonTypOldCli + areaBudgetDets.feb_budg
-                                        mar_vwLonTypOldCli = mar_vwLonTypOldCli + areaBudgetDets.mar_budg
-                                        apr_vwLonTypOldCli = apr_vwLonTypOldCli + areaBudgetDets.apr_budg
-                                        may_vwLonTypOldCli = may_vwLonTypOldCli + areaBudgetDets.may_budg
-                                        jun_vwLonTypOldCli = jun_vwLonTypOldCli + areaBudgetDets.jun_budg
-                                        jul_vwLonTypOldCli = jul_vwLonTypOldCli + areaBudgetDets.jul_budg
-                                        aug_vwLonTypOldCli = aug_vwLonTypOldCli + areaBudgetDets.aug_budg
-                                        sep_vwLonTypOldCli = sep_vwLonTypOldCli + areaBudgetDets.sep_budg
-                                        oct_vwLonTypOldCli = oct_vwLonTypOldCli + areaBudgetDets.oct_budg
-                                        nov_vwLonTypOldCli = nov_vwLonTypOldCli + areaBudgetDets.nov_budg
-                                        dec_vwLonTypOldCli = dec_vwLonTypOldCli + areaBudgetDets.dec_budg                        
-        
-                                        jan_TotOldClient = jan_TotOldClient + areaBudgetDets.jan_budg
-                                        feb_TotOldClient = feb_TotOldClient + areaBudgetDets.feb_budg
-                                        mar_TotOldClient = mar_TotOldClient + areaBudgetDets.mar_budg
-                                        apr_TotOldClient = apr_TotOldClient + areaBudgetDets.apr_budg
-                                        may_TotOldClient = may_TotOldClient + areaBudgetDets.may_budg
-                                        jun_TotOldClient = jun_TotOldClient + areaBudgetDets.jun_budg
-                                        jul_TotOldClient = jul_TotOldClient + areaBudgetDets.jul_budg
-                                        aug_TotOldClient = aug_TotOldClient + areaBudgetDets.aug_budg
-                                        sep_TotOldClient = sep_TotOldClient + areaBudgetDets.sep_budg
-                                        oct_TotOldClient = oct_TotOldClient + areaBudgetDets.oct_budg
-                                        nov_TotOldClient = nov_TotOldClient + areaBudgetDets.nov_budg
-                                        dec_TotOldClient = dec_TotOldClient + areaBudgetDets.dec_budg
+                                        if (areaLnType === "Group Loan" || areaLnType === "Agricultural Loan") {
+                                            totBegBalOldClient = totBegBalOldClient + areaBudgetDets.beg_bal
+                                            branBegBalOldClient = branBegBalOldClient + areaBudgetDets.beg_bal
+                                        }
+                                            lnTypBegBalOldClient = lnTypBegBalOldClient + areaBudgetDets.beg_bal
+    
+                                            jan_vwLonTypOldCli = jan_vwLonTypOldCli + areaBudgetDets.jan_budg
+                                            feb_vwLonTypOldCli = feb_vwLonTypOldCli + areaBudgetDets.feb_budg
+                                            mar_vwLonTypOldCli = mar_vwLonTypOldCli + areaBudgetDets.mar_budg
+                                            apr_vwLonTypOldCli = apr_vwLonTypOldCli + areaBudgetDets.apr_budg
+                                            may_vwLonTypOldCli = may_vwLonTypOldCli + areaBudgetDets.may_budg
+                                            jun_vwLonTypOldCli = jun_vwLonTypOldCli + areaBudgetDets.jun_budg
+                                            jul_vwLonTypOldCli = jul_vwLonTypOldCli + areaBudgetDets.jul_budg
+                                            aug_vwLonTypOldCli = aug_vwLonTypOldCli + areaBudgetDets.aug_budg
+                                            sep_vwLonTypOldCli = sep_vwLonTypOldCli + areaBudgetDets.sep_budg
+                                            oct_vwLonTypOldCli = oct_vwLonTypOldCli + areaBudgetDets.oct_budg
+                                            nov_vwLonTypOldCli = nov_vwLonTypOldCli + areaBudgetDets.nov_budg
+                                            dec_vwLonTypOldCli = dec_vwLonTypOldCli + areaBudgetDets.dec_budg                        
+            
+                                        if (areaLnType === "Group Loan" || areaLnType === "Agricultural Loan") {
+                                            jan_TotOldClient = jan_TotOldClient + areaBudgetDets.jan_budg
+                                            feb_TotOldClient = feb_TotOldClient + areaBudgetDets.feb_budg
+                                            mar_TotOldClient = mar_TotOldClient + areaBudgetDets.mar_budg
+                                            apr_TotOldClient = apr_TotOldClient + areaBudgetDets.apr_budg
+                                            may_TotOldClient = may_TotOldClient + areaBudgetDets.may_budg
+                                            jun_TotOldClient = jun_TotOldClient + areaBudgetDets.jun_budg
+                                            jul_TotOldClient = jul_TotOldClient + areaBudgetDets.jul_budg
+                                            aug_TotOldClient = aug_TotOldClient + areaBudgetDets.aug_budg
+                                            sep_TotOldClient = sep_TotOldClient + areaBudgetDets.sep_budg
+                                            oct_TotOldClient = oct_TotOldClient + areaBudgetDets.oct_budg
+                                            nov_TotOldClient = nov_TotOldClient + areaBudgetDets.nov_budg
+                                            dec_TotOldClient = dec_TotOldClient + areaBudgetDets.dec_budg
+                                        }
                                     
                                         break;
                                     case "NewLoanAmt":
@@ -3714,40 +3738,44 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                                     
                                         break;
                                     case "ResClientCount":
-                                        jan_vwLonTypResCli = jan_vwLonTypResCli + areaBudgetDets.jan_budg
-                                        feb_vwLonTypResCli = feb_vwLonTypResCli + areaBudgetDets.feb_budg
-                                        mar_vwLonTypResCli = mar_vwLonTypResCli + areaBudgetDets.mar_budg
-                                        apr_vwLonTypResCli = apr_vwLonTypResCli + areaBudgetDets.apr_budg
-                                        may_vwLonTypResCli = may_vwLonTypResCli + areaBudgetDets.may_budg
-                                        jun_vwLonTypResCli = jun_vwLonTypResCli + areaBudgetDets.jun_budg
-                                        jul_vwLonTypResCli = jul_vwLonTypResCli + areaBudgetDets.jul_budg
-                                        aug_vwLonTypResCli = aug_vwLonTypResCli + areaBudgetDets.aug_budg
-                                        sep_vwLonTypResCli = sep_vwLonTypResCli + areaBudgetDets.sep_budg
-                                        oct_vwLonTypResCli = oct_vwLonTypResCli + areaBudgetDets.oct_budg
-                                        nov_vwLonTypResCli = nov_vwLonTypResCli + areaBudgetDets.nov_budg
-                                        dec_vwLonTypResCli = dec_vwLonTypResCli + areaBudgetDets.dec_budg                        
-        
-                                        jan_TotResClient = jan_TotResClient + areaBudgetDets.jan_budg
-                                        feb_TotResClient = feb_TotResClient + areaBudgetDets.feb_budg
-                                        mar_TotResClient = mar_TotResClient + areaBudgetDets.mar_budg
-                                        apr_TotResClient = apr_TotResClient + areaBudgetDets.apr_budg
-                                        may_TotResClient = may_TotResClient + areaBudgetDets.may_budg
-                                        jun_TotResClient = jun_TotResClient + areaBudgetDets.jun_budg
-                                        jul_TotResClient = jul_TotResClient + areaBudgetDets.jul_budg
-                                        aug_TotResClient = aug_TotResClient + areaBudgetDets.aug_budg
-                                        sep_TotResClient = sep_TotResClient + areaBudgetDets.sep_budg
-                                        oct_TotResClient = oct_TotResClient + areaBudgetDets.oct_budg
-                                        nov_TotResClient = nov_TotResClient + areaBudgetDets.nov_budg
-                                        dec_TotResClient = dec_TotResClient + areaBudgetDets.dec_budg
+                                            jan_vwLonTypResCli = jan_vwLonTypResCli + areaBudgetDets.jan_budg
+                                            feb_vwLonTypResCli = feb_vwLonTypResCli + areaBudgetDets.feb_budg
+                                            mar_vwLonTypResCli = mar_vwLonTypResCli + areaBudgetDets.mar_budg
+                                            apr_vwLonTypResCli = apr_vwLonTypResCli + areaBudgetDets.apr_budg
+                                            may_vwLonTypResCli = may_vwLonTypResCli + areaBudgetDets.may_budg
+                                            jun_vwLonTypResCli = jun_vwLonTypResCli + areaBudgetDets.jun_budg
+                                            jul_vwLonTypResCli = jul_vwLonTypResCli + areaBudgetDets.jul_budg
+                                            aug_vwLonTypResCli = aug_vwLonTypResCli + areaBudgetDets.aug_budg
+                                            sep_vwLonTypResCli = sep_vwLonTypResCli + areaBudgetDets.sep_budg
+                                            oct_vwLonTypResCli = oct_vwLonTypResCli + areaBudgetDets.oct_budg
+                                            nov_vwLonTypResCli = nov_vwLonTypResCli + areaBudgetDets.nov_budg
+                                            dec_vwLonTypResCli = dec_vwLonTypResCli + areaBudgetDets.dec_budg                        
+            
+                                        // if (areaLnType === "Group Loan" || areaLnType === "Agricultural Loan") {
+                                            jan_TotResClient = jan_TotResClient + areaBudgetDets.jan_budg
+                                            feb_TotResClient = feb_TotResClient + areaBudgetDets.feb_budg
+                                            mar_TotResClient = mar_TotResClient + areaBudgetDets.mar_budg
+                                            apr_TotResClient = apr_TotResClient + areaBudgetDets.apr_budg
+                                            may_TotResClient = may_TotResClient + areaBudgetDets.may_budg
+                                            jun_TotResClient = jun_TotResClient + areaBudgetDets.jun_budg
+                                            jul_TotResClient = jul_TotResClient + areaBudgetDets.jul_budg
+                                            aug_TotResClient = aug_TotResClient + areaBudgetDets.aug_budg
+                                            sep_TotResClient = sep_TotResClient + areaBudgetDets.sep_budg
+                                            oct_TotResClient = oct_TotResClient + areaBudgetDets.oct_budg
+                                            nov_TotResClient = nov_TotResClient + areaBudgetDets.nov_budg
+                                            dec_TotResClient = dec_TotResClient + areaBudgetDets.dec_budg
+    
+                                        // }
+
                                         break;
                                     default:
                                         month = ""
                                         break;
                                 }    
     
-                            }
+                            }  // (areaBranCode === brnCode && areaLnType === scanvwloanType) {
             
-                        })
+                        })         // END - SCAN Center_Budget_dets for the Area
 
                         tot_vwLonTypOldAmt = jan_vwLonTypOldAmt + feb_vwLonTypOldAmt + mar_vwLonTypOldAmt + apr_vwLonTypOldAmt + may_vwLonTypOldAmt + jun_vwLonTypOldAmt
                             + jul_vwLonTypOldAmt + aug_vwLonTypOldAmt + sep_vwLonTypOldAmt + oct_vwLonTypOldAmt + nov_vwLonTypOldAmt + dec_vwLonTypOldAmt
@@ -3759,7 +3787,7 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                         if (totNewLonAmt > 0) {
                             areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "New Client", sortkey: ctrPerLonType, group: ctrPerLonTypGrp, jan_value : jan_vwLonTypNewCli, feb_value : feb_vwLonTypNewCli, mar_value : mar_vwLonTypNewCli, 
                                 apr_value : apr_vwLonTypNewCli, may_value : may_vwLonTypNewCli, jun_value : jun_vwLonTypNewCli, jul_value : jul_vwLonTypNewCli, 
-                                aug_value : aug_vwLonTypNewCli, sep_value : sep_vwLonTypNewCli, oct_value : oct_vwLonTypNewCli, nov_value : nov_vwLonTypNewCli, dec_value : dec_vwLonTypNewCli, tot_value : tot_vwLonTypNewCli
+                                aug_value : aug_vwLonTypNewCli, sep_value : sep_vwLonTypNewCli, oct_value : oct_vwLonTypNewCli, nov_value : nov_vwLonTypNewCli, dec_value : dec_vwLonTypNewCli, tot_value : dec_vwLonTypNewCli
                             })
         
                             areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "New Amount", sortkey: ctrPerLonType, group: ctrPerLonTypGrp, jan_value : jan_vwLonTypNewAmt, feb_value : feb_vwLonTypNewAmt, mar_value : mar_vwLonTypNewAmt, 
@@ -3775,7 +3803,7 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                         if (totOldLonAmt > 0) {
                             areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "Old Client", sortkey: ctrPerLonType, group: ctrPerLonTypGrp, beg_bal: lnTypBegBalOldClient, jan_value : jan_vwLonTypOldCli, feb_value : feb_vwLonTypOldCli, mar_value : mar_vwLonTypOldCli, 
                                 apr_value : apr_vwLonTypOldCli, may_value : may_vwLonTypOldCli, jun_value : jun_vwLonTypOldCli, jul_value : jul_vwLonTypOldCli, 
-                                aug_value : aug_vwLonTypOldCli, sep_value : sep_vwLonTypOldCli, oct_value : oct_vwLonTypOldCli, nov_value : nov_vwLonTypOldCli, dec_value : dec_vwLonTypOldCli, tot_value : tot_vwLonTypOldCli
+                                aug_value : aug_vwLonTypOldCli, sep_value : sep_vwLonTypOldCli, oct_value : oct_vwLonTypOldCli, nov_value : nov_vwLonTypOldCli, dec_value : dec_vwLonTypOldCli, tot_value : dec_vwLonTypOldCli
                             })
         
                             areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "Old Amount", sortkey: ctrPerLonType, group: ctrPerLonTypGrp, jan_value : jan_vwLonTypOldAmt, feb_value : feb_vwLonTypOldAmt, mar_value : mar_vwLonTypOldAmt, 
@@ -3856,32 +3884,33 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                         nov_vwLonTypResCli = 0
                         dec_vwLonTypResCli = 0
                             tot_vwLonTypNewCli = 0
-                    })
+
+                    })            // END - SCAN the Loan Types
     
                         jan_oldCliTot = branBegBalOldClient 
-                            jan_totNumClients = (jan_oldCliTot + jan_brnNewCliTot) - jan_vwLonTypResCli
+                            jan_totNumClients = (jan_oldCliTot + jan_brnNewCliTot) - jan_TotResClient
                         feb_oldCliTot = jan_totNumClients
-                            feb_totNumClients = (feb_oldCliTot + feb_brnNewCliTot) - feb_vwLonTypResCli    
+                            feb_totNumClients = (feb_oldCliTot + feb_brnNewCliTot) - feb_TotResClient    
                         mar_oldCliTot = feb_totNumClients
-                            mar_totNumClients = (mar_oldCliTot + mar_brnNewCliTot) - mar_vwLonTypResCli
+                            mar_totNumClients = (mar_oldCliTot + mar_brnNewCliTot) - mar_TotResClient
                         apr_oldCliTot = mar_totNumClients
-                            apr_totNumClients = (apr_oldCliTot + apr_brnNewCliTot) - apr_vwLonTypResCli
+                            apr_totNumClients = (apr_oldCliTot + apr_brnNewCliTot) - apr_TotResClient
                         may_oldCliTot = apr_totNumClients
-                            may_totNumClients = (may_oldCliTot + may_brnNewCliTot) - may_vwLonTypResCli
+                            may_totNumClients = (may_oldCliTot + may_brnNewCliTot) - may_TotResClient
                         jun_oldCliTot = may_totNumClients
-                            jun_totNumClients = (jun_oldCliTot + jun_brnNewCliTot) - jun_vwLonTypResCli
+                            jun_totNumClients = (jun_oldCliTot + jun_brnNewCliTot) - jun_TotResClient
                         jul_oldCliTot = jun_totNumClients
-                            jul_totNumClients = (jul_oldCliTot + jul_brnNewCliTot) - jul_vwLonTypResCli
+                            jul_totNumClients = (jul_oldCliTot + jul_brnNewCliTot) - jul_TotResClient
                         aug_oldCliTot = jul_totNumClients
-                            aug_totNumClients = (aug_oldCliTot + aug_brnNewCliTot) - aug_vwLonTypResCli
+                            aug_totNumClients = (aug_oldCliTot + aug_brnNewCliTot) - aug_TotResClient
                         sep_oldCliTot = aug_totNumClients
-                            sep_totNumClients = (sep_oldCliTot + sep_brnNewCliTot) - sep_vwLonTypResCli
+                            sep_totNumClients = (sep_oldCliTot + sep_brnNewCliTot) - sep_TotResClient
                         oct_oldCliTot = sep_totNumClients
-                            oct_totNumClients = (oct_oldCliTot + oct_brnNewCliTot) - oct_vwLonTypResCli
+                            oct_totNumClients = (oct_oldCliTot + oct_brnNewCliTot) - oct_TotResClient
                         nov_oldCliTot = oct_totNumClients
-                            nov_totNumClients = (nov_oldCliTot + nov_brnNewCliTot) - nov_vwLonTypResCli
+                            nov_totNumClients = (nov_oldCliTot + nov_brnNewCliTot) - nov_TotResClient
                         dec_oldCliTot = nov_totNumClients
-                            dec_totNumClients = (dec_oldCliTot + dec_brnNewCliTot) - dec_vwLonTypResCli
+                            dec_totNumClients = (dec_oldCliTot + dec_brnNewCliTot) - dec_TotResClient
                         
                             jan_brnTotAmtDisburse = jan_brnNewLoanAmt + jan_brnOldLoanAmt
                             feb_brnTotAmtDisburse = feb_brnNewLoanAmt + feb_brnOldLoanAmt
@@ -3899,12 +3928,9 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                             ctrAreaOutReach = ctrAreaOutReach + 1
                             ctrAreaDisb = ctrAreaDisb + 1
 
-                        const totToOutReach = jan_totNumClients + feb_totNumClients + mar_totNumClients + apr_totNumClients + may_totNumClients + jun_totNumClients
-                            + jul_totNumClients + aug_totNumClients + sep_totNumClients + oct_totNumClients + nov_totNumClients + dec_totNumClients
-
-                        poSumView.push({area: viewAreaCode, branch: brnDesc, loan_type:"", title: brnDesc, sortkey: ctrAreaOutReach, group: 1, beg_bal: branBegBalOldClient, jan_value : jan_totNumClients, feb_value : feb_totNumClients, mar_value : mar_totNumClients, 
+                        poSumView.push({area: viewAreaCode, branch: brnDesc, loan_type:"", title: "-" +brnDesc, sortkey: ctrAreaOutReach, group: 1, beg_bal: branBegBalOldClient, jan_value : jan_totNumClients, feb_value : feb_totNumClients, mar_value : mar_totNumClients, 
                             apr_value : apr_totNumClients, may_value : may_totNumClients, jun_value : jun_totNumClients, jul_value : jul_totNumClients, aug_value : aug_totNumClients,
-                            sep_value : sep_totNumClients, oct_value : oct_totNumClients, nov_value : nov_totNumClients, dec_value : dec_totNumClients, tot_value : totToOutReach
+                            sep_value : sep_totNumClients, oct_value : oct_totNumClients, nov_value : nov_totNumClients, dec_value : dec_totNumClients, tot_value : dec_totNumClients
                         }) 
 
                         const totTotDisbAmt = jan_brnTotAmtDisburse + feb_brnTotAmtDisburse + mar_brnTotAmtDisburse + apr_brnTotAmtDisburse + may_brnTotAmtDisburse + jun_brnTotAmtDisburse
@@ -3993,7 +4019,20 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                         oct_brnNewCliTot = 0
                         nov_brnNewCliTot = 0
                         dec_brnNewCliTot = 0
-            
+                        
+                        jan_TotResClient = 0 
+                        feb_TotResClient = 0
+                        mar_TotResClient = 0
+                        apr_TotResClient = 0
+                        may_TotResClient = 0
+                        jun_TotResClient = 0
+                        jul_TotResClient = 0
+                        aug_TotResClient = 0
+                        sep_TotResClient = 0
+                        oct_TotResClient = 0
+                        nov_TotResClient = 0
+                        dec_TotResClient = 0        
+                        
                         jan_totNumClients = 0 
                         feb_totNumClients = 0
                         mar_totNumClients = 0
@@ -4007,14 +4046,11 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                         nov_totNumClients = 0
                         dec_totNumClients = 0        
 
-                })                
-
-                        const totTotalOutReach = jan_TotalCliOutReach + feb_TotalCliOutReach + mar_TotalCliOutReach + apr_TotalCliOutReach + may_TotalCliOutReach + jun_TotalCliOutReach
-                            + jul_TotalCliOutReach + aug_TotalCliOutReach + sep_TotalCliOutReach + oct_TotalCliOutReach + nov_TotalCliOutReach + dec_TotalCliOutReach
+                })   // END - SCAN BRANCHES              
 
                         poSumView.push({area: viewAreaCode, branch: "", loan_type:"", title: "TOTAL OUTREACH", sortkey: ctrAreaOutReach, group: 1, beg_bal: totBegBalOldClient, jan_value : jan_TotalCliOutReach, feb_value : feb_TotalCliOutReach, mar_value : mar_TotalCliOutReach, 
                             apr_value : apr_TotalCliOutReach, may_value : may_TotalCliOutReach, jun_value : jun_TotalCliOutReach, jul_value : jul_TotalCliOutReach, aug_value : aug_TotalCliOutReach,
-                            sep_value : sep_TotalCliOutReach, oct_value : oct_TotalCliOutReach, nov_value : nov_TotalCliOutReach, dec_value : dec_TotalCliOutReach, tot_value : totTotalOutReach
+                            sep_value : sep_TotalCliOutReach, oct_value : oct_TotalCliOutReach, nov_value : nov_TotalCliOutReach, dec_value : dec_TotalCliOutReach, tot_value : dec_TotalCliOutReach
                         }) 
 
                         const totTotalDisbAmt = jan_TotalAmtDisburse + feb_TotalAmtDisburse + mar_TotalAmtDisburse + apr_TotalAmtDisburse + may_TotalAmtDisburse + jun_TotalAmtDisburse
@@ -4090,6 +4126,7 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                         let nov_perLnTypTotAmt = 0
                         let dec_perLnTypTotAmt = 0
                 
+                        let beg_perLnTypTotReach = 0
                         let jan_perLnTypTotReach = 0
                         let feb_perLnTypTotReach = 0
                         let mar_perLnTypTotReach = 0
@@ -4177,7 +4214,7 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                             let nov_lonTypBranOldAmt = 0
                             let dec_lonTypBranOldAmt = 0
 
-                            areaPerLnTypView.forEach( areaBrnLontyp => {
+                            areaPerLnTypView.forEach( areaBrnLontyp => { // SCAN Array of Summary per branch, per Loan Type and view_code
                                 const areaLonTyp = areaBrnLontyp.loan_type 
                                 const areaBranCod = areaBrnLontyp.branch
                                 const areaViewCod = areaBrnLontyp.title
@@ -4253,8 +4290,9 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                                             areaNon = 0
 
                                     }                                    
-                                }
-                            })
+                                }  // ( areaLonTyp === scanvwloanType && areaBranCod === brnCode)
+
+                            })  // SCAN Array of Summary per branch, per Loan Type and view_code
 
                             jan_brLnTypCliTot = jan_lonTypBranBegBal 
                                 jan_perBranTotCliOutReach = (jan_brLnTypCliTot + jan_lonTypBranNewCli) - jan_lonTypBranResCli
@@ -4317,7 +4355,8 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                             oct_perLnTypTotAmt = oct_perLnTypTotAmt + oct_perLnTypBrTotAmt
                             nov_perLnTypTotAmt = nov_perLnTypTotAmt + nov_perLnTypBrTotAmt
                             dec_perLnTypTotAmt = dec_perLnTypTotAmt + dec_perLnTypBrTotAmt
-                            
+
+                            beg_perLnTypTotReach = beg_perLnTypTotReach + jan_lonTypBranBegBal
                             jan_perLnTypTotReach = jan_perLnTypTotReach + jan_perBranTotCliOutReach
                             feb_perLnTypTotReach = feb_perLnTypTotReach + feb_perBranTotCliOutReach
                             mar_perLnTypTotReach = mar_perLnTypTotReach + mar_perBranTotCliOutReach
@@ -4336,9 +4375,9 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                             const totScanvwOutReach = jan_perBranTotCliOutReach + feb_perBranTotCliOutReach + mar_perBranTotCliOutReach + apr_perBranTotCliOutReach + may_perBranTotCliOutReach + jun_perBranTotCliOutReach
                                 + jul_perBranTotCliOutReach + aug_perBranTotCliOutReach + sep_perBranTotCliOutReach + oct_perBranTotCliOutReach + nov_perBranTotCliOutReach + dec_perBranTotCliOutReach
 
-                            poSumView.push({loan_type: scanvwloanType, branch: brnDesc, title:  "?" + brnDesc, sortkey: ctrPerLonType , group: 1, beg_bal: 0, jan_value : jan_perBranTotCliOutReach, feb_value : feb_perBranTotCliOutReach, mar_value : mar_perBranTotCliOutReach, 
+                            poSumView.push({loan_type: scanvwloanType, branch: brnDesc, title:  "?" + brnDesc, sortkey: ctrPerLonType , group: 1, beg_bal: jan_lonTypBranBegBal, jan_value : jan_perBranTotCliOutReach, feb_value : feb_perBranTotCliOutReach, mar_value : mar_perBranTotCliOutReach, 
                                 apr_value : apr_perBranTotCliOutReach, may_value : may_perBranTotCliOutReach, jun_value : jun_perBranTotCliOutReach, jul_value : jul_perBranTotCliOutReach, aug_value : aug_perBranTotCliOutReach,
-                                sep_value : sep_perBranTotCliOutReach, oct_value : oct_perBranTotCliOutReach, nov_value : nov_perBranTotCliOutReach, dec_value : dec_perBranTotCliOutReach, tot_value : totScanvwOutReach
+                                sep_value : sep_perBranTotCliOutReach, oct_value : oct_perBranTotCliOutReach, nov_value : nov_perBranTotCliOutReach, dec_value : dec_perBranTotCliOutReach, tot_value : dec_perBranTotCliOutReach
                             }) 
                             ctrPerLonType2 = ctrPerLonType + 5
 
@@ -4355,9 +4394,9 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                         const totPerLnTypeOutReach = jan_perLnTypTotReach + feb_perLnTypTotReach + mar_perLnTypTotReach + apr_perLnTypTotReach + may_perLnTypTotReach + jun_perLnTypTotReach
                             + jul_perLnTypTotReach + aug_perLnTypTotReach + sep_perLnTypTotReach + oct_perLnTypTotReach + nov_perLnTypTotReach + dec_perLnTypTotReach
 
-                        poSumView.push({loan_type: scanvwloanType, branch: "", title: scanVwLoanCode + " Outreach", sortkey: ctrPerLonType , group: 1, beg_bal: 0, jan_value : jan_perLnTypTotReach, feb_value : feb_perLnTypTotReach, mar_value : mar_perLnTypTotReach, 
+                        poSumView.push({loan_type: scanvwloanType, branch: "", title: scanVwLoanCode + " Outreach", sortkey: ctrPerLonType , group: 1, beg_bal: beg_perLnTypTotReach, jan_value : jan_perLnTypTotReach, feb_value : feb_perLnTypTotReach, mar_value : mar_perLnTypTotReach, 
                             apr_value : apr_perLnTypTotReach, may_value : may_perLnTypTotReach, jun_value : jun_perLnTypTotReach, jul_value : jul_perLnTypTotReach, aug_value : aug_perLnTypTotReach,
-                            sep_value : sep_perLnTypTotReach, oct_value : oct_perLnTypTotReach, nov_value : nov_perLnTypTotReach, dec_value : dec_perLnTypTotReach, tot_value : totPerLnTypeOutReach
+                            sep_value : sep_perLnTypTotReach, oct_value : oct_perLnTypTotReach, nov_value : nov_perLnTypTotReach, dec_value : dec_perLnTypTotReach, tot_value : dec_perLnTypTotReach
                         }) 
                         ctrPerLonType2 = ctrPerLonType + 5
 
