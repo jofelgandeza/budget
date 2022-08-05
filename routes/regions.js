@@ -26,7 +26,7 @@ const { ROLE } = require('../public/javascripts/data.js')
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
 
 let poSumView = []
-// let budgetYear = ""
+let budgetYear = ""
 
 // let LoggedUser = {}
 // app.use(setSysUser)
@@ -86,7 +86,7 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
     let doneFoundPO = false
     let doneReadLonTyp = false
 
-    const budget_Year = await Setting.find({})
+    const budget_Year = await Setting.find()
 
     fndPositi.forEach(fndPosii => {
         const fndPositionEmp = fndPosii.code
@@ -108,7 +108,11 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
         }
     })
 
-    budgetYear = budget_Year[0].budget_year
+    if (!isNull(budget_Year)) {
+        budget_Year.forEach(budgYear => {
+            budgetYear = budgYear.budget_year
+        })
+    }
 
     try {
 
