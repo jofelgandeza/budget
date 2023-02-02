@@ -12,7 +12,9 @@ const Center_budget_det = require('../models/center_budget_det')
 const Budg_exec_sum = require('../models/budg_exec_sum')
 const Unit = require('../models/unit')
 const Po = require('../models/po')
+const User = require('../models/user')
 const Setting = require('../models/setting')
+const bcrypt = require('bcryptjs')
 
 const _ = require('lodash')
 const Cleave = require('../public/javascripts/cleave.js')
@@ -36,7 +38,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     
     const unitCode = req.params.id
     console.log(unitCode)
-    const branchCode = unitCode.substring(0,3)
+    const branchCode = unitCode.substr(0,3)
     const unitLetter = unitCode.substr(4,1)
 
     const unitPosition = posisyon
@@ -91,16 +93,27 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
         }
     })
 
-
-
-   budgetYear = budget_Year[0].budget_year
+    if (!isNull(budget_Year)) {
+        budget_Year.forEach(budgYear => {
+            budgetYear = budgYear.budget_year
+        })
+    }
 
     try {
 
-    const branEmployees = await Employee.findOne({assign_code: unitCode}, function (err, fndUnitHead) {
+        const center = await Center.find({branch: branchCode, unit: unitLetter}) 
+
+        const branEmployees = await Employee.findOne({assign_code: unitCode}, function (err, fndUnitHead) {
+
+            if (fndUnitHead) {
+                officerName = fndUnitHead.first_name + " " + _.trim(fndUnitHead.middle_name).substr(0,1) + ". " + fndUnitHead.last_name
+
+            } else {
+                officerName = "VACANT"
+
+            }
         
-        officerName = fndUnitHead.first_name + " " + _.trim(fndUnitHead.middle_name).substr(0,1) + ". " + fndUnitHead.last_name
-    })
+        })
 
         const programOfficers = await Employee.find({branch: branchCode, unit: unitLetter, position_code: postProgOfr}, function (err, foundPO){
             foundPOs = foundPO
@@ -109,13 +122,12 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
         const loanType = await Loan_type.find({})
 
-        ctrResBudgDet = await Center_budget_det.find({unit: unitCode, view_code: "ResClientCount"})
+        ctrResBudgDet = await Center_budget_det.find({unit: unitCode, view_code: "ResClientCount", target_year: budgetYear})
         //  console.log(ctrResBudgDet)
 
-        const center = await Center.find({branch: branchCode, unit: unitLetter}) 
 //        const center = await Center.find(searchOptions)
 
-        if (center.length === 0) {
+        if (isNull(center) || center.length === 0) {
             doneReadTot = true
         
         } else {
@@ -186,6 +198,8 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             begClientTot = 0
             bClientAmt = 0
             bClientCnt = 0
+            let budgEndBal = 0
+
 
             // center
             // foundCenter.forEach(center => {
@@ -200,11 +214,9 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                         if (lnType === _.trim(lnType)) {
                             BudgBegBal = center.budget_BegBal
                         }
-                        // console.log(resignClient)
-                        // console.log(resloanTot)
 
                         centerTargets.forEach(centerLoan => {
-                            if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
+                            if (_.trim(centerLoan.loan_type) === _.trim(typeLoan) && centerLoan.target_year === budgetYear) {
                                 const loanRem = centerLoan.remarks
                                 if (_.trim(loanRem) === "New Loan") {
                                     nloanTot = nloanTot + centerLoan.totAmount
@@ -218,11 +230,14 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                         })
 
                         LoanBegBal.forEach(centerBegBal => {
-                            if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
-                                begLoanTot = centerBegBal.beg_amount
-                                begClientTot = centerBegBal.beg_client_count
-                                bClientCnt = bClientCnt + begClientTot
-                                bClientAmt = bClientAmt + begLoanTot
+                            if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan) && centerBegBal.target_year === budgetYear) {
+                                const loan_type = centerBegBal.loan_type
+                                if (loan_type === "Group Loan" || loan_type === "Agricultural Loan" || loan_type === "Individual Loan - IMEP") {
+                                    begLoanTot = centerBegBal.beg_amount
+                                    begClientTot = centerBegBal.beg_client_count
+                                    bClientCnt = bClientCnt + begClientTot
+                                    bClientAmt = bClientAmt + begLoanTot
+                                }
                             }
                         })
                     }
@@ -230,7 +245,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
                 if (!isNull(ctrResBudgDet)) {
                     ctrResBudgDet.forEach(fndResCli => {
-                        if (fndResCli.loan_type === typeLoan  && fndResCli.po_code === po_code) {
+                        if (fndResCli.loan_type === typeLoan  && fndResCli.po_code === po_code && fndResCli.target_year === budgetYear) {
                             const totalResCnt = fndResCli.jan_budg + fndResCli.feb_budg + fndResCli.mar_budg + fndResCli.apr_budg + fndResCli.may_budg + fndResCli.jun_budg + 
                                 fndResCli.jul_budg + fndResCli.aug_budg + fndResCli.sep_budg + fndResCli.oct_budg + fndResCli.nov_budg + fndResCli.dec_budg 
         
@@ -240,11 +255,13 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                         }
                     })
                 }
-        
-        
+                
+            let unitBudgEndBal = 0
+             if (typeLoan === "Group Loan" || typeLoan === "Agricultural Loan" || typeLoan === "Individual Loan - IMEP") {
+                let unitBudgEndBal = (begClientTot + nloanTotCount) - resloanTot                    
+            }
     
             let totAmounts = nloanTot + oloanTot 
-            let unitBudgEndBal = (begClientTot + nloanTotCount) - resloanTot
             totbudgEndBal = totbudgEndBal + unitBudgEndBal
             
             unitLoanTotals.push({sortkey: forSortPoNum, po: poNum, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClientCnt,
@@ -346,6 +363,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     } 
     catch (err) {
         console.log(err)
+        res.redirect('/')
     }
 })
 
@@ -353,7 +371,7 @@ router.get('/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     
     const unitCodePO = req.params.id
-    const branchCodePO = unitCodePO.substring(0,3)
+    const branchCodePO = unitCodePO.substr(0,3)
     const unitLetterPO = unitCodePO.substr(4,1)
     const _userPO = req.user
     console.log(_userPO)
@@ -402,7 +420,7 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
         unitPUH = await Employee.find({assign_code: unitCodePO, position_code: postUnitHeadPO})
         console.log(unitPUH)
 
-            officerNamePUH = unitPUH.first_name + " " + _.trim(unitPUH.middle_name).substring(0,1) + ". " + unitPUH.last_name
+            officerNamePUH = unitPUH.first_name + " " + _.trim(unitPUH.middle_name).substr(0,1) + ". " + unitPUH.last_name
 
         // foundPOs = _.find(unitEmployees, {unit: unitLetterPO, position_code: postProgOfrPO})
         //     console.log(foundPOs)
@@ -481,7 +499,7 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                     // console.log(resloanTot)
 
                     centerTargets.forEach(centerLoan => {
-                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
+                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan) && centerLoan.target_year === budgetYear) {
                             const loanRem = centerLoan.remarks
                             if (_.trim(loanRem) === "New Loan") {
                                 nloanTot = nloanTot + centerLoan.totAmount
@@ -495,7 +513,7 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
                     })
 
                     LoanBegBal.forEach(centerBegBal => {
-                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
+                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan) && centerBegBal.target_year === budgetYear) {
                             begLoanTot = centerBegBal.beg_amount
                             bClientCnt = centerBegBal.beg_client_count
                             uBegClientTot = uBegClientTot + bClientCnt
@@ -556,6 +574,7 @@ router.get('/perPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     } 
     catch (err) {
         console.log(err)
+        res.redirect('/')
     }
 })
 
@@ -738,6 +757,7 @@ router.get('/newPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
     
     const poCode = req.params.id
     const uniCode = poCode.substr(0,5)
+    const branCode = poCode.substr(0,3)
     const yuser = req.user
 
     const loanType = await Loan_type.find({})
@@ -745,8 +765,14 @@ router.get('/newPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
          res.render('units/newPO', { 
             po: new Po(), 
             lonType: loanType,
+            branchCode: branCode,
             unitCode: uniCode,
-            yuser: yuser
+            yuser: yuser,
+            newPO : true,
+            resetPW: false,
+            user: new User(),
+            editPO : false
+
          })
     // })
 //    console.log(position)
@@ -759,23 +785,53 @@ router.post('/postNewPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => 
     const param = req.params.id
     const brnCod = param.substr(0,3)
     const poUnit = param.substr(4,1)
-    const poCod = param + req.body.poNum
+    const uniCode = param
+    const poNUm = req.body.poNum
+    const poCod = param + poNUm
+
+    const nEmail = _.trim(req.body.email).toLowerCase()
+
+    // const validPONum = /[^1-19]/.test(poNUm)
+
+    let nameCanProceed = false
+    let fieldsOkay = false
+    let locals
+
+    // if (validPONum) {
+    //     locals = {errorMessage: "Values for PO NUMBER must be 1 - 19 Only!"}
+    // } else {
+
+        fieldsOkay = true
+    // }
 
     let canProceed = true
-    let locals   
- 
+    let UserProceed = false    
+
  try {
     const unit = await Po.findOne({po_code: poCod}, function (err, foundedPO) {
 
     })
 
-    if (unit === null) {
-        canProceed = true
-    } else {
+    const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                
+    const getExistingUser = await User.findOne({email: nEmail})
+        // console.log(foundUser)
+        if (getExistingUser) {
+                UserProceed = false 
+                locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
+            } else {
+                UserProceed = true
+                // const userAssignCode = await User.findOneAndUpdate({assCode: assCode}, {$set:{"emp_code": req.body.empCode, "password": hashedPassword }})
+        }    
+
+
+    if (unit) {
         canProceed = false
+    } else {
+        canProceed = true
     }
 
-    if (canProceed) {
+    if (canProceed && fieldsOkay && UserProceed) {
         let po = new Po({
             po_code: poCod,
             po_number: req.body.poNum,
@@ -791,52 +847,84 @@ router.post('/postNewPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => 
             status: "Active"
        })
        const newPO = await po.save()
+
+        let nUser = new User({
+            email: nEmail,
+            password: hashedPassword,
+            name: "",
+            emp_code: "",
+            assCode: poCod,
+            role: "PO",
+            region: req.user.region,
+            area: req.user.area,
+            branch: brnCod
+        })
+        const saveUser = nUser.save()
+
        res.redirect('/units/pos/'+ param)
      
     } else {
-        locals = {errorMessage: 'PO number already exists!'}
+        // locals = {errorMessage: 'PO number already exists!'}
 
         const loanType = await Loan_type.find({})
 
         res.render('units/newPO', { 
+            po: new Po(), 
            unit: new Unit(), 
            lonType: loanType,
            branchCode: brnCod,
-           locals: locals
-         })
+           locals: locals,
+           unitCode: uniCode,
+           yuser: yuser,
+           newPO : true,
+           resetPW: false,
+           user: new User(),
+           editPO : false
+        })
     }
 
  } catch (err) {
      console.log(err)
     let locals = {errorMessage: 'Something WENT went wrong.'}
-     res.redirect('/units/'+ brnCod)
+     res.redirect('/units/pos/'+ param)
  }
  })
  
  // Get a PO for EDIT
 router.get('/getPOForEdit/:id/edit', authUser, authRole(ROLE.PUH), async (req, res) => {
     const param = req.params.id
-    const brnCod = param.substring(0,3)
+    const brnCod = param.substr(0,3)
     const uUnitCode = param.substr(0,5)
     const uUnit = param.substr(4,1)
     const yuser = req.user
 
     let foundedPO = []
+    let canEditPONum = false
+    let editPONum = false
 
     try {
 
         const loanType = await Loan_type.find({})
 
-        const unitPO = await Po.findOne({po_code: param}, function (err, fndPO) {
-            foundedPO = fndPO
-        })
-        // console.log(foundedPO)
+        const unitPO = await Po.findOne({po_code: param}) 
+
+        if (_.trim(unitPO.emp_code) === "") {
+            canEditPONum = true
+        } else {
+
+            canEditPONum = false
+            locals = {errorMessage: "UNIT Code is locked for editing, already has transactions."}
+        }
 
         res.render('units/editPO', { 
-            po: foundedPO, 
+            po: unitPO, 
             lonType: loanType,
             unitCode: uUnitCode,
-            yuser: yuser
+            branchCode: brnCod,
+            yuser: yuser,
+            newPO : false,
+            resetPW: false,
+            editPO : canEditPONum
        })
 
     } catch (err) {
@@ -848,29 +936,121 @@ router.get('/getPOForEdit/:id/edit', authUser, authRole(ROLE.PUH), async (req, r
 
 // SAVE EDITed Unit
 
-router.put('/putEditedPo/:id', authUser, authRole(ROLE.PUH), async function(req, res){
+router.put('/putEditedPO/:id', authUser, authRole(ROLE.PUH), async function(req, res){
     const poCode = req.params.id
-    const brnCod = poCode.substring(0,3)
-    const poUnitCode = poCode.substring(0,5)
-    const poUnitNum = poCode.substring(4,1)
-    const poNum = poCode.substring(5,1)
+    const brnCod = poCode.substr(0,3)
+    const poUnitCode = poCode.substr(0,5)
+    const poUnitNum = poCode.substr(4,1)
+    const poNum = req.body.poNum
+    const eStrPONum = poNum.toString()
     const ln_Typ = req.body.poLoan
+    const HidPOCode = req.body.hiddenPOCode
+    const HidPoNum = HidPOCode.substr(5,1)
+
+    let fieldsOkay = false
+    let locals = ""
+    let uUnit = ""
+    let newPONum = ""
+
+    if ((poNum > 0) && (poNum <= 12)) {
+            fieldsOkay = true
+
+            newPONum = poUnitCode + eStrPONum
+    } else {
+        locals = {errorMessage: "Values for PO Number must be BETWEEN 1 - 12!"}
+        fieldsOkay = false
+    }
+
+    let nameCanProceed = false
+    let canProceed = false
+    let UserProceed = false    
 
     console.log(req.params.id)
 
-    let listPO
-        try {
+    let editUserProceed = false    
 
-            listPO = await Po.findOne({po_code: poCode})
+    let poforEdit
+    let newPOCode = ""
+    let emailForEdit = ""
+    let newUserPassword = ""
+    let newEmail = ""
+    let canEditPONum = false
 
-            listPO.unit_code = poUnitCode
-            listPO.unit = poUnitNum
-            listPO.branch = brnCod
-            listPO.loan_type = ln_Typ
+    try {
+
+            const branchPOs = await Po.find({branch: brnCod})
+
+            const listPO = await Po.findOne({po_code: poCode})
+
+            if (poNum) { // can EDIT Unit Letter
+                canEditPONum = true
+
+                if (HidPoNum === eStrPONum) { // NEW Unit & OLD Unit are the same
+                    canProceed = true
+
+                    poforEdit= await Po.findOne({po_code: HidPOCode})
+
+                } else {
+                    const poNumFound = _.find(branchPOs, {po_number: eStrPONum}) 
+
+                    if (poNumFound) { // Nagbago ang Unit Letter & may Existing na Unit Letter
+                        locals = {errorMessage: "ERROR: PO " + eStrPONum + " already exists!"}
+                        
+                    } else {
+                        canProceed = true
+                        editUserProceed = true 
+
+                        newPOCode = poUnitCode + eStrPONum
+                        
+                        listPO.po_number = eStrPONum
+                        listPO.po_code = newPOCode
+
+                        emailForEdit = HidPOCode.toLowerCase() + '@kmbi.org.ph'
+                        newEmail = newPOCode.toLowerCase() + '@kmbi.org.ph'
+                        newUserPassword = newPOCode.toLowerCase()
+                    }
+                }
+    
+            } else {
+                canProceed = true
+
+            }
+
+            if (fieldsOkay && canProceed) {
+
+                listPO.po_code = newPOCode
+                listPO.po_number = eStrPONum
+                listPO.branch = brnCod
+                listPO.loan_type = ln_Typ
         
-            await listPO.save()
+                await listPO.save()
+
+                if (editUserProceed) {
+
+                    const hashedPassword = await bcrypt.hash(newUserPassword, 10)
+                
+                    const getExistingUser = await User.findOneAndUpdate({email: emailForEdit}, {$set:{"email": newEmail, "password": hashedPassword }})
+                
+                }
+
+                res.redirect('/units/pos/'+ poUnitCode)
+
+            } else {
+                const loanType = await Loan_type.find({})
+
+                res.render('units/editPO', { 
+                    po: HidPOCode, 
+                    lonType: loanType,
+                    unitCode: poUnitCode,
+                    branchCode: brnCod,
+                    yuser: yuser,
+                    newPO : false,
+                    resetPW: false,
+                    editPO : canEditPONum,
+                    locals: locals
+               })
         
-            res.redirect('/units/pos/'+ poUnitCode)
+            }
 
         } catch (err) {
             console.log(err)
@@ -916,13 +1096,24 @@ router.get('/setPOCenters/:id', authUser, authRole(ROLE.PUH), async (req, res) =
             
 
         })
+
+        sortedCenters = foundCenter.sort( function (a,b) {
+            if ( a.center < b.center ){
+                return -1;
+              }
+              if ( a.center > b.center ){
+                return 1;
+              }
+               return 0;
+        })
+ 
         
         if (doneReadCtr) {
             res.render('units/center', {
                 poCode: poCode,
                 unitCode: unitCode,
                 unit_Code: unit_Code,
-                centers: foundCenter,
+                centers: sortedCenters,
                 yuser: yuser
             })
         }
@@ -1041,9 +1232,9 @@ router.post('/postNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res
             // } else {
             //     cntrCode = centerPoCode + cntrNum
             // }
-            // const cntrLoanType = req.body.cntrLoan
+            const cntrLoanType = req.body.cntrLoan
             // const cntrStat = req.body.centerStat
-            const cntrLoanType = "Group Loan"
+            // const cntrLoanType = "Group Loan"
             const cntrAdd = ""
             const cntrStat = "Active"
         
@@ -1106,10 +1297,14 @@ router.post('/postNewCenters/:id', authUser, authRole(ROLE.PUH), async (req, res
                     locals: locals
                 })
             }
+
+            if (i == centerNums) {
+                res.redirect('/units/setPOCenters/'+ centerPoCode)                
+            }
         } //e
 
 
-    res.redirect('/units/setPOCenters/'+ centerPoCode)
+    // res.redirect('/units/setPOCenters/'+ centerPoCode)
 
  } catch (err) {
      console.log(err)
@@ -1203,47 +1398,49 @@ router.post('/postNewCenter/:id', authUser, authRole(ROLE.PUH), async (req, res)
     const cntrAdd = req.body.centerAdd
     const cntrStat = req.body.centerStat
 
+ let locals
+//  let fondCtr
+ //console.log(brnCode)
+ let canProceed = true
+ const fondCtr = await Center.findOne({center: cntrCode})
+console.log(fondCtr)
+
+ try {
     const cntrInfo = [
         {address: cntrAdd}
       ]
  
- let center = new Center({
+    let center = new Center({
+    
+        region: _user.region,
+        area: _user.area,
+        branch: branchCode,
+        unit: unitCode,
+        po: poNumber,
+        po_code: centerPoCode,
+        center_no: centerNumber,
+        center: cntrCode,
+        active_clients: 0,
+        active_loan_amt: 0,
+        loan_cycle: 0,
+        loan_type: cntrLoanType,
+        status: cntrStat,
+        beg_center_month: " ",
+        Info : cntrInfo,
+        Targets: [],
+        Loan_beg_bal: [],
+        budgBegBalCli: 0,
+        budgBegBal: 0,
+        newClient: 0,
+        newClientAmt: 0,
+        oldClient: 0,
+        oldClientAmt: 0,
+        resClient: 0,
+        resClient2: 0
+    })
  
-    region: _user.region,
-    area: _user.area,
-    branch: branchCode,
-    unit: unitCode,
-    po: poNumber,
-    po_code: centerPoCode,
-    center_no: centerNumber,
-    center: cntrCode,
-    active_clients: 0,
-    active_loan_amt: 0,
-    loan_cycle: 0,
-    loan_type: cntrLoanType,
-    status: cntrStat,
-    beg_center_month: " ",
-    Info : cntrInfo,
-    Targets: [],
-    Loan_beg_bal: [],
-    budgBegBalCli: 0,
-    budgBegBal: 0,
-    newClient: 0,
-    newClientAmt: 0,
-    oldClient: 0,
-    oldClientAmt: 0,
-    resClient: 0,
-    resClient2: 0
- })
- 
- let locals
- let fondCtr
- //console.log(brnCode)
- let canProceed = true
- try {
-     fondCtr = await Center.findOne({center: cntrCode})
 
-     if (!fondCtr) {
+    if (isNull(fondCtr)) {
         const newCoa = await center.save()
         res.redirect('/units/setPOCenters/'+ centerPoCode)
     } else {
@@ -1262,7 +1459,7 @@ router.post('/postNewCenter/:id', authUser, authRole(ROLE.PUH), async (req, res)
             centerStatus: centerStatus,
             locals: locals
         })
-   }
+    }
 
  } catch (err) {
      console.log(err)
@@ -1354,8 +1551,8 @@ router.put('/putEditedCenter/:id', authUser, authRole(ROLE.PUH), async function(
         case "6": 
             cntrNum = cntrNum + 50
             break;
-            cntrNum = cntrNum + 60
         case "7": 
+            cntrNum = cntrNum + 60
             break;
         case "8": 
             cntrNum = cntrNum + 70
@@ -1429,6 +1626,7 @@ router.delete('/deleteCenter/:id', authUser, authRole(ROLE.PUH), async (req, res
         res.redirect('/units/setPOCenters/' + cntrCode)
     } catch (err) {
         console.log(err)
+        res.redirect('/')
     }
 })
 
@@ -1450,6 +1648,7 @@ console.log(poCode)
         res.redirect('/units/pos/'+uniCode)
     } catch (err) {
         console.log(err)
+        res.redirect('/')
     }
 })
 
@@ -1556,7 +1755,8 @@ router.get('/unit/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
        } 
        catch (err) {
            console.log(err)
-       }
+           res.redirect('/')
+        }
    })
    
    
@@ -1576,6 +1776,7 @@ router.post('/delete', authUser, authRole(ROLE.PUH), async (req, res) => {
         })
     } catch (err) {
         console.log(err)
+        res.redirect('/')
       }   
       console.log(center)
 })
@@ -1591,6 +1792,7 @@ router.delete('/deleteEmp/:id', authUser, authRole(ROLE.PUH), async (req, res) =
         res.redirect('/branches/employees/'+delBranCode)
     } catch (err) {
         console.log(err)
+        res.redirect('/')
     }
 })
 
@@ -1608,7 +1810,7 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
     // let foundCenterDet = []
 
     const vwloanType = await Loan_type.find({})
-    const unitBudgExecViews = await Budg_exec_sum.find({unit: viewUnitCode})
+    const unitBudgExecViews = await Budg_exec_sum.find({unit: viewUnitCode, target_year: budgetYear})
 
     console.log("Apay madi?")
 
@@ -1754,11 +1956,11 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
 
         poSumView = []
 
-        const fndUnitBudgExecTotLonAmt = await Budg_exec_sum.findOne({unit: viewUnitCode, view_code: "TotLoanAmt"})
+        const fndUnitBudgExecTotLonAmt = await Budg_exec_sum.findOne({unit: viewUnitCode, view_code: "TotLoanAmt", target_year: budgetYear})
 
-        const fndUnitBudgExecTotInc = await Budg_exec_sum.findOne({unit: viewUnitCode, view_code: "TotProjInc"})
+        const fndUnitBudgExecTotInc = await Budg_exec_sum.findOne({unit: viewUnitCode, view_code: "TotProjInc", target_year: budgetYear})
 
-        const fndUnitBuExTotProcFees = await Budg_exec_sum.findOne({unit: viewUnitCode, view_code: "TotProcFee"})
+        const fndUnitBuExTotProcFees = await Budg_exec_sum.findOne({unit: viewUnitCode, view_code: "TotProcFee", target_year: budgetYear})
 
 
         try {
@@ -2750,8 +2952,8 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
 
                     if (isNull(fndUnitBudgExecTotLonAmt)) { 
                         let newPoExecSumBudg = new Budg_exec_sum({
-                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: "Unit", target_year: budgetYear,
-                            title: "TOTAL AMOUNT OF LOAN", view_code: "TotLoanAmt", jan_budg : janTotAmtLoan, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: "Unit",
+                            title: "TOTAL AMOUNT OF LOAN", view_code: "TotLoanAmt", target_year: budgetYear, jan_budg : janTotAmtLoan, 
                             feb_budg : febTotAmtLoan, mar_budg : marTotAmtLoan, apr_budg : aprTotAmtLoan, may_budg : mayTotAmtLoan, jun_budg : junTotAmtLoan, jul_budg : julTotAmtLoan, 
                             aug_budg : augTotAmtLoan, sep_budg : sepTotAmtLoan, oct_budg : octTotAmtLoan, nov_budg : novTotAmtLoan, dec_budg : decTotAmtLoan                                        
                         })
@@ -2781,7 +2983,7 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
 
                     if (isNull(fndUnitBudgExecTotInc)) { 
                         let newPoExecSumBudg = new Budg_exec_sum({
-                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: "Unit", target_year: budgetYear, title: "LOAN FEES", view_code: "TotProjInc", jan_budg : jan_totIntAmt, 
+                            region: "NOL", area: "NEL", branch: vwBranchCode, unit: vwUnitCode, po: "Unit", title: "LOAN FEES", view_code: "TotProjInc", target_year: budgetYear, jan_budg : jan_totIntAmt, 
                             feb_budg : feb_totIntAmt, mar_budg : mar_totIntAmt, apr_budg : apr_totIntAmt, may_budg : may_totIntAmt, jun_budg : jun_totIntAmt, jul_budg : jul_totIntAmt, 
                             aug_budg : aug_totIntAmt, sep_budg : sep_totIntAmt, oct_budg : oct_totIntAmt, nov_budg : nov_totIntAmt, dec_budg : dec_totIntAmt, tot_budg: nloanTotIntAmt                                  
                         })
@@ -2836,8 +3038,8 @@ router.get('/viewUnitTargetPerMon/:id', authUser, authRole(ROLE.PUH), async (req
         
                     if (isNull(fndUnitBuExTotProcFees)) { 
                         let newPoExecSumBudg = new Budg_exec_sum({
-                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: "Unit", target_year: budgetYear,
-                            title: "PROCESSING FEES", view_code: "TotProcFee", jan_budg : janProcFeeAmt, 
+                            region: yuser.region, area: yuser.area, branch: vwBranchCode, unit: vwUnitCode, po: "Unit",
+                            title: "PROCESSING FEES", view_code: "TotProcFee", target_year: budgetYear, jan_budg : janProcFeeAmt, 
                             feb_budg : febProcFeeAmt, mar_budg : marProcFeeAmt, apr_budg : aprProcFeeAmt, 
                             may_budg : mayProcFeeAmt, jun_budg : junProcFeeAmt, jul_budg : julProcFeeAmt, 
                             aug_budg : augProcFeeAmt, sep_budg : sepProcFeeAmt, oct_budg : octProcFeeAmt, 
@@ -2989,7 +3191,7 @@ router.get('/viewUnitProjInc/:id', authUser, authRole(ROLE.PUH), async (req, res
 
             let fndUnitBudgExecTotLonAmt = []
 
-            const poBudgExecTotLonAmt = await Budg_exec_sum.findOne({unit: viewUnitCode, view_code: "TotLoanAmt"}, function (err, fndTotLonAmt) {
+            const poBudgExecTotLonAmt = await Budg_exec_sum.findOne({unit: viewUnitCode, view_code: "TotLoanAmt", target_year: budgetYear}, function (err, fndTotLonAmt) {
             fndUnitBudgExecTotLonAmt = fndTotLonAmt
 
                 let jan_totLonReleaseInt = 0 

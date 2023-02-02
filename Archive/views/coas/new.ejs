@@ -1,0 +1,9 @@
+<h2 class="page-header">New Chart of Accounts</h2>
+<form action="/coas" method="POST">
+    <%- include('_form_fields') %>
+    <%- include('../partials/errorMessage') %>    
+        <div class="form-row form-row-end">
+            <a class="btn btn-primary" href="/coas">Cancel</a>
+            <button class="btn btn-primary" type="submit">Create</button>
+        </div>
+</form>

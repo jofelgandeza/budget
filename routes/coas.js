@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
     if (req.query.title  !=null && req.query.title !== '') {
         searchOptions.title = RegExp(req.query.title, 'i')
     }
-    console.log(searchOptions)
+    console.log(searchOptions) 
     try {
         const coas = await Coa.find(searchOptions)
 

@@ -3,18 +3,24 @@
        <h4> BRANCH EMPLOYEES MAINTENANCE</h4>
         <table class="content-table">
             <tr>
-                <th> POSITION</th>
                 <th> NAME</th>
+                <th> POSITION</th>
+                <th> ASSIGNMENT</th>
                 <th> LINKS</th>
             </tr>
             <% fndEmploy.forEach(brnEmployee => { %>
                 <tr>
-                    <td><%= brnEmployee.empPost %> </td>
                     <td><%= brnEmployee.empName %> </td>
+                    <td><%= brnEmployee.empPost %> </td>
+                    <td><%= brnEmployee.assign_code %> </td>
                     <td>
                         <div class="btn-row">
+                            <% if (brnEmployee.empPost === "BRANCH MANAGER") { %>
+
+                            <% } else { %>
                             <a class="btn btn-primary" href="/branches/getEmpForEdit/<%= branchCode + brnEmployee.empCode %>/edit">Edit</a>
-                            <a class="btn btn-primary" href="/branches/getEmpEditPass/<%= branchCode + brnEmployee.empCode %>/edit">Reset Password</a>
+
+                            <% } %>
                             <!-- <%- include('../partials/deleteForm', { url: `/branches/deleteEmp/${branchCode+brnEmployee.empID}` }) %> -->
                         </div>        
                     </td>
@@ -22,7 +28,8 @@
             <% }) %> 
         </table>
         <div>
-            <a class="btn btn-primary" href="/branches/newEmployee/<%= branchCode %>">ADD NEW EMPLOYEE</a>
+            <a class="btn btn-primary" href="/branches/newEmpPUH/<%= branchCode %>">ADD NEW PUH</a>
+            <a class="btn btn-primary" href="/branches/newEmpPO/<%= branchCode %>">ADD NEW PO</a>
             <a class="btn btn-primary" href="/branches/<%= branchCode %>">DONE</a>
         </div>
     </div>

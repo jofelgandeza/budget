@@ -26,6 +26,10 @@ const centerTargetSchema = {
         type: String,
         required: true
     },
+    branch: {
+        type: String,
+        required: true
+    },
     area: {
         type: String,
         required: true

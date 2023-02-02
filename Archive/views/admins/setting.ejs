@@ -1,0 +1,16 @@
+<h2 class="page-header">BUDGET MODULE SETTING</h2>
+<form action="/admins/saveSettings/<%= admin %>" method="POST">
+            <%- include('../partials/errorMessage') %>    
+            <%- include('_setting_fields') %>
+<div class="form-row">
+    <div class="form-item-column">
+        <a class="btn btn-primary" href="/admins/settings/<%= admin %>">Cancel</a>
+    </div>
+    <div class="form-item-column">
+        <button class="btn btn-primary" type="submit">Save</button>
+    </div>
+    <div class="form-item-column"></div>
+    <div class="form-item-column">  </div>
+
+</div>
+</form>

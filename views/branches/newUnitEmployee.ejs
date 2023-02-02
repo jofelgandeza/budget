@@ -1,0 +1,15 @@
+<h2 class="page-header">New PUH Employee Entry</h2>
+<form action="/branches/postNewUnitEmp/<%= emp.branch %>" method="POST">
+            <%- include('../partials/errorMessage') %>    
+            <%- include('_unitEmp_form_fields') %>
+<div class="form-row">
+    <div class="form-item-column"></div>
+    <div class="form-item-column">
+        <a class="btn btn-primary" href="/branches/employees/<%= branchCode %>">Cancel</a>
+    </div>
+    <div class="form-item-column">
+        <button class="btn btn-primary" type="submit">Create</button>
+    </div>
+    <div class="form-item-column"></div>
+</div>
+</form>

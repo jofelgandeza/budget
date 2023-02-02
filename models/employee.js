@@ -22,9 +22,13 @@ const employeeSchema = new mongoose.Schema({
         required: true,
         ref: 'Position'
     },
+    position_class: {
+        type: String,
+        required: false,
+    },
     assign_code: {
         type: String,
-        required: true
+        required: false
     },
     po_number: {
         type: String,

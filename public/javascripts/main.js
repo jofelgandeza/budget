@@ -106,38 +106,57 @@ const cleave11 = new Cleave('.decAmount', {
     numeralThousandGroupStyle: 'thousand'
 })
 
-function hideUnitPoInputs(selected) {
+function hideUnitPoInputs() {
     var e = document.getElementById("ayApo");
-
-    const hidePosit = e.value;
-   
-    const posi = hidePosit
-
-    let y = document.getElementById("poUnit");
+    let y = document.getElementById("unitCode");
     let z = document.getElementById("poNumber");
+
+    const hidePosit = e.value
+    // alert(hidePosit)
+    // alert(e.label)
     // y.disabled = false;
     // z.disabled = false;
 // BRN_MGR = 604f06bf7ca02f8a731fa8a6
 // UNI_HED = 604f07087ca02f8a731fa8a7
 // PRO_OFR = 604f074e7ca02f8a731fa8a8
 
-    if ( posi === "604f06bf7ca02f8a731fa8a6" || posi === "BRN_ACT" || posi === "BRN_AST" ) {
-        y.disabled = true;
-        y.value = "Not Applicable";
-        z.disabled = true;
-        z.value = "Not Applicable";
-    }
-    if (posi === "604f07087ca02f8a731fa8a7"){
-        z.value = "Not Applicable";
-        y.value = "";
-        z.disabled = true;
-    } 
-    if (posi === "604f074e7ca02f8a731fa8a8") {
-        y.value = "";
-        z.value = "";
-        y.disabled = false;
-        z.disabled = false;
-    }
+    switch(hidePosit) {
+
+        case "604f06bf7ca02f8a731fa8a6":
+            // alert("Hi manager")
+
+            document.getElementById("unitCode").value = "Not Applicable"
+            document.getElementById("unitCode").disabled = true
+            document.getElementById("poNumber").value = "Not Applicable"
+            document.getElementById("poNumber").disabled = true
+    
+            break;
+        case "604f07087ca02f8a731fa8a7":
+            document.getElementById("unitCode").disabled = false
+            document.getElementById("poNumber").disabled = true
+            document.getElementById("poNumber").value = "Not Applicable"
+            
+            // alert("Hi PUH")
+            break;
+
+        case "604f074e7ca02f8a731fa8a8":
+            document.getElementById("unitCode").disabled = false
+            document.getElementById("poNumber").disabled = false
+            document.getElementById("poNumber").value = "Not Applicable"
+            document.getElementById("poNumber").min = "1" 
+            document.getElementById("poNumber").max = "10"
+            // alert("Hi PO")
+            break;
+
+        default:
+            document.getElementById("poNumber").disabled = true
+            document.getElementById("unitCode").disabled = true
+            document.getElementById("unitCode").value = "Not Applicable"
+            document.getElementById("poNumber").value = "Not Applicable"
+
+            break;
+    }   
+
 
     var ePosition = e.options[e.selectedIndex].value;
     // e.value = ePosition;
@@ -179,15 +198,67 @@ function getSemester() {
 
 }
 
-function setEmailUser() {
+function getLoanTerm() {
 
+    nmonth = document.getElementById("monthID").value
+//   alert(x)
+
+ //   document.getElementById("semesterID").value = x
+ 
+    switch(nmonth) {
+        case "January":
+            document.getElementById("semesterID").value = "First Half"
+        case "February":case "March":case "April":case "May":case "June":
+            document.getElementById("semesterID").value = "First Half"
+            break;
+        case "July":case "August":case "September":case "October":case "November":case "December":
+            document.getElementById("semesterID").value = "Second Half"
+            break
+        default:
+            document.getElementById("semesterID").value = "Empty"
+    }   
+
+}
+
+function setUnitEmailUser() {
+    // alert("Hello set username!")
+       let setEmailBranchCode = ""
+       let setEmailUnitCode = ""
+       let setEmailPoNumber = " "
+       setEmailBranchCode = document.getElementById("brnCode").value
+       setEmailUnitCode = document.getElementById("unitLetter").value
+    //    setEmailPoNumber = document.getElementById("poNumber").value
+       // alert(setEmailBranchCode + setEmailPoNumber)
+   
+       const emailName = setEmailBranchCode.toLowerCase() + "-" + setEmailUnitCode.toLowerCase() + "@kmbi.org.ph"
+   
+       document.getElementById("email").value = emailName
+   }
+
+   function setPOEmailUser() {
+    // alert("Hello set username!")
+       let eBranchCode = ""
+       let unitCode = ""
+       let ePoNum = " "
+       eBranchCode = document.getElementById("brnCode").value
+       unitCode = document.getElementById("unitCode").value
+       ePoNum = document.getElementById("poNum").value
+       //    ePoNumber = document.getElementById("poNumber").value
+       // alert(eBranchCode + ePoNumber)
+   
+       const emailName = unitCode.toLowerCase() + ePoNum.toLowerCase() + "@kmbi.org.ph"
+   
+       document.getElementById("email").value = emailName
+   }
+
+function setEmailUser() {
+ alert("Hello set username!")
     let setEmailBranchCode = ""
     let setEmailUnitCode = ""
     let setEmailPoNumber = " "
     setEmailBranchCode = document.getElementById("brnCode").value
     setEmailUnitCode = document.getElementById("unitCode").value
     setEmailPoNumber = document.getElementById("poNumber").value
-
     // alert(setEmailBranchCode + setEmailPoNumber)
 
     const emailName = setEmailBranchCode.toLowerCase() + "-" + setEmailUnitCode.toLowerCase() + setEmailPoNumber + "@kmbi.org.ph"
@@ -207,10 +278,34 @@ function setOffEmailUser() {
     document.getElementById("email").value = emailName
 }
 
+function setOffEmailUserDED() {
+
+    let setEmailRegion = ""
+    // setEmailRegion = document.getElementById("ded").value
+
+    // alert(setEmailBranchCode + setEmailPoNumber)
+
+    const emailName = "ded@kmbi.org.ph"
+
+    document.getElementById("email").value = emailName
+}
+
 function setAreaEmailUser() {
 
     let setEmailArea = ""
-    setEmailArea = document.getElementById("area").value
+    setEmailArea = document.getElementById("areaCode").value
+
+    // alert(setEmailBranchCode + setEmailPoNumber)
+
+    const emailName = setEmailArea.toLowerCase() + "@kmbi.org.ph"
+
+    document.getElementById("email").value = emailName
+}
+
+function setRegionEmailUser() {
+
+    let setEmailArea = ""
+    setEmailArea = document.getElementById("regionCode").value
 
     // alert(setEmailBranchCode + setEmailPoNumber)
 

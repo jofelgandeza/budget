@@ -1,24 +1,70 @@
 <div class="form-row">
     <div class="form-item-column">
         <label>PO Number</label>
-        <input type="number" name="poNum" value="<%= po.po_number %>" autocomplete="off" min="1" max="10">
-    </div>
-    <div class="form-item-column">
+        <% if (newPO || editPO) { %> 
+            <input type="number" id="poNum" name="poNum" value="<%= po.po_number %>" autocomplete="off" min="1" max="10" step="1">
+        <% } else { %>
+            <input type="number" name="poNum" value="<%= po.po_number %>" disabled>
+        <% } %>
+        <input style="text-transform: uppercase" type="text" name="hiddenPONum" value="<%= po.po %>" hidden>
+        <input style="text-transform: uppercase" type="text" name="hiddenPOCode" value="<%= po.po_code %>" hidden>
+        <input style="text-transform: uppercase" type="text" id="brnCode" name="brnCode" value="<%= branchCode %>" hidden>
+        <input style="text-transform: uppercase" type="text" name="newPO" value="<%= newPO %>" hidden>
+        <input style="text-transform: uppercase" type="text" name="editPO" value="<%= editPO %>" hidden>
+        <input style="text-transform: uppercase" type="text" id="unitCode" name="unitCode" value="<%= unitCode %>" hidden>
+
     </div>
     <div class="form-item-column">
         <label>Loan Type</label>
-        <select name="poLoan" id="poLon" >
-            <option select value="">Select here...</option>
-            <% lonType.forEach(lnTyp => { %>
-                <% if ( lnTyp.title == po.loan_type) { %>
-                   <option selected value="<%= lnTyp.title %>"> <%= lnTyp.title %></option>
-                <% } else { %>
-                    <option value="<%= lnTyp.title %>"> <%= lnTyp.title %></option>
-                <%  } %>
-            <% }) %> 
-        </select>
+        <% if (newPO || editPO) { %> 
+            <select name="poLoan" id="poLon" >
+                <option select value="">Select here...</option>
+                <% lonType.forEach(lnTyp => { %>
+                    <% if ( lnTyp.title == po.loan_type) { %>
+                       <option selected value="<%= lnTyp.title %>"> <%= lnTyp.title %></option>
+                    <% } else { %>
+                        <option value="<%= lnTyp.title %>"> <%= lnTyp.title %></option>
+                    <%  } %>
+                <% }) %> 
+            </select>
+        <% } else { %>
+            <input style="text-transform: uppercase" type="text" name="poLoan" value="<%= po.loan_type %>" disabled>
+            <input style="text-transform: uppercase" type="text" name="hidLoanTyp" value="<%= po.loan_type %>" hidden>
+        <% } %>
+
+        <input type="hidden" id="brnCode" name="branCode" value="<%= branchCode %>">
+
     </div>
     <div class="form-item-column">
-        <input type="hidden" id="brnCode" name="branCode" value="<%= unitCode %>">
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-item-column">
+    </div>
+</div>
+
+<div class="form-row">
+        <% if (resetPW) { %> 
+            <div class="form-item-columnUSER">
+                <label>System's User Name</label>
+                <% if (newPO) { %> 
+                    <input type="email" id="email" name="email" value="<%= user.email %>" onclick="setPOEmailUser()" autocomplete="off">
+                <% } else { %>
+                    <input type="email" name="email" value="<%= user.email %>" autocomplete="off" disabled>
+                <% } %>
+                <input type="user_id" name="user_id" value="<%= user.id %>" autocomplete="off" hidden>
+            </div>
+            <div class="form-item-columnUSER">
+                <label>Password</label>
+                <% if (resetPW || newPO) { %> 
+                    <input type="password" name="password" value="<%= user.password %>">
+                <% } else { %>
+                    <input type="password" name="password" value="<%= user.password %>" disabled>
+                <% } %>
+            </div>
+        <% } %>
+
+    <div class="form-item-column">
     </div>
 </div>

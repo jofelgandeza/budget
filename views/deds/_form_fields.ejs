@@ -1,13 +1,27 @@
 <div class="form-row">
     <div class="form-item-column">
-        <label>Employee Code</label>
+        <label>Employee Number</label>
         <% if (resetPW) { %>
             <input type="text" name="empCode" value="<%= emp.emp_code %>" autocomplete="off" required disabled>
         <% } else { %>
-            <input type="text" name="empCode" value="<%= emp.emp_code %>" autocomplete="off">
+            <input type="text" name="empCode" value="<%= emp.emp_code %>" autocomplete="off" required>
         <% } %>
+        <input type="text" name="HideEmpCode" value="<%= emp.emp_code %>" hidden>
     </div>
     <div class="form-item-column">
+        <label>Status</label>
+        <% if (resetPW) { %>
+        <% } else { %>
+            <select name="empStat" id="empStat" >
+                <% empStatus.forEach(empStat => { %>
+                    <% if (empStat === emp.status) { %>
+                       <option selected value="<%= empStat %>"> <%= empStat %></option>
+                    <% } else { %>
+                        <option value="<%= empStat %>"> <%= empStat %></option>
+                    <%  } %>
+                <% }) %> 
+            </select>
+            <% } %>
     </div>
     <div class="form-item-column">
     </div>
@@ -43,8 +57,8 @@
         <label>Region Assignment</label>
         <% if (!resetPW) { %>
             <select id="region" name="region">
-            <% foundRegion.forEach(fndRegion => { %>
-                <% if ( fndRegion.region == emp.region) { %>
+            <% fndRegion.forEach(fndRegion => { %>
+                <% if ( fndRegion.region == emp.assign_code) { %>
                    <option selected value="<%= fndRegion.region %>" label="<%= fndRegion.region_desc %>"> </option>
                 <% } else { %>
                     <option value="<%= fndRegion.region %>" label="<%= fndRegion.region_desc %>"> </option>
@@ -52,37 +66,13 @@
             <% }) %> 
             </select>
         <% } else { %>
-            <input type="text" name="region" value="<%= region.region %>" autocomplete="off" disabled>
+            <input type="text" name="region" value="<%= region %>" autocomplete="off" disabled>
         <% } %>
+        <input type="text" name="HideRegionAss" value="<%= emp.assign_code %>" hidden>
     </div>
     <div class="form-item-column">
     </div>
 </div>
 <div>
     <p></p>
-</div>
-<div>
-    <hr>
-</div>
-<div>
-<p></p>
-</div>
-<div class="form-row">
-    <% if (newEmp || resetPW) { %> 
-        <div class="form-item-columnUSER">
-            <label>System's User Name</label>
-            <% if (newEmp) { %> 
-                <input type="email" id="email" name="email" value="<%= user.email %>" onclick="setOffEmailUser()" autocomplete="off">
-            <% } else { %>
-                <input type="email" name="email" value="<%= user.email %>" autocomplete="off" disabled>
-                <input type="user_id" name="user_id" value="<%= user.id %>" autocomplete="off" hidden>
-            <% } %>
-        </div>
-        <div class="form-item-columnUSER">
-            <label>Password</label>
-            <input type="password" name="password" value="<%= user.password %>">
-        </div>
-    <% } %>
-    <div class="form-item-column">
-    </div>
 </div>

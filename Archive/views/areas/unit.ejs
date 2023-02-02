@@ -1,0 +1,40 @@
+<section class="s1">
+    <div class="main-container">
+       <h4> BRANCH UNITS MAINTENANCE</h4>
+        <table class="content-table">
+            <tr>
+                <% if (fondUnits.length > 0) { %>
+                <% } else { %>
+                    <a class="btn btn-primary" href='/branches/setNewPOs/<%= branchCode %>'>SET NEW CENTERS</a>
+                <% } %>
+
+            </tr>
+            <tr>
+                <th> UNIT</th>
+                <th> UNIT HEAD</th>
+                <th> LOAN PRODUCT</th>
+                <th> OFFICE LOCATION</th>
+                <th> LINKS</th>
+            </tr>
+            <% fondUnits.forEach(brnUnit => { %>
+                <tr>
+                    <td><%= brnUnit.unitUnit %> </td>
+                    <td><%= brnUnit.unitHead %> </td>
+                    <td><%= brnUnit.unitLoanProd %> </td>
+                    <td><%= brnUnit.unitOffLoc %> </td>
+                    <td>
+                        <div class="btn-row">
+                            <a class="btn btn-primary" href="/branches/getUnitForEdit/<%= brnUnit.unitCode %>/edit">Edit</a>
+                            <%- include('../partials/deleteForm', { url: `/branches/deleteUnit/${brnUnit.id}` }) %>
+                        </div>        
+                    </td>
+                </tr>
+            <% }) %> 
+        </table>
+        <div>
+            <a class="btn btn-primary" href="/branches/newUnit/<%= branchCode %>">ADD NEW UNIT</a>
+            <a class="btn btn-primary" href="/branches/<%= branchCode %>">DONE</a>
+        </div>
+    </div>
+</section>
+

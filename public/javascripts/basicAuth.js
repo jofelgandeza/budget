@@ -2,9 +2,13 @@
 function authUser(req, res, next) {
   const auUser = req.user
   console.log('Log From authUser -->' + auUser)
+  
   if (auUser == null) {
-      res.status(403)
-      return res.send('You need to sign in')
+      // console.log(err)
+      // res.status(403)
+      // return res.send('You need to sign in')
+      return res.redirect('/login')
+
     }
   
     next()
@@ -37,7 +41,7 @@ function authUser(req, res, next) {
           paramsID = params_ID.substr(0,3)
         }          
         if (req.user.role === "ADMIN") {
-          paramsID = req.params.id
+          paramsID = req.user.role
         }          
         console.log("paramsID ->" + paramsID)
 

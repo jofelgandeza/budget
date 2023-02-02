@@ -1,0 +1,70 @@
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Branch Code</label>
+        <input style="text-transform: uppercase" type="text" name="branchCode" value="<%= branch.branch %>" maxlength="3" autocomplete="off">
+    </div>
+    <div class="form-item-column">
+        <label>Branch Description</label>
+        <input style="text-transform: uppercase" type="text" name="branchDesc" value="<%= branch.branch_desc %>" autocomplete="off">
+    </div>
+    <div class="form-item-column">
+    
+    </div>
+
+</div>
+
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Address</label>
+        <input type="text" enable name="branchAdd" id="branchAdd" value="<%= branch.address %>">
+    </div>
+    <div class="form-item-column">
+        <label>Status</label>
+            <select name="brnStat" id="brnStat" >
+                <% brnStatus.forEach(brnStat => { %>
+                    <% if (brnStat === branch.status) { %>
+                       <option selected value="<%= brnStat %>"> <%= brnStat %></option>
+                    <% } else { %>
+                        <option value="<%= brnStat %>"> <%= brnStat %></option>
+                    <% } %>
+                <% }) %>
+            </select>
+    </div>
+    <div class="form-item-column">
+    
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-item-column">
+    </div>
+    <div class="form-item-column">
+        Branch Category
+        <div>
+            <% if (branch.branch_category === "MEGA") { %>
+                <input type="radio" name="branch_category" id="Mega" value="Mega" checked>
+            <% } else { %>
+                <input type="radio" name="branch_category" id="Mega" value="Mega">
+            <% } %>
+            <label for="Mega">Mega Branch</label>
+            <br>
+            <% if (branch.branch_category === "FULL") { %>
+                <input type="radio" name="branch_category" id="inHouse" value="Full" checked>
+            <% } else { %>
+                <input type="radio" name="branch_category" id="inHouse" value="Full">
+            <% } %>
+            <label for="Full">Full Branch</label>
+            <br>
+            <% if (branch.category === "STAND ALONE UNIT") { %>
+                <input type="radio" name="branch_category" id="standAloneUnit" value="standAloneUnit" checked>
+            <% } else { %>
+                <input type="radio" name="branch_category" id="standAloneUnit" value="standAloneUnit">
+            <% } %>
+                <label for="standAloneUnit">Stand Alone Unit</label>
+        </div>
+    </div>
+    
+</div>
+
+
+

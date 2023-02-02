@@ -1,0 +1,89 @@
+:root {
+    --nav-title-font-size: 2rem;
+    --nav-title-font-weight: bold;
+    --nav-link-font-weight: 100;
+}
+
+/* .header-nav {
+    height: 80px;
+    width: 100%;
+} */
+
+/* OLD NAV Design */
+.header-nav { 
+    display: flex;
+    justify-content: space-between; 
+    align-items: flex-start;
+} 
+
+.header-title {
+    color: var(--color-text-light);
+    text-decoration: none;
+    font-size: var(--nav-title-font-size);
+    font-weight: var(--nav-title-font-weight);
+    /* background-color: blueviolet; */
+}
+.header-link {
+    /* display: flex; */
+    color: var(--color-text-light);
+    text-decoration: none;
+    font-size: var(--nav-title-font-size);
+    font-weight: var(--nav-title-font-weight);
+}
+
+.header-nav ul {
+    display: flex;
+
+    /* background-color: brown; */
+    margin: 0;
+    padding: 0;
+}
+
+.header-nav-user {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    align-items: flex-end;
+    /* background-color: red; */
+}
+
+.header-nav-user p {
+    margin: 0;
+    padding: 0;
+    text-align: end;
+}
+
+.header-nav-user a {
+    margin: 0;
+    padding: 0;
+    text-align: end;
+    font-size: .8rem;
+    /* background-color: red; */
+}
+
+.header-nav li {
+    list-style: none;
+    /* text-align: left;  */
+    /* align-self: flex-start; */
+    font-size: 1rem
+}
+
+.header-nav li a {
+    text-decoration: none;
+    color: var(--color-text-light);
+    font-weight: var(--nav-link-font-weight);
+    padding: 1rem;
+}
+
+.dashboard-page {
+    text-align: center;
+}
+
+.header-nav li a:hover, .header-title:hover {
+    color: white;
+}
+
+.header-nav-user a:hover{
+    color: white;
+}

@@ -5,7 +5,7 @@ const app = express()
 const bodyParser = require('body-parser')
 const methodOverride = require('method-override')
 const { model } = require('mongoose')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 const { forEach, isNull } = require('lodash')
 const _ = require('lodash')
 
@@ -16,6 +16,7 @@ const Branch = require('../models/branch')
 const Center = require('../models/center')
 const Employee = require('../models/employee')
 const Loan_type = require('../models/loan_type')
+const Center_budget_det = require('../models/center_budget_det')
 const Budg_exec_sum = require('../models/budg_exec_sum')
 const Setting = require('../models/setting')
 
@@ -114,7 +115,11 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
         })
     }
 
+    const center = await Center.find({region: regionCode}) //, function (err, foundCenters) {        
+    
     try {
+
+        const ctrResBudgDet = await Center_budget_det.find({region: regionCode, view_code: "ResClientCount"})
 
         const areaManager = await Employee.find({region: regionCode}, function (err, foundAreaEmp){
             fndAreaEmps = foundAreaEmp
@@ -159,9 +164,8 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
         
         const loanType = await Loan_type.find({})
 
-        const center = await Center.find({region: regionCode}) //, function (err, foundCenters) {
 //        const center = await Center.find(searchOptions)
-            if (center.length === 0) {
+            if (isNull(center) || (center.length === 0)) {
                 doneReadCenter = true
             
             } else {
@@ -263,6 +267,20 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
                     })
                 }
             })
+
+            if (!isNull(ctrResBudgDet)) {
+                ctrResBudgDet.forEach(fndResCli => {
+                    if (fndResCli.loan_type === typeLoan  && fndResCli.area === area_Code && fndResCli.target_year === budgetYear) {
+                        const totalResCnt = fndResCli.jan_budg + fndResCli.feb_budg + fndResCli.mar_budg + fndResCli.apr_budg + fndResCli.may_budg + fndResCli.jun_budg + 
+                            fndResCli.jul_budg + fndResCli.aug_budg + fndResCli.sep_budg + fndResCli.oct_budg + fndResCli.nov_budg + fndResCli.dec_budg 
+    
+                        resloanTot = resloanTot + totalResCnt
+    
+                        rClient = rClient + totalResCnt
+                    }
+                })
+            }
+
             let totAmounts = nloanTot + oloanTot 
             let areaBudgEndBal = (uBegClientTot + nloanTotCount) - resloanTot
             totbudgEndBal = totbudgEndBal + areaBudgEndBal
@@ -388,7 +406,7 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
 })
 
 
-// View Area per area  - NLO
+// View Region per area  - NLO
 router.get('/budget/:id', authUser, authRole(ROLE.RD), async (req, res) => {
     
     const regionCode = req.params.id
@@ -725,10 +743,12 @@ router.get('/areas/:id', authUser, authRole(ROLE.RD), async (req, res) => {
     let sortedAreas = []
     let doneReadRegion = false
 
-    let empName = []
+    let 
+     = []
     let areaCode = ""
     let areaDesc = ""
     let areaEmp = ""
+    let employeeName = ""
 
     // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
 
@@ -738,27 +758,27 @@ router.get('/areas/:id', authUser, authRole(ROLE.RD), async (req, res) => {
             fndArea = fnd_Areas
         })
         
-        let fndEmployee = await Employee.find({region: regionCode})
+        const fndEmployee = await Employee.find({region: regionCode})
         
     //            const fndEmployees = foundEmployees
     //            const empStatus = fndEmployees.status
-        if (fndArea.length === 0) {
+        if (fnd_area.length === 0) {
             doneReadRegion = true
         } else {
-            fndArea.forEach(fndAreas =>{
+            fnd_area.forEach(fndAreas =>{
                 id = fndAreas._id
                 areaCode = fndAreas.area
                 areaDesc = fndAreas.area_desc
                 areaEmp = fndAreas.emp_code
-
+                employeeName = ""
                 // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
-                empName = _.filter(fndEmployee, {'emp_code': areaEmp})
+                const empName = _.find(fndEmployee, {emp_code: areaEmp})
 
-                if (empName.length === 0) {
+                if (!empName) {
                 } else {
                     employeeName = empName.first_name + " " + _.trim(empName.middle_name).substr(0,1) + ". " + empName.last_name
                 }
-                foundArea.push({id: id, regionCode: regionCode, areaCode: areaCode, areaDesc: areaDesc, areaEmp: areaEmp, empName: empName})
+                foundArea.push({id: id, regionCode: regionCode, areaCode: areaCode, areaDesc: areaDesc, areaEmp: areaEmp, empName: employeeName})
 
                 doneReadRegion = true
             })
@@ -853,6 +873,9 @@ router.get('/setNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) => {
                 numAreas: numAreas,
                 uniCod: unitCode,
                 lonType: loanType,
+                canEditAreaCode: true,
+                newArea : true,
+                resetPW: false,
                 searchOptions: req.query,
                 yuser: yuser
             })
@@ -866,10 +889,22 @@ router.get('/setNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) => {
 router.get('/newArea/:id', authUser, authRole(ROLE.RD), async (req, res) => {
     const regionCod = req.params.id
 
-    res.render('regions/newArea', {
-        regionCode: regionCod,
-        area: new Area()
-    })
+    try {
+        res.render('regions/newArea', {
+            regionCode: regionCod,
+            editArea: true,
+            newArea : true,
+            resetPW: false,
+            canEditAreaCode: true,
+            user: new User(),
+            area: new Area()
+        })
+    
+    } catch {
+        console.log(err)
+        res.redirect('/regions/'+ regionCod)
+
+    }
 })
 
 router.post('/postNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) => {
@@ -878,28 +913,67 @@ router.post('/postNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) =>
     let locals
     let canProceed = false
     const area_code = _.trim(req.body.areaCode).toUpperCase()
+    const trimmedAreaCode = _.replace(area_code, " ", "")
+    console.log(trimmedAreaCode)
     const area_desc = _.trim(req.body.areaDesc).toUpperCase()
+
+    const nEmail = _.trim(req.body.email).toLowerCase()
+    const nPassword = _.trim(req.body.password)
+
+    let fieldsOkay = false
+    const validDesc = /[^a-zA-Z0-9 ]/.test(area_desc) // /[^a-zA-Z0-9]+/g
+
+    let validCode = /[^a-zA-Z0-9]/.test(area_code) // /[^a-zA-Z0-9]+/g    
+
+    if (area_code.length == 0 || area_desc.length == 0 || nPassword.length == 0) {
+        locals = {errorMessage: "Values for the fields must NOT be space/s!"}
+    } else if (trimmedAreaCode.length < 3) {
+        locals = {errorMessage: "Values for the AREA CODE field must NOT contain space/s!"}
+    } else if (validCode) {
+        locals = {errorMessage: "Values for CODE must not contain Special/Space Characters!"}
+
+    } else if (validDesc) {
+        locals = {errorMessage: "Values for DESCRIPTION must not contain Special Characters!"}
+    } else {
+
+        fieldsOkay = true
+    }
 
     let doneReadArea = false
     let fndArea = [ ]
+    let UserProceed = false
     try {
         
         // const regionAreas = await Area.find({area:area_code})
-        const getExisArea = await Area.findOne({area: area_code}, function (err, foundArea) {
-            fndArea = foundArea
+        const getExisArea = await Area.findOne({area: trimmedAreaCode}) //, function (err, foundArea) {
 
-            if (isNull(fndArea)) {
+            if (isNull(getExisArea)) {
                 canProceed = true 
             } else {
                 canProceed = false
-                locals = {errorMessage: "Area Code already exists!"}
+                locals = {errorMessage: "Area Code " + area_code + " already exists! Please try again."}
             }
-            doneReadArea = true
-        })
 
         console.log(canProceed)
+
+        const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                
+        getExistingUser = await User.findOne({email: nEmail})
+            // console.log(foundUser)
+            if (!getExistingUser) {
+                if (nPassword.length == 0) {
+                    UserProceed = false
+                    locals = {errorMessage: 'Password must NOT be SPACE/S!'}
+                } else {
+                    UserProceed = true 
+                }
+            } else {
+                    UserProceed = false
+                    locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
+            }    
+
         
-        if (doneReadArea && canProceed) {
+        if (canProceed && fieldsOkay && UserProceed) {
             let nArea  = new Area({
 
                 area: area_code,
@@ -921,12 +995,34 @@ router.post('/postNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) =>
                 status: "Active"
             })
         
-            const saveUser = nArea.save()
+            const saveArea = nArea.save()
 
+            let nUser = new User({
+                email: nEmail,
+                password: hashedPassword,
+                name: "",
+                emp_code: "",
+                assCode: trimmedAreaCode,
+                role: 'AM',
+                region: regionCod,
+                area: area_code,
+            })
+            const saveUser = nUser.save()
+    
+    
             res.redirect('/regions/areas/' + regionCod)
 
         } else {
-            res.redirect('/regions/areas/' + regionCod)
+            res.render('regions/newArea', {
+                regionCode: regionCod,
+                area: new Area(),
+                user: new User(),
+                locals: locals,
+                canEditAreaCode: true,
+                newArea : true,
+                resetPW: false,
+                editArea: true
+            })
         }
 
     } catch (err) {
@@ -948,26 +1044,62 @@ router.post('/postNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) =>
 
     let fondArea = []
     let regID = ""
-
+    let canEditAreaCode = false
+    let doneReadArea = false
+    let areaEmpCode =""
+    let areaAsignCode = ""
+    let doneReadYoser = false
+    let locals = ""
+ 
     try {
 
-        const regForEdit = await Area.findById(param)  
-        regID = regForEdit.id
-
+        const regForEdit = await Area.findById(param) 
+        if (!isNull(regForEdit)) {
+            regID = regForEdit.id
+            areaEmpCode = regForEdit.emp_code
+            areaAsignCode = regForEdit.area
+            if (areaEmpCode === "") {
+                canEditAreaCode = true
+            } else {
+                locals = {errorMessage: "AREA CODE is locked for editing, already has transactions."}
+            }
+            doneReadArea = true 
+        }
         fondArea = regForEdit
         console.log(fondArea)
 
-        res.render('regions/editArea', { 
-            regID: regID,
-           area: fondArea, 
-           regionCode: regionCod,
-           yuser : _user
-       })
+        const yoser = await User.findOne({assCode: areaAsignCode}) //, function (err, foundUser) {
+            //            console.log(foundlist)
+        if (!isNull(yoser)) {
+            fndUser = yoser
+            console.log(yoser)
+
+            doneReadYoser = true
+
+            yoser.password = ""
+        }
+
+        if (doneReadArea && doneReadYoser) {
+
+            res.render('regions/editArea', { 
+                regID: regID,
+                area: fondArea, 
+                regionCode: regionCod,
+                canEditAreaCode: canEditAreaCode,
+                locals: locals,
+                newArea : false,
+                resetPW: false,
+                editArea: true,
+                yuser : _user,
+                user : yoser
+           })
+    
+        }
 
     } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.redirect('/regions/area/'+ param)
+            res.redirect('/regions/areas/'+ regionCod)
     }
 })
 
@@ -979,21 +1111,202 @@ router.put('/putEditedArea/:id', authUser, authRole(ROLE.RD), async function(req
     const paramsID = parame.substr(0,3)
     const param = _.trim(parame.substr(3,25))
     const area_code = _.trim(req.body.areaCode).toUpperCase()
+    const trimmedAreaCode = _.replace(area_code, " ", "") // if Area Code can be Edited
+    const canEditAreaCode = req.body.canEditAreaCode
+
     const area_desc = _.trim(req.body.areaDesc).toUpperCase()
+    const areaCodeHide = _.trim(req.body.areaCodeHid).toUpperCase()
+    let fieldsOkay = false
+    let locals
+    let validCode
+
+    const validDesc = /[^a-zA-Z0-9 ]/.test(area_desc) // /[^a-zA-Z0-9]+/g
+
+    if (canEditAreaCode === "true") { // Area Code can be edited..
+        validCode = /[^a-zA-Z0-9]/.test(trimmedAreaCode) // /[^a-zA-Z0-9]+/g
+        if (validCode) {
+            locals = {errorMessage: "Values for CODE must not contain Special Characters!"}
+
+        } else if (area_code === areaCodeHide) {
+            if (area_desc.length == 0) {
+                locals = {errorMessage: "Values for the fields must NOT be space/s!"}
+            } else if (validDesc) {
+                locals = {errorMessage: "Values for DESCRIPTION must not contain Special Characters!"}
+            } else {
+                fieldsOkay = true          
+            }
+        } else {
+            if (trimmedAreaCode.length < 3) {
+                locals = {errorMessage: "Values for the AREA CODE field must NOT contain space/s!"}
+            } else {
+                fieldsOkay = true          
+            }
+        }
+    
+    } else { // Area Code is locked for Editing
+        if (area_desc.length == 0) {
+            locals = {errorMessage: "Values for the fields must NOT be space/s!"}
+        } else if (validDesc) {
+            locals = {errorMessage: "Values for DESCRIPTION must not contain Special Characters!"}
+        } else {
+            fieldsOkay = true          
+        }
+    }
+
 
     console.log(req.params.id)
 
-    let area
+    let canProceed = false
+    let sameAreaDesc = false
+    let newAreaCode = area_code
+
+    let getAreaForEdit
+
         try {
 
-            area = await Area.findById(param)
+            if (fieldsOkay) {
 
-            area.area = area_code,
-            area.area_desc = area_desc
+                const getExisArea = await Area.findOne({area_desc: area_desc}) //, function (err, foundArea) {
+                    fndArea = getExisArea
+
+                    const sameDEesc = _.find(getExisArea, {area_desc: area_desc})
+
+                if (canEditAreaCode === "true") { // Area Code can be edited..
+    
+                    getAreaForEdit = await Area.findOne({area: trimmedAreaCode})
+    
+                    if (getAreaForEdit) { // may kaparehang Area Code
+                        if (getAreaForEdit.area === areaCodeHide) {
+                            if (sameDEesc) {
+                                canProceed = true
+                                // sameAreaDesc = true
+                                // locals = {errorMessage: "Area DESCRIPTION already exists!"}
+                            } else { 
+                                newAreaCode = trimmedAreaCode
+                                canProceed = true
+                            }
+
+                        } else {
+                            if (sameDEesc) {
+                                sameAreaDesc = true
+                                locals = {errorMessage: "Area DESCRIPTION already exists!"}
+                            } else { 
+                                newAreaCode = trimmedAreaCode
+                                canProceed = true
+                            }
+                        }
+
+                    } else if (sameDEesc) {
+                        if (area_code === areaCodeHide) {
+                            sameAreaDesc = true
+                            locals = {errorMessage: "Area DESCRIPTION already exists!"}
+    
+                        } else {
+                            sameAreaDesc = false    
+                            canProceed = true
+                        }
+                    } else {
+                        getAreaForEdit = await Area.findOne({area: trimmedAreaCode})
+
+                        newAreaCode = trimmedAreaCode
+                        canProceed = true
+
+                    }
+                
+                } else {
+
+                    if (sameDEesc) {
+                        getAreaForEdit = await Area.findOne({area: areaCodeHide})
         
-            await area.save()
-        
-            res.redirect('/regions/areas/'+ paramsID)
+                        if (getAreaForEdit) { // may kaparehang Branch Code
+                            if (getAreaForEdit.branch === areaCodeHide) {
+                                canProceed = true
+                            }
+                        } else {
+                            sameAreaDesc = true
+                            locals = {errorMessage: "Area DESCRIPTION already exists!"}
+                        }
+                    } else {
+                        getAreaForEdit = await Area.findOne({area: areaCodeHide})
+
+                        newAreaCode = areaCodeHide
+                        canProceed = true
+
+                    }    
+                }
+            } else {
+
+            }
+
+                if (canEditAreaCode === "true") { // Area Code can be edited..
+                    if (validCode) {
+                        getAreaForEdit = await Area.findOne({area: areaCodeHide})                    
+                    } else if (!fieldsOkay) {
+                        getAreaForEdit = await Area.findOne({area: areaCodeHide})
+                    } else if (area_code !== areaCodeHide) {
+                        getAreaForEdit = await Area.findOne({area: areaCodeHide})
+
+                    } else {
+                        getAreaForEdit = await Area.findOne({area: trimmedAreaCode})
+                    }
+
+                } else {
+                    getAreaForEdit = await Area.findOne({area: areaCodeHide})
+                }
+
+                if (canProceed && fieldsOkay && !sameAreaDesc) {
+                        getAreaForEdit.area = newAreaCode
+                        getAreaForEdit.area_desc = area_desc
+                
+                        getAreaForEdit.save()
+
+                    if (area_code !== areaCodeHide) {
+                        const emailForSearch = areaCodeHide + '@kmbi.org.ph'
+                        const getUser = await User.findOne({user: emailForSearch})
+
+                        if (!isNull(getUser)) {
+                            getUser.email = emailForSearch
+                            getUser.area = area_code
+                            getUser.assCode = area_code
+
+                            getUser.save()
+                        }
+
+
+                    }
+
+                        res.redirect('/regions/areas/'+ paramsID)
+
+                        // Update USER Collection
+
+                } else {
+
+                    const yoser = await User.findOne({assCode: areaCodeHide}) //, function (err, foundUser) {
+                        //            console.log(foundlist)
+                    if (!isNull(yoser)) {
+                        fndUser = yoser
+                        console.log(yoser)
+            
+                        doneReadYoser = true
+            
+                    }
+            
+                    res.render('regions/editArea', { 
+                        regID: param,
+                       area: getAreaForEdit, 
+                       regionCode: paramsID,
+                       locals: locals,
+                       canEditAreaCode: canEditAreaCode,
+                       yuser : req.user,
+                       newArea : false,
+                       resetPW: true,
+                       editArea: true,
+                       user: yoser
+           
+                   })
+
+                }    
+    
 
         } catch (err) {
             console.log(err)
@@ -1034,6 +1347,8 @@ router.get('/employees/:id', authUser, authRole(ROLE.RD), async (req, res) => {
     
     // const areaMgrID = "611d088fdb81bf7f61039615"
 
+    let areaMgrID
+
     fndPositi = posisyon
 
     let fondEmploy = []
@@ -1047,7 +1362,6 @@ router.get('/employees/:id', authUser, authRole(ROLE.RD), async (req, res) => {
     let empPst
     let empAss = ""
     let empID = ""
-    let empUnit = ""
     let areaDesc = ""
 
     let empCanProceed = false
@@ -1132,6 +1446,7 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.RD), async (req, res) => 
     
     const regionCode = req.params.id
     const _user = req.user
+    const empStatus = ["Active","Deactivate"]
 
     // regionPosiID = "611d094bdb81bf7f61039616"
     let foundArea = []
@@ -1139,7 +1454,7 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.RD), async (req, res) => 
 
     try {
 
-        foundArea = await Area.find({emp_code: ""})
+        foundArea = await Area.find({region: regionCode, emp_code: ""})
 
            console.log(foundArea)
            const newEmp = new Employee()
@@ -1151,6 +1466,8 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.RD), async (req, res) => 
                regionCode: regionCode,
                areaAsignDesc: "",
                foundArea: foundArea,
+               empStatus : empStatus,
+               empHasAreaAss: false,
                yuser: _user,
                newEmp: true,
                resetPW: false,
@@ -1168,14 +1485,43 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.RD), async (req, res) => 
 // POST or Save new Employee
 router.post('/postNewEmp/:id', authUser, authRole(ROLE.RD), async (req, res) => {
     const _user = req.user
+    let locals
+    const empStatus = ["Active","Deactivate"]
+
    const empAreaCod = req.body.area
     const nEmpCode = _.trim(req.body.empCode)
-    const nEmail = _.trim(req.body.email).toLowerCase()
     const nLName = _.trim(req.body.lName).toUpperCase()
     const nFName = _.trim(req.body.fName).toUpperCase()
     const nMName = _.trim(req.body.mName).toUpperCase()
+    const empStat = req.body.empStat
     const nName =  nLName + ", " + nFName + " " + nMName
     
+    const validEmpCode = /[^a-zA-Z0-9]-/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
+    const trimmedEmpCode = _.replace(nEmpCode, " ", "")
+    const validLName = /[^a-zA-Z] /.test(nLName)
+    const validFName = /[^a-zA-Z] /.test(nFName)
+    const validMName = /[^a-zA-Z] /.test(nMName)
+
+    let nameCanProceed = false
+    let fieldsOkay = false
+    
+    if (validEmpCode) {
+        locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+    } else if (validLName) {
+        locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+    } else if (validFName) {
+        locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+    } else if (validMName) {
+        locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+    } else if (nEmpCode.length == 0 || nLName.length == 0 || nFName.length == 0 || nMName.length == 0) {
+        locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+        // nameCanProceed = true
+    } else {
+
+        fieldsOkay = true
+    }
+
+
     let areaMgrID = ""
 
     console.log(req.body.password)
@@ -1190,17 +1536,23 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.RD), async (req, res) => 
         }
     })
     
-let locals
 //console.log(areaCode)
 let getExistingUser = []
 let canProceed = false
 let UserProceed = false
 
-const areaEmployees = await Employee.find({position: areaMgrID})
-console.log(areaEmployees)
-
 try {
 
+
+    // const areaEmployees = await Employee.find({position: areaMgrID})
+    const areaEmployees = await Employee.find({})
+    console.log(req.params.id)
+    
+    let regionAreas = []
+    const rePosition = await Area.find({region: req.params.id, emp_code : ""}, function (err, fnd_Post) {
+        regionAreas = fnd_Post
+    })
+        
     const sameName = _.find(areaEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
 
     const sameCode = _.find(areaEmployees, {emp_code: nEmpCode})
@@ -1215,29 +1567,35 @@ try {
             locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
             canProceed = false
         } else if (sameAssign) {
-            locals = {errorMessage: 'Assign Code: ' + empAreaCod + ' already exists!'}
+            const codeAssignName = sameAssign.last_name + ', ' + sameAssign.first_name + ' ' + sameAssign.middle_name
+            locals = {errorMessage: 'Assign Code: ' + empAreaCod + ' has been assigned to ' + codeAssignName}
             canProceed = false
 
-          } else if (sameCode) {
-                locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
-                canProceed = false
-            } else {
-                canProceed = true
-            }
+        } else if (sameCode) {
+            locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+            canProceed = false
+        } else {
+            canProceed = true
+        }
     }
 
-        const hashedPassword = await bcrypt.hash(req.body.password, 10)
+        // const hashedPassword = await bcrypt.hash(req.body.password, 10)
                 
-        getExistingUser = await User.findOne({email: nEmail})
-            // console.log(foundUser)
-            if (!getExistingUser) {
-                    UserProceed = true 
-            } else {
-                    UserProceed = false
-                    locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
-            }    
+        // getExistingUser = await User.findOne({email: nEmail})
+        //     // console.log(foundUser)
+        //     if (!getExistingUser) {
+        //         if (nPassword.length == 0) {
+        //             UserProceed = false
+        //             locals = {errorMessage: 'Password must NOT be SPACE/S!'}
+        //         } else {
+        //             UserProceed = true 
+        //         }
+        //     } else {
+        //             UserProceed = false
+        //             locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
+        //     }    
     
-    if (canProceed && UserProceed)  {
+    if (canProceed && fieldsOkay)  {
         // if (ePosition === "REG_DIR") {
             const poAssignCode = await Area.findOneAndUpdate({"area": empAreaCod}, {$set:{"emp_code": req.body.empCode}})
         // } 
@@ -1257,45 +1615,39 @@ try {
             branch: 'N/A',
             area: empAreaCod,
             region: req.params.id,
-            status: "Active"
+            status: empStat
         })
         
         const newCoa = employee.save()
 
-        let nUser = new User({
-            email: nEmail,
-            password: hashedPassword,
-            name: nName,
-            emp_code: nEmpCode,
-            assCode: empAreaCod,
-            role: 'AM',
-            region: req.params.id,
-            area: empAreaCod,
-        })
-        const saveUser = nUser.save()
+        const getExistingUser = await User.findOne({area: empAreaCod, role: "AM"})
+        if (getExistingUser) {
+
+            getExistingUser.emp_code = nEmpCode
+            getExistingUser.name = nLName + ', ' + nFName + ' ' + nMName.substr(0,1) + '.'
+            const savedNewPW = getExistingUser.save()    
+        }
 
         res.redirect('/regions/employees/'+ req.params.id)
     } 
     else {
-        let regionAreas = []
-        const rePosition = await Region.find({region: req.params.id}, function (err, fnd_Post) {
-            regionAreas = fnd_Post
-        })
 
         let errEmp = []
         let errUser = []
 
-            errUser.push({email: nEmail, password: req.body.password})
+            // errUser.push({email: nEmail, password: req.body.password})
 
             errEmp.push({emp_code: nEmpCode, area: empAreaCod, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: empAreaCod})
             console.log(errEmp)
 
             res.render('regions/newEmployee', { 
                 emp: errEmp, 
-                user: errUser,
+                // user: errUser,
                 regionCode: req.params.id,
-                foundArea: regionAreas,
-                 yuser: _user,
+                foundArea: rePosition,
+                empStatus: empStatus,
+                empHasAreaAss: false,
+                yuser: _user,
                 newEmp: true,
                 resetPW: false,
                 locals: locals
@@ -1313,38 +1665,59 @@ try {
 // Get an Employee for EDIT
 router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.RD), async (req, res) => {
 
-    const parame = req.params.id // regionCode + region.id
+    const parame = req.params.id // regionCode + employee.id
     const regionCode = parame.substr(0,3)
     const empCode = _.trim(parame.substr(3,10))
 
-    areaCod = req.body.area
+    const areaCod = req.body.area
 
     console.log(empCode)
     const _user = req.user
     let locals = ""
     let foundEmploy = []
     let regionAreas = []
-     
+    const empStatus = ["Active","Deactivate"]
+
+     let empHasAreaAss = false
    try {
-        let areaCod
-        const emRegion = await Area.find({region: regionCode}, function (err, fnd_Post) {
-            regionAreas = fnd_Post
-        })
-        console.log(regionAreas)
+        // let areaCod
+        const emRegion = await Area.find({region: regionCode}) //, function (err, fnd_Post) {
+            // regionAreas = emRegion
+
+            emRegion.forEach( areaSelection => {
+                const region_Code = areaSelection.region    
+                const area_Code = areaSelection.area
+                const area_Desc = areaSelection.area_desc
+                const area_EmpCode = areaSelection.emp_code
+
+                if (area_EmpCode === "" || area_EmpCode=== empCode) {
+                    regionAreas.push({area: area_Code, area_desc : area_Desc, region: region_Code})
+                }
+            })
+            regionAreas.push({area: "", area_desc : "", region: ""})
+            console.log(regionAreas)
+        
+        const empHasArea = _.find(emRegion, {emp_code: empCode})
+
+        if (empHasArea) {
+            empHasAreaAss = true
+            locals = {errorMessage: "Employee Code is locked for editing, already has transactions."}
+        }
 
         const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
 //            console.log(foundlist)
             foundEmploy = foundEmp
-            areaCod = foundEmp.area
+            // areaCod = foundEmp.area
         })
         // console.log(employe)
-        const newUser = new User()
+        // const newUser = new User()
 
         res.render('regions/editEmployee', {
             regionCode: regionCode,
             foundArea: regionAreas,
-            user: newUser,
             emp: employe, 
+            empHasAreaAss: empHasAreaAss,
+            empStatus : empStatus,
             locals: locals,
             yuser: _user,
             newEmp: false,
@@ -1378,27 +1751,112 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.RD), async function(req,
     const eLName = _.trim(req.body.lName).toUpperCase()
     const eFName = _.trim(req.body.fName).toUpperCase()
     const eMName = _.trim(req.body.mName).toUpperCase()
+    const eStatus = req.body.empStat
+    const HidAreaAss = req.body.HideAreaAss
+    const HidEmpCode = req.body.HideEmpCode
     const nName =  eLName + ", " + eFName + " " + eMName
-        
+    
+    const validEmpCode = /[^a-zA-Z0-9]-/.test(eCode) // /[^a-zA-Z0-9]+/g
+    const trimmedEmpCode = _.replace(eCode, " ", "")
+    const validLName = /[^a-zA-Z ]/.test(eLName)
+    const validFName = /[^a-zA-Z ]/.test(eFName)
+    const validMName = /[^a-zA-Z ]/.test(eMName)
+
+    let nameCanProceed = false
+    let fieldsOkay = false
+    
+    if (validEmpCode) {
+        locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+    } else if (validLName) {
+        locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+    } else if (validFName) {
+        locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+    } else if (validMName) {
+        locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+    } else if (HidEmpCode.length == 0 || eLName.length == 0 || eFName.length == 0 || eMName.length == 0) {
+        locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+        // nameCanProceed = true
+    } else {
+
+        fieldsOkay = true
+    }
+    let eFoundArea = []
+    let employee
+
+    const empStatus = ["Active","Deactivate"]
+
         try {
+
+            const eFoundArea = await Area.find({region: regionCod, emp_code : ""})
 
             employee = await Employee.findById(empID)
             console.log(employee)
 
-            employee.emp_code = eCode
-            employee.last_name = eLName
-            employee.first_name = eFName
-            employee.middle_name = eMName
-            employee.assign_code = eAssCode
-            employee.area = eAssCode
-        
-            await employee.save()
-        
-                const poAssignCode = await Area.findOneAndUpdate({"area": areaCod}, {$set:{"emp_code": eCode}})
+            if (fieldsOkay) {
+                employee.emp_code = HidEmpCode
+                employee.last_name = eLName
+                employee.first_name = eFName
+                employee.middle_name = eMName
+                employee.status = eStatus
+            
+                    if (eAssCode === HidAreaAss) {
+                        employee.area = eAssCode
+                        employee.assign_code = eAssCode
 
-                const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": eCode, "region": regionCod, "area": areaCod }})
+                    } else {
+ 
+                        if (eAssCode === "") {
+                            const areaOldAssCode = await Area.findOneAndUpdate({"area": HidAreaAss}, {$set:{"emp_code": ""}})
+        
+                            const userAssignCode = await User.findOneAndUpdate({"assCode": HidAreaAss}, {$set:{"name": "", "emp_code": ""}})
 
-                res.redirect('/regions/employees/'+ regionCod)
+                            employee.assign_code = ""
+                            employee.area = HidAreaAss
+            
+                        } else {
+
+                            const oldAreaForUpdate = await Area.findOneAndUpdate({"area": eAssCode}, {$set:{"emp_code": HidEmpCode}})
+        
+                            const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": HidEmpCode, "region": regionCod, "area": eAssCode }})
+
+                            if (HidAreaAss === "") {                        
+
+                            } else {
+                                const branchOldAssCode = await Area.findOneAndUpdate({"area": HidAreaAss}, {$set:{"emp_code": ""}})
+        
+                                const userOldAssignCode = await User.findOneAndUpdate({"area": HidAreaAss}, {$set:{"name": "", "emp_code": "" }})
+            
+                            }
+            
+                            employee.assign_code = eAssCode
+                            employee.area = eAssCode
+    
+                        }                            
+                    }
+    
+                    await employee.save()
+            
+                    res.redirect('/regions/employees/'+ regionCod)
+    
+            } else {
+
+                eFoundArea = await Area.find({region: regionCod, emp_code : HidEmpCode})
+
+                res.render('regions/editEmployee', {
+                    regionCode: regionCod,
+                    foundArea: eFoundArea,
+                    user: req.user,
+                    emp: employee, 
+                    empHasAreaAss: true,
+                    empStatus : empStatus ,
+                    locals: locals,
+                    yuser: req.user,
+                    newEmp: false,
+                    resetPW: false
+               })
+        
+            }
+
 
         } catch (err) {
             console.log(err)
@@ -1415,7 +1873,7 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.RD), async (req, 
 
     const parame = req.params.id // regionCode + emp_code
     const regionCode = parame.substr(0,3)
-    const empCode = _.trim(parame.substr(3,10))
+    const areaCod = _.trim(parame.substr(3,3))
 
 
    const paramsID = req.params.id
@@ -1437,43 +1895,52 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.RD), async (req, 
 
    try {
 
-        const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
-//            console.log(foundlist)
-            foundEmploy = foundEmp
-            areaCod = foundEmp.area
-            possit = _.trim(foundEmploy.position_code)
-           console.log(possit)
-           areaAsignCode = foundEmploy.assign_code
+//         const employe = await Employee.findOne({emp_code: empCode}) //, function (err, foundEmp) {
+// //            console.log(foundlist)
+//         if (!isNull(employe)) {
+//             foundEmploy = employe
+//             areaCod = employe.area
+//             possit = _.trim(employe.position_code)
+//            console.log(possit)
+//            areaAsignCode = employe.assign_code
 
-           doneReadEmp = true
-        })
+//            doneReadEmp = true
+
+//         }
         
-        if (doneReadEmp) {
-            const emPosit = await Area.findOne({area: areaAsignCode}, function (err, fndArea) {
-                areaAsignDesc = fndArea.area_desc
-                regionAreas = fndArea
+        // if (doneReadEmp) {
+            const emArea = await Area.findOne({area: areaCod}) //, function (err, fndArea) {
+            
+            if (!isNull(emArea)) {
+                areaAsignDesc = emArea.area_desc
+                areaAsignCode = emArea.area
+                regionAreas = emArea
 
                 doneReadArea = true
-            })
-        }
+
+            }
+
+        // }
             // console.log(employe)
-        const yoser = await User.findOne({assCode: areaAsignCode}, function (err, foundUser) {
+        const yoser = await User.findOne({area: areaCod}) //, function (err, foundUser) {
             //            console.log(foundlist)
-            fndUser = foundUser
-            console.log(fndUser)
+        if (!isNull(yoser)) {
+            fndUser = yoser
+            console.log(yoser)
 
             doneReadYoser = true
-        })
+            yoser.password = ""
 
-        yoser.password = ""
+        }
         
         if (doneReadArea && doneReadYoser ) {
             res.render('regions/resetPassword', {
                 regionCode: regionCode,
                 areaAsignDesc: areaAsignDesc,
-                foundArea: regionAreas,
+                area: emArea,
+                canEditAreaCode : false,
+                newArea : false,
                 user: yoser,
-                emp: employe, 
                 locals: locals,
                 yuser: _user,
                 newEmp: false,
@@ -1498,21 +1965,78 @@ router.put('/putEditedPass/:id', authUser, authRole(ROLE.RD), async function(req
     const newPassword = _.trim(req.body.password)
     const userID = req.body.user_id
 
+    let fieldsOkay = false
+    let locals
+    let areaAsignCode = ""
+    let areaAsignDesc = ""
+    
+    if (newPassword.length == 0) {
+        locals = {errorMessage: 'PASSWORD must not be SPACE/S.'}
+    } else {
+        fieldsOkay = true
+    }
+
+    let doneReadArea = false
+    let doneReadYoser = false
+
     // let getExistingUser
     
         try {
-            const hashdPassword = await bcrypt.hash(newPassword, 10)
-            let getExistingUser = await User.findOne({assCode: areaCod})
 
-                getExistingUser.password = hashdPassword
-                const savedNewPW = getExistingUser.save()
+            if (fieldsOkay) {
+                const hashdPassword = await bcrypt.hash(newPassword, 10)
+
+                const getExistingUser = await User.findOne({area: areaCod, role: "AM"})
+                    if (getExistingUser) {
+                        getExistingUser.password = hashdPassword
+                        const savedNewPW = getExistingUser.save()
+                    }
+
+                res.redirect('/regions/areas/'+ regionCod)
+    
+            } else {
+
+                const emArea = await Area.findOne({area: areaCod}) //, function (err, fndArea) {
+            
+                    if (!isNull(emArea)) {
+                        areaAsignDesc = emArea.area_desc
+                        areaAsignCode = emArea.area
+                        regionAreas = emArea
         
-            res.redirect('/regions/employees/'+ regionCod)
+                        doneReadArea = true
+        
+                    }
+                    const yoser = await User.findOne({area: areaCod}) //, function (err, foundUser) {
+                        //            console.log(foundlist)
+                    if (!isNull(yoser)) {
+                        fndUser = yoser
+                        console.log(yoser)
+            
+                        doneReadYoser = true
+                        yoser.password = ""
+            
+                    }
+                    
+                if (doneReadArea && doneReadYoser) {
+                    res.render('regions/resetPassword', {
+                        regionCode: regionCod,
+                        areaAsignDesc: areaAsignDesc,
+                        area: emArea,
+                        canEditAreaCode : false,
+                        newArea : false,
+                        user: yoser,
+                        locals: locals,
+                        yuser: req.user,
+                        newEmp: false,
+                        resetPW: true
+                    })       
+                }
 
+            }
         } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.render('/regions/employee/'+ regionCod, {
+            res.render('/regions/areas/'+ regionCod, {
             locals: locals
             })
         }
@@ -1815,6 +2339,8 @@ router.get('/viewRegionTargetMon/:id', authUser, authRole(ROLE.RD), async (req, 
     // let foundCenterDet = []
 
     const vwloanType = await Loan_type.find({})
+    const brnBudgExecViews = await Budg_exec_sum.find({region: viewRegionCode, target_year: budgetYear})
+
     // console.log(vwloanType)
 
     let poTotLoanAmtArray = []
@@ -1865,6 +2391,33 @@ router.get('/viewRegionTargetMon/:id', authUser, authRole(ROLE.RD), async (req, 
     let oct_newAtotValue = 0
     let nov_newAtotValue = 0
     let dec_newAtotValue = 0
+
+    let jan_newCliTot = 0
+    let feb_newCliTot = 0
+    let mar_newCliTot = 0
+    let apr_newCliTot = 0
+    let may_newCliTot = 0
+    let jun_newCliTot = 0
+    let jul_newCliTot = 0
+    let aug_newCliTot = 0
+    let sep_newCliTot = 0
+    let oct_newCliTot = 0
+    let nov_newCliTot = 0
+    let dec_newCliTot = 0
+
+    let jan_oldCliTot = 0
+    let feb_oldCliTot = 0
+    let mar_oldCliTot = 0
+    let apr_oldCliTot = 0
+    let may_oldCliTot = 0
+    let jun_oldCliTot = 0
+    let jul_oldCliTot = 0
+    let aug_oldCliTot = 0
+    let sep_oldCliTot = 0
+    let oct_oldCliTot = 0
+    let nov_oldCliTot = 0
+    let dec_oldCliTot = 0
+
         let jan_oldAtotValue = 0  
         let feb_oldAtotValue = 0
         let mar_oldAtotValue = 0
@@ -1904,7 +2457,59 @@ router.get('/viewRegionTargetMon/:id', authUser, authRole(ROLE.RD), async (req, 
         let nov_totIntAmt = 0
         let dec_totIntAmt = 0
 
-        let totTotAmtLoan = 0 
+        let jan_reLoanCliTot = 0
+        let feb_reLoanCliTot = 0
+        let mar_reLoanCliTot = 0
+        let apr_reLoanCliTot = 0
+        let may_reLoanCliTot = 0
+        let jun_reLoanCliTot = 0
+        let jul_reLoanCliTot = 0
+        let aug_reLoanCliTot = 0
+        let sep_reLoanCliTot = 0
+        let oct_reLoanCliTot = 0
+        let nov_reLoanCliTot = 0
+        let dec_reLoanCliTot = 0
+
+        let jan_totNumClients = 0
+        let feb_totNumClients = 0
+        let mar_totNumClients = 0
+        let apr_totNumClients = 0
+        let may_totNumClients = 0
+        let jun_totNumClients = 0
+        let jul_totNumClients = 0
+        let aug_totNumClients = 0
+        let sep_totNumClients = 0
+        let oct_totNumClients = 0
+        let nov_totNumClients = 0
+        let dec_totNumClients = 0
+
+        let jan_resCliTot = 0
+        let feb_resCliTot = 0
+        let mar_resCliTot = 0
+        let apr_resCliTot = 0
+        let may_resCliTot = 0
+        let jun_resCliTot = 0
+        let jul_resCliTot = 0
+        let aug_resCliTot = 0
+        let sep_resCliTot = 0
+        let oct_resCliTot = 0
+        let nov_resCliTot = 0
+        let dec_resCliTot = 0
+
+        let janProcFeeAmt = 0
+        let febProcFeeAmt = 0
+        let marProcFeeAmt = 0 
+        let aprProcFeeAmt = 0
+        let mayProcFeeAmt = 0
+        let junProcFeeAmt = 0
+        let julProcFeeAmt = 0
+        let augProcFeeAmt = 0
+        let sepProcFeeAmt = 0
+        let octProcFeeAmt = 0
+        let novProcFeeAmt = 0
+        let decProcFeeAmt = 0
+
+    let totTotAmtLoan = 0 
 
         let doneReadNLC = false
         let doneReadOLC = false
@@ -1929,201 +2534,294 @@ router.get('/viewRegionTargetMon/:id', authUser, authRole(ROLE.RD), async (req, 
 
         //  Pre-determine if items is already existed or saved in Budg_exec_sum Collection
 
-        const poBudgExecNumCenters = await Budg_exec_sum.find({region: viewRegionCode, view_code: "NumberOfCenters"}, function (err, fndTotNumCenter) {
-                fndUnitBudgExecNumCenters = fndTotNumCenter
-                console.log(fndTotNumCenter)
-                jan_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.jan_budg; })
-                feb_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.feb_budg; })
-                mar_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.mar_budg; })
-                apr_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.apr_budg; })
-                may_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.may_budg; })
-                jun_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.jun_budg; })
-                jul_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.jul_budg; })
-                aug_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.aug_budg; })
-                sep_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.sep_budg; })
-                oct_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.oct_budg; })
-                nov_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.nov_budg; })
-                dec_centerCount = _.sumBy(fndTotNumCenter, function(o) { return o.dec_budg; })
+        if (!isNull(brnBudgExecViews)) {
 
-                poSumView.push({title: "NUMBER OF CENTERS", sortkey: 2, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_centerCount, feb_value: feb_centerCount, mar_value: mar_centerCount,
-                    apr_value: apr_centerCount, may_value: may_centerCount, jun_value: jun_centerCount, jul_value: jul_centerCount, aug_value: aug_centerCount,
-                    sep_value: sep_centerCount, oct_value: oct_centerCount, nov_value: nov_centerCount, dec_value: dec_centerCount, tot_value : dec_centerCount
-                })
+            brnBudgExecViews.forEach( TotNumCenter => {
 
-                jan_centerCount = jan_centerCount + centerCntBegBal
-                feb_centerCount = feb_centerCount + jan_centerCount
-                mar_centerCount = mar_centerCount + feb_centerCount
-                apr_centerCount = apr_centerCount + mar_centerCount
-                may_centerCount = may_centerCount + apr_centerCount
-                jun_centerCount = jun_centerCount + may_centerCount
-                jul_centerCount = jul_centerCount + jun_centerCount
-                aug_centerCount = aug_centerCount + jul_centerCount
-                sep_centerCount = sep_centerCount + aug_centerCount
-                oct_centerCount = oct_centerCount + sep_centerCount
-                nov_centerCount = nov_centerCount + oct_centerCount
-                dec_centerCount = dec_centerCount + nov_centerCount
+                const areaVwCode = TotNumCenter.view_code
 
-                doneReadNumCenters = true
-    
+                switch(areaVwCode) {
+                    case "NumberOfCenters":
+
+                        centerCntBegBal = centerCntBegBal + TotNumCenter.beg_bal
+                        jan_centerCount = jan_centerCount + TotNumCenter.jan_budg
+                        feb_centerCount = feb_centerCount + TotNumCenter.feb_budg
+                        mar_centerCount = mar_centerCount + TotNumCenter.mar_budg
+                        apr_centerCount = apr_centerCount + TotNumCenter.apr_budg
+                        may_centerCount = may_centerCount + TotNumCenter.may_budg
+                        jun_centerCount = jun_centerCount + TotNumCenter.jun_budg
+                        jul_centerCount = jul_centerCount + TotNumCenter.jul_budg
+                        aug_centerCount = aug_centerCount + TotNumCenter.aug_budg
+                        sep_centerCount = sep_centerCount + TotNumCenter.sep_budg
+                        oct_centerCount = oct_centerCount + TotNumCenter.oct_budg
+                        nov_centerCount = nov_centerCount + TotNumCenter.nov_budg
+                        dec_centerCount = dec_centerCount + TotNumCenter.dec_budg                        
+                        break;
+                                                    
+                        case "NewClients":
+                            
+                            jan_newCliTot = jan_newCliTot + TotNumCenter.jan_budg
+                            feb_newCliTot = feb_newCliTot + TotNumCenter.feb_budg
+                            mar_newCliTot = mar_newCliTot + TotNumCenter.mar_budg
+                            apr_newCliTot = apr_newCliTot + TotNumCenter.apr_budg
+                            may_newCliTot = may_newCliTot + TotNumCenter.may_budg
+                            jun_newCliTot = jun_newCliTot + TotNumCenter.jun_budg
+                            jul_newCliTot = jul_newCliTot + TotNumCenter.jul_budg
+                            aug_newCliTot = aug_newCliTot + TotNumCenter.aug_budg
+                            sep_newCliTot = sep_newCliTot + TotNumCenter.sep_budg
+                            oct_newCliTot = oct_newCliTot + TotNumCenter.oct_budg
+                            nov_newCliTot = nov_newCliTot + TotNumCenter.nov_budg
+                            dec_newCliTot = dec_newCliTot + TotNumCenter.dec_budg
+                            break;
+
+                        case "NumReLoanCli":
+                            begBalOldClient = begBalOldClient + TotNumCenter.beg_bal
+                            jan_oldCliTot = jan_oldCliTot + TotNumCenter.jan_budg
+                            feb_oldCliTot = feb_oldCliTot + TotNumCenter.feb_budg
+                            mar_oldCliTot = mar_oldCliTot + TotNumCenter.mar_budg
+                            apr_oldCliTot = apr_oldCliTot + TotNumCenter.apr_budg
+                            may_oldCliTot = may_oldCliTot + TotNumCenter.may_budg
+                            jun_oldCliTot = jun_oldCliTot + TotNumCenter.jun_budg
+                            jul_oldCliTot = jul_oldCliTot + TotNumCenter.jul_budg
+                            aug_oldCliTot = aug_oldCliTot + TotNumCenter.aug_budg
+                            sep_oldCliTot = sep_oldCliTot + TotNumCenter.sep_budg
+                            oct_oldCliTot = oct_oldCliTot + TotNumCenter.oct_budg
+                            nov_oldCliTot = nov_oldCliTot + TotNumCenter.nov_budg
+                            dec_oldCliTot = dec_oldCliTot + TotNumCenter.dec_budg
+                            break;
+                        
+                        case "NumNewLoanCli":
+
+                            jan_newCtotValue =  jan_newCtotValue + TotNumCenter.jan_budg 
+                            feb_newCtotValue =  feb_newCtotValue + TotNumCenter.feb_budg 
+                            mar_newCtotValue =  mar_newCtotValue + TotNumCenter.mar_budg 
+                            apr_newCtotValue =  apr_newCtotValue + TotNumCenter.apr_budg 
+                            may_newCtotValue =  may_newCtotValue + TotNumCenter.may_budg 
+                            jun_newCtotValue =  jun_newCtotValue + TotNumCenter.jun_budg 
+                            jul_newCtotValue =  jul_newCtotValue + TotNumCenter.jul_budg 
+                            aug_newCtotValue =  aug_newCtotValue + TotNumCenter.aug_budg 
+                            sep_newCtotValue =  sep_newCtotValue + TotNumCenter.sep_budg 
+                            oct_newCtotValue =  oct_newCtotValue + TotNumCenter.oct_budg 
+                            nov_newCtotValue =  nov_newCtotValue + TotNumCenter.nov_budg 
+                            dec_newCtotValue =  dec_newCtotValue + TotNumCenter.dec_budg
+                            break;
+                            
+                        case "ResignClients":
+
+                            jan_resCliTot = jan_resCliTot + TotNumCenter.jan_budg 
+                            feb_resCliTot = feb_resCliTot + TotNumCenter.feb_budg 
+                            mar_resCliTot = mar_resCliTot + TotNumCenter.mar_budg 
+                            apr_resCliTot = apr_resCliTot + TotNumCenter.apr_budg 
+                            may_resCliTot = may_resCliTot + TotNumCenter.may_budg 
+                            jun_resCliTot = jun_resCliTot + TotNumCenter.jun_budg 
+                            jul_resCliTot = jul_resCliTot + TotNumCenter.jul_budg 
+                            aug_resCliTot = aug_resCliTot + TotNumCenter.aug_budg 
+                            sep_resCliTot = sep_resCliTot + TotNumCenter.sep_budg 
+                            oct_resCliTot = oct_resCliTot + TotNumCenter.oct_budg 
+                            nov_resCliTot = nov_resCliTot + TotNumCenter.nov_budg 
+                            dec_resCliTot = dec_resCliTot + TotNumCenter.dec_budg 
+                                    break;
+
+                        case "TotProcFee":
+
+                            janProcFeeAmt = janProcFeeAmt +  TotNumCenter.jan_budg 
+                            febProcFeeAmt = febProcFeeAmt +  TotNumCenter.feb_budg 
+                            marProcFeeAmt = marProcFeeAmt +  TotNumCenter.mar_budg 
+                            aprProcFeeAmt = aprProcFeeAmt +  TotNumCenter.apr_budg 
+                            mayProcFeeAmt = mayProcFeeAmt +  TotNumCenter.may_budg 
+                            junProcFeeAmt = junProcFeeAmt +  TotNumCenter.jun_budg 
+                            julProcFeeAmt = julProcFeeAmt +  TotNumCenter.jul_budg 
+                            augProcFeeAmt = augProcFeeAmt +  TotNumCenter.aug_budg 
+                            sepProcFeeAmt = sepProcFeeAmt +  TotNumCenter.sep_budg 
+                            octProcFeeAmt = octProcFeeAmt +  TotNumCenter.oct_budg 
+                            novProcFeeAmt = novProcFeeAmt +  TotNumCenter.nov_budg 
+                            decProcFeeAmt = decProcFeeAmt +  TotNumCenter.dec_budg
+                                break;
+
+                        case "TotProjInc":
+                            jan_totIntAmt = jan_totIntAmt + TotNumCenter.jan_budg
+                            feb_totIntAmt = feb_totIntAmt + TotNumCenter.feb_budg
+                            mar_totIntAmt = mar_totIntAmt + TotNumCenter.mar_budg
+                            apr_totIntAmt = apr_totIntAmt + TotNumCenter.apr_budg
+                            may_totIntAmt = may_totIntAmt + TotNumCenter.may_budg
+                            jun_totIntAmt = jun_totIntAmt + TotNumCenter.jun_budg
+                            jul_totIntAmt = jul_totIntAmt + TotNumCenter.jul_budg
+                            aug_totIntAmt = aug_totIntAmt + TotNumCenter.aug_budg
+                            sep_totIntAmt = sep_totIntAmt + TotNumCenter.sep_budg
+                            oct_totIntAmt = oct_totIntAmt + TotNumCenter.oct_budg
+                            nov_totIntAmt = nov_totIntAmt + TotNumCenter.nov_budg
+                            dec_totIntAmt = dec_totIntAmt + TotNumCenter.dec_budg
+                            break;
+
+                            
+                        case "NewLoanAmount":
+
+                            jan_newAtotValue =  jan_newAtotValue + TotNumCenter.jan_budg
+                            feb_newAtotValue =  feb_newAtotValue + TotNumCenter.feb_budg
+                            mar_newAtotValue =  mar_newAtotValue + TotNumCenter.mar_budg
+                            apr_newAtotValue =  apr_newAtotValue + TotNumCenter.apr_budg
+                            may_newAtotValue =  may_newAtotValue + TotNumCenter.may_budg
+                            jun_newAtotValue =  jun_newAtotValue + TotNumCenter.jun_budg
+                            jul_newAtotValue =  jul_newAtotValue + TotNumCenter.jul_budg
+                            aug_newAtotValue =  aug_newAtotValue + TotNumCenter.aug_budg
+                            sep_newAtotValue =  sep_newAtotValue + TotNumCenter.sep_budg
+                            oct_newAtotValue =  oct_newAtotValue + TotNumCenter.oct_budg
+                            nov_newAtotValue =  nov_newAtotValue + TotNumCenter.nov_budg
+                            dec_newAtotValue =  dec_newAtotValue + TotNumCenter.dec_budg
+                            break;
+
+                        case "ReLoanAmount":
+
+                            jan_oldAtotValue = jan_oldAtotValue + TotNumCenter.jan_budg 
+                            feb_oldAtotValue = feb_oldAtotValue + TotNumCenter.feb_budg 
+                            mar_oldAtotValue = mar_oldAtotValue + TotNumCenter.mar_budg 
+                            apr_oldAtotValue = apr_oldAtotValue + TotNumCenter.apr_budg 
+                            may_oldAtotValue = may_oldAtotValue + TotNumCenter.may_budg 
+                            jun_oldAtotValue = jun_oldAtotValue + TotNumCenter.jun_budg 
+                            jul_oldAtotValue = jul_oldAtotValue + TotNumCenter.jul_budg 
+                            aug_oldAtotValue = aug_oldAtotValue + TotNumCenter.aug_budg 
+                            sep_oldAtotValue = sep_oldAtotValue + TotNumCenter.sep_budg 
+                            oct_oldAtotValue = oct_oldAtotValue + TotNumCenter.oct_budg 
+                            nov_oldAtotValue = nov_oldAtotValue + TotNumCenter.nov_budg 
+                            dec_oldAtotValue = dec_oldAtotValue + TotNumCenter.dec_budg
+                            break;
+
+                        default:
+                            month = 0
+                            break;
+                    }
+            })
+            poSumView.push({title: "NUMBER OF CENTERS", sortkey: 2, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_centerCount, feb_value: feb_centerCount, mar_value: mar_centerCount,
+                apr_value: apr_centerCount, may_value: may_centerCount, jun_value: jun_centerCount, jul_value: jul_centerCount, aug_value: aug_centerCount,
+                sep_value: sep_centerCount, oct_value: oct_centerCount, nov_value: nov_centerCount, dec_value: dec_centerCount, tot_value : dec_centerCount
             })
 
-            const poBudgExecTotLonAmt = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotLoanAmt"}, function (err, fndTotLonAmt) {
-                fndUnitBudgExecTotLonAmt = fndTotLonAmt
-                janTotAmtLoan = _.sumBy(fndTotLonAmt, function(o) { return o.jan_budg; })
-                febTotAmtLoan = _.sumBy(fndTotLonAmt, function(o) { return o.feb_budg; })
-                marTotAmtLoan = _.sumBy(fndTotLonAmt, function(o) { return o.mar_budg; })
-                aprTotAmtLoan = _.sumBy(fndTotLonAmt, function(o) { return o.apr_budg; })
-                mayTotAmtLoan = _.sumBy(fndTotLonAmt, function(o) { return o.may_budg; })
-                junTotAmtLoan = _.sumBy(fndTotLonAmt, function(o) { return o.jun_budg; })
-                julTotAmtLoan = _.sumBy(fndTotLonAmt, function(o) { return o.jul_budg; })
-                augTotAmtLoan = _.sumBy(fndTotLonAmt, function(o) { return o.aug_budg; })
-                sepTotAmtLoan = _.sumBy(fndTotLonAmt, function(o) { return o.sep_budg; })
-                octTotAmtLoan = _.sumBy(fndTotLonAmt, function(o) { return o.oct_budg; })
-                novTotAmtLoan = _.sumBy(fndTotLonAmt, function(o) { return o.nov_budg; })
-                decTotAmtLoan = _.sumBy(fndTotLonAmt, function(o) { return o.dec_budg; })
+            jan_centerCount = jan_centerCount + centerCntBegBal
+            feb_centerCount = feb_centerCount + jan_centerCount
+            mar_centerCount = mar_centerCount + feb_centerCount
+            apr_centerCount = apr_centerCount + mar_centerCount
+            may_centerCount = may_centerCount + apr_centerCount
+            jun_centerCount = jun_centerCount + may_centerCount
+            jul_centerCount = jul_centerCount + jun_centerCount
+            aug_centerCount = aug_centerCount + jul_centerCount
+            sep_centerCount = sep_centerCount + aug_centerCount
+            oct_centerCount = oct_centerCount + sep_centerCount
+            nov_centerCount = nov_centerCount + oct_centerCount
+            dec_centerCount = dec_centerCount + nov_centerCount
 
-                totTotAmtLoan = janTotAmtLoan + febTotAmtLoan + marTotAmtLoan + aprTotAmtLoan + mayTotAmtLoan + junTotAmtLoan + julTotAmtLoan + augTotAmtLoan +
-                    sepTotAmtLoan + octTotAmtLoan + novTotAmtLoan + decTotAmtLoan
+            doneReadNumCenters = true  // ****-----
 
-                poSumView.push({title: "TOTAL AMOUNT OF LOAN", sortkey: 15, group: 2, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
-                    apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
-                    aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan, tot_value : totTotAmtLoan
-                })
+            // total Disbursement Amount - for Copying to Area conso and Up
+            janTotAmtLoan = jan_newAtotValue + jan_oldAtotValue
+            febTotAmtLoan = feb_newAtotValue + feb_oldAtotValue
+            marTotAmtLoan = mar_newAtotValue + mar_oldAtotValue
+            aprTotAmtLoan = apr_newAtotValue + apr_oldAtotValue
+            mayTotAmtLoan = may_newAtotValue + may_oldAtotValue
+            junTotAmtLoan = jun_newAtotValue + jun_oldAtotValue
+            julTotAmtLoan = jul_newAtotValue + jul_oldAtotValue
+            augTotAmtLoan = aug_newAtotValue + aug_oldAtotValue
+            sepTotAmtLoan = sep_newAtotValue + sep_oldAtotValue
+            octTotAmtLoan = oct_newAtotValue + oct_oldAtotValue
+            novTotAmtLoan = nov_newAtotValue + nov_oldAtotValue
+            decTotAmtLoan = dec_newAtotValue + dec_oldAtotValue
 
-                doneReadTotLonAmt = true
+            totTotAmtLoan = janTotAmtLoan + febTotAmtLoan + marTotAmtLoan + aprTotAmtLoan + mayTotAmtLoan + junTotAmtLoan + julTotAmtLoan + augTotAmtLoan +
+                sepTotAmtLoan + octTotAmtLoan + novTotAmtLoan + decTotAmtLoan
+
+            poSumView.push({title: "TOTAL AMOUNT OF LOAN", sortkey: 15, group: 2, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
+                apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
+                aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan, tot_value : totTotAmtLoan
             })
 
-            const poBudgExecTotIncAmt = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotProjInc"}, function (err, fndTotIncAmt) {
-                fndUnitBudgExecTotInc = fndTotIncAmt
-                jan_totIntAmt = _.sumBy(fndTotIncAmt, function(o) { return o.jan_budg; })
-                feb_totIntAmt = _.sumBy(fndTotIncAmt, function(o) { return o.feb_budg; })
-                mar_totIntAmt = _.sumBy(fndTotIncAmt, function(o) { return o.mar_budg; })
-                apr_totIntAmt = _.sumBy(fndTotIncAmt, function(o) { return o.apr_budg; })
-                may_totIntAmt = _.sumBy(fndTotIncAmt, function(o) { return o.may_budg; })
-                jun_totIntAmt = _.sumBy(fndTotIncAmt, function(o) { return o.jun_budg; })
-                jul_totIntAmt = _.sumBy(fndTotIncAmt, function(o) { return o.jul_budg; })
-                aug_totIntAmt = _.sumBy(fndTotIncAmt, function(o) { return o.aug_budg; })
-                sep_totIntAmt = _.sumBy(fndTotIncAmt, function(o) { return o.sep_budg; })
-                oct_totIntAmt = _.sumBy(fndTotIncAmt, function(o) { return o.oct_budg; })
-                nov_totIntAmt = _.sumBy(fndTotIncAmt, function(o) { return o.nov_budg; })
-                dec_totIntAmt = _.sumBy(fndTotIncAmt, function(o) { return o.dec_budg; })
+            doneReadTotLonAmt = true  // ****-----
+        
+            nwTotValueClient = jan_newCliTot + feb_newCliTot + mar_newCliTot + apr_newCliTot + may_newCliTot + jun_newCliTot
+            + jul_newCliTot + aug_newCliTot + sep_newCliTot + oct_newCliTot + nov_newCliTot + dec_newCliTot
+        
+            poSumView.push({title: "New Clients", sortkey: 4, group: 2, beg_bal: 0, jan_value : jan_newCliTot, feb_value : feb_newCliTot, mar_value : mar_newCliTot, apr_value : apr_newCliTot,
+                may_value : may_newCliTot, jun_value : jun_newCliTot, jul_value : jul_newCliTot, aug_value : aug_newCliTot,
+                sep_value : sep_newCliTot, oct_value : oct_newCliTot, nov_value : nov_newCliTot, dec_value : dec_newCliTot, tot_value : nwTotValueClient
+            }) 
+            doneReadNLCli = true  // ****-----
 
-                let nloanTotIntAmt = jan_totIntAmt + feb_totIntAmt + mar_totIntAmt + apr_totIntAmt + may_totIntAmt + jun_totIntAmt
+            jan_reLoanCliTot = jan_oldCliTot
+            feb_reLoanCliTot = feb_oldCliTot
+            mar_reLoanCliTot = mar_oldCliTot
+            apr_reLoanCliTot = apr_oldCliTot
+            may_reLoanCliTot = may_oldCliTot
+            jun_reLoanCliTot = jun_oldCliTot
+            jul_reLoanCliTot = jul_oldCliTot
+            aug_reLoanCliTot = aug_oldCliTot
+            sep_reLoanCliTot = sep_oldCliTot
+            oct_reLoanCliTot = oct_oldCliTot
+            nov_reLoanCliTot = nov_oldCliTot
+            dec_reLoanCliTot = dec_oldCliTot
+
+            olTotValueClient = jan_oldCliTot + feb_oldCliTot + mar_oldCliTot + apr_oldCliTot + may_oldCliTot + jun_oldCliTot
+                        + jul_oldCliTot + aug_oldCliTot + sep_oldCliTot + oct_oldCliTot + nov_oldCliTot + dec_oldCliTot
+
+            poSumView.push({title: "Number of Reloan", sortkey: 10, group: 1, beg_bal: 0, jan_value : jan_oldCliTot, feb_value : feb_oldCliTot, mar_value : mar_oldCliTot, apr_value : apr_oldCliTot,
+                may_value : may_oldCliTot, jun_value : jun_oldCliTot, jul_value : jul_oldCliTot, aug_value : aug_oldCliTot,
+                sep_value : sep_oldCliTot, oct_value : oct_oldCliTot, nov_value : nov_oldCliTot, dec_value : dec_oldCliTot, tot_value : olTotValueClient
+            }) 
+
+            doneReadOLC = true  // ****-----
+
+            nwTotValueClient = jan_newCtotValue + feb_newCtotValue + mar_newCtotValue + apr_newCtotValue + may_newCtotValue + jun_newCtotValue
+            + jul_newCtotValue + aug_newCtotValue + sep_newCtotValue + oct_newCtotValue + nov_newCtotValue + dec_newCtotValue
+        
+            poSumView.push({title: "Number of New Loan", sortkey: 9, group: 1, beg_bal: 0, jan_value : jan_newCtotValue, feb_value : feb_newCtotValue, mar_value : mar_newCtotValue, apr_value : apr_newCtotValue,
+                may_value : may_newCtotValue, jun_value : jun_newCtotValue, jul_value : jul_newCtotValue, aug_value : aug_newCtotValue,
+                sep_value : sep_newCtotValue, oct_value : oct_newCtotValue, nov_value : nov_newCtotValue, dec_value : dec_newCtotValue, tot_value : nwTotValueClient
+            }) 
+            doneReadNLC = true  // ****-----
+
+            olTotValueClient = jan_resCliTot + feb_resCliTot + mar_resCliTot + apr_resCliTot + may_resCliTot + jun_resCliTot
+            + jul_resCliTot + aug_resCliTot + sep_resCliTot + oct_resCliTot + nov_resCliTot + dec_resCliTot
+        
+            doneReadResCli = true  // ****-----
+
+            let nloanTotProcFeeAmt = janProcFeeAmt + febProcFeeAmt + marProcFeeAmt + aprProcFeeAmt + mayProcFeeAmt + junProcFeeAmt
+                 + julProcFeeAmt + augProcFeeAmt + sepProcFeeAmt + octProcFeeAmt + novProcFeeAmt + decProcFeeAmt
+
+              poSumView.push({title: "Processing Fees", desc: "Processing Fees", sortkey: 27, group: 1, jan_value : janProcFeeAmt, feb_value : febProcFeeAmt, mar_value : marProcFeeAmt, apr_value : aprProcFeeAmt,
+                  may_value : mayProcFeeAmt, jun_value : junProcFeeAmt, jul_value : julProcFeeAmt, aug_value : augProcFeeAmt,
+                  sep_value : sepProcFeeAmt, oct_value : octProcFeeAmt, nov_value : novProcFeeAmt, dec_value : decProcFeeAmt, tot_value : nloanTotProcFeeAmt
+              })         
+
+            let nloanTotIntAmt = jan_totIntAmt + feb_totIntAmt + mar_totIntAmt + apr_totIntAmt + may_totIntAmt + jun_totIntAmt
                 + jul_totIntAmt + aug_totIntAmt + sep_totIntAmt + oct_totIntAmt + nov_totIntAmt + dec_totIntAmt
 
-              if (nloanTotIntAmt > 0) {
-                  poSumView.push({title: "Loan Fees", desc: "Loan Fees", sortkey: 26, group: 1, jan_value : jan_totIntAmt, feb_value : feb_totIntAmt, mar_value : mar_totIntAmt, apr_value : apr_totIntAmt,
-                      may_value : may_totIntAmt, jun_value : jun_totIntAmt, jul_value : jul_totIntAmt, aug_value : aug_totIntAmt,
-                      sep_value : sep_totIntAmt, oct_value : oct_totIntAmt, nov_value : nov_totIntAmt, dec_value : dec_totIntAmt, tot_value:  nloanTotIntAmt
-                  })         
-              }
+              poSumView.push({title: "Loan Fees", desc: "Loan Fees", sortkey: 26, group: 1, jan_value : jan_totIntAmt, feb_value : feb_totIntAmt, mar_value : mar_totIntAmt, apr_value : apr_totIntAmt,
+                  may_value : may_totIntAmt, jun_value : jun_totIntAmt, jul_value : jul_totIntAmt, aug_value : aug_totIntAmt,
+                  sep_value : sep_totIntAmt, oct_value : oct_totIntAmt, nov_value : nov_totIntAmt, dec_value : dec_totIntAmt, tot_value : nloanTotIntAmt
+              })         
+            
+            let nwTotValueAmt = jan_newAtotValue + feb_newAtotValue + mar_newAtotValue + apr_newAtotValue + may_newAtotValue + jun_newAtotValue
+              + jul_newAtotValue + aug_newAtotValue + sep_newAtotValue + oct_newAtotValue + nov_newAtotValue + dec_newAtotValue
 
-            })
+            poSumView.push({title: "Amount of New Loan", sortkey: 13, group: 2, jan_value : jan_newAtotValue, feb_value : feb_newAtotValue, mar_value : mar_newAtotValue, apr_value : apr_newAtotValue,
+                may_value : may_newAtotValue, jun_value : jun_newAtotValue, jul_value : jul_newAtotValue, aug_value : aug_newAtotValue,
+                sep_value : sep_newAtotValue, oct_value : oct_newAtotValue, nov_value : nov_newAtotValue, dec_value : dec_newAtotValue, tot_value : nwTotValueAmt
+            }) 
+            doneReadNLA = true  // ****-----
 
-            const fndUnitBuExTotProcFeeAmt = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotProcFee"}, function (err, fndTotProcFeeAmt) {
-                fndUnitBuExTotProcFees = fndTotProcFeeAmt
-                janProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.jan_budg; })
-                febProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.feb_budg; })
-                marProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.mar_budg; })
-                aprProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.apr_budg; })
-                mayProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.may_budg; })
-                junProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.jun_budg; })
-                julProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.jul_budg; })
-                augProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.aug_budg; })
-                sepProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.sep_budg; })
-                octProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.oct_budg; })
-                novProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.nov_budg; })
-                decProcFeeAmt = _.sumBy(fndTotProcFeeAmt, function(o) { return o.dec_budg; })
+            let olTotValueAmt = jan_oldAtotValue + feb_oldAtotValue + mar_oldAtotValue + apr_oldAtotValue + may_oldAtotValue + jun_oldAtotValue
+            + jul_oldAtotValue + aug_oldAtotValue + sep_oldAtotValue + oct_oldAtotValue + nov_oldAtotValue + dec_oldAtotValue
 
+            poSumView.push({title: "Amount of Reloan", sortkey: 14, group: 2, jan_value : jan_oldAtotValue, feb_value : feb_oldAtotValue, mar_value : mar_oldAtotValue, apr_value : apr_oldAtotValue,
+                may_value : may_oldAtotValue, jun_value : jun_oldAtotValue, jul_value : jul_oldAtotValue, aug_value : aug_oldAtotValue,
+                sep_value : sep_oldAtotValue, oct_value : oct_oldAtotValue, nov_value : nov_oldAtotValue, dec_value : dec_oldAtotValue, tot_value : olTotValueAmt
+            }) 
+            doneReadOLA = true  // ****-----                                          
 
-                let nloanTotProcFeeAmt = janProcFeeAmt + febProcFeeAmt + marProcFeeAmt + aprProcFeeAmt + mayProcFeeAmt + junProcFeeAmt
-                     + julProcFeeAmt + augProcFeeAmt + sepProcFeeAmt + octProcFeeAmt + novProcFeeAmt + decProcFeeAmt
+        }
 
-                  poSumView.push({title: "Processing Fees", desc: "Processing Fees", sortkey: 27, group: 1, jan_value : janProcFeeAmt, feb_value : febProcFeeAmt, mar_value : marProcFeeAmt, apr_value : aprProcFeeAmt,
-                      may_value : mayProcFeeAmt, jun_value : junProcFeeAmt, jul_value : julProcFeeAmt, aug_value : augProcFeeAmt,
-                      sep_value : sepProcFeeAmt, oct_value : octProcFeeAmt, nov_value : novProcFeeAmt, dec_value : decProcFeeAmt, tot_value : nloanTotProcFeeAmt
-                  })         
-
-      })
-            // console.log(poBudgExecTotLonAmt)
 
         poSumView.push({title: "CENTERS", sortkey: 1, group: 1, isTitle: true})
 
         poSumView.push({title: "CLIENTS", sortkey: 3, group: 2, isTitle: true})
 
-
-        const newClientCntView = await Budg_exec_sum.find({region: viewRegionCode, view_code: "NewClients"}, function (err, fndNewCliCnt) {
-            jan_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jan_budg; })
-            feb_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.feb_budg; })
-            mar_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.mar_budg; })
-            apr_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.apr_budg; })
-            may_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.may_budg; })
-            jun_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jun_budg; })
-            jul_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.jul_budg; })
-            aug_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.aug_budg; })
-            sep_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.sep_budg; })
-            oct_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.oct_budg; })
-            nov_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.nov_budg; })
-            dec_newCliTot = _.sumBy(fndNewCliCnt, function(o) { return o.dec_budg; })
-
-            nwTotValueClient = jan_newCliTot + feb_newCliTot + mar_newCliTot + apr_newCliTot + may_newCliTot + jun_newCliTot
-                + jul_newCliTot + aug_newCliTot + sep_newCliTot + oct_newCliTot + nov_newCliTot + dec_newCliTot
-            
-                poSumView.push({title: "New Clients", sortkey: 4, group: 2, beg_bal: 0, jan_value : jan_newCliTot, feb_value : feb_newCliTot, mar_value : mar_newCliTot, apr_value : apr_newCliTot,
-                    may_value : may_newCliTot, jun_value : jun_newCliTot, jul_value : jul_newCliTot, aug_value : aug_newCliTot,
-                    sep_value : sep_newCliTot, oct_value : oct_newCliTot, nov_value : nov_newCliTot, dec_value : dec_newCliTot, tot_value : dec_newCliTot
-                }) 
-            doneReadNLCli = true
-        }) //, function (err, fndPOV) {
-
-        const oldClientCntView = await Budg_exec_sum.find({region: viewRegionCode, view_code: "NumReLoanCli"}, function (err, fndOldCliCnt) {
-
-            begBalOldClient = _.sumBy(fndOldCliCnt, function(o) { return o.beg_bal; })
-            jan_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.jan_budg; })
-            feb_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.feb_budg; })
-            mar_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.mar_budg; })
-            apr_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.apr_budg; })
-            may_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.may_budg; })
-            jun_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.jun_budg; })
-            jul_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.jul_budg; })
-            aug_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.aug_budg; })
-            sep_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.sep_budg; })
-            oct_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.oct_budg; })
-            nov_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.nov_budg; })
-            dec_oldCliTot = _.sumBy(fndOldCliCnt, function(o) { return o.dec_budg; })
-
-            olTotValueClient = jan_oldCliTot + feb_oldCliTot + mar_oldCliTot + apr_oldCliTot + may_oldCliTot + jun_oldCliTot
-                        + jul_oldCliTot + aug_oldCliTot + sep_oldCliTot + oct_oldCliTot + nov_oldCliTot + dec_oldCliTot
-
-            poSumView.push({title: "Number of Reloan", sortkey: 10, group: 1, beg_bal: begBalOldClient, jan_value : jan_oldCliTot, feb_value : feb_oldCliTot, mar_value : mar_oldCliTot, apr_value : apr_oldCliTot,
-                may_value : may_oldCliTot, jun_value : jun_oldCliTot, jul_value : jul_oldCliTot, aug_value : aug_oldCliTot,
-                sep_value : sep_oldCliTot, oct_value : oct_oldCliTot, nov_value : nov_oldCliTot, dec_value : dec_oldCliTot, tot_value : olTotValueClient
-            }) 
-
-             doneReadOLC = true
-        }) //, function (err, fndPOV) {
-
-        const resClientCntView = await Budg_exec_sum.find({region: viewRegionCode, view_code: "ResignClients"}, function (err, fndResCliCnt) {
-
-            jan_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jan_budg; })
-            feb_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.feb_budg; })
-            mar_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.mar_budg; })
-            apr_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.apr_budg; })
-            may_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.may_budg; })
-            jun_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jun_budg; })
-            jul_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.jul_budg; })
-            aug_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.aug_budg; })
-            sep_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.sep_budg; })
-            oct_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.oct_budg; })
-            nov_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.nov_budg; })
-            dec_resCliTot = _.sumBy(fndResCliCnt, function(o) { return o.dec_budg; })
-
-            olTotValueClient = jan_resCliTot + feb_resCliTot + mar_resCliTot + apr_resCliTot + may_resCliTot + jun_resCliTot
-                        + jul_resCliTot + aug_resCliTot + sep_resCliTot + oct_resCliTot + nov_resCliTot + dec_resCliTot
-                    
-            doneReadResCli = true
-
-        }) //, function (err, fndPOV) {
 
     if (doneReadNLCli && doneReadOLC && doneReadResCli) {
 
@@ -2171,30 +2869,6 @@ router.get('/viewRegionTargetMon/:id', authUser, authRole(ROLE.RD), async (req, 
 
         poSumView.push({title: "NUMBER OF LOANS", sortkey: 8, group: 1, isTitle: true})
 
-        const newLoanClientView = await Budg_exec_sum.find({region: viewRegionCode, view_code: "NumNewLoanCli"}, function (err, fndNewCli) {
-            jan_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jan_budg; })
-            feb_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.feb_budg; })
-            mar_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.mar_budg; })
-            apr_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.apr_budg; })
-            may_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.may_budg; })
-            jun_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jun_budg; })
-            jul_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.jul_budg; })
-            aug_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.aug_budg; })
-            sep_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.sep_budg; })
-            oct_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.oct_budg; })
-            nov_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.nov_budg; })
-            dec_newCtotValue = _.sumBy(fndNewCli, function(o) { return o.dec_budg; })
-
-            nwTotValueClient = jan_newCtotValue + feb_newCtotValue + mar_newCtotValue + apr_newCtotValue + may_newCtotValue + jun_newCtotValue
-                + jul_newCtotValue + aug_newCtotValue + sep_newCtotValue + oct_newCtotValue + nov_newCtotValue + dec_newCtotValue
-            
-                poSumView.push({title: "Number of New Loan", sortkey: 9, group: 1, beg_bal: 0, jan_value : jan_newCtotValue, feb_value : feb_newCtotValue, mar_value : mar_newCtotValue, apr_value : apr_newCtotValue,
-                    may_value : may_newCtotValue, jun_value : jun_newCtotValue, jul_value : jul_newCtotValue, aug_value : aug_newCtotValue,
-                    sep_value : sep_newCtotValue, oct_value : oct_newCtotValue, nov_value : nov_newCtotValue, dec_value : dec_newCtotValue, tot_value : nwTotValueClient
-                }) 
-            doneReadNLC = true
-        }) //, function (err, fndPOV) {
-
             let jan_totNoOfLoan = jan_oldCliTot + jan_newCtotValue
             let feb_totNoOfLoan = feb_oldCliTot + feb_newCtotValue
             let mar_totNoOfLoan = mar_oldCliTot + mar_newCtotValue
@@ -2219,59 +2893,6 @@ router.get('/viewRegionTargetMon/:id', authUser, authRole(ROLE.RD), async (req, 
             }
 
         poSumView.push({title: "AMOUNT OF LOANS", sortkey: 12, group: 2, isTitle: true})
-
-
-        const newLoanAmtView = await Budg_exec_sum.find({region: viewRegionCode, view_code: "NewLoanAmount"}, function (err, fndNewAmt) {
-
-            jan_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jan_budg; })
-            feb_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.feb_budg; })
-            mar_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.mar_budg; })
-            apr_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.apr_budg; })
-            may_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.may_budg; })
-            jun_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jun_budg; })
-            jul_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.jul_budg; })
-            aug_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.aug_budg; })
-            sep_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.sep_budg; })
-            oct_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.oct_budg; })
-            nov_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.nov_budg; })
-            dec_newAtotValue = _.sumBy(fndNewAmt, function(o) { return o.dec_budg; })
-
-            nwTotValueAmt = jan_newAtotValue + feb_newAtotValue + mar_newAtotValue + apr_newAtotValue + may_newAtotValue + jun_newAtotValue
-                    + jul_newAtotValue + aug_newAtotValue + sep_newAtotValue + oct_newAtotValue + nov_newAtotValue + dec_newAtotValue
-
-            poSumView.push({title: "Amount of New Loan", sortkey: 13, group: 2, jan_value : jan_newAtotValue, feb_value : feb_newAtotValue, mar_value : mar_newAtotValue, apr_value : apr_newAtotValue,
-                may_value : may_newAtotValue, jun_value : jun_newAtotValue, jul_value : jul_newAtotValue, aug_value : aug_newAtotValue,
-                sep_value : sep_newAtotValue, oct_value : oct_newAtotValue, nov_value : nov_newAtotValue, dec_value : dec_newAtotValue, tot_value : nwTotValueAmt
-            }) 
-            doneReadNLA = true
-
-        }) //, function (err, fndPOV) {
-
-        const oldLoanAmtView = await Budg_exec_sum.find({region: viewRegionCode, view_code: "ReLoanAmount"}, function (err, fndOldAmt) {
-
-            jan_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jan_budg; })
-            feb_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.feb_budg; })
-            mar_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.mar_budg; })
-            apr_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.apr_budg; })
-            may_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.may_budg; })
-            jun_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jun_budg; })
-            jul_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.jul_budg; })
-            aug_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.aug_budg; })
-            sep_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.sep_budg; })
-            oct_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.oct_budg; })
-            nov_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.nov_budg; })
-            dec_oldAtotValue = _.sumBy(fndOldAmt, function(o) { return o.dec_budg; })
-
-            olTotValueAmt = jan_oldAtotValue + feb_oldAtotValue + mar_oldAtotValue + apr_oldAtotValue + may_oldAtotValue + jun_oldAtotValue
-                    + jul_oldAtotValue + aug_oldAtotValue + sep_oldAtotValue + oct_oldAtotValue + nov_oldAtotValue + dec_oldAtotValue
-
-                    poSumView.push({title: "Amount of Reloan", sortkey: 14, group: 2, jan_value : jan_oldAtotValue, feb_value : feb_oldAtotValue, mar_value : mar_oldAtotValue, apr_value : apr_oldAtotValue,
-                        may_value : may_oldAtotValue, jun_value : jun_oldAtotValue, jul_value : jul_oldAtotValue, aug_value : aug_oldAtotValue,
-                        sep_value : sep_oldAtotValue, oct_value : oct_oldAtotValue, nov_value : nov_oldAtotValue, dec_value : dec_oldAtotValue, tot_value : olTotValueAmt
-                    }) 
-            doneReadOLA = true
-
-        }) //, function (err, fndPOV) {
 
         let jan_totColAmt = 0 
         let feb_totColAmt = 0 
@@ -3007,365 +3628,1351 @@ router.get('/viewRegionKRAMon/:id', authUser, authRole(ROLE.RD), async (req, res
     const vwloanType = await Loan_type.find({})
     const vwRegionBranches = await Branch.find({region:viewRegionCode})
     const vwRegionAreas = await Area.find({region:viewRegionCode})
-    const poBudgExecTotReach = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotClientOutreach"})
-    const poBudgExecTotLonAmt = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotLoanAmt"})
+    const areaCtrBudgDet = await Center_budget_det.find({region: viewRegionCode, target_year: budgetYear})
+
+    const poBudgExecTotReach = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotClientOutreach", target_year: budgetYear})
+    const poBudgExecTotLonAmt = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotLoanAmt", target_year: budgetYear})
 
     console.log(vwRegionAreas)
-
-            let begBalOldClient = 0
-                let centerCntBegBal = 0
-                let jan_TotCliOutReach = 0
-                let feb_TotCliOutReach = 0
-                let mar_TotCliOutReach = 0
-                let apr_TotCliOutReach = 0
-                let may_TotCliOutReach = 0
-                let jun_TotCliOutReach = 0
-                let jul_TotCliOutReach = 0
-                let aug_TotCliOutReach = 0
-                let sep_TotCliOutReach = 0
-                let oct_TotCliOutReach = 0
-                let nov_TotCliOutReach = 0
-                let dec_TotCliOutReach = 0
-                let tot_TotCliOutReach = 0
-
-                let jan_TotalCliOutReach = 0
-                let feb_TotalCliOutReach = 0
-                let mar_TotalCliOutReach = 0
-                let apr_TotalCliOutReach = 0
-                let may_TotalCliOutReach = 0
-                let jun_TotalCliOutReach = 0
-                let jul_TotalCliOutReach = 0
-                let aug_TotalCliOutReach = 0
-                let sep_TotalCliOutReach = 0
-                let oct_TotalCliOutReach = 0
-                let nov_TotalCliOutReach = 0
-                let dec_TotalCliOutReach = 0
-
-
-            let janTotalAmtLoan = 0
-            let febTotalAmtLoan = 0
-            let marTotalAmtLoan = 0
-            let aprTotalAmtLoan = 0
-            let mayTotalAmtLoan = 0
-            let junTotalAmtLoan = 0
-            let julTotalAmtLoan = 0
-            let augTotalAmtLoan = 0
-            let sepTotalAmtLoan = 0
-            let octTotalAmtLoan = 0
-            let novTotalAmtLoan = 0
-            let decTotalAmtLoan = 0
     
-                let jan_areaTotCliOutReach = 0
-                let feb_areaTotCliOutReach = 0
-                let mar_areaTotCliOutReach = 0
-                let apr_areaTotCliOutReach = 0
-                let may_areaTotCliOutReach = 0
-                let jun_areaTotCliOutReach = 0
-                let jul_areaTotCliOutReach = 0
-                let aug_areaTotCliOutReach = 0
-                let sep_areaTotCliOutReach = 0
-                let oct_areaTotCliOutReach = 0
-                let nov_areaTotCliOutReach = 0
-                let dec_areaTotCliOutReach = 0
-
-
-            let janAreaTotAmtLoan = 0
-            let febAreaTotAmtLoan = 0
-            let marAreaTotAmtLoan = 0
-            let aprAreaTotAmtLoan = 0
-            let mayAreaTotAmtLoan = 0
-            let junAreaTotAmtLoan = 0
-            let julAreaTotAmtLoan = 0
-            let augAreaTotAmtLoan = 0
-            let sepAreaTotAmtLoan = 0
-            let octAreaTotAmtLoan = 0
-            let novAreaTotAmtLoan = 0
-            let decAreaTotAmtLoan = 0
+                    let centerCntBegBal = 0
     
-            let janTotAmtLoan = 0
-            let febTotAmtLoan = 0
-            let marTotAmtLoan = 0
-            let aprTotAmtLoan = 0
-            let mayTotAmtLoan = 0
-            let junTotAmtLoan = 0
-            let julTotAmtLoan = 0
-            let augTotAmtLoan = 0
-            let sepTotAmtLoan = 0
-            let octTotAmtLoan = 0
-            let novTotAmtLoan = 0
-            let decTotAmtLoan = 0
-
-            let totTotalAmtLoan = 0
-            let totTotAmtLoan = 0
-            let totAreaTotAmtLoan = 0
-
-            let doneReadTotLonAmt = false
-            let doneReadTotOutreach = false
+                    let jan_TotalCliOutReach = 0
+                    let feb_TotalCliOutReach = 0
+                    let mar_TotalCliOutReach = 0
+                    let apr_TotalCliOutReach = 0
+                    let may_TotalCliOutReach = 0
+                    let jun_TotalCliOutReach = 0
+                    let jul_TotalCliOutReach = 0
+                    let aug_TotalCliOutReach = 0
+                    let sep_TotalCliOutReach = 0
+                    let oct_TotalCliOutReach = 0
+                    let nov_TotalCliOutReach = 0
+                    let dec_TotalCliOutReach = 0
     
-            poSumView = [ ]
-    
-            try {
-    
-            //  Pre-determine if items is already existed or saved in Budg_exec_sum Collection
-    
-            // const poBudgExecNumCenters = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotClientOutreach"}, function (err, fndTotCliOutreach) {
-            //         fndAreaBudgExecTotOutreach = fndTotCliOutreach
-            // })
+                    let jan_TotalAmtDisburse = 0
+                    let feb_TotalAmtDisburse = 0
+                    let mar_TotalAmtDisburse = 0
+                    let apr_TotalAmtDisburse = 0
+                    let may_TotalAmtDisburse = 0
+                    let jun_TotalAmtDisburse = 0
+                    let jul_TotalAmtDisburse = 0
+                    let aug_TotalAmtDisburse = 0
+                    let sep_TotalAmtDisburse = 0
+                    let oct_TotalAmtDisburse = 0
+                    let nov_TotalAmtDisburse = 0
+                    let dec_TotalAmtDisburse = 0
 
-            // const poBudgExecTotLonAmt = await Budg_exec_sum.find({region: viewRegionCode, view_code: "TotLoanAmt"}, function (err, fndTotLonAmt) {
-            //     fndUnitBudgExecTotLonAmt = fndTotLonAmt
-            // })
-            if (isNull(poBudgExecTotReach)) {
-
-                doneReadTotOutreach = true
-            }
-
-            if (isNull(poBudgExecTotLonAmt)) {
-
-                doneReadTotLonAmt = true
-            }
-
-            let loopCtr = 20
-
-            poSumView.push({title: "OUTREACH", sortkey: 1, group: 1, isTitle: true})
-
-            poSumView.push({title: "LOAN DISBURSEMENT", sortkey: loopCtr, group: 2, isTitle: true})
-
-            let ctr = 1
-
-                vwRegionAreas.forEach( vwAreas => {
-
-                    const areaDesc = vwAreas.area_desc
-                    const areaCode = vwAreas.area
-                    
-                    ctr = ctr + 1
-
-                    poSumView.push({title: areaDesc, sortkey: ctr, group: 2, isTitle: true})
-                    
-                    poSumView.push({title: areaDesc, sortkey: loopCtr + ctr, group: 2, isTitle: true})
-
-                    vwRegionBranches.forEach(vwBranches => {
-
-                        const branchDesc = vwBranches.branch_desc
-                        const branchCode = vwBranches.branch
-
-                        ctr = ctr + 1
-
-                        if (vwBranches.area === areaCode) {
-
-                            poBudgExecTotReach.forEach(TotCliOutreach => {
-
-                                if (TotCliOutreach.branch === branchCode) {
-                                    centerCntBegBal = centerCntBegBal + TotCliOutreach.beg_bal
-                                    jan_TotCliOutReach = jan_TotCliOutReach + TotCliOutreach.jan_budg
-                                    feb_TotCliOutReach = feb_TotCliOutReach + TotCliOutreach.feb_budg
-                                    mar_TotCliOutReach = mar_TotCliOutReach + TotCliOutreach.mar_budg
-                                    apr_TotCliOutReach = apr_TotCliOutReach + TotCliOutreach.apr_budg
-                                    may_TotCliOutReach = may_TotCliOutReach + TotCliOutreach.may_budg
-                                    jun_TotCliOutReach = jun_TotCliOutReach + TotCliOutreach.jun_budg
-                                    jul_TotCliOutReach = jul_TotCliOutReach + TotCliOutreach.jul_budg
-                                    aug_TotCliOutReach = aug_TotCliOutReach + TotCliOutreach.aug_budg
-                                    sep_TotCliOutReach = sep_TotCliOutReach + TotCliOutreach.sep_budg
-                                    oct_TotCliOutReach = oct_TotCliOutReach + TotCliOutreach.oct_budg
-                                    nov_TotCliOutReach = nov_TotCliOutReach + TotCliOutreach.nov_budg
-                                    dec_TotCliOutReach = dec_TotCliOutReach + TotCliOutreach.dec_budg
-    
-                                    jan_areaTotCliOutReach = jan_areaTotCliOutReach + TotCliOutreach.jan_budg
-                                    feb_areaTotCliOutReach = feb_areaTotCliOutReach + TotCliOutreach.feb_budg
-                                    mar_areaTotCliOutReach = mar_areaTotCliOutReach + TotCliOutreach.mar_budg
-                                    apr_areaTotCliOutReach = apr_areaTotCliOutReach + TotCliOutreach.apr_budg
-                                    may_areaTotCliOutReach = may_areaTotCliOutReach + TotCliOutreach.may_budg
-                                    jun_areaTotCliOutReach = jun_areaTotCliOutReach + TotCliOutreach.jun_budg
-                                    jul_areaTotCliOutReach = jul_areaTotCliOutReach + TotCliOutreach.jul_budg
-                                    aug_areaTotCliOutReach = aug_areaTotCliOutReach + TotCliOutreach.aug_budg
-                                    sep_areaTotCliOutReach = sep_areaTotCliOutReach + TotCliOutreach.sep_budg
-                                    oct_areaTotCliOutReach = oct_areaTotCliOutReach + TotCliOutreach.oct_budg
-                                    nov_areaTotCliOutReach = nov_areaTotCliOutReach + TotCliOutreach.nov_budg
-                                    dec_areaTotCliOutReach = dec_areaTotCliOutReach + TotCliOutreach.dec_budg
-            
-                                    jan_TotalCliOutReach = jan_TotalCliOutReach + TotCliOutreach.jan_budg
-                                    feb_TotalCliOutReach = feb_TotalCliOutReach + TotCliOutreach.feb_budg
-                                    mar_TotalCliOutReach = mar_TotalCliOutReach + TotCliOutreach.mar_budg
-                                    apr_TotalCliOutReach = apr_TotalCliOutReach + TotCliOutreach.apr_budg
-                                    may_TotalCliOutReach = may_TotalCliOutReach + TotCliOutreach.may_budg
-                                    jun_TotalCliOutReach = jun_TotalCliOutReach + TotCliOutreach.jun_budg
-                                    jul_TotalCliOutReach = jul_TotalCliOutReach + TotCliOutreach.jul_budg
-                                    aug_TotalCliOutReach = aug_TotalCliOutReach + TotCliOutreach.aug_budg
-                                    sep_TotalCliOutReach = sep_TotalCliOutReach + TotCliOutreach.sep_budg
-                                    oct_TotalCliOutReach = oct_TotalCliOutReach + TotCliOutreach.oct_budg
-                                    nov_TotalCliOutReach = nov_TotalCliOutReach + TotCliOutreach.nov_budg
-                                    dec_TotalCliOutReach = dec_TotalCliOutReach + TotCliOutreach.dec_budg
-                        
-                                }
-                            })
-                            
-                            poSumView.push({title: branchDesc, sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_TotCliOutReach, feb_value: feb_TotCliOutReach, mar_value: mar_TotCliOutReach,
-                                apr_value: apr_TotCliOutReach, may_value: may_TotCliOutReach, jun_value: jun_TotCliOutReach, jul_value: jul_TotCliOutReach, aug_value: aug_TotCliOutReach,
-                                sep_value: sep_TotCliOutReach, oct_value: oct_TotCliOutReach, nov_value: nov_TotCliOutReach, dec_value: dec_TotCliOutReach, tot_value : dec_TotCliOutReach
-                            })
-            
-                            doneReadTotOutreach = true
-            
-                            poBudgExecTotLonAmt.forEach(TotAmtLon => {
+                let jan_brnTotAmtDisburse = 0
+                let feb_brnTotAmtDisburse = 0
+                let mar_brnTotAmtDisburse = 0
+                let apr_brnTotAmtDisburse = 0
+                let may_brnTotAmtDisburse = 0
+                let jun_brnTotAmtDisburse = 0
+                let jul_brnTotAmtDisburse = 0
+                let aug_brnTotAmtDisburse = 0
+                let sep_brnTotAmtDisburse = 0
+                let oct_brnTotAmtDisburse = 0
+                let nov_brnTotAmtDisburse = 0
+                let dec_brnTotAmtDisburse = 0
         
-                                if (TotAmtLon.branch === branchCode) { 
-                                    janTotAmtLoan = janTotAmtLoan + TotAmtLon.jan_budg
-                                    febTotAmtLoan = febTotAmtLoan + TotAmtLon.feb_budg
-                                    marTotAmtLoan = marTotAmtLoan + TotAmtLon.mar_budg
-                                    aprTotAmtLoan = aprTotAmtLoan + TotAmtLon.apr_budg
-                                    mayTotAmtLoan = mayTotAmtLoan + TotAmtLon.may_budg
-                                    junTotAmtLoan = junTotAmtLoan + TotAmtLon.jun_budg
-                                    julTotAmtLoan = julTotAmtLoan + TotAmtLon.jul_budg
-                                    augTotAmtLoan = augTotAmtLoan + TotAmtLon.aug_budg
-                                    sepTotAmtLoan = sepTotAmtLoan + TotAmtLon.sep_budg
-                                    octTotAmtLoan = octTotAmtLoan + TotAmtLon.oct_budg
-                                    novTotAmtLoan = novTotAmtLoan + TotAmtLon.nov_budg
-                                    decTotAmtLoan = decTotAmtLoan + TotAmtLon.dec_budg
-                                        
-                                    janAreaTotAmtLoan = janAreaTotAmtLoan + TotAmtLon.jan_budg
-                                    febAreaTotAmtLoan = febAreaTotAmtLoan + TotAmtLon.feb_budg
-                                    marAreaTotAmtLoan = marAreaTotAmtLoan + TotAmtLon.mar_budg
-                                    aprAreaTotAmtLoan = aprAreaTotAmtLoan + TotAmtLon.apr_budg
-                                    mayAreaTotAmtLoan = mayAreaTotAmtLoan + TotAmtLon.may_budg
-                                    junAreaTotAmtLoan = junAreaTotAmtLoan + TotAmtLon.jun_budg
-                                    julAreaTotAmtLoan = julAreaTotAmtLoan + TotAmtLon.jul_budg
-                                    augAreaTotAmtLoan = augAreaTotAmtLoan + TotAmtLon.aug_budg
-                                    sepAreaTotAmtLoan = sepAreaTotAmtLoan + TotAmtLon.sep_budg
-                                    octAreaTotAmtLoan = octAreaTotAmtLoan + TotAmtLon.oct_budg
-                                    novAreaTotAmtLoan = novAreaTotAmtLoan + TotAmtLon.nov_budg
-                                    decAreaTotAmtLoan = decAreaTotAmtLoan + TotAmtLon.dec_budg
-                                    
-                                    janTotalAmtLoan = janTotalAmtLoan + TotAmtLon.jan_budg
-                                    febTotalAmtLoan = febTotalAmtLoan + TotAmtLon.feb_budg
-                                    marTotalAmtLoan = marTotalAmtLoan + TotAmtLon.mar_budg
-                                    aprTotalAmtLoan = aprTotalAmtLoan + TotAmtLon.apr_budg
-                                    mayTotalAmtLoan = mayTotalAmtLoan + TotAmtLon.may_budg
-                                    junTotalAmtLoan = junTotalAmtLoan + TotAmtLon.jun_budg
-                                    julTotalAmtLoan = julTotalAmtLoan + TotAmtLon.jul_budg
-                                    augTotalAmtLoan = augTotalAmtLoan + TotAmtLon.aug_budg
-                                    sepTotalAmtLoan = sepTotalAmtLoan + TotAmtLon.sep_budg
-                                    octTotalAmtLoan = octTotalAmtLoan + TotAmtLon.oct_budg
-                                    novTotalAmtLoan = novTotalAmtLoan + TotAmtLon.nov_budg
-                                    decTotalAmtLoan = decTotalAmtLoan + TotAmtLon.dec_budg
-                                    
-                                }
-                            })
-            
-                            totTotAmtLoan = janTotAmtLoan + febTotAmtLoan + marTotAmtLoan + aprTotAmtLoan + mayTotAmtLoan + junTotAmtLoan + julTotAmtLoan + augTotAmtLoan +
-                                sepTotAmtLoan + octTotAmtLoan + novTotAmtLoan + decTotAmtLoan
-            
-                            poSumView.push({title: branchDesc, sortkey: loopCtr + ctr, group: 2, jan_value : janTotAmtLoan, feb_value : febTotAmtLoan, mar_value : marTotAmtLoan, 
-                                apr_value : aprTotAmtLoan, may_value : mayTotAmtLoan, jun_value : junTotAmtLoan, jul_value : julTotAmtLoan, 
-                                aug_value : augTotAmtLoan, sep_value : sepTotAmtLoan, oct_value : octTotAmtLoan, nov_value : novTotAmtLoan, dec_value : decTotAmtLoan, tot_value : totTotAmtLoan
-                            })
-            
-                            doneReadTotLonAmt = true
-            
-                             centerCntBegBal = 0
-                             jan_TotCliOutReach = 0
-                             feb_TotCliOutReach = 0
-                             mar_TotCliOutReach = 0
-                             apr_TotCliOutReach = 0
-                             may_TotCliOutReach = 0
-                             jun_TotCliOutReach = 0
-                             jul_TotCliOutReach = 0
-                             aug_TotCliOutReach = 0
-                             sep_TotCliOutReach = 0
-                             oct_TotCliOutReach = 0
-                             nov_TotCliOutReach = 0
-                             dec_TotCliOutReach = 0
-                             tot_TotCliOutReach = 0
-                
-                             janTotAmtLoan = 0
-                             febTotAmtLoan = 0
-                             marTotAmtLoan = 0
-                             aprTotAmtLoan = 0
-                             mayTotAmtLoan = 0
-                             junTotAmtLoan = 0
-                             julTotAmtLoan = 0
-                             augTotAmtLoan = 0
-                             sepTotAmtLoan = 0
-                             octTotAmtLoan = 0
-                             novTotAmtLoan = 0
-                             decTotAmtLoan = 0
+                let jan_brnNewLoanAmt = 0
+                let feb_brnNewLoanAmt = 0
+                let mar_brnNewLoanAmt = 0
+                let apr_brnNewLoanAmt = 0
+                let may_brnNewLoanAmt = 0
+                let jun_brnNewLoanAmt = 0
+                let jul_brnNewLoanAmt = 0
+                let aug_brnNewLoanAmt = 0
+                let sep_brnNewLoanAmt = 0
+                let oct_brnNewLoanAmt = 0
+                let nov_brnNewLoanAmt = 0
+                let dec_brnNewLoanAmt = 0
     
-                        }
-                
-                    }) // End of regionBranches loop
-
-                    poSumView.push({title: "AREA TOTAL: " + areaCode, sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_areaTotCliOutReach, feb_value: feb_areaTotCliOutReach, mar_value: mar_areaTotCliOutReach,
-                        apr_value: apr_areaTotCliOutReach, may_value: may_areaTotCliOutReach, jun_value: jun_areaTotCliOutReach, jul_value: jul_areaTotCliOutReach, aug_value: aug_areaTotCliOutReach,
-                        sep_value: sep_areaTotCliOutReach, oct_value: oct_areaTotCliOutReach, nov_value: nov_areaTotCliOutReach, dec_value: dec_areaTotCliOutReach, tot_value : dec_areaTotCliOutReach
-                    })
+                let jan_brnOldLoanAmt = 0
+                let feb_brnOldLoanAmt = 0
+                let mar_brnOldLoanAmt = 0
+                let apr_brnOldLoanAmt = 0
+                let may_brnOldLoanAmt = 0
+                let jun_brnOldLoanAmt = 0
+                let jul_brnOldLoanAmt = 0
+                let aug_brnOldLoanAmt = 0
+                let sep_brnOldLoanAmt = 0
+                let oct_brnOldLoanAmt = 0
+                let nov_brnOldLoanAmt = 0
+                let dec_brnOldLoanAmt = 0
     
-                    totAreaTotAmtLoan = janAreaTotAmtLoan + febAreaTotAmtLoan + marAreaTotAmtLoan + aprAreaTotAmtLoan + mayAreaTotAmtLoan + junAreaTotAmtLoan + julAreaTotAmtLoan + augAreaTotAmtLoan +
-                        sepAreaTotAmtLoan + octAreaTotAmtLoan + novAreaTotAmtLoan + decAreaTotAmtLoan
-
-                    poSumView.push({title: "AREA TOTAL: " + areaCode, sortkey: loopCtr + ctr, group: 2, jan_value : janAreaTotAmtLoan, feb_value : febAreaTotAmtLoan, mar_value : marAreaTotAmtLoan, 
-                        apr_value : aprAreaTotAmtLoan, may_value : mayAreaTotAmtLoan, jun_value : junAreaTotAmtLoan, jul_value : julAreaTotAmtLoan, 
-                        aug_value : augAreaTotAmtLoan, sep_value : sepAreaTotAmtLoan, oct_value : octAreaTotAmtLoan, nov_value : novAreaTotAmtLoan, dec_value : decAreaTotAmtLoan, tot_value : totAreaTotAmtLoan
-                    })
-
-                    jan_areaTotCliOutReach = 0
-                    feb_areaTotCliOutReach = 0
-                    mar_areaTotCliOutReach = 0
-                    apr_areaTotCliOutReach = 0
-                    may_areaTotCliOutReach = 0
-                    jun_areaTotCliOutReach = 0
-                    jul_areaTotCliOutReach = 0
-                    aug_areaTotCliOutReach = 0
-                    sep_areaTotCliOutReach = 0
-                    oct_areaTotCliOutReach = 0
-                    nov_areaTotCliOutReach = 0
-                    dec_areaTotCliOutReach = 0    
+                let tot_brnTotAmtDisburse = 0
     
-                    janAreaTotAmtLoan = 0
-                    febAreaTotAmtLoan = 0
-                    marAreaTotAmtLoan = 0
-                    aprAreaTotAmtLoan = 0
-                    mayAreaTotAmtLoan = 0
-                    junAreaTotAmtLoan = 0
-                    julAreaTotAmtLoan = 0
-                    augAreaTotAmtLoan = 0
-                    sepAreaTotAmtLoan = 0
-                    octAreaTotAmtLoan = 0
-                    novAreaTotAmtLoan = 0
-                    decAreaTotAmtLoan = 0
+                    let jan_TotOldClient = 0
+                    let feb_TotOldClient = 0
+                    let mar_TotOldClient = 0
+                    let apr_TotOldClient = 0
+                    let may_TotOldClient = 0
+                    let jun_TotOldClient = 0
+                    let jul_TotOldClient = 0
+                    let aug_TotOldClient = 0
+                    let sep_TotOldClient = 0
+                    let oct_TotOldClient = 0
+                    let nov_TotOldClient = 0
+                    let dec_TotOldClient = 0
+    
+                    let jan_TotNewClient = 0
+                    let feb_TotNewClient = 0
+                    let mar_TotNewClient = 0
+                    let apr_TotNewClient = 0
+                    let may_TotNewClient = 0
+                    let jun_TotNewClient = 0
+                    let jul_TotNewClient = 0
+                    let aug_TotNewClient = 0
+                    let sep_TotNewClient = 0
+                    let oct_TotNewClient = 0
+                    let nov_TotNewClient = 0
+                    let dec_TotNewClient = 0
+    
+                    let jan_TotResClient = 0
+                    let feb_TotResClient = 0
+                    let mar_TotResClient = 0
+                    let apr_TotResClient = 0
+                    let may_TotResClient = 0
+                    let jun_TotResClient = 0
+                    let jul_TotResClient = 0
+                    let aug_TotResClient = 0
+                    let sep_TotResClient = 0
+                    let oct_TotResClient = 0
+                    let nov_TotResClient = 0
+                    let dec_TotResClient = 0
+    
+                    let jan_TotNewLoanAmt = 0
+                    let feb_TotNewLoanAmt = 0
+                    let mar_TotNewLoanAmt = 0
+                    let apr_TotNewLoanAmt = 0
+                    let may_TotNewLoanAmt = 0
+                    let jun_TotNewLoanAmt = 0
+                    let jul_TotNewLoanAmt = 0
+                    let aug_TotNewLoanAmt = 0
+                    let sep_TotNewLoanAmt = 0
+                    let oct_TotNewLoanAmt = 0
+                    let nov_TotNewLoanAmt = 0
+                    let dec_TotNewLoanAmt = 0
+    
+                    let jan_TotOldLoanAmt = 0
+                    let feb_TotOldLoanAmt = 0
+                    let mar_TotOldLoanAmt = 0
+                    let apr_TotOldLoanAmt = 0
+                    let may_TotOldLoanAmt = 0
+                    let jun_TotOldLoanAmt = 0
+                    let jul_TotOldLoanAmt = 0
+                    let aug_TotOldLoanAmt = 0
+                    let sep_TotOldLoanAmt = 0
+                    let oct_TotOldLoanAmt = 0
+                    let nov_TotOldLoanAmt = 0
+                    let dec_TotOldLoanAmt = 0
+    
+                let jan_vwLonTypNewCli = 0
+                let feb_vwLonTypNewCli = 0
+                let mar_vwLonTypNewCli = 0
+                let apr_vwLonTypNewCli = 0
+                let may_vwLonTypNewCli = 0
+                let jun_vwLonTypNewCli = 0
+                let jul_vwLonTypNewCli = 0
+                let aug_vwLonTypNewCli = 0
+                let sep_vwLonTypNewCli = 0
+                let oct_vwLonTypNewCli = 0
+                let nov_vwLonTypNewCli = 0
+                let dec_vwLonTypNewCli = 0
+    
+                let jan_vwLonTypOldCli = 0
+                let feb_vwLonTypOldCli = 0
+                let mar_vwLonTypOldCli = 0
+                let apr_vwLonTypOldCli = 0
+                let may_vwLonTypOldCli = 0
+                let jun_vwLonTypOldCli = 0
+                let jul_vwLonTypOldCli = 0
+                let aug_vwLonTypOldCli = 0
+                let sep_vwLonTypOldCli = 0
+                let oct_vwLonTypOldCli = 0
+                let nov_vwLonTypOldCli = 0
+                let dec_vwLonTypOldCli = 0
+    
+                let jan_vwLonTypNewAmt = 0
+                let feb_vwLonTypNewAmt = 0
+                let mar_vwLonTypNewAmt = 0
+                let apr_vwLonTypNewAmt = 0
+                let may_vwLonTypNewAmt = 0
+                let jun_vwLonTypNewAmt = 0
+                let jul_vwLonTypNewAmt = 0
+                let aug_vwLonTypNewAmt = 0
+                let sep_vwLonTypNewAmt = 0
+                let oct_vwLonTypNewAmt = 0
+                let nov_vwLonTypNewAmt = 0
+                let dec_vwLonTypNewAmt = 0
+    
+                let jan_vwLonTypOldAmt = 0
+                let feb_vwLonTypOldAmt = 0
+                let mar_vwLonTypOldAmt = 0
+                let apr_vwLonTypOldAmt = 0
+                let may_vwLonTypOldAmt = 0
+                let jun_vwLonTypOldAmt = 0
+                let jul_vwLonTypOldAmt = 0
+                let aug_vwLonTypOldAmt = 0
+                let sep_vwLonTypOldAmt = 0
+                let oct_vwLonTypOldAmt = 0
+                let nov_vwLonTypOldAmt = 0
+                let dec_vwLonTypOldAmt = 0
+    
+                let jan_vwLonTypResCli = 0
+                let feb_vwLonTypResCli = 0
+                let mar_vwLonTypResCli = 0
+                let apr_vwLonTypResCli = 0
+                let may_vwLonTypResCli = 0
+                let jun_vwLonTypResCli = 0
+                let jul_vwLonTypResCli = 0
+                let aug_vwLonTypResCli = 0
+                let sep_vwLonTypResCli = 0
+                let oct_vwLonTypResCli = 0
+                let nov_vwLonTypResCli = 0
+                let dec_vwLonTypResCli = 0
+                    let tot_vwLonTypNewCli = 0
+                    let tot_vwLonTypOldCli = 0
+                    let tot_vwLonTypNewAmt = 0
+                    let tot_vwLonTypOldAmt = 0
+    
+                    let jan_brnOldCliTot = 0
+                    let feb_brnOldCliTot = 0
+                    let mar_brnOldCliTot = 0
+                    let apr_brnOldCliTot = 0
+                    let may_brnOldCliTot = 0
+                    let jun_brnOldCliTot = 0
+                    let jul_brnOldCliTot = 0
+                    let aug_brnOldCliTot = 0
+                    let sep_brnOldCliTot = 0
+                    let oct_brnOldCliTot = 0
+                    let nov_brnOldCliTot = 0
+                    let dec_brnOldCliTot = 0
+        
+                    let jan_brnNewCliTot = 0
+                    let feb_brnNewCliTot = 0
+                    let mar_brnNewCliTot = 0
+                    let apr_brnNewCliTot = 0
+                    let may_brnNewCliTot = 0
+                    let jun_brnNewCliTot = 0
+                    let jul_brnNewCliTot = 0
+                    let aug_brnNewCliTot = 0
+                    let sep_brnNewCliTot = 0
+                    let oct_brnNewCliTot = 0
+                    let nov_brnNewCliTot = 0
+                    let dec_brnNewCliTot = 0
+        
+                    let jan_totNumClients = 0 
+                    let feb_totNumClients = 0
+                    let mar_totNumClients = 0
+                    let apr_totNumClients = 0
+                    let may_totNumClients = 0
+                    let jun_totNumClients = 0
+                    let jul_totNumClients = 0
+                    let aug_totNumClients = 0
+                    let sep_totNumClients = 0
+                    let oct_totNumClients = 0
+                    let nov_totNumClients = 0
+                    let dec_totNumClients = 0
+    
+                    let lnTypBegBalOldClient = 0
+                    let branBegBalOldClient = 0
+                    let totBegBalOldClient = 0
+    
+                let doneReadTotLonAmt = false
+                let doneReadTotOutreach = false
+                let doneReadBranLnType = false
+                let doneReadLnType = false
+                let ctr = 20
+                let ctrPerLonType = 60
+                let ctrAreaOutReach = 1
+                let ctrAreaDisb = 40
+                let totalCtr = 2
+                let ctrPerLonTypGrp = 1
+                let areaCounter1 = 1
+
+                poSumView = [ ]
+    
+                let areaPerLnTypView = []
+                const branchCounter = vwRegionBranches.length
+        try {
                     
-
-                }) // End of regionAreas loop
-
-                if (doneReadTotOutreach && doneReadTotLonAmt) { 
-
-                    poSumView.push({title: "TOTAL OUTREACH", sortkey: ctr, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_TotalCliOutReach, feb_value: feb_TotalCliOutReach, mar_value: mar_TotalCliOutReach,
-                        apr_value: apr_TotalCliOutReach, may_value: may_TotalCliOutReach, jun_value: jun_TotalCliOutReach, jul_value: jul_TotalCliOutReach, aug_value: aug_TotalCliOutReach,
-                        sep_value: sep_TotalCliOutReach, oct_value: oct_TotalCliOutReach, nov_value: nov_TotalCliOutReach, dec_value: dec_TotalCliOutReach, tot_value : dec_TotalCliOutReach
-                    })
-
-                    totTotalAmtLoan = janTotalAmtLoan + febTotalAmtLoan + marTotalAmtLoan + aprTotalAmtLoan + mayTotalAmtLoan + junTotalAmtLoan + julTotalAmtLoan + augTotalAmtLoan +
-                    sepTotalAmtLoan + octTotalAmtLoan + novTotalAmtLoan + decTotalAmtLoan
+                    console.log(poBudgExecTotReach)
     
-                    poSumView.push({title: "TOTAL DISBURSEMENT", sortkey: loopCtr + ctr, group: 2, jan_value : janTotalAmtLoan, feb_value : febTotalAmtLoan, mar_value : marTotalAmtLoan, 
-                        apr_value : aprTotalAmtLoan, may_value : mayTotalAmtLoan, jun_value : junTotalAmtLoan, jul_value : julTotalAmtLoan, 
-                        aug_value : augTotalAmtLoan, sep_value : sepTotalAmtLoan, oct_value : octTotalAmtLoan, nov_value : novTotalAmtLoan, dec_value : decTotalAmtLoan, tot_value : totTotalAmtLoan
-                    })
+                    if (isNull(poBudgExecTotReach)) {
     
-                    poSumView.sort( function (a,b) {
-                        if ( a.sortkey < b.sortkey ){
-                            return -1;
-                        }
-                        if ( a.sortkey > b.sortkey ){
-                            return 1;
-                        }
-                        return 0;
-                    })
+                        doneReadTotOutreach = true
+                    }
+    
+                    if (isNull(poBudgExecTotLonAmt)) {
+    
+                        doneReadTotLonAmt = true
+                    }
+    
+                    poSumView.push({title: "REGION OUTREACH", sortkey: 1, group: 1, isTitle: true})
+    
+                    poSumView.push({title: "REGION DISBURSEMENT", sortkey: ctrAreaDisb , group: 2, isTitle: true})
+
+                    vwRegionAreas.forEach( regionArea => {
+                        const viewAreaCode = regionArea.area
+                        const areaDesc = _.trim(regionArea.area_desc)
+
+                        poSumView.push({title: areaDesc, sortkey: areaCounter1, group: 1, isTitle: true})
+
+                        poSumView.push({title: areaDesc, sortkey: ctrAreaDisb , group: 2, isTitle: true})
+
+                        let totAreaBalOldClient = 0
+
+                        let jan_areaTotCliOutReach = 0
+                        let feb_areaTotCliOutReach = 0
+                        let mar_areaTotCliOutReach = 0
+                        let apr_areaTotCliOutReach = 0
+                        let may_areaTotCliOutReach = 0
+                        let jun_areaTotCliOutReach = 0
+                        let jul_areaTotCliOutReach = 0
+                        let aug_areaTotCliOutReach = 0
+                        let sep_areaTotCliOutReach = 0
+                        let oct_areaTotCliOutReach = 0
+                        let nov_areaTotCliOutReach = 0
+                        let dec_areaTotCliOutReach = 0
+        
+                        let jan_areaTotAmtDisburse = 0
+                        let feb_areaTotAmtDisburse = 0
+                        let mar_areaTotAmtDisburse = 0
+                        let apr_areaTotAmtDisburse = 0
+                        let may_areaTotAmtDisburse = 0
+                        let jun_areaTotAmtDisburse = 0
+                        let jul_areaTotAmtDisburse = 0
+                        let aug_areaTotAmtDisburse = 0
+                        let sep_areaTotAmtDisburse = 0
+                        let oct_areaTotAmtDisburse = 0
+                        let nov_areaTotAmtDisburse = 0
+                        let dec_areaTotAmtDisburse = 0
+    
+                        vwRegionBranches.forEach ( areaBranch => {         //SCAN the Branches
+                            const brnDesc = areaBranch.branch_desc
+
+                            if (areaBranch.area === viewAreaCode) {
+                                areaCounter1 = areaCounter1 + 1
+
+                                const brnCode = areaBranch.branch
+
+                                vwloanType.forEach( lonType => {            // SCAN the Loan Types
+        
+                                    const scanvwloanType = lonType.title
+                                    ctr = ctr + 1
+            
+                                    // poSumView.push({title: scanvwloanType, sortkey: ctrPerLonType , group: 2, isTitle: true})
+            
+                                    ctrPerLonType = ctrPerLonType + 1
+            
+                                    if (ctrPerLonTypGrp == 1) {
+                                        ctrPerLonTypGrp = 2
+                                    } else {
+                                        ctrPerLonTypGrp = 1
+                                    }
+                
+                                    areaCtrBudgDet.forEach(areaBudgetDets => {      // SCAN Center_Budget_dets for the Area
+                
+                                        const areaViewCode = areaBudgetDets.view_code
+                                        const areaLnType = areaBudgetDets.loan_type
+                                        const areaBranCode = areaBudgetDets.branch
+                
+                                        if (areaBranCode === brnCode && areaLnType === scanvwloanType) {
+                
+                                            switch (areaViewCode) {
+                                                case "NewLoanClient":
+            
+                                                        jan_vwLonTypNewCli = jan_vwLonTypNewCli + areaBudgetDets.jan_budg
+                                                        feb_vwLonTypNewCli = feb_vwLonTypNewCli + areaBudgetDets.feb_budg
+                                                        mar_vwLonTypNewCli = mar_vwLonTypNewCli + areaBudgetDets.mar_budg
+                                                        apr_vwLonTypNewCli = apr_vwLonTypNewCli + areaBudgetDets.apr_budg
+                                                        may_vwLonTypNewCli = may_vwLonTypNewCli + areaBudgetDets.may_budg
+                                                        jun_vwLonTypNewCli = jun_vwLonTypNewCli + areaBudgetDets.jun_budg
+                                                        jul_vwLonTypNewCli = jul_vwLonTypNewCli + areaBudgetDets.jul_budg
+                                                        aug_vwLonTypNewCli = aug_vwLonTypNewCli + areaBudgetDets.aug_budg
+                                                        sep_vwLonTypNewCli = sep_vwLonTypNewCli + areaBudgetDets.sep_budg
+                                                        oct_vwLonTypNewCli = oct_vwLonTypNewCli + areaBudgetDets.oct_budg
+                                                        nov_vwLonTypNewCli = nov_vwLonTypNewCli + areaBudgetDets.nov_budg
+                                                        dec_vwLonTypNewCli = dec_vwLonTypNewCli + areaBudgetDets.dec_budg                        
+                        
+                                                    // if (areaLnType === "Group Loan" || areaLnType === "Agricultural Loan") {
+                                                        jan_brnNewCliTot = jan_brnNewCliTot + areaBudgetDets.jan_budg
+                                                        feb_brnNewCliTot = feb_brnNewCliTot + areaBudgetDets.feb_budg
+                                                        mar_brnNewCliTot = mar_brnNewCliTot + areaBudgetDets.mar_budg
+                                                        apr_brnNewCliTot = apr_brnNewCliTot + areaBudgetDets.apr_budg
+                                                        may_brnNewCliTot = may_brnNewCliTot + areaBudgetDets.may_budg
+                                                        jun_brnNewCliTot = jun_brnNewCliTot + areaBudgetDets.jun_budg
+                                                        jul_brnNewCliTot = jul_brnNewCliTot + areaBudgetDets.jul_budg
+                                                        aug_brnNewCliTot = aug_brnNewCliTot + areaBudgetDets.aug_budg
+                                                        sep_brnNewCliTot = sep_brnNewCliTot + areaBudgetDets.sep_budg
+                                                        oct_brnNewCliTot = oct_brnNewCliTot + areaBudgetDets.oct_budg
+                                                        nov_brnNewCliTot = nov_brnNewCliTot + areaBudgetDets.nov_budg
+                                                        dec_brnNewCliTot = dec_brnNewCliTot + areaBudgetDets.dec_budg                        
+                        
+                                                        jan_TotNewClient = jan_TotNewClient + areaBudgetDets.jan_budg
+                                                        feb_TotNewClient = feb_TotNewClient + areaBudgetDets.feb_budg
+                                                        mar_TotNewClient = mar_TotNewClient + areaBudgetDets.mar_budg
+                                                        apr_TotNewClient = apr_TotNewClient + areaBudgetDets.apr_budg
+                                                        may_TotNewClient = may_TotNewClient + areaBudgetDets.may_budg
+                                                        jun_TotNewClient = jun_TotNewClient + areaBudgetDets.jun_budg
+                                                        jul_TotNewClient = jul_TotNewClient + areaBudgetDets.jul_budg
+                                                        aug_TotNewClient = aug_TotNewClient + areaBudgetDets.aug_budg
+                                                        sep_TotNewClient = sep_TotNewClient + areaBudgetDets.sep_budg
+                                                        oct_TotNewClient = oct_TotNewClient + areaBudgetDets.oct_budg
+                                                        nov_TotNewClient = nov_TotNewClient + areaBudgetDets.nov_budg
+                                                        dec_TotNewClient = dec_TotNewClient + areaBudgetDets.dec_budg                        
+                                                    // }
+            
+                                                    break;
+                                                case "OldLoanClient":
+                                                    if (areaLnType === "Group Loan" || areaLnType === "Agricultural Loan") {
+                                                        totBegBalOldClient = totBegBalOldClient + areaBudgetDets.beg_bal
+                                                        totAreaBalOldClient = totAreaBalOldClient + areaBudgetDets.beg_bal
+                                                        branBegBalOldClient = branBegBalOldClient + areaBudgetDets.beg_bal
+                                                    }
+                                                        lnTypBegBalOldClient = lnTypBegBalOldClient + areaBudgetDets.beg_bal
+                
+                                                        jan_vwLonTypOldCli = jan_vwLonTypOldCli + areaBudgetDets.jan_budg
+                                                        feb_vwLonTypOldCli = feb_vwLonTypOldCli + areaBudgetDets.feb_budg
+                                                        mar_vwLonTypOldCli = mar_vwLonTypOldCli + areaBudgetDets.mar_budg
+                                                        apr_vwLonTypOldCli = apr_vwLonTypOldCli + areaBudgetDets.apr_budg
+                                                        may_vwLonTypOldCli = may_vwLonTypOldCli + areaBudgetDets.may_budg
+                                                        jun_vwLonTypOldCli = jun_vwLonTypOldCli + areaBudgetDets.jun_budg
+                                                        jul_vwLonTypOldCli = jul_vwLonTypOldCli + areaBudgetDets.jul_budg
+                                                        aug_vwLonTypOldCli = aug_vwLonTypOldCli + areaBudgetDets.aug_budg
+                                                        sep_vwLonTypOldCli = sep_vwLonTypOldCli + areaBudgetDets.sep_budg
+                                                        oct_vwLonTypOldCli = oct_vwLonTypOldCli + areaBudgetDets.oct_budg
+                                                        nov_vwLonTypOldCli = nov_vwLonTypOldCli + areaBudgetDets.nov_budg
+                                                        dec_vwLonTypOldCli = dec_vwLonTypOldCli + areaBudgetDets.dec_budg                        
+                        
+                                                    if (areaLnType === "Group Loan" || areaLnType === "Agricultural Loan") {
+                                                        jan_TotOldClient = jan_TotOldClient + areaBudgetDets.jan_budg
+                                                        feb_TotOldClient = feb_TotOldClient + areaBudgetDets.feb_budg
+                                                        mar_TotOldClient = mar_TotOldClient + areaBudgetDets.mar_budg
+                                                        apr_TotOldClient = apr_TotOldClient + areaBudgetDets.apr_budg
+                                                        may_TotOldClient = may_TotOldClient + areaBudgetDets.may_budg
+                                                        jun_TotOldClient = jun_TotOldClient + areaBudgetDets.jun_budg
+                                                        jul_TotOldClient = jul_TotOldClient + areaBudgetDets.jul_budg
+                                                        aug_TotOldClient = aug_TotOldClient + areaBudgetDets.aug_budg
+                                                        sep_TotOldClient = sep_TotOldClient + areaBudgetDets.sep_budg
+                                                        oct_TotOldClient = oct_TotOldClient + areaBudgetDets.oct_budg
+                                                        nov_TotOldClient = nov_TotOldClient + areaBudgetDets.nov_budg
+                                                        dec_TotOldClient = dec_TotOldClient + areaBudgetDets.dec_budg
+                                                    }
+                                                
+                                                    break;
+                                                case "NewLoanAmt":
+                                                    jan_vwLonTypNewAmt = jan_vwLonTypNewAmt + areaBudgetDets.jan_budg
+                                                    feb_vwLonTypNewAmt = feb_vwLonTypNewAmt + areaBudgetDets.feb_budg
+                                                    mar_vwLonTypNewAmt = mar_vwLonTypNewAmt + areaBudgetDets.mar_budg
+                                                    apr_vwLonTypNewAmt = apr_vwLonTypNewAmt + areaBudgetDets.apr_budg
+                                                    may_vwLonTypNewAmt = may_vwLonTypNewAmt + areaBudgetDets.may_budg
+                                                    jun_vwLonTypNewAmt = jun_vwLonTypNewAmt + areaBudgetDets.jun_budg
+                                                    jul_vwLonTypNewAmt = jul_vwLonTypNewAmt + areaBudgetDets.jul_budg
+                                                    aug_vwLonTypNewAmt = aug_vwLonTypNewAmt + areaBudgetDets.aug_budg
+                                                    sep_vwLonTypNewAmt = sep_vwLonTypNewAmt + areaBudgetDets.sep_budg
+                                                    oct_vwLonTypNewAmt = oct_vwLonTypNewAmt + areaBudgetDets.oct_budg
+                                                    nov_vwLonTypNewAmt = nov_vwLonTypNewAmt + areaBudgetDets.nov_budg
+                                                    dec_vwLonTypNewAmt = dec_vwLonTypNewAmt + areaBudgetDets.dec_budg                        
+                    
+                                                    jan_brnNewLoanAmt = jan_brnNewLoanAmt + areaBudgetDets.jan_budg
+                                                    feb_brnNewLoanAmt = feb_brnNewLoanAmt + areaBudgetDets.feb_budg
+                                                    mar_brnNewLoanAmt = mar_brnNewLoanAmt + areaBudgetDets.mar_budg
+                                                    apr_brnNewLoanAmt = apr_brnNewLoanAmt + areaBudgetDets.apr_budg
+                                                    may_brnNewLoanAmt = may_brnNewLoanAmt + areaBudgetDets.may_budg
+                                                    jun_brnNewLoanAmt = jun_brnNewLoanAmt + areaBudgetDets.jun_budg
+                                                    jul_brnNewLoanAmt = jul_brnNewLoanAmt + areaBudgetDets.jul_budg
+                                                    aug_brnNewLoanAmt = aug_brnNewLoanAmt + areaBudgetDets.aug_budg
+                                                    sep_brnNewLoanAmt = sep_brnNewLoanAmt + areaBudgetDets.sep_budg
+                                                    oct_brnNewLoanAmt = oct_brnNewLoanAmt + areaBudgetDets.oct_budg
+                                                    nov_brnNewLoanAmt = nov_brnNewLoanAmt + areaBudgetDets.nov_budg
+                                                    dec_brnNewLoanAmt = dec_brnNewLoanAmt + areaBudgetDets.dec_budg                       
+            
+                                                    jan_TotNewLoanAmt = jan_TotNewLoanAmt + areaBudgetDets.jan_budg
+                                                    feb_TotNewLoanAmt = feb_TotNewLoanAmt + areaBudgetDets.feb_budg
+                                                    mar_TotNewLoanAmt = mar_TotNewLoanAmt + areaBudgetDets.mar_budg
+                                                    apr_TotNewLoanAmt = apr_TotNewLoanAmt + areaBudgetDets.apr_budg
+                                                    may_TotNewLoanAmt = may_TotNewLoanAmt + areaBudgetDets.may_budg
+                                                    jun_TotNewLoanAmt = jun_TotNewLoanAmt + areaBudgetDets.jun_budg
+                                                    jul_TotNewLoanAmt = jul_TotNewLoanAmt + areaBudgetDets.jul_budg
+                                                    aug_TotNewLoanAmt = aug_TotNewLoanAmt + areaBudgetDets.aug_budg
+                                                    sep_TotNewLoanAmt = sep_TotNewLoanAmt + areaBudgetDets.sep_budg
+                                                    oct_TotNewLoanAmt = oct_TotNewLoanAmt + areaBudgetDets.oct_budg
+                                                    nov_TotNewLoanAmt = nov_TotNewLoanAmt + areaBudgetDets.nov_budg
+                                                    dec_TotNewLoanAmt = dec_TotNewLoanAmt + areaBudgetDets.dec_budg
+                                                
+                                                    break;
+                                                case "OldLoanAmt":
+                                                    jan_vwLonTypOldAmt = jan_vwLonTypOldAmt + areaBudgetDets.jan_budg
+                                                    feb_vwLonTypOldAmt = feb_vwLonTypOldAmt + areaBudgetDets.feb_budg
+                                                    mar_vwLonTypOldAmt = mar_vwLonTypOldAmt + areaBudgetDets.mar_budg
+                                                    apr_vwLonTypOldAmt = apr_vwLonTypOldAmt + areaBudgetDets.apr_budg
+                                                    may_vwLonTypOldAmt = may_vwLonTypOldAmt + areaBudgetDets.may_budg
+                                                    jun_vwLonTypOldAmt = jun_vwLonTypOldAmt + areaBudgetDets.jun_budg
+                                                    jul_vwLonTypOldAmt = jul_vwLonTypOldAmt + areaBudgetDets.jul_budg
+                                                    aug_vwLonTypOldAmt = aug_vwLonTypOldAmt + areaBudgetDets.aug_budg
+                                                    sep_vwLonTypOldAmt = sep_vwLonTypOldAmt + areaBudgetDets.sep_budg
+                                                    oct_vwLonTypOldAmt = oct_vwLonTypOldAmt + areaBudgetDets.oct_budg
+                                                    nov_vwLonTypOldAmt = nov_vwLonTypOldAmt + areaBudgetDets.nov_budg
+                                                    dec_vwLonTypOldAmt = dec_vwLonTypOldAmt + areaBudgetDets.dec_budg                        
+            
+                                                    jan_brnOldLoanAmt = jan_brnOldLoanAmt + areaBudgetDets.jan_budg
+                                                    feb_brnOldLoanAmt = feb_brnOldLoanAmt + areaBudgetDets.feb_budg
+                                                    mar_brnOldLoanAmt = mar_brnOldLoanAmt + areaBudgetDets.mar_budg
+                                                    apr_brnOldLoanAmt = apr_brnOldLoanAmt + areaBudgetDets.apr_budg
+                                                    may_brnOldLoanAmt = may_brnOldLoanAmt + areaBudgetDets.may_budg
+                                                    jun_brnOldLoanAmt = jun_brnOldLoanAmt + areaBudgetDets.jun_budg
+                                                    jul_brnOldLoanAmt = jul_brnOldLoanAmt + areaBudgetDets.jul_budg
+                                                    aug_brnOldLoanAmt = aug_brnOldLoanAmt + areaBudgetDets.aug_budg
+                                                    sep_brnOldLoanAmt = sep_brnOldLoanAmt + areaBudgetDets.sep_budg
+                                                    oct_brnOldLoanAmt = oct_brnOldLoanAmt + areaBudgetDets.oct_budg
+                                                    nov_brnOldLoanAmt = nov_brnOldLoanAmt + areaBudgetDets.nov_budg
+                                                    dec_brnOldLoanAmt = dec_brnOldLoanAmt + areaBudgetDets.dec_budg                       
+            
+                                                    jan_TotOldLoanAmt = jan_TotOldLoanAmt + areaBudgetDets.jan_budg
+                                                    feb_TotOldLoanAmt = feb_TotOldLoanAmt + areaBudgetDets.feb_budg
+                                                    mar_TotOldLoanAmt = mar_TotOldLoanAmt + areaBudgetDets.mar_budg
+                                                    apr_TotOldLoanAmt = apr_TotOldLoanAmt + areaBudgetDets.apr_budg
+                                                    may_TotOldLoanAmt = may_TotOldLoanAmt + areaBudgetDets.may_budg
+                                                    jun_TotOldLoanAmt = jun_TotOldLoanAmt + areaBudgetDets.jun_budg
+                                                    jul_TotOldLoanAmt = jul_TotOldLoanAmt + areaBudgetDets.jul_budg
+                                                    aug_TotOldLoanAmt = aug_TotOldLoanAmt + areaBudgetDets.aug_budg
+                                                    sep_TotOldLoanAmt = sep_TotOldLoanAmt + areaBudgetDets.sep_budg
+                                                    oct_TotOldLoanAmt = oct_TotOldLoanAmt + areaBudgetDets.oct_budg
+                                                    nov_TotOldLoanAmt = nov_TotOldLoanAmt + areaBudgetDets.nov_budg
+                                                    dec_TotOldLoanAmt = dec_TotOldLoanAmt + areaBudgetDets.dec_budg
+                                                
+                                                    break;
+                                                case "ResClientCount":
+                                                        jan_vwLonTypResCli = jan_vwLonTypResCli + areaBudgetDets.jan_budg
+                                                        feb_vwLonTypResCli = feb_vwLonTypResCli + areaBudgetDets.feb_budg
+                                                        mar_vwLonTypResCli = mar_vwLonTypResCli + areaBudgetDets.mar_budg
+                                                        apr_vwLonTypResCli = apr_vwLonTypResCli + areaBudgetDets.apr_budg
+                                                        may_vwLonTypResCli = may_vwLonTypResCli + areaBudgetDets.may_budg
+                                                        jun_vwLonTypResCli = jun_vwLonTypResCli + areaBudgetDets.jun_budg
+                                                        jul_vwLonTypResCli = jul_vwLonTypResCli + areaBudgetDets.jul_budg
+                                                        aug_vwLonTypResCli = aug_vwLonTypResCli + areaBudgetDets.aug_budg
+                                                        sep_vwLonTypResCli = sep_vwLonTypResCli + areaBudgetDets.sep_budg
+                                                        oct_vwLonTypResCli = oct_vwLonTypResCli + areaBudgetDets.oct_budg
+                                                        nov_vwLonTypResCli = nov_vwLonTypResCli + areaBudgetDets.nov_budg
+                                                        dec_vwLonTypResCli = dec_vwLonTypResCli + areaBudgetDets.dec_budg                        
+                        
+                                                    // if (areaLnType === "Group Loan" || areaLnType === "Agricultural Loan") {
+                                                        jan_TotResClient = jan_TotResClient + areaBudgetDets.jan_budg
+                                                        feb_TotResClient = feb_TotResClient + areaBudgetDets.feb_budg
+                                                        mar_TotResClient = mar_TotResClient + areaBudgetDets.mar_budg
+                                                        apr_TotResClient = apr_TotResClient + areaBudgetDets.apr_budg
+                                                        may_TotResClient = may_TotResClient + areaBudgetDets.may_budg
+                                                        jun_TotResClient = jun_TotResClient + areaBudgetDets.jun_budg
+                                                        jul_TotResClient = jul_TotResClient + areaBudgetDets.jul_budg
+                                                        aug_TotResClient = aug_TotResClient + areaBudgetDets.aug_budg
+                                                        sep_TotResClient = sep_TotResClient + areaBudgetDets.sep_budg
+                                                        oct_TotResClient = oct_TotResClient + areaBudgetDets.oct_budg
+                                                        nov_TotResClient = nov_TotResClient + areaBudgetDets.nov_budg
+                                                        dec_TotResClient = dec_TotResClient + areaBudgetDets.dec_budg
+                
+                                                    // }
+            
+                                                    break;
+                                                default:
+                                                    month = ""
+                                                    break;
+                                            }    
+                
+                                        }  // (areaBranCode === brnCode && areaLnType === scanvwloanType) {
+                        
+                                    })         // END - SCAN Center_Budget_dets for the Area
+            
+                                    tot_vwLonTypOldAmt = jan_vwLonTypOldAmt + feb_vwLonTypOldAmt + mar_vwLonTypOldAmt + apr_vwLonTypOldAmt + may_vwLonTypOldAmt + jun_vwLonTypOldAmt
+                                        + jul_vwLonTypOldAmt + aug_vwLonTypOldAmt + sep_vwLonTypOldAmt + oct_vwLonTypOldAmt + nov_vwLonTypOldAmt + dec_vwLonTypOldAmt
+            
+            
+                                    const totNewLonAmt = jan_vwLonTypNewAmt + feb_vwLonTypNewAmt + mar_vwLonTypNewAmt + apr_vwLonTypNewAmt + may_vwLonTypNewAmt + jun_vwLonTypNewAmt
+                                        + jul_vwLonTypNewAmt + aug_vwLonTypNewAmt + sep_vwLonTypNewAmt + oct_vwLonTypNewAmt + nov_vwLonTypNewAmt + dec_vwLonTypNewAmt
+                                    
+                                    if (totNewLonAmt > 0) {
+                                        areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "New Client", sortkey: ctrPerLonType + viewAreaCode, group: ctrPerLonTypGrp, jan_value : jan_vwLonTypNewCli, feb_value : feb_vwLonTypNewCli, mar_value : mar_vwLonTypNewCli, 
+                                            apr_value : apr_vwLonTypNewCli, may_value : may_vwLonTypNewCli, jun_value : jun_vwLonTypNewCli, jul_value : jul_vwLonTypNewCli, 
+                                            aug_value : aug_vwLonTypNewCli, sep_value : sep_vwLonTypNewCli, oct_value : oct_vwLonTypNewCli, nov_value : nov_vwLonTypNewCli, dec_value : dec_vwLonTypNewCli, tot_value : dec_vwLonTypNewCli
+                                        })
+                    
+                                        areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "New Amount", sortkey: ctrPerLonType + viewAreaCode, group: ctrPerLonTypGrp, jan_value : jan_vwLonTypNewAmt, feb_value : feb_vwLonTypNewAmt, mar_value : mar_vwLonTypNewAmt, 
+                                            apr_value : apr_vwLonTypNewAmt, may_value : may_vwLonTypNewAmt, jun_value : jun_vwLonTypNewAmt, jul_value : jul_vwLonTypNewAmt, 
+                                            aug_value : aug_vwLonTypNewAmt, sep_value : sep_vwLonTypNewAmt, oct_value : oct_vwLonTypNewAmt, nov_value : nov_vwLonTypNewAmt, dec_value : dec_vwLonTypNewAmt, tot_value : tot_vwLonTypNewAmt
+                                        })
+            
+                                    }
+            
+                                    const totOldLonAmt = jan_vwLonTypOldAmt + feb_vwLonTypOldAmt + mar_vwLonTypOldAmt + apr_vwLonTypOldAmt + may_vwLonTypOldAmt + jun_vwLonTypOldAmt
+                                        + jul_vwLonTypOldAmt + aug_vwLonTypOldAmt + sep_vwLonTypOldAmt + oct_vwLonTypOldAmt + nov_vwLonTypOldAmt + dec_vwLonTypOldAmt
+                                    
+                                    if (totOldLonAmt > 0) {
+                                        areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "Old Client", sortkey: ctrPerLonType + viewAreaCode, group: ctrPerLonTypGrp, beg_bal: lnTypBegBalOldClient, jan_value : jan_vwLonTypOldCli, feb_value : feb_vwLonTypOldCli, mar_value : mar_vwLonTypOldCli, 
+                                            apr_value : apr_vwLonTypOldCli, may_value : may_vwLonTypOldCli, jun_value : jun_vwLonTypOldCli, jul_value : jul_vwLonTypOldCli, 
+                                            aug_value : aug_vwLonTypOldCli, sep_value : sep_vwLonTypOldCli, oct_value : oct_vwLonTypOldCli, nov_value : nov_vwLonTypOldCli, dec_value : dec_vwLonTypOldCli, tot_value : dec_vwLonTypOldCli
+                                        })
+                    
+                                        areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "Old Amount", sortkey: ctrPerLonType + viewAreaCode, group: ctrPerLonTypGrp, jan_value : jan_vwLonTypOldAmt, feb_value : feb_vwLonTypOldAmt, mar_value : mar_vwLonTypOldAmt, 
+                                            apr_value : apr_vwLonTypOldAmt, may_value : may_vwLonTypOldAmt, jun_value : jun_vwLonTypOldAmt, jul_value : jul_vwLonTypOldAmt, 
+                                            aug_value : aug_vwLonTypOldAmt, sep_value : sep_vwLonTypOldAmt, oct_value : oct_vwLonTypOldAmt, nov_value : nov_vwLonTypOldAmt, dec_value : dec_vwLonTypOldAmt, tot_value : tot_vwLonTypOldAmt
+                                        })
+            
+                                        areaPerLnTypView.push({area: viewAreaCode, branch: brnCode, loan_type: scanvwloanType, title: "Resign Clients", sortkey: ctrPerLonType + viewAreaCode, group: ctrPerLonTypGrp, jan_value : jan_vwLonTypResCli, feb_value : feb_vwLonTypResCli, mar_value : mar_vwLonTypResCli, 
+                                            apr_value : apr_vwLonTypResCli, may_value : may_vwLonTypResCli, jun_value : jun_vwLonTypResCli, jul_value : jul_vwLonTypResCli, 
+                                            aug_value : aug_vwLonTypResCli, sep_value : sep_vwLonTypResCli, oct_value : oct_vwLonTypResCli, nov_value : nov_vwLonTypResCli, dec_value : dec_vwLonTypResCli, tot_value : dec_vwLonTypResCli
+                                        })
+                                    } 
+            
+            
+                                    lnTypBegBalOldClient = 0
+                                    jan_vwLonTypNewCli = 0
+                                    feb_vwLonTypNewCli = 0
+                                    mar_vwLonTypNewCli = 0
+                                    apr_vwLonTypNewCli = 0
+                                    may_vwLonTypNewCli = 0
+                                    jun_vwLonTypNewCli = 0
+                                    jul_vwLonTypNewCli = 0
+                                    aug_vwLonTypNewCli = 0
+                                    sep_vwLonTypNewCli = 0
+                                    oct_vwLonTypNewCli = 0
+                                    nov_vwLonTypNewCli = 0
+                                    dec_vwLonTypNewCli = 0
+                        
+                                    jan_vwLonTypOldCli = 0
+                                    feb_vwLonTypOldCli = 0
+                                    mar_vwLonTypOldCli = 0
+                                    apr_vwLonTypOldCli = 0
+                                    may_vwLonTypOldCli = 0
+                                    jun_vwLonTypOldCli = 0
+                                    jul_vwLonTypOldCli = 0
+                                    aug_vwLonTypOldCli = 0
+                                    sep_vwLonTypOldCli = 0
+                                    oct_vwLonTypOldCli = 0
+                                    nov_vwLonTypOldCli = 0
+                                    dec_vwLonTypOldCli = 0
+                        
+                                    jan_vwLonTypNewAmt = 0
+                                    feb_vwLonTypNewAmt = 0
+                                    mar_vwLonTypNewAmt = 0
+                                    apr_vwLonTypNewAmt = 0
+                                    may_vwLonTypNewAmt = 0
+                                    jun_vwLonTypNewAmt = 0
+                                    jul_vwLonTypNewAmt = 0
+                                    aug_vwLonTypNewAmt = 0
+                                    sep_vwLonTypNewAmt = 0
+                                    oct_vwLonTypNewAmt = 0
+                                    nov_vwLonTypNewAmt = 0
+                                    dec_vwLonTypNewAmt = 0
+                        
+                                    jan_vwLonTypOldAmt = 0
+                                    feb_vwLonTypOldAmt = 0
+                                    mar_vwLonTypOldAmt = 0
+                                    apr_vwLonTypOldAmt = 0
+                                    may_vwLonTypOldAmt = 0
+                                    jun_vwLonTypOldAmt = 0
+                                    jul_vwLonTypOldAmt = 0
+                                    aug_vwLonTypOldAmt = 0
+                                    sep_vwLonTypOldAmt = 0
+                                    oct_vwLonTypOldAmt = 0
+                                    nov_vwLonTypOldAmt = 0
+                                    dec_vwLonTypOldAmt = 0
+                        
+                                    jan_vwLonTypResCli = 0
+                                    feb_vwLonTypResCli = 0
+                                    mar_vwLonTypResCli = 0
+                                    apr_vwLonTypResCli = 0
+                                    may_vwLonTypResCli = 0
+                                    jun_vwLonTypResCli = 0
+                                    jul_vwLonTypResCli = 0
+                                    aug_vwLonTypResCli = 0
+                                    sep_vwLonTypResCli = 0
+                                    oct_vwLonTypResCli = 0
+                                    nov_vwLonTypResCli = 0
+                                    dec_vwLonTypResCli = 0
+                                        tot_vwLonTypNewCli = 0
+            
+                                })            // END - SCAN the Loan Types
+    
+                                jan_oldCliTot = branBegBalOldClient 
+                                    jan_totNumClients = (jan_oldCliTot + jan_brnNewCliTot) - jan_TotResClient
+                                feb_oldCliTot = jan_totNumClients
+                                    feb_totNumClients = (feb_oldCliTot + feb_brnNewCliTot) - feb_TotResClient    
+                                mar_oldCliTot = feb_totNumClients
+                                    mar_totNumClients = (mar_oldCliTot + mar_brnNewCliTot) - mar_TotResClient
+                                apr_oldCliTot = mar_totNumClients
+                                    apr_totNumClients = (apr_oldCliTot + apr_brnNewCliTot) - apr_TotResClient
+                                may_oldCliTot = apr_totNumClients
+                                    may_totNumClients = (may_oldCliTot + may_brnNewCliTot) - may_TotResClient
+                                jun_oldCliTot = may_totNumClients
+                                    jun_totNumClients = (jun_oldCliTot + jun_brnNewCliTot) - jun_TotResClient
+                                jul_oldCliTot = jun_totNumClients
+                                    jul_totNumClients = (jul_oldCliTot + jul_brnNewCliTot) - jul_TotResClient
+                                aug_oldCliTot = jul_totNumClients
+                                    aug_totNumClients = (aug_oldCliTot + aug_brnNewCliTot) - aug_TotResClient
+                                sep_oldCliTot = aug_totNumClients
+                                    sep_totNumClients = (sep_oldCliTot + sep_brnNewCliTot) - sep_TotResClient
+                                oct_oldCliTot = sep_totNumClients
+                                    oct_totNumClients = (oct_oldCliTot + oct_brnNewCliTot) - oct_TotResClient
+                                nov_oldCliTot = oct_totNumClients
+                                    nov_totNumClients = (nov_oldCliTot + nov_brnNewCliTot) - nov_TotResClient
+                                dec_oldCliTot = nov_totNumClients
+                                    dec_totNumClients = (dec_oldCliTot + dec_brnNewCliTot) - dec_TotResClient
+                                
+                                    jan_brnTotAmtDisburse = jan_brnNewLoanAmt + jan_brnOldLoanAmt
+                                    feb_brnTotAmtDisburse = feb_brnNewLoanAmt + feb_brnOldLoanAmt
+                                    mar_brnTotAmtDisburse = mar_brnNewLoanAmt + mar_brnOldLoanAmt
+                                    apr_brnTotAmtDisburse = apr_brnNewLoanAmt + apr_brnOldLoanAmt
+                                    may_brnTotAmtDisburse = may_brnNewLoanAmt + may_brnOldLoanAmt
+                                    jun_brnTotAmtDisburse = jun_brnNewLoanAmt + jun_brnOldLoanAmt
+                                    jul_brnTotAmtDisburse = jul_brnNewLoanAmt + jul_brnOldLoanAmt
+                                    aug_brnTotAmtDisburse = aug_brnNewLoanAmt + aug_brnOldLoanAmt
+                                    sep_brnTotAmtDisburse = sep_brnNewLoanAmt + sep_brnOldLoanAmt
+                                    oct_brnTotAmtDisburse = oct_brnNewLoanAmt + oct_brnOldLoanAmt
+                                    nov_brnTotAmtDisburse = nov_brnNewLoanAmt + nov_brnOldLoanAmt
+                                    dec_brnTotAmtDisburse = dec_brnNewLoanAmt + dec_brnOldLoanAmt
+                                
+                                    ctrAreaOutReach = ctrAreaOutReach + 1
+                                    ctrAreaDisb = ctrAreaDisb + 1
+        
+                                poSumView.push({area: viewAreaCode, branch: brnDesc, loan_type:"", title: "-" +brnDesc, sortkey: ctrAreaOutReach, group: 1, beg_bal: branBegBalOldClient, jan_value : jan_totNumClients, feb_value : feb_totNumClients, mar_value : mar_totNumClients, 
+                                    apr_value : apr_totNumClients, may_value : may_totNumClients, jun_value : jun_totNumClients, jul_value : jul_totNumClients, aug_value : aug_totNumClients,
+                                    sep_value : sep_totNumClients, oct_value : oct_totNumClients, nov_value : nov_totNumClients, dec_value : dec_totNumClients, tot_value : dec_totNumClients
+                                }) 
+        
+                                const totTotDisbAmt = jan_brnTotAmtDisburse + feb_brnTotAmtDisburse + mar_brnTotAmtDisburse + apr_brnTotAmtDisburse + may_brnTotAmtDisburse + jun_brnTotAmtDisburse
+                                    + jul_brnTotAmtDisburse + aug_brnTotAmtDisburse + sep_brnTotAmtDisburse + oct_brnTotAmtDisburse + nov_brnTotAmtDisburse + dec_brnTotAmtDisburse
+        
+                                poSumView.push({area: viewAreaCode, branch: brnDesc, loan_type:"", title: "-" + brnDesc, sortkey: ctrAreaDisb, group: 2, beg_bal: 0, jan_value : jan_brnTotAmtDisburse, feb_value : feb_brnTotAmtDisburse, mar_value : mar_brnTotAmtDisburse, 
+                                    apr_value : apr_brnTotAmtDisburse, may_value : may_brnTotAmtDisburse, jun_value : jun_brnTotAmtDisburse, jul_value : jul_brnTotAmtDisburse, aug_value : aug_brnTotAmtDisburse,
+                                    sep_value : sep_brnTotAmtDisburse, oct_value : oct_brnTotAmtDisburse, nov_value : nov_brnTotAmtDisburse, dec_value : dec_brnTotAmtDisburse, tot_value : totTotDisbAmt
+                                }) 
+        
+                                jan_TotalCliOutReach = jan_TotalCliOutReach + jan_totNumClients
+                                feb_TotalCliOutReach = feb_TotalCliOutReach + feb_totNumClients
+                                mar_TotalCliOutReach = mar_TotalCliOutReach + mar_totNumClients
+                                apr_TotalCliOutReach = apr_TotalCliOutReach + apr_totNumClients
+                                may_TotalCliOutReach = may_TotalCliOutReach + may_totNumClients
+                                jun_TotalCliOutReach = jun_TotalCliOutReach + jun_totNumClients
+                                jul_TotalCliOutReach = jul_TotalCliOutReach + jul_totNumClients
+                                aug_TotalCliOutReach = aug_TotalCliOutReach + aug_totNumClients
+                                sep_TotalCliOutReach = sep_TotalCliOutReach + sep_totNumClients
+                                oct_TotalCliOutReach = oct_TotalCliOutReach + oct_totNumClients
+                                nov_TotalCliOutReach = nov_TotalCliOutReach + nov_totNumClients
+                                dec_TotalCliOutReach = dec_TotalCliOutReach + dec_totNumClients
+                
+                                jan_TotalAmtDisburse = jan_TotalAmtDisburse + jan_brnTotAmtDisburse
+                                feb_TotalAmtDisburse = feb_TotalAmtDisburse + feb_brnTotAmtDisburse
+                                mar_TotalAmtDisburse = mar_TotalAmtDisburse + mar_brnTotAmtDisburse
+                                apr_TotalAmtDisburse = apr_TotalAmtDisburse + apr_brnTotAmtDisburse
+                                may_TotalAmtDisburse = may_TotalAmtDisburse + may_brnTotAmtDisburse
+                                jun_TotalAmtDisburse = jun_TotalAmtDisburse + jun_brnTotAmtDisburse
+                                jul_TotalAmtDisburse = jul_TotalAmtDisburse + jul_brnTotAmtDisburse
+                                aug_TotalAmtDisburse = aug_TotalAmtDisburse + aug_brnTotAmtDisburse
+                                sep_TotalAmtDisburse = sep_TotalAmtDisburse + sep_brnTotAmtDisburse
+                                oct_TotalAmtDisburse = oct_TotalAmtDisburse + oct_brnTotAmtDisburse
+                                nov_TotalAmtDisburse = nov_TotalAmtDisburse + nov_brnTotAmtDisburse
+                                dec_TotalAmtDisburse = dec_TotalAmtDisburse + dec_brnTotAmtDisburse
+        
+                                jan_areaTotCliOutReach = jan_areaTotCliOutReach + jan_totNumClients
+                                feb_areaTotCliOutReach = feb_areaTotCliOutReach + feb_totNumClients
+                                mar_areaTotCliOutReach = mar_areaTotCliOutReach + mar_totNumClients
+                                apr_areaTotCliOutReach = apr_areaTotCliOutReach + apr_totNumClients
+                                may_areaTotCliOutReach = may_areaTotCliOutReach + may_totNumClients
+                                jun_areaTotCliOutReach = jun_areaTotCliOutReach + jun_totNumClients
+                                jul_areaTotCliOutReach = jul_areaTotCliOutReach + jul_totNumClients
+                                aug_areaTotCliOutReach = aug_areaTotCliOutReach + aug_totNumClients
+                                sep_areaTotCliOutReach = sep_areaTotCliOutReach + sep_totNumClients
+                                oct_areaTotCliOutReach = oct_areaTotCliOutReach + oct_totNumClients
+                                nov_areaTotCliOutReach = nov_areaTotCliOutReach + nov_totNumClients
+                                dec_areaTotCliOutReach = dec_areaTotCliOutReach + dec_totNumClients
+                
+                                jan_areaTotAmtDisburse = jan_areaTotAmtDisburse + jan_brnTotAmtDisburse
+                                feb_areaTotAmtDisburse = feb_areaTotAmtDisburse + feb_brnTotAmtDisburse
+                                mar_areaTotAmtDisburse = mar_areaTotAmtDisburse + mar_brnTotAmtDisburse
+                                apr_areaTotAmtDisburse = apr_areaTotAmtDisburse + apr_brnTotAmtDisburse
+                                may_areaTotAmtDisburse = may_areaTotAmtDisburse + may_brnTotAmtDisburse
+                                jun_areaTotAmtDisburse = jun_areaTotAmtDisburse + jun_brnTotAmtDisburse
+                                jul_areaTotAmtDisburse = jul_areaTotAmtDisburse + jul_brnTotAmtDisburse
+                                aug_areaTotAmtDisburse = aug_areaTotAmtDisburse + aug_brnTotAmtDisburse
+                                sep_areaTotAmtDisburse = sep_areaTotAmtDisburse + sep_brnTotAmtDisburse
+                                oct_areaTotAmtDisburse = oct_areaTotAmtDisburse + oct_brnTotAmtDisburse
+                                nov_areaTotAmtDisburse = nov_areaTotAmtDisburse + nov_brnTotAmtDisburse
+                                dec_areaTotAmtDisburse = dec_areaTotAmtDisburse + dec_brnTotAmtDisburse
+
+                                branBegBalOldClient = 0
+                                jan_brnNewLoanAmt = 0
+                                feb_brnNewLoanAmt = 0
+                                mar_brnNewLoanAmt = 0
+                                apr_brnNewLoanAmt = 0
+                                may_brnNewLoanAmt = 0
+                                jun_brnNewLoanAmt = 0
+                                jul_brnNewLoanAmt = 0
+                                aug_brnNewLoanAmt = 0
+                                sep_brnNewLoanAmt = 0
+                                oct_brnNewLoanAmt = 0
+                                nov_brnNewLoanAmt = 0
+                                dec_brnNewLoanAmt = 0
+                    
+                                jan_brnOldLoanAmt = 0
+                                feb_brnOldLoanAmt = 0
+                                mar_brnOldLoanAmt = 0
+                                apr_brnOldLoanAmt = 0
+                                may_brnOldLoanAmt = 0
+                                jun_brnOldLoanAmt = 0
+                                jul_brnOldLoanAmt = 0
+                                aug_brnOldLoanAmt = 0
+                                sep_brnOldLoanAmt = 0
+                                oct_brnOldLoanAmt = 0
+                                nov_brnOldLoanAmt = 0
+                                dec_brnOldLoanAmt = 0
+        
+                                jan_brnOldCliTot = 0
+                                feb_brnOldCliTot = 0
+                                mar_brnOldCliTot = 0
+                                apr_brnOldCliTot = 0
+                                may_brnOldCliTot = 0
+                                jun_brnOldCliTot = 0
+                                jul_brnOldCliTot = 0
+                                aug_brnOldCliTot = 0
+                                sep_brnOldCliTot = 0
+                                oct_brnOldCliTot = 0
+                                nov_brnOldCliTot = 0
+                                dec_brnOldCliTot = 0
+        
+                                jan_brnNewCliTot = 0
+                                feb_brnNewCliTot = 0
+                                mar_brnNewCliTot = 0
+                                apr_brnNewCliTot = 0
+                                may_brnNewCliTot = 0
+                                jun_brnNewCliTot = 0
+                                jul_brnNewCliTot = 0
+                                aug_brnNewCliTot = 0
+                                sep_brnNewCliTot = 0
+                                oct_brnNewCliTot = 0
+                                nov_brnNewCliTot = 0
+                                dec_brnNewCliTot = 0
+                                
+                                jan_TotResClient = 0 
+                                feb_TotResClient = 0
+                                mar_TotResClient = 0
+                                apr_TotResClient = 0
+                                may_TotResClient = 0
+                                jun_TotResClient = 0
+                                jul_TotResClient = 0
+                                aug_TotResClient = 0
+                                sep_TotResClient = 0
+                                oct_TotResClient = 0
+                                nov_TotResClient = 0
+                                dec_TotResClient = 0        
+                                
+                                jan_totNumClients = 0 
+                                feb_totNumClients = 0
+                                mar_totNumClients = 0
+                                apr_totNumClients = 0
+                                may_totNumClients = 0
+                                jun_totNumClients = 0
+                                jul_totNumClients = 0
+                                aug_totNumClients = 0
+                                sep_totNumClients = 0
+                                oct_totNumClients = 0
+                                nov_totNumClients = 0
+                                dec_totNumClients = 0 
+
+                            } // if (areaBranch.area === areaCode)
+        
+                        })   // END - SCAN BRANCHES        
+
+
+                        poSumView.push({area: viewRegionCode, branch: "", loan_type:"", title: viewAreaCode + " TOTAL OUTREACH", sortkey: ctrAreaOutReach, group: 1, beg_bal: totAreaBalOldClient, jan_value : jan_areaTotCliOutReach, feb_value : feb_areaTotCliOutReach, mar_value : mar_areaTotCliOutReach, 
+                            apr_value : apr_areaTotCliOutReach, may_value : may_areaTotCliOutReach, jun_value : jun_areaTotCliOutReach, jul_value : jul_areaTotCliOutReach, aug_value : aug_areaTotCliOutReach,
+                            sep_value : sep_areaTotCliOutReach, oct_value : oct_areaTotCliOutReach, nov_value : nov_areaTotCliOutReach, dec_value : dec_areaTotCliOutReach, tot_value : dec_areaTotCliOutReach
+                        }) 
+    
+                        const totareaTotDisbAmt = jan_areaTotAmtDisburse + feb_areaTotAmtDisburse + mar_areaTotAmtDisburse + apr_areaTotAmtDisburse + may_areaTotAmtDisburse + jun_areaTotAmtDisburse
+                            + jul_areaTotAmtDisburse + aug_areaTotAmtDisburse + sep_areaTotAmtDisburse + oct_areaTotAmtDisburse + nov_areaTotAmtDisburse + dec_areaTotAmtDisburse
+
+                        poSumView.push({area: viewRegionCode, branch: "", loan_type:"", title: viewAreaCode + " TOTAL DISB.", sortkey: ctrAreaDisb, group: 2, beg_bal: 0, jan_value : jan_areaTotAmtDisburse, feb_value : feb_areaTotAmtDisburse, mar_value : mar_areaTotAmtDisburse, 
+                            apr_value : apr_areaTotAmtDisburse, may_value : may_areaTotAmtDisburse, jun_value : jun_areaTotAmtDisburse, jul_value : jul_areaTotAmtDisburse, aug_value : aug_areaTotAmtDisburse,
+                            sep_value : sep_areaTotAmtDisburse, oct_value : oct_areaTotAmtDisburse, nov_value : nov_areaTotAmtDisburse, dec_value : dec_areaTotAmtDisburse, tot_value : totareaTotDisbAmt
+                        }) 
+
+                    }) // SCAN AREAS IN A REGIOM
+        
+                            poSumView.push({area: viewRegionCode, branch: "", loan_type:"", title: "REGION TOTAL OUTREACH", sortkey: ctrAreaOutReach, group: 1, beg_bal: totBegBalOldClient, jan_value : jan_TotalCliOutReach, feb_value : feb_TotalCliOutReach, mar_value : mar_TotalCliOutReach, 
+                                apr_value : apr_TotalCliOutReach, may_value : may_TotalCliOutReach, jun_value : jun_TotalCliOutReach, jul_value : jul_TotalCliOutReach, aug_value : aug_TotalCliOutReach,
+                                sep_value : sep_TotalCliOutReach, oct_value : oct_TotalCliOutReach, nov_value : nov_TotalCliOutReach, dec_value : dec_TotalCliOutReach, tot_value : dec_TotalCliOutReach
+                            }) 
+    
+                            const totTotalDisbAmt = jan_TotalAmtDisburse + feb_TotalAmtDisburse + mar_TotalAmtDisburse + apr_TotalAmtDisburse + may_TotalAmtDisburse + jun_TotalAmtDisburse
+                                + jul_TotalAmtDisburse + aug_TotalAmtDisburse + sep_TotalAmtDisburse + oct_TotalAmtDisburse + nov_TotalAmtDisburse + dec_TotalAmtDisburse
+    
+                            poSumView.push({area: viewRegionCode, branch: "", loan_type:"", title: "REGION TOTAL DISBURSEMENT", sortkey: ctrAreaDisb, group: 2, beg_bal: 0, jan_value : jan_TotalAmtDisburse, feb_value : feb_TotalAmtDisburse, mar_value : mar_TotalAmtDisburse, 
+                                apr_value : apr_TotalAmtDisburse, may_value : may_TotalAmtDisburse, jun_value : jun_TotalAmtDisburse, jul_value : jul_TotalAmtDisburse, aug_value : aug_TotalAmtDisburse,
+                                sep_value : sep_TotalAmtDisburse, oct_value : oct_TotalAmtDisburse, nov_value : nov_TotalAmtDisburse, dec_value : dec_TotalAmtDisburse, tot_value : totTotalDisbAmt
+                            }) 
+                    
+                        // console.log(poSumView)                        
+        
+                        let jan_lonTypBranResCli = 0
+                        let feb_lonTypBranResCli = 0
+                        let mar_lonTypBranResCli = 0
+                        let apr_lonTypBranResCli = 0
+                        let may_lonTypBranResCli = 0
+                        let jun_lonTypBranResCli = 0
+                        let jul_lonTypBranResCli = 0
+                        let aug_lonTypBranResCli = 0
+                        let sep_lonTypBranResCli = 0
+                        let oct_lonTypBranResCli = 0
+                        let nov_lonTypBranResCli = 0
+                        let dec_lonTypBranResCli = 0
+        
+                        let jan_brLnTypCliTot = 0
+                        let feb_brLnTypCliTot = 0
+                        let mar_brLnTypCliTot = 0
+                        let apr_brLnTypCliTot = 0
+                        let may_brLnTypCliTot = 0
+                        let jun_brLnTypCliTot = 0
+                        let jul_brLnTypCliTot = 0
+                        let aug_brLnTypCliTot = 0
+                        let sep_brLnTypCliTot = 0
+                        let oct_brLnTypCliTot = 0
+                        let nov_brLnTypCliTot = 0
+                        let dec_brLnTypCliTot = 0
+    
+                        console.log(areaPerLnTypView)
+                        
+                        let scanvwloanType = ""
+                        let brnCode = ""
+                        let ctrPerLonType2 = ctrPerLonType
+    
+                        poSumView.push({title: "PER LOAN TYPE", sortkey: ctrAreaDisb, group: 1, isTitle: true})
+    
+                        let budgPerLonTyp = []
+    
+                        vwloanType.forEach( lonType => {            // SCAN the Loan Types
+    
+                            scanvwloanType = lonType.title
+                            const scanVwLoanCode = lonType.loan_type
+                            ctr = ctr + 1
+    
+                            poSumView.push({title: scanvwloanType, sortkey: ctrPerLonType2 , group: 2, isTitle: true})
+    
+                            // budgPerLonTyp = areaPerLnTypView.find({loan_type: scanvwloanType})
+    
+                            // console.log(scanvwloanType)
+                            
+                            ctrPerLonType = ctrPerLonType2 + 1
+    
+                            let jan_perLnTypTotAmt = 0
+                            let feb_perLnTypTotAmt = 0
+                            let mar_perLnTypTotAmt = 0
+                            let apr_perLnTypTotAmt = 0
+                            let may_perLnTypTotAmt = 0
+                            let jun_perLnTypTotAmt = 0
+                            let jul_perLnTypTotAmt = 0
+                            let aug_perLnTypTotAmt = 0
+                            let sep_perLnTypTotAmt = 0
+                            let oct_perLnTypTotAmt = 0
+                            let nov_perLnTypTotAmt = 0
+                            let dec_perLnTypTotAmt = 0
+                    
+                            let beg_perLnTypTotReach = 0
+                            let jan_perLnTypTotReach = 0
+                            let feb_perLnTypTotReach = 0
+                            let mar_perLnTypTotReach = 0
+                            let apr_perLnTypTotReach = 0
+                            let may_perLnTypTotReach = 0
+                            let jun_perLnTypTotReach = 0
+                            let jul_perLnTypTotReach = 0
+                            let aug_perLnTypTotReach = 0
+                            let sep_perLnTypTotReach = 0
+                            let oct_perLnTypTotReach = 0
+                            let nov_perLnTypTotReach = 0
+                            let dec_perLnTypTotReach = 0
+
+                            vwRegionAreas.forEach( regionArea => {         //SCAN the Areas
+                                const viewAreaCode = regionArea.area
+                                const areaDesc = regionArea.area_desc
+
+                                let jan_perAreaTotAmt = 0
+                                let feb_perAreaTotAmt = 0
+                                let mar_perAreaTotAmt = 0
+                                let apr_perAreaTotAmt = 0
+                                let may_perAreaTotAmt = 0
+                                let jun_perAreaTotAmt = 0
+                                let jul_perAreaTotAmt = 0
+                                let aug_perAreaTotAmt = 0
+                                let sep_perAreaTotAmt = 0
+                                let oct_perAreaTotAmt = 0
+                                let nov_perAreaTotAmt = 0
+                                let dec_perAreaTotAmt = 0
+                        
+                                let beg_perAreaTotReach = 0
+                                let jan_perAreaTotReach = 0
+                                let feb_perAreaTotReach = 0
+                                let mar_perAreaTotReach = 0
+                                let apr_perAreaTotReach = 0
+                                let may_perAreaTotReach = 0
+                                let jun_perAreaTotReach = 0
+                                let jul_perAreaTotReach = 0
+                                let aug_perAreaTotReach = 0
+                                let sep_perAreaTotReach = 0
+                                let oct_perAreaTotReach = 0
+                                let nov_perAreaTotReach = 0
+                                let dec_perAreaTotReach = 0
+                                let areaBranchCtr = 0
+    
+                                vwRegionBranches.forEach ( areaBranch => {         //SCAN the Branches
+                                    const brnDesc = areaBranch.branch_desc
+                                    brnCode = areaBranch.branch
+                                    // console.log(brnDesc)
+                                    if (areaBranch.area === viewAreaCode) {
+
+                                        areaBranchCtr = areaBranchCtr + 1
+
+                                        let jan_perBranTotCliOutReach = 0
+                                        let feb_perBranTotCliOutReach = 0
+                                        let mar_perBranTotCliOutReach = 0
+                                        let apr_perBranTotCliOutReach = 0
+                                        let may_perBranTotCliOutReach = 0
+                                        let jun_perBranTotCliOutReach = 0
+                                        let jul_perBranTotCliOutReach = 0
+                                        let aug_perBranTotCliOutReach = 0
+                                        let sep_perBranTotCliOutReach = 0
+                                        let oct_perBranTotCliOutReach = 0
+                                        let nov_perBranTotCliOutReach = 0
+                                        let dec_perBranTotCliOutReach = 0
+                                        let tot_perBranTotCliOutReach = 0
+            
+                                        let jan_perLnTypBrTotAmt = 0
+                                        let feb_perLnTypBrTotAmt = 0
+                                        let mar_perLnTypBrTotAmt = 0
+                                        let apr_perLnTypBrTotAmt = 0
+                                        let may_perLnTypBrTotAmt = 0
+                                        let jun_perLnTypBrTotAmt = 0
+                                        let jul_perLnTypBrTotAmt = 0
+                                        let aug_perLnTypBrTotAmt = 0
+                                        let sep_perLnTypBrTotAmt = 0
+                                        let oct_perLnTypBrTotAmt = 0
+                                        let nov_perLnTypBrTotAmt = 0
+                                        let dec_perLnTypBrTotAmt = 0
+                    
+                                        let jan_lonTypBranNewCli = 0
+                                        let feb_lonTypBranNewCli = 0
+                                        let mar_lonTypBranNewCli = 0
+                                        let apr_lonTypBranNewCli = 0
+                                        let may_lonTypBranNewCli = 0
+                                        let jun_lonTypBranNewCli = 0
+                                        let jul_lonTypBranNewCli = 0
+                                        let aug_lonTypBranNewCli = 0
+                                        let sep_lonTypBranNewCli = 0
+                                        let oct_lonTypBranNewCli = 0
+                                        let nov_lonTypBranNewCli = 0
+                                        let dec_lonTypBranNewCli = 0
+                                
+                                        let jan_lonTypBranNewAmt = 0
+                                        let feb_lonTypBranNewAmt = 0
+                                        let mar_lonTypBranNewAmt = 0
+                                        let apr_lonTypBranNewAmt = 0
+                                        let may_lonTypBranNewAmt = 0
+                                        let jun_lonTypBranNewAmt = 0
+                                        let jul_lonTypBranNewAmt = 0
+                                        let aug_lonTypBranNewAmt = 0
+                                        let sep_lonTypBranNewAmt = 0
+                                        let oct_lonTypBranNewAmt = 0
+                                        let nov_lonTypBranNewAmt = 0
+                                        let dec_lonTypBranNewAmt = 0
+                    
+                                        let jan_lonTypBranBegBal = 0
+                                        let jan_lonTypBranOldAmt = 0
+                                        let feb_lonTypBranOldAmt = 0
+                                        let mar_lonTypBranOldAmt = 0
+                                        let apr_lonTypBranOldAmt = 0
+                                        let may_lonTypBranOldAmt = 0
+                                        let jun_lonTypBranOldAmt = 0
+                                        let jul_lonTypBranOldAmt = 0
+                                        let aug_lonTypBranOldAmt = 0
+                                        let sep_lonTypBranOldAmt = 0
+                                        let oct_lonTypBranOldAmt = 0
+                                        let nov_lonTypBranOldAmt = 0
+                                        let dec_lonTypBranOldAmt = 0
+            
+                                        areaPerLnTypView.forEach( areaBrnLontyp => { // SCAN Array of Summary per branch, per Loan Type and view_code
+                                            const areaLonTyp = areaBrnLontyp.loan_type 
+                                            const areaBranCod = areaBrnLontyp.branch
+                                            const areaViewCod = areaBrnLontyp.title
+            
+            
+                                            if ( areaLonTyp === scanvwloanType && areaBranCod === brnCode && areaBrnLontyp.area === viewAreaCode) {
+            
+                                                switch (areaViewCod) {
+                                                    case "New Client":
+                                                        jan_lonTypBranNewCli = areaBrnLontyp.jan_value
+                                                        feb_lonTypBranNewCli = areaBrnLontyp.feb_value
+                                                        mar_lonTypBranNewCli = areaBrnLontyp.mar_value
+                                                        apr_lonTypBranNewCli = areaBrnLontyp.apr_value
+                                                        may_lonTypBranNewCli = areaBrnLontyp.may_value
+                                                        jun_lonTypBranNewCli = areaBrnLontyp.jun_value
+                                                        jul_lonTypBranNewCli = areaBrnLontyp.jul_value
+                                                        aug_lonTypBranNewCli = areaBrnLontyp.aug_value
+                                                        sep_lonTypBranNewCli = areaBrnLontyp.sep_value
+                                                        oct_lonTypBranNewCli = areaBrnLontyp.oct_value
+                                                        nov_lonTypBranNewCli = areaBrnLontyp.nov_value  
+                                                        dec_lonTypBranNewCli = areaBrnLontyp.dec_value
+                                    
+                                                        break;
+                                                    case "Old Client":
+                                                        jan_lonTypBranBegBal = areaBrnLontyp.beg_bal
+                                                        break;
+                                                    case "New Amount":
+                                                        jan_lonTypBranNewAmt = areaBrnLontyp.jan_value
+                                                        feb_lonTypBranNewAmt = areaBrnLontyp.feb_value
+                                                        mar_lonTypBranNewAmt = areaBrnLontyp.mar_value
+                                                        apr_lonTypBranNewAmt = areaBrnLontyp.apr_value
+                                                        may_lonTypBranNewAmt = areaBrnLontyp.may_value
+                                                        jun_lonTypBranNewAmt = areaBrnLontyp.jun_value
+                                                        jul_lonTypBranNewAmt = areaBrnLontyp.jul_value
+                                                        aug_lonTypBranNewAmt = areaBrnLontyp.aug_value
+                                                        sep_lonTypBranNewAmt = areaBrnLontyp.sep_value
+                                                        oct_lonTypBranNewAmt = areaBrnLontyp.oct_value
+                                                        nov_lonTypBranNewAmt = areaBrnLontyp.nov_value
+                                                        dec_lonTypBranNewAmt = areaBrnLontyp.dec_value
+            
+                                                        break;
+                                                    case "Old Amount":
+                                                        jan_lonTypBranOldAmt = areaBrnLontyp.jan_value
+                                                        feb_lonTypBranOldAmt = areaBrnLontyp.feb_value
+                                                        mar_lonTypBranOldAmt = areaBrnLontyp.mar_value
+                                                        apr_lonTypBranOldAmt = areaBrnLontyp.apr_value
+                                                        may_lonTypBranOldAmt = areaBrnLontyp.may_value
+                                                        jun_lonTypBranOldAmt = areaBrnLontyp.jun_value
+                                                        jul_lonTypBranOldAmt = areaBrnLontyp.jul_value
+                                                        aug_lonTypBranOldAmt = areaBrnLontyp.aug_value
+                                                        sep_lonTypBranOldAmt = areaBrnLontyp.sep_value
+                                                        oct_lonTypBranOldAmt = areaBrnLontyp.oct_value
+                                                        nov_lonTypBranOldAmt = areaBrnLontyp.nov_value
+                                                        dec_lonTypBranOldAmt = areaBrnLontyp.dec_value
+            
+                                                        break;
+                                                    case "Resign Clients":
+            
+                                                        jan_lonTypBranResCli = areaBrnLontyp.jan_value
+                                                        feb_lonTypBranResCli = areaBrnLontyp.feb_value
+                                                        mar_lonTypBranResCli = areaBrnLontyp.mar_value
+                                                        apr_lonTypBranResCli = areaBrnLontyp.apr_value
+                                                        may_lonTypBranResCli = areaBrnLontyp.may_value
+                                                        jun_lonTypBranResCli = areaBrnLontyp.jun_value
+                                                        jul_lonTypBranResCli = areaBrnLontyp.jul_value
+                                                        aug_lonTypBranResCli = areaBrnLontyp.aug_value
+                                                        sep_lonTypBranResCli = areaBrnLontyp.sep_value
+                                                        oct_lonTypBranResCli = areaBrnLontyp.oct_value
+                                                        nov_lonTypBranResCli = areaBrnLontyp.nov_value
+                                                        dec_lonTypBranResCli = areaBrnLontyp.dec_value
+                                                        break;
+                                                    default:
+                                                        areaNon = 0
+            
+                                                } 
+                                            }  // ( areaLonTyp === scanvwloanType && areaBranCod === brnCode)
+            
+                                        })  // SCAN Array of Summary per branch, per Loan Type and view_code
+            
+                                        jan_brLnTypCliTot = jan_lonTypBranBegBal 
+                                            jan_perBranTotCliOutReach = (jan_brLnTypCliTot + jan_lonTypBranNewCli) - jan_lonTypBranResCli
+            
+                                        feb_brLnTypCliTot = jan_perBranTotCliOutReach
+                                            feb_perBranTotCliOutReach = (feb_brLnTypCliTot + feb_lonTypBranNewCli) - feb_lonTypBranResCli    
+            
+                                        mar_brLnTypCliTot = feb_perBranTotCliOutReach
+                                            mar_perBranTotCliOutReach = (mar_brLnTypCliTot + mar_lonTypBranNewCli) - mar_lonTypBranResCli
+            
+                                        apr_brLnTypCliTot = mar_perBranTotCliOutReach
+                                            apr_perBranTotCliOutReach = (apr_brLnTypCliTot + apr_lonTypBranNewCli) - apr_lonTypBranResCli
+            
+                                        may_brLnTypCliTot = apr_perBranTotCliOutReach
+                                            may_perBranTotCliOutReach = (may_brLnTypCliTot + may_lonTypBranNewCli) - may_lonTypBranResCli
+            
+                                        jun_brLnTypCliTot = may_perBranTotCliOutReach
+                                            jun_perBranTotCliOutReach = (jun_brLnTypCliTot + jun_lonTypBranNewCli) - jun_lonTypBranResCli
+            
+                                        jul_brLnTypCliTot = jun_perBranTotCliOutReach
+                                            jul_perBranTotCliOutReach = (jul_brLnTypCliTot + jul_lonTypBranNewCli) - jul_lonTypBranResCli
+            
+                                        aug_brLnTypCliTot = jul_perBranTotCliOutReach
+                                            aug_perBranTotCliOutReach = (aug_brLnTypCliTot + aug_lonTypBranNewCli) - aug_lonTypBranResCli
+            
+                                        sep_brLnTypCliTot = aug_perBranTotCliOutReach
+                                            sep_perBranTotCliOutReach = (sep_brLnTypCliTot + sep_lonTypBranNewCli) - sep_lonTypBranResCli
+            
+                                        oct_brLnTypCliTot = sep_perBranTotCliOutReach
+                                            oct_perBranTotCliOutReach = (oct_brLnTypCliTot + oct_lonTypBranNewCli) - oct_lonTypBranResCli
+            
+                                        nov_brLnTypCliTot = oct_perBranTotCliOutReach
+                                            nov_perBranTotCliOutReach = (nov_brLnTypCliTot + nov_lonTypBranNewCli) - nov_lonTypBranResCli
+            
+                                        dec_brLnTypCliTot = nov_perBranTotCliOutReach
+                                            dec_perBranTotCliOutReach = (dec_brLnTypCliTot + dec_lonTypBranNewCli) - dec_lonTypBranResCli
+                                    
+                                        jan_perLnTypBrTotAmt = jan_lonTypBranNewAmt + jan_lonTypBranOldAmt
+                                        feb_perLnTypBrTotAmt = feb_lonTypBranNewAmt + feb_lonTypBranOldAmt
+                                        mar_perLnTypBrTotAmt = mar_lonTypBranNewAmt + mar_lonTypBranOldAmt
+                                        apr_perLnTypBrTotAmt = apr_lonTypBranNewAmt + apr_lonTypBranOldAmt
+                                        may_perLnTypBrTotAmt = may_lonTypBranNewAmt + may_lonTypBranOldAmt
+                                        jun_perLnTypBrTotAmt = jun_lonTypBranNewAmt + jun_lonTypBranOldAmt
+                                        jul_perLnTypBrTotAmt = jul_lonTypBranNewAmt + jul_lonTypBranOldAmt
+                                        aug_perLnTypBrTotAmt = aug_lonTypBranNewAmt + aug_lonTypBranOldAmt
+                                        sep_perLnTypBrTotAmt = sep_lonTypBranNewAmt + sep_lonTypBranOldAmt
+                                        oct_perLnTypBrTotAmt = oct_lonTypBranNewAmt + oct_lonTypBranOldAmt
+                                        nov_perLnTypBrTotAmt = nov_lonTypBranNewAmt + nov_lonTypBranOldAmt
+                                        dec_perLnTypBrTotAmt = dec_lonTypBranNewAmt + dec_lonTypBranOldAmt
+            
+                                        jan_perLnTypTotAmt = jan_perLnTypTotAmt + jan_perLnTypBrTotAmt
+                                        feb_perLnTypTotAmt = feb_perLnTypTotAmt + feb_perLnTypBrTotAmt
+                                        mar_perLnTypTotAmt = mar_perLnTypTotAmt + mar_perLnTypBrTotAmt
+                                        apr_perLnTypTotAmt = apr_perLnTypTotAmt + apr_perLnTypBrTotAmt
+                                        may_perLnTypTotAmt = may_perLnTypTotAmt + may_perLnTypBrTotAmt
+                                        jun_perLnTypTotAmt = jun_perLnTypTotAmt + jun_perLnTypBrTotAmt
+                                        jul_perLnTypTotAmt = jul_perLnTypTotAmt + jul_perLnTypBrTotAmt
+                                        aug_perLnTypTotAmt = aug_perLnTypTotAmt + aug_perLnTypBrTotAmt
+                                        sep_perLnTypTotAmt = sep_perLnTypTotAmt + sep_perLnTypBrTotAmt
+                                        oct_perLnTypTotAmt = oct_perLnTypTotAmt + oct_perLnTypBrTotAmt
+                                        nov_perLnTypTotAmt = nov_perLnTypTotAmt + nov_perLnTypBrTotAmt
+                                        dec_perLnTypTotAmt = dec_perLnTypTotAmt + dec_perLnTypBrTotAmt
+            
+                                        beg_perLnTypTotReach = beg_perLnTypTotReach + jan_lonTypBranBegBal
+                                        jan_perLnTypTotReach = jan_perLnTypTotReach + jan_perBranTotCliOutReach
+                                        feb_perLnTypTotReach = feb_perLnTypTotReach + feb_perBranTotCliOutReach
+                                        mar_perLnTypTotReach = mar_perLnTypTotReach + mar_perBranTotCliOutReach
+                                        apr_perLnTypTotReach = apr_perLnTypTotReach + apr_perBranTotCliOutReach
+                                        may_perLnTypTotReach = may_perLnTypTotReach + may_perBranTotCliOutReach
+                                        jun_perLnTypTotReach = jun_perLnTypTotReach + jun_perBranTotCliOutReach
+                                        jul_perLnTypTotReach = jul_perLnTypTotReach + jul_perBranTotCliOutReach
+                                        aug_perLnTypTotReach = aug_perLnTypTotReach + aug_perBranTotCliOutReach
+                                        sep_perLnTypTotReach = sep_perLnTypTotReach + sep_perBranTotCliOutReach
+                                        oct_perLnTypTotReach = oct_perLnTypTotReach + oct_perBranTotCliOutReach
+                                        nov_perLnTypTotReach = nov_perLnTypTotReach + nov_perBranTotCliOutReach
+                                        dec_perLnTypTotReach = dec_perLnTypTotReach + dec_perBranTotCliOutReach
+                                        
+                                        jan_perAreaTotAmt = jan_perAreaTotAmt + jan_perLnTypBrTotAmt
+                                        feb_perAreaTotAmt = feb_perAreaTotAmt + feb_perLnTypBrTotAmt
+                                        mar_perAreaTotAmt = mar_perAreaTotAmt + mar_perLnTypBrTotAmt
+                                        apr_perAreaTotAmt = apr_perAreaTotAmt + apr_perLnTypBrTotAmt
+                                        may_perAreaTotAmt = may_perAreaTotAmt + may_perLnTypBrTotAmt
+                                        jun_perAreaTotAmt = jun_perAreaTotAmt + jun_perLnTypBrTotAmt
+                                        jul_perAreaTotAmt = jul_perAreaTotAmt + jul_perLnTypBrTotAmt
+                                        aug_perAreaTotAmt = aug_perAreaTotAmt + aug_perLnTypBrTotAmt
+                                        sep_perAreaTotAmt = sep_perAreaTotAmt + sep_perLnTypBrTotAmt
+                                        oct_perAreaTotAmt = oct_perAreaTotAmt + oct_perLnTypBrTotAmt
+                                        nov_perAreaTotAmt = nov_perAreaTotAmt + nov_perLnTypBrTotAmt
+                                        dec_perAreaTotAmt = dec_perAreaTotAmt + dec_perLnTypBrTotAmt
+            
+                                        beg_perAreaTotReach = beg_perAreaTotReach + jan_lonTypBranBegBal
+                                        jan_perAreaTotReach = jan_perAreaTotReach + jan_perBranTotCliOutReach
+                                        feb_perAreaTotReach = feb_perAreaTotReach + feb_perBranTotCliOutReach
+                                        mar_perAreaTotReach = mar_perAreaTotReach + mar_perBranTotCliOutReach
+                                        apr_perAreaTotReach = apr_perAreaTotReach + apr_perBranTotCliOutReach
+                                        may_perAreaTotReach = may_perAreaTotReach + may_perBranTotCliOutReach
+                                        jun_perAreaTotReach = jun_perAreaTotReach + jun_perBranTotCliOutReach
+                                        jul_perAreaTotReach = jul_perAreaTotReach + jul_perBranTotCliOutReach
+                                        aug_perAreaTotReach = aug_perAreaTotReach + aug_perBranTotCliOutReach
+                                        sep_perAreaTotReach = sep_perAreaTotReach + sep_perBranTotCliOutReach
+                                        oct_perAreaTotReach = oct_perAreaTotReach + oct_perBranTotCliOutReach
+                                        nov_perAreaTotReach = nov_perAreaTotReach + nov_perBranTotCliOutReach
+                                        dec_perAreaTotReach = dec_perAreaTotReach + dec_perBranTotCliOutReach
+    
+                                        ctrPerLonType = ctrPerLonType + 1
+
+                                        const totScanvwOutReach = jan_perBranTotCliOutReach + feb_perBranTotCliOutReach + mar_perBranTotCliOutReach + apr_perBranTotCliOutReach + may_perBranTotCliOutReach + jun_perBranTotCliOutReach
+                                            + jul_perBranTotCliOutReach + aug_perBranTotCliOutReach + sep_perBranTotCliOutReach + oct_perBranTotCliOutReach + nov_perBranTotCliOutReach + dec_perBranTotCliOutReach
+                                        
+                                        let titlePerBranch = ""
+                                        let groupPerBranch = 0
+                                        if (areaBranchCtr == 1) {
+                                            poSumView.push({title: viewAreaCode, sortkey: ctrPerLonType , group: 2, isTitle: true})
+                                            titlePerBranch =  "- " + brnDesc
+                                            groupPerBranch = 2
+                                        } else {
+                                            titlePerBranch = "-" + brnDesc
+                                            groupPerBranch = 1
+                                        }
+                                        poSumView.push({loan_type: scanvwloanType, branch: brnDesc, title:  titlePerBranch, sortkey: ctrPerLonType , group: groupPerBranch, beg_bal: jan_lonTypBranBegBal, jan_value : jan_perBranTotCliOutReach, feb_value : feb_perBranTotCliOutReach, mar_value : mar_perBranTotCliOutReach, 
+                                            apr_value : apr_perBranTotCliOutReach, may_value : may_perBranTotCliOutReach, jun_value : jun_perBranTotCliOutReach, jul_value : jul_perBranTotCliOutReach, aug_value : aug_perBranTotCliOutReach,
+                                            sep_value : sep_perBranTotCliOutReach, oct_value : oct_perBranTotCliOutReach, nov_value : nov_perBranTotCliOutReach, dec_value : dec_perBranTotCliOutReach, tot_value : dec_perBranTotCliOutReach
+                                        }) 
+                                        ctrPerLonType2 = ctrPerLonType + branchCounter
+            
+                                        const totScanvwDisbAmt = jan_perLnTypBrTotAmt + feb_perLnTypBrTotAmt + mar_perLnTypBrTotAmt + apr_perLnTypBrTotAmt + may_perLnTypBrTotAmt + jun_perLnTypBrTotAmt
+                                            + jul_perLnTypBrTotAmt + aug_perLnTypBrTotAmt + sep_perLnTypBrTotAmt + oct_perLnTypBrTotAmt + nov_perLnTypBrTotAmt + dec_perLnTypBrTotAmt
+            
+                                        poSumView.push({loan_type: scanvwloanType, branch: brnDesc, title: titlePerBranch, sortkey: ctrPerLonType2, group: groupPerBranch, beg_bal: 0, jan_value : jan_perLnTypBrTotAmt, feb_value : feb_perLnTypBrTotAmt, mar_value : mar_perLnTypBrTotAmt, 
+                                            apr_value : apr_perLnTypBrTotAmt, may_value : may_perLnTypBrTotAmt, jun_value : jun_perLnTypBrTotAmt, jul_value : jul_perLnTypBrTotAmt, aug_value : aug_perLnTypBrTotAmt,
+                                            sep_value : sep_perLnTypBrTotAmt, oct_value : oct_perLnTypBrTotAmt, nov_value : nov_perLnTypBrTotAmt, dec_value : dec_perLnTypBrTotAmt, tot_value : totScanvwDisbAmt
+                                        }) 
+
+                                        areaBranchCtr = areaBranchCtr + 1
+
+                                    }
+                                })       //SCAN the Branches 
+    
+        
+                                
+                                poSumView.push({loan_type: scanvwloanType, branch: "", title: viewAreaCode + " Outreach", sortkey: ctrPerLonType , group: 1, beg_bal: beg_perAreaTotReach, jan_value : jan_perAreaTotReach, feb_value : feb_perAreaTotReach, mar_value : mar_perAreaTotReach, 
+                                    apr_value : apr_perAreaTotReach, may_value : may_perAreaTotReach, jun_value : jun_perAreaTotReach, jul_value : jul_perAreaTotReach, aug_value : aug_perAreaTotReach,
+                                    sep_value : sep_perAreaTotReach, oct_value : oct_perAreaTotReach, nov_value : nov_perAreaTotReach, dec_value : dec_perAreaTotReach, tot_value : dec_perAreaTotReach
+                                }) 
+                                ctrPerLonType2 = ctrPerLonType + branchCounter //5
+        
+                                const totPerLnTypeDisbAmt = jan_perAreaTotAmt + feb_perAreaTotAmt + mar_perAreaTotAmt + apr_perAreaTotAmt + may_perAreaTotAmt + jun_perAreaTotAmt
+                                    + jul_perAreaTotAmt + aug_perAreaTotAmt + sep_perAreaTotAmt + oct_perAreaTotAmt + nov_perAreaTotAmt + dec_perAreaTotAmt
+        
+                                poSumView.push({loan_type: scanvwloanType, branch: "", title: viewAreaCode + " Disb. Amount", sortkey: ctrPerLonType2, group: 1, beg_bal: 0, jan_value : jan_perAreaTotAmt, feb_value : feb_perAreaTotAmt, mar_value : mar_perAreaTotAmt, 
+                                    apr_value : apr_perAreaTotAmt, may_value : may_perAreaTotAmt, jun_value : jun_perAreaTotAmt, jul_value : jul_perAreaTotAmt, aug_value : aug_perAreaTotAmt,
+                                    sep_value : sep_perAreaTotAmt, oct_value : oct_perAreaTotAmt, nov_value : nov_perAreaTotAmt, dec_value : dec_perAreaTotAmt, tot_value : totPerLnTypeDisbAmt
+                                }) 
+            
+                            })       //SCAN the Areas
+                            
+    
+                            const totPerLnTypeOutReach = jan_perLnTypTotReach + feb_perLnTypTotReach + mar_perLnTypTotReach + apr_perLnTypTotReach + may_perLnTypTotReach + jun_perLnTypTotReach
+                                + jul_perLnTypTotReach + aug_perLnTypTotReach + sep_perLnTypTotReach + oct_perLnTypTotReach + nov_perLnTypTotReach + dec_perLnTypTotReach
+    
+                            poSumView.push({loan_type: scanvwloanType, branch: "", title: scanVwLoanCode + "-TOTAL OUTREACH", sortkey: ctrPerLonType , group: 1, beg_bal: beg_perLnTypTotReach, jan_value : jan_perLnTypTotReach, feb_value : feb_perLnTypTotReach, mar_value : mar_perLnTypTotReach, 
+                                apr_value : apr_perLnTypTotReach, may_value : may_perLnTypTotReach, jun_value : jun_perLnTypTotReach, jul_value : jul_perLnTypTotReach, aug_value : aug_perLnTypTotReach,
+                                sep_value : sep_perLnTypTotReach, oct_value : oct_perLnTypTotReach, nov_value : nov_perLnTypTotReach, dec_value : dec_perLnTypTotReach, tot_value : dec_perLnTypTotReach
+                            }) 
+                            ctrPerLonType2 = ctrPerLonType + branchCounter //5
+    
+                            const totPerLnTypeDisbAmt = jan_perLnTypTotAmt + feb_perLnTypTotAmt + mar_perLnTypTotAmt + apr_perLnTypTotAmt + may_perLnTypTotAmt + jun_perLnTypTotAmt
+                                + jul_perLnTypTotAmt + aug_perLnTypTotAmt + sep_perLnTypTotAmt + oct_perLnTypTotAmt + nov_perLnTypTotAmt + dec_perLnTypTotAmt
+    
+                            poSumView.push({loan_type: scanvwloanType, branch: "", title: scanVwLoanCode + "-TOTAL DISB. AMOUNT", sortkey: ctrPerLonType2, group: 1, beg_bal: 0, jan_value : jan_perLnTypTotAmt, feb_value : feb_perLnTypTotAmt, mar_value : mar_perLnTypTotAmt, 
+                                apr_value : apr_perLnTypTotAmt, may_value : may_perLnTypTotAmt, jun_value : jun_perLnTypTotAmt, jul_value : jul_perLnTypTotAmt, aug_value : aug_perLnTypTotAmt,
+                                sep_value : sep_perLnTypTotAmt, oct_value : oct_perLnTypTotAmt, nov_value : nov_perLnTypTotAmt, dec_value : dec_perLnTypTotAmt, tot_value : totPerLnTypeDisbAmt
+                            }) 
+    
+                        }) // SCAN the Loan Types
+                        
+                        poSumView.sort( function (a,b) {
+                            if ( a.sortkey < b.sortkey ){
+                                return -1;
+                            }
+                            if ( a.sortkey > b.sortkey ){
+                                return 1;
+                            }
+                            return 0;
+                        })
+                
+    
             
                     res.render('regions/viewRegionKRAMon', {
                         vwAreaCod: viewRegionCode,
                         poSumView: poSumView,
                         yuser: yuser   
                     })
-                }
+
         } catch (err) {
             console.log(err)
             res.redirect('/regions/'+ viewRegionCode)

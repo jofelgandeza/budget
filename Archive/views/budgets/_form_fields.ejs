@@ -1,0 +1,77 @@
+<div border: 3px>
+    <label>User</label>
+    <input type="text" name="user" value="<%= budget.user %>">
+    <label>Department</label>
+    <input type="text" name="department" size=50 value="<%= budget.department %>">
+</div>
+<div class="item">
+  <label>Chart of Account</label>
+  <select name="coa">
+   <option select label=" " value=" "></option>
+   <% coas.forEach(coa => { %>
+     <% if (coa.id === budget.coa) { %>
+        <option select label="<%= coa.description %>" value="<% coa.id %>"></option>
+     <% } else { %>
+        <option label="<%= coa.description %>" value="<%= coa.id %>"></option>
+    <%  } %>
+  <% }) %> 
+  </select>
+
+</div>
+<div class="inputAmountContainer select_ledger">
+   <label>Account</label>
+   <select name="subLedger">
+      <option select label=" " value=" "></option>
+      <% sub_ledgers.forEach(sub_ledger => { %>
+         <% if (sub_ledger.id === budget.coa) { %>
+            <option select label="<%= sub_ledger.description %>" value="<% sub_ledger.id %>"></option>
+         <% } else { %>
+            <option label="<%= sub_ledger.description %>" value="<%= sub_ledger.id %>"></option>
+        <%  } %>
+      <% }) %> 
+      </select>
+      <label>Cost Center</label>
+      <select name="costCenter">
+         <option select label=" " value=" "></option>
+         <% cost_centers.forEach(cost_center => { %>
+            <% if (cost_center.id === budget.cost_center) { %>
+               <option select label="<%= cost_center.description %>" value="<% cost_center.id %>"></option>
+            <% } else { %>
+               <option label="<%= cost_center.description %>" value="<%= cost_center.id %>"></option>
+           <%  } %>
+         <% }) %> 
+         </select>
+       
+   <label class="input_label">January</label>
+  <input type="text" required class="janAmount input_amount" id="janInput" oninput="myFunction()" autocomplete="off" name="january" value="<%= budget.january %>">
+  <label class="input_label">February</label>
+  <input type="text" class="febAmount input_amount" id="febInput" name="february" value="<%= budget.february %>">
+  <label class="input_label">March</label>
+  <input type="text" class="marAmount input_amount" id="marInput" name="march" value="<%= budget.march %>">
+  <label>April</label>
+  <input type="text" class="aprAmount input_amount" id="aprInput" name="april" value="<%= budget.april %>">
+  <label>May</label>
+  <input type="text" class="mayAmount input_amount" name="may" value="<%= budget.may %>">
+  <label>June</label>
+  <input type="text" class="junAmount input_amount" name="june" value="<%= budget.june %>">
+  <label>July</label>
+  <input type="text" class="julAmount input_amount" name="july" value="<%= budget.july %>">
+  <label>August</label>
+  <input type="text" class="augAmount input_amount" name="august" value="<%= budget.august %>">
+  <label>September</label>
+  <input type="text" class="sepAmount input_amount" name="september" value="<%= budget.september %>">
+  <label>October</label>
+  <input type="text" class="octAmount input_amount" name="october" value="<%= budget.october %>">
+  <label>November</label>
+  <input type="text" class="novAmount input_amount" name="november" value="<%= budget.november %>">
+  <label>December</label>
+  <input type="text" class="decAmount input_amount" name="december" value="<%= budget.december %>">
+
+</div>
+<label>Type</label>
+<input type="text" name="type" value="<%= budget.type %>">
+
+<label>Creation Date</label>
+<input type="date" name="createDate" 
+       value="<%= budget.createAt == null ? '' : 
+       budget.createAt.toISOString().split('T')[0] %>">

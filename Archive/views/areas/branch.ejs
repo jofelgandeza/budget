@@ -1,0 +1,38 @@
+<section class="s1">
+    <div class="main-container">
+       <h4> BRANCHES OPERATIONS MAINTENANCE</h4>
+        <table class="content-table">
+            <tr>
+                <% if (fondBranchs.length > 0) { %>
+                <% } else { %>
+                    <a class="btn btn-primary" href='/areas/setNewBranches'>SET NEW BRANCHES</a>
+                <% } %>
+
+            </tr>
+            <tr>
+                <th> BRANCH CODE</th>
+                <th> BRANCH DESCRIPTION</th>
+                <th> BRANCH CATEGORY</th>
+                <th> LINKS</th>
+            </tr>
+            <% fondBranchs.forEach(areaBranch => { %>
+                <tr>
+                    <td><%= areaBranch.branchCode %> </td>
+                    <td><%= areaBranch.branchDesc %> </td>
+                    <td><%= areaBranch.branch_category %> </td>
+                    <td>
+                        <div class="btn-row">
+                            <a class="btn btn-primary" href="/areas/getBranchForEdit/<%= areaCode + areaBranch.id %>/edit">Edit</a>
+                            <!-- <%- include('../partials/deleteForm', { url: `/areas/deleteArea/${areaBranch.id}` }) %> -->
+                        </div>        
+                    </td>
+                </tr>
+            <% }) %> 
+        </table>
+        <div>
+            <a class="btn btn-primary" href="/areas/newBranch/<%= areaCode %>">ADD NEW BRANCH</a>
+            <a class="btn btn-primary" href="/areas/<%= areaCode %>">DONE</a>
+        </div>
+    </div>
+</section>
+

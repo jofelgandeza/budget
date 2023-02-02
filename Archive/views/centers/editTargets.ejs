@@ -1,0 +1,340 @@
+
+    <section class="s1">
+		<div class="main-container1">
+            <div>  
+                Set targets for center: <%= listTitle %> 
+            </div>
+
+            <div class="intro-wrapper1">
+
+					<!-- Link around dots-wrapper added after tutorial video -->
+					
+				<div class="left-column">
+                    <table class="content-table-brnView">
+                        <tr>
+                            <th style="text-align: left;">BEGINNING BALANCES:</th>
+                        </tr>
+                        <tr>
+                            <th style="text-align: left;">LOAN TYPE</th>
+                            <th style="text-align: left;">RE-LOAN MONTH</th>
+                            <th>#CLIENT</th>
+                            <th>PRINCIPAL</th>
+                            <th>INTEREST</th>
+                        </tr>
+                        
+                        <% begBalData.forEach(function(begBal, index) { %>
+                            <tr>
+                                <td style="text-align: left;">
+                                    <%= begBal.begLonType.trim() %>
+                                </td>
+                                <td style="text-align: left;">
+                                    <%= begBal.begMon.trim() %>
+                                </td>
+                                <td class="tdRowAmt">
+                                    <p><%= begBal.begClient %></p>
+                                </td>
+                                <td style="text-align: right;">
+                                    <p><%= begBal.begPrincipal %></p>
+                                </td>
+                                <td style="text-align: right;">
+                                    <p> <%= begBal.begInterest %></p>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </table>
+				</div>
+				<div class="right-column">
+                    <table class="content1-table-brnView">
+                        <tr>
+                            <th style="text-align: left;">BREAKDOWNS:</th>
+                            <th></th>
+                        </tr>
+                        <tr>
+                            <th style="text-align: right;">ITEMS</th>
+                            <th style="text-align: right;">1ST HALF</th>
+                            <th>2ND HALF</th>
+                            <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+
+                        <% ctrBrkDownTots.forEach(function(ctrTargTot, index) { %>
+                                
+                                <tr>
+                                    <td style="align-content: flex-end;">
+                                        <p> BEGINNING</p>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <p><%= ctrTargTot.totBegBal1 %></p>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <p> <%= ctrTargTot.totBegBal2 %></p>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td style="align-content: flex-end;">
+                                        <p> NEW LOANS</p>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <p><%= ctrTargTot.totNewCliSem1 %></p>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <p> <%= ctrTargTot.totNewCliSem2 %></p>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td style="align-content: flex-end;">
+                                        <p> RELOANS</p>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <p><%= ctrTargTot.totOldCliSem1 %></p>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <p> <%= ctrTargTot.totOldCliSem2 %></p>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td style="align-content: flex-end;">
+                                        <p> RESIGNED</p>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <p><%= ctrTargTot.totResign1 %></p>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <p> <%= ctrTargTot.totResign2 %></p>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr style="font-weight: 700;">
+                                    <td style="align-content: flex-end;">
+                                        <p> TOTAL</p>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <p><%= ctrTargTot.totCliSem1 %></p>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <p> <%= ctrTargTot.totCliSem2 %></p>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td style="align-content: flex-end;">
+                                        <p> NEW LOAN AMT</p>
+                                    </td>
+                                        <% if (ctrTargTot.totNewAmtSem1 > 0) { %>
+                                            <td><%= ctrTargTot.totNewAmtSem1.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                        <% } else { %>
+                                            <td>-</td>
+                                        <% } %>
+
+                                        <% if (ctrTargTot.totNewAmtSem2 > 0) { %>
+                                            <td><%= ctrTargTot.totNewAmtSem2.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                        <% } else { %>
+                                            <td>-</td>
+                                        <% } %>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td style="align-content: flex-end;">
+                                        <p> RELOAN AMT</p>
+                                    </td>
+                                        <% if (ctrTargTot.totOldAmtSem1 > 0) { %>
+                                            <td><%= ctrTargTot.totOldAmtSem1.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                        <% } else { %>
+                                            <td>-</td>
+                                        <% } %>
+
+                                        <% if (ctrTargTot.totOldAmtSem2 > 0) { %>
+                                            <td><%= ctrTargTot.totOldAmtSem2.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                        <% } else { %>
+                                            <td>-</td>
+                                        <% } %>
+                                    <td></td>
+                                </tr>
+                                <tr style="font-weight: 700;">
+                                    <td style="align-content: flex-end;">
+                                        <p> TOTAL</p>
+                                    </td>
+                                        <% if (ctrTargTot.totLoanAmtSem1 > 0) { %>
+                                            <td><%= ctrTargTot.totLoanAmtSem1.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                        <% } else { %>
+                                            <td>-</td>
+                                        <% } %>
+
+                                        <% if (ctrTargTot.totLoanAmtSem2 > 0) { %>
+                                            <td><%= ctrTargTot.totLoanAmtSem2.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                        <% } else { %>
+                                            <td>-</td>
+                                        <% } %>
+                                    <td></td>
+                                </tr>
+                        <% }) %>
+
+                    </table>
+				</div>
+
+            </div>
+		</div>
+    </section>
+
+            <table class="table-set-targets">
+                <tr style="background-color: rgb(1, 76, 95);">
+                    <th></th>
+                    <th>LOAN TYPE</th>
+                    <th>TERM</th>
+                    <th>MONTH</th>
+                    <TH>PERIOD</TH>
+                    <TH>#OF CLIENTS</TH>
+                    <TH>AMOUNT</TH>
+                    <th>TOTAL</th>
+                    <th>REMARKS</th>
+                    <th></th>
+                </tr>
+
+                <form  action="/centers/saveEditTargets/<%= listTitle %>?_method=PUT" method="POST">
+
+                    <% for(var i=0; i<newListItems.length; i++) {%>
+                        <tr style= "<%= newListItems[i].semester === "First Half" ? "background-color:rgb(2, 93, 116)" : "background-color:rgb(0, 74, 95)" %>" >
+                            <td>
+                            </td>
+                            <td>
+                                <p><%= newListItems[i].loan_type.trim() %></p>
+                            </td>
+                            <td>
+                                <p><%= newListItems[i].lonTerm.trim() %></p>
+                            </td>
+                            <td>
+                                <p><%= newListItems[i].month.trim() %></p>
+                            </td>
+                            <td>
+                                <p><%= newListItems[i].semester.trim() %></p>
+                            </td>
+                            <td>
+                                <% if (budget_Mode === "OPEN") { %>
+                                    <input type="number" size = "4" style = "background-color:#025575; text-align: right; padding: 8px 5px; font-size: 18px" name="numClient" id="numClient<%= i %>" onchange ="getTotAmt('<%= newListItems[i].amount %>', 'numClient<%= i %>', '<%= i %>', '<%= newListItems.length %>' )" value= <%= newListItems[i].numClient %> >
+                                <% } else { %>
+                                    <input disabled type="number" size = "4"  style = "background-color:#025575; text-align: right; padding: 8px 5px; font-size: 18px" name="numClient" id="numClient<%= i %>" onchange ="getTotAmt('<%= newListItems[i].amount %>', 'numClient<%= i %>', '<%= i %>', '<%= newListItems.length %>' )" value= <%= newListItems[i].numClient %> >
+                                <% } %>
+                                </td>
+                            <td>
+                                <p style="text-align: right;" size = "6"><%= newListItems[i].amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></p>                        
+                            </td>
+                            <td>      
+                                <input disabled type="text" size = "12" style = "background-color:#025575; text-align: right; padding: 8px 5px; font-size: 18px" name="totAmt" id="totAmt<%= i %>" value= <%= newListItems[i].totAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %> >
+                            </td>
+                            <td>
+                                <p><%= newListItems[i].remarks %></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <input type="hidden" name="idClient" value="<%= newListItems[i]._id%>"> </input>
+                        </tr>
+                        <% if (i == newListItems.length - 1) { %>
+                            <tr>
+                                <td></td>
+                                <% if (budget_Mode === "OPEN") { %>
+                                    <a class="btn btn-primary" href="/centers/reCalculateCenter/<%= listTitle %>">RECALCULATE BALANCES</a>
+                                <% } else { %>
+                                    <a class="btn btn-primary" href="/centers/viewTarget/<%= poCode %>">BACK</a>
+                                <% } %>
+                            </td>
+                            <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>
+                                    <% if (budget_Mode === "OPEN") { %>
+                                        <button type="submit"  class="btn btn-primary" name="targets" value=<%= listTitle %> >Save Changes Above</button>
+                                    <% } else { %>
+                                        <a class="btn btn-primary" href="/centers/viewTarget/<%= poCode %>">BACK</a>
+                                    <% } %>
+                                </td>
+                                <td>TOTAL-></td>
+                                <td>      
+                                    <input disabled type="text" size = "12" style = "background-color:#025575; text-align: right; padding: 8px 5px; font-size: 18px" name="totAmt" id="gTotAmt" value= <%= totCntrBudgAmt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %> %> >
+                                </td>
+                                <td>
+                                    <% if (yuser.role === "BM") { %>
+                                        <a class="btn btn-primary" href="/branches/perPOforEdit/<%= poCode.substr(0,3) %>">BACK</a>
+                                    <% } else { %>
+                                        <a class="btn btn-primary" href="/centers/viewTarget/<%= poCode %>">BACK</a>
+        
+                                    <% } %>
+                                </td>
+                            </tr>
+    
+                        <% } %>
+                    <% } %>
+                    <input type="hidden" name="listName" value="<%= listTitle %>"> </input>
+                </form>
+                <tr>
+                    <td>------</td>
+                </tr>
+
+                <% if (budget_Mode !== "CLOSED") { %>
+                    <tr class="form-item-target">
+                        <form action="/centers/<%= listTitle %>?_method=PUT" method="POST">
+                            <td>New:</td>
+                            <td>
+                                <select name="loanType" id="loanType">
+                                    <% loanType.forEach(function(loan_type, index) { %>
+                                            <option label="<%= loan_type.title %>" value="<%= loan_type.title  %>"></option>
+                                    <% }) %>
+                                </select>            
+                            </td>
+                            
+                            <td>
+                                <select name="loanTerm" id="loanTerm" >
+
+                                    <% loanTermOption.forEach(function(lonTerm, index) { %> 
+                                                 <option value="<%= lonTerm %>"> <%= lonTerm %></option>                                            
+                                    <% }) %>
+                                </select>            
+                            </td>
+                            <td>
+                                <select name="month" id="monthID" onchange="getSemester()">
+                                    <% monthSelect.forEach(function(month, index) { %> 
+                                            <!-- <option label="<%= month %>" value="<%= month  %>"></option> -->
+                                            <% if (month === defMonSelect) { %>
+                                                <option selected value="<%= month %>"> <%= month %></option>
+                                             <% } else { %>
+                                                 <option value="<%= month %>"> <%= month %></option>
+                                             <%  } %>
+                             
+                                            
+                                    <% }) %>
+                                </select>            
+                            </td>
+                            <td>
+                                <input type="text" name="semester" id="semesterID" value = "<%= defaultPeriod %>"" placeholder="Semester">
+                            </td>
+                            <td>
+                                <input type="number" class="targNumCli" name="numClient" placeholder="Number of Clients" required min="1" max="40" autocomplete="off">
+                            </td>
+                            <td>
+                                <input type="number" class="targetAmt" name="amount" placeholder="Loan Amount" min="4000" max="50000" required autocomplete="off">
+                            </td>
+                            <td>
+                                <select name="remarks" id="remarks">
+                                    <option value="New Loan">New Loan</option>
+                                    <option value="Re-loan">Re-loan</option>
+                                </select>
+                                <td>
+                                    <button type="submit" name="list" value=<%= listTitle %>>+</button>
+                                </td>
+                             </td>
+                        </form>                            
+                    </tr>
+                    <tr class="form-item-target">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+
+                    </tr>
+                <% } %>
+            </table>

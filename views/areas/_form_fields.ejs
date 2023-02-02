@@ -1,15 +1,29 @@
 <div class="form-row">
     <div class="form-item-column">
         <label>Employee Code</label>
-        <% if (resetPW) { %>
+        <% if (resetPW || empHasBranchAss) { %>
             <input type="text" name="empCode" value="<%= emp.emp_code %>" autocomplete="off" required disabled>
         <% } else { %>
-            <input type="text" name="empCode" value="<%= emp.emp_code %>" autocomplete="off">
+            <input style="text-transform: uppercase" type="text" name="empCode" value="<%= emp.emp_code %>" required autocomplete="off">
         <% } %>
+        <input type="text" name="HideEmpCode" value="<%= emp.emp_code %>" hidden>
     </div>
     <div class="form-item-column">
     </div>
     <div class="form-item-column">
+        <label>Status</label>
+        <% if (resetPW) { %>
+        <% } else { %>
+            <select name="empStat" id="empStat" >
+                <% empStatus.forEach(empStat => { %>
+                    <% if (empStat === emp.status) { %>
+                       <option selected value="<%= empStat %>"> <%= empStat %></option>
+                    <% } else { %>
+                        <option value="<%= empStat %>"> <%= empStat %></option>
+                    <%  } %>
+                <% }) %> 
+            </select>
+            <% } %>
     </div>
 </div>
 <div class="form-row">
@@ -18,7 +32,7 @@
         <% if (resetPW) { %>
             <input type="text" name="lName" value="<%= emp.last_name %>" autocomplete="off" disabled>
         <% } else { %>
-            <input type="text" name="lName" value="<%= emp.last_name %>" autocomplete="off"  required>
+            <input style="text-transform: uppercase" type="text" name="lName" value="<%= emp.last_name %>" autocomplete="off"  required>
         <% } %>
     </div>
     <div class="form-item-column">
@@ -26,7 +40,7 @@
         <% if (resetPW) { %>
             <input type="text" name="fName" value="<%= emp.first_name %>" autocomplete="off" disabled>
         <% } else { %>
-            <input type="text" name="fName" value="<%= emp.first_name %>" autocomplete="off" required>
+            <input style="text-transform: uppercase" type="text" name="fName" value="<%= emp.first_name %>" autocomplete="off" required>
         <% } %>
     </div>
     <div class="form-item-column">
@@ -34,17 +48,21 @@
         <% if (resetPW) { %>
             <input type="text" name="mName" value="<%= emp.middle_name %>" autocomplete="off" disabled>
         <% } else { %>
-            <input type="text" name="mName" value="<%= emp.middle_name %>" autocomplete="off" required>
+            <input style="text-transform: uppercase" type="text" name="mName" value="<%= emp.middle_name %>" autocomplete="off" required>
         <% } %>
     </div>
 </div>
+
+<div class="form-row">
+</div>
+
 <div class="form-row">
     <div class="form-item-column">
         <label>Branch</label>
         <% if (!resetPW) { %>
             <select id="branch" name="branch"">
             <% foundBranch.forEach(bran => { %>
-                <% if ( bran.branch == emp.branch) { %>
+                <% if ( bran.branch == emp.assign_code) { %>
                    <option selected value="<%= bran.branch %>" label="<%= bran.branch_desc %>"> </option>
                 <% } else { %>
                     <option value="<%= bran.branch %>" label="<%= bran.branch_desc %>"> </option>
@@ -54,9 +72,36 @@
         <% } else { %>
             <input type="text" name="branch" value="<%= branchAsignDesc %>" autocomplete="off" disabled>
         <% } %>
+        <input type="text" name="HideBranchAss" value="<%= emp.assign_code %>" hidden>
+    </div>
+
+    <div class="form-item-column">
+        BRANCH MANAGER CLASSIFICATION
+        <div>
+            <% if (emp.position_class === "FULL") { %>
+                <input type="radio" name="position_class" id="fullPledge" value="FULL" checked>
+            <% } else { %>
+                <input type="radio" name="position_class" id="fullPledge" value="FULL">
+            <% } %>
+            <label for="fullPledge">Full - Pledge</label>
+            <br>
+            <% if (emp.position_class === "ACTING") { %>
+                <input type="radio" name="position_class" id="actingCap" value="ACTING" checked>
+            <% } else { %>
+                <input type="radio" name="position_class" id="actingCap" value="ACTING">
+            <% } %>
+            <label for="actingCap">Acting Capacity</label>
+            <br>
+            <% if (emp.position_class === "OIC") { %>
+                <input type="radio" name="position_class" id="oic" value="OIC" checked>
+            <% } else { %>
+                <input type="radio" name="position_class" id="oic" value="OIC">
+            <% } %>
+                <label for="oic">Office In-charge</label>
+        </div>
     </div>
     <div class="form-item-column"> </div>   
-    <div class="form-item-column"> </div>   
+    
 </div>
 <div>
     <p></p>
@@ -66,23 +111,4 @@
 </div>
 <div>
 <p></p>
-</div>
-<div class="form-row">
-    <% if (newEmp || resetPW) { %> 
-        <div class="form-item-columnUSER">
-            <label>System's User Name</label>
-            <% if (newEmp) { %> 
-                <input type="email" id="email" name="email" value="<%= user.email %>" onclick="setBranchEmailUser()" autocomplete="off">
-            <% } else { %>
-                <input type="email" name="email" value="<%= user.email %>" autocomplete="off" disabled>
-                <input type="user_id" name="user_id" value="<%= user.id %>" autocomplete="off" hidden>
-            <% } %>
-        </div>
-        <div class="form-item-columnUSER">
-            <label>Password</label>
-            <input type="password" name="password" value="<%= user.password %>">
-        </div>
-    <% } %>
-    <div class="form-item-column">
-    </div>
 </div>

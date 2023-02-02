@@ -1,0 +1,50 @@
+<div class="form-row">
+    <div class="form-item">
+        <label>Code </label>
+        <input type="text" name="code" value="<%= coa.code %>" autocomplete="off">
+    </div>
+    <div class="form-item">
+        <label>Title </label>
+        <input type="text" name="title" value="<%= coa.title %>" autocomplete="off">
+    </div>  
+    <div class="form-item">
+        <label>Class </label>
+        <select name="class">
+            <% coaClass.forEach(items => { %>
+                <% if (items === coa.class) { %>
+                    <option select label="<%= items %>" value="<%= coa.class %>"></option>
+                 <% } else { %>
+                     <option label="<%= items %>" value="<%= items  %>"></option>
+                 <%  } %> 
+            <% }) %>
+        </select>
+    </div>  
+</div>
+<div class="form-row">
+    <div class="form-item">
+        <label>Description </label>
+        <textarea name="description" value="<%= coa.description %>" rows="4" cols="50"> <%= coa.description %> </textarea>
+    </div>
+    <div class="form-item-column">
+        Profit and Loss
+        <div>
+            <% if (coa.type === "Debit") { %>
+                <input type="radio" name="type" id="Debit" value="Debit" checked>
+            <% } else { %>
+                <input type="radio" name="type" id="Debit" value="Debit">
+            <% } %>
+            <label for="inHouse">Debit</label>
+            <br>
+            <% if (coa.type === "Credit") { %>
+                <input type="radio" name="type" id="Credit" value="Credit" checked>
+            <% } else { %>
+                <input type="radio" name="type" id="Credit" value="Credit">
+            <% } %>
+                <label for="inHouse">Credit</label>
+        </div>
+    </div>
+
+    <div class="form-item">
+        <label> </label>
+    </div>  
+</div>

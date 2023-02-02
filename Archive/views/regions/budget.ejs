@@ -1,0 +1,196 @@
+
+
+	<section class="s1">
+		<div class="main-container">
+
+            <div class="intro-wrapper">
+				<div class="nav-wrapper">
+
+					<!-- Link around dots-wrapper added after tutorial video -->
+					<a href="index.html">
+						<div>  
+                            RD Name: <%= officerName%>
+						</div>
+					</a>
+					
+
+					<ul id="navigation">
+						<li><a href="index.html#contact">As of today, <%= dateToday.toLocaleDateString() %></a></li>
+
+					</ul>
+				</div>
+
+				<div class="left-column">
+                    <table class="content-table-brnView">
+                        <tr>
+                            <th>BUDGET</th>
+                            <th colspan="7"></th>
+                        </tr>
+                        <tr>
+                            <th>LOAN TYPES</th>
+                            <th>BEGINNING BALANCE</th>
+                            <th>RE-LOAN CLIENTS</th>
+                            <th>RESIGN CLIENTS</th>
+                            <th>NEW CLIENTS</th>
+                            <th>ENDING BALANCE</th>
+                            <th></th>
+                            <th>DISBURSEMENT AMOUNT</th>
+                        </tr>
+                        <% loanTots.forEach(loan => {  %>
+                            <tr>
+                                <td><%= loan.loan_type %></td>
+                                <% if (loan.begClientTot > 0) { %>
+                                    <td><%= loan.begClientTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (loan.onumClient > 0) { %>
+                                    <td><%= loan.onumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (loan.resloanTot > 0) { %>
+                                    <td><%= loan.resloanTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (loan.nnumClient > 0) { %>
+                                    <td><%= loan.nnumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (loan.budgEndBal > 0) { %>
+                                    <td><%= loan.budgEndBal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <td></td>
+                                <% if (loan.amtDisburse > 0) { %>
+                                    <td><%= loan.amtDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                <td style=>-</td>
+                                <% } %>
+                            </tr>
+                        <% }) %>
+                        <tr class="td-bold">
+                            <td>TOTAL</td>
+                            <% poGrandTot.forEach( gTot => { %>
+                                <% if (gTot.budBegBalClient > 0) { %>
+                                    <td><%= gTot.budBegBalClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (gTot.oClient > 0) { %>
+                                    <td><%= gTot.oClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (gTot.rClient > 0) { %>
+                                    <td><%= gTot.rClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (gTot.nClient > 0) { %>
+                                    <td><%= gTot.nClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <% if (gTot.budgEndBal > 0) { %>
+                                    <td><%= gTot.budgEndBal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+                                <td></td>
+                                <% if (gTot.totalDisburse > 0) { %>
+                                    <td> <%= gTot.totalDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                <% } else { %>
+                                    <td style=>-</td>
+                                <% } %>
+
+                            <% }) %>
+                        </tr>
+                    </table>
+				</div>
+
+				<div class="right-column">
+
+					<div id="preview-shadow">
+						<div id="preview">
+							<div id="corner-tl" class="corner"></div>
+							<div id="corner-tr" class="corner"></div>
+                            <ul id="navigation">
+                                <lh>BUDGET VIEWS</lh>
+                                <li><a href='/regions/viewRegionProjCol/<%= listTitle %>'>Proj. Collection</a></li>
+                                <li><a href='/regions/viewRegionProjInc/<%= listTitle %>'>Projected Income </a></li>
+                                <li><a href="/regions/viewRegionTargetMon/<%= listTitle %>">EXECUTIVE SUMMARY </a></li>
+                                <li></li>
+                                <lh>KEY RESULT AREAS</lh>
+                                <li><a href='/regions/viewRegionKRAMon/<%=listTitle%>'>KRA per Area</a></li>
+                                <li></li>
+                            </ul>
+                            <div id="corner-br" class="corner"></div>
+							<div id="corner-bl" class="corner"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+    </section>
+    <div>
+        <h5>
+        </h5>
+    </div>
+    <section class="s1">
+		<div class="main-container">
+            Budget Breakdown per AREA  
+            <table class="content-table">
+                <tr>
+                    <th> AREA</th>
+                    <th> AREA MGR</th>
+                    <th> LOAN TYPE</th>
+                    <th> BEG BAL</th>
+                    <th> NEW CLIENT</th>
+                    <th> OLD CLIENT</th>
+                    <th> RESIGN</th>
+                    <th> LINKS</th>
+                </tr>
+                <% unitLoanTots.forEach(unit => { %>
+                    <tr>
+                        <td><%= unit.unit%> </td>
+                        <td><%= unit.unitHead%> </td>
+                        <td><%= unit.loan_type%> </td>
+                        <% if (unit.begClientTot > 0) { %>
+                            <td> <%= unit.begClientTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
+                        <% if (unit.nnumClient > 0) { %>
+                            <td> <%= unit.nnumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
+                        <% if (unit.onumClient > 0) { %>
+                            <td> <%= unit.onumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
+                        <% if (unit.resiloanTot > 0) { %>
+                            <td> <%= unit.onumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
+                        <td>
+                            <div class="btn-row">
+                                <a class="btn btn-primary" href="">View</a>
+                            </div>        
+                        </td>
+                    </tr>
+                <% }) %> 
+            </table>
+        </div>
+        <div>
+            <a class="btn btn-primary" href="/regions/<%= listTitle %>">Done</a>
+        </div>
+
+    </section>
+

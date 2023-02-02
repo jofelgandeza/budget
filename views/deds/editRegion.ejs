@@ -1,5 +1,6 @@
 <h2 class="page-header">Edit Region</h2>
 <form action="/deds/putEditedRegion/<%= ded + regID %>?_method=PUT" method="POST">
+    <%- include('../partials/errorMessage') %>    
     <%- include('_region_form_fields') %>
     <div class="form-row">
         <div class="form-item-column">

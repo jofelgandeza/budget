@@ -5,7 +5,7 @@ const app = express()
 const bodyParser = require('body-parser')
 const methodOverride = require('method-override')
 const { model } = require('mongoose')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 const { forEach, isNull, isEmpty } = require('lodash')
 const _ = require('lodash')
 const { authUser, authRole } = require('../public/javascripts/basicAuth.js')
@@ -13,8 +13,12 @@ const { ROLE } = require('../public/javascripts/data.js')
 
 const User = require('../models/user')
 const Region = require('../models/region')
+const Area = require('../models/area')
+const Branch = require('../models/branch')
+
 const Employee = require('../models/employee')
 const Setting = require('../models/setting')
+const region = require('../models/region')
 
 // let LoggedUser = {}
 // app.use(setSysUser)
@@ -41,59 +45,43 @@ router.get('/settings/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => 
     const statSelect = ["OPEN","CLOSED"]
 
     let fndBudgSetting = []
+
+    let doneReadSetting = false
     
     try {
 
-        const budg_setting = await Setting.find({}, function (err, foundSettings) {
-            fndBudgSetting = foundSettings
-            
-            foundSettings.forEach(fndSet =>{
+        const budg_setting = await Setting.find({}) //, function (err, foundSettings) {
+
+        if (budg_setting.length > 0) {
+            budg_setting.forEach(fndSet =>{
                 budget_Mode = fndSet.status
+                
+                let starDet = fndSet.start_budget_date
+                let endDet = fndSet.end_budget_date
+
+
+                fndBudgSetting.push({budget_year: fndSet.budget_year, start_budget_date: starDet,
+                    end_budget_date: endDet, status: fndSet.status})
             })
-
-        })
-
-
-//         const brnEmployees = await Employee.find({position_code: regDirID}, function (err, foundEmployees) {
-//             const fndEmployees = foundEmployees
-
-// //            const empStatus = fndEmployees.status
-// //  - Area ID
-//             fndEmployees.forEach(foundEmp =>{
-//                 empPst = foundEmp.position_code
-//                 empID = foundEmp._id
-//                 empName = foundEmp.last_name + ", " + foundEmp.first_name + " " + foundEmp.middle_name.substr(0,1) + "."
-//                 empCode = foundEmp.emp_code
-//                 empUnit = foundEmp.unit
-//                 empUnitPOnum = foundEmp.unit + foundEmp.po_number
-//                 empAss = foundEmp.assign_code
-//                 let exist = false
-
-//                 const empAssign = _.find(regions, {region: empAss})
-                
-//                 fondEmploy.push({empID: empID, area: areaCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empAssign.region_desc})
-                
-//                 empCanProceed = true            
-//             })
-
-//             sortedEmp = fondEmploy.sort( function (a,b) {
-//                 if ( a.empName < b.empName ){
-//                     return -1;
-//                   }
-//                   if ( a.empName > b.empName ){
-//                     return 1;
-//                   }
-//                    return 0;
-//             })        
-    
+            doneReadSetting = true            
+        } else {
+            fndBudgSetting.push({budget_year: "2023" , start_budget_date: new Date(),
+                end_budget_date: new Date(), status: "OPEN"})
+         }
+         const startDate = new Date()
+         const endDate = new Date()
+        // console.log(Date.now())
+        // if (doneReadSetting) {
             res.render('admins/setting', {
                 admin: "ADMIN",
+                startDate: startDate,
+                endDate: endDate,
                 fndSetting: fndBudgSetting,
                 statSelect: statSelect,
                 searchOptions: req.query,
                 yuser: _user
             })
-
+    // }
 } catch (err) {
         console.log(err)
         res.redirect('/')
@@ -108,9 +96,9 @@ const admin = req.params.id
 // let setting
     try {
         
-        const setting = await Setting.find({})
+        const setting = await Setting.findOne()
             
-            if (!isEmpty(setting)) {
+            if (!isNull(setting)) {
                 console.log(setting)
         
                 setting.budget_year = req.body.budgYear
@@ -147,9 +135,513 @@ const admin = req.params.id
     }
 })  
 
+//View EMPLOYEES / USERS
+
+router.get('/employees/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => {
+
+    const areaCode = req.params.id
+    const _user = req.user
+    
+    let fndPositi = posisyon
+
+    const regDirID = "611d094bdb81bf7f61039616"
+
+    let fondEmploy = []
+    let sortedEmp = []
+    let fndPosition = {}
+    let empCode = ""
+    let empName = ""
+    let empPostCode = "REG_DIR"
+    let empPost = ""
+    let empSortKey = ""
+    let empPst
+    let empAss = ""
+    let empID = ""
+    let empUnit = ""
+    let opDED = ""
+    let recCount = 0
+
+    let empCanProceed = false
+    let fndEmployees = []
+    
+    // console.log(fndPositi)
+
+    fndPositi.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii.id
+        if (fndPositionEmp === "DED") {
+            opDED = fndPositID
+        }
+    })
+
+    console.log(opDED)
+
+    try {
+
+        const regions = await Region.find()
+
+        const brnEmployees = await Employee.find({position_code: opDED}) // , function (err, foundEmployees) {
+
+            if (!isNull(brnEmployees) && brnEmployees.length > 0) {
+                const fndEmployees = brnEmployees
+
+                brnEmployees.forEach(foundEmp =>{
+                    empPst = foundEmp.position_code
+                    const regDirRegion = foundEmp.region
+                    empID = foundEmp._id
+                    empName = foundEmp.last_name + ", " + foundEmp.first_name + " " + foundEmp.middle_name.substr(0,1) + "."
+                    empCode = foundEmp.emp_code
+                    empUnit = foundEmp.unit
+                    empUnitPOnum = foundEmp.unit + foundEmp.po_number
+                    empAss = foundEmp.assign_code
+                    let exist = false
+    
+                    // const empAssign = _.find(regions, {region: empAss})
+                    
+                    fondEmploy.push({empID: empID, region: regDirRegion, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empAss})
+    
+                })
+                recCount = 1
+            }
+            else {
+                recCount = 0
+            }
+
+            console.log(brnEmployees)
+            console.log(recCount)
+
+                empCanProceed = true            
+
+            sortedEmp = fondEmploy.sort( function (a,b) {
+                if ( a.empName < b.empName ){
+                    return -1;
+                  }
+                  if ( a.empName > b.empName ){
+                    return 1;
+                  }
+                   return 0;
+            })        
+    
+            res.render('admins/employee', {
+                ded: "DED",
+                fndEmploy: sortedEmp,
+                searchOptions: req.query,
+                recCount: recCount,
+                yuser: _user
+            })
+
+} catch (err) {
+        console.log(err)
+        res.render(err)
+        // res.redirect('/')
+    }
+})
+
+
+// New EMPLOYEE Route
+router.get('/newEmployee/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => {
+    
+    const areaCode = req.params.id
+    const _user = req.user
+    const empStatus = ["Active","Deactivate"]
+
+    // regionPosiID = "611d094bdb81bf7f61039616"
+    let foundRegion = []
+    let fndRegions = []
+
+    try {
+
+        foundRegion = await Region.find()
+
+           console.log(foundRegion)
+           const newEmp = new Employee()
+           const newUser = new User()
+   
+            res.render('admins/newEmployee', { 
+               emp: newEmp, 
+               empStatus: empStatus,
+               user: newUser,
+               admin: "ADMIN",
+               foundRegion: foundRegion,
+               yuser: _user,
+               newEmp: true,
+               resetPW: false
+           })
+   
+    } catch (err) {
+        console.log(err)
+        res.redirect('/')
+    }
+//    console.log(position)
+
+})
+
+// POST or Save new Employee
+router.post('/postNewEmp/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => {
+    const _user = req.user
+   let eUnit
+   let ePONum
+    const nEmpCode = _.trim(req.body.empCode)
+    const nEmail = _.trim(req.body.email).toLowerCase()
+    const nLName = _.trim(req.body.lName).toUpperCase()
+    const nFName = _.trim(req.body.fName).toUpperCase()
+    const nMName = _.trim(req.body.mName).toUpperCase()
+    const nName =  nLName + ", " + nFName + " " + nMName
+    const empID = req.params.id
+
+    // const regionPosiID = "611d094bdb81bf7f61039616"
+
+    console.log(req.body.password)
+
+    let opDED_ID = ""
+
+    console.log(req.body.password)
+
+    let fndPositi = posisyon
+
+    fndPositi.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii.id
+        if (fndPositionEmp === "DED") {
+            opDED_ID = fndPositID
+        }
+    })
+
+    const empStatus = ["Active","Deactivate"]
+
+let locals
+//console.log(brnCode)
+let getExistingUser = []
+let canProceed = false
+let UserProceed = false
+
+const regionEmployees = await Employee.find()
+
+
+try {
+
+
+    const sameName = _.find(regionEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
+
+    const sameCode = _.find(regionEmployees, {emp_code: nEmpCode})
+
+    const sameAssign = _.find(regionEmployees, {assign_code: empID})
+    console.log(sameAssign)
+
+    if (regionEmployees.length === 0) {
+        if (sameName) {
+            locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+            canProceed = false
+        } else if (sameAssign) {
+            locals = {errorMessage: 'Assign Code: ' + empID + ' already exists!'}
+            canProceed = false
+
+          } else if (sameCode) {
+                locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                canProceed = false
+            } else {
+                canProceed = true
+            }
+
+    } else {
+        canProceed = true
+    }
+
+        const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                
+        getExistingUser = await User.findOne({email: nEmail})
+            // console.log(foundUser)
+            if (!getExistingUser) {
+                    UserProceed = true 
+            } else {
+                    UserProceed = false
+                    locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
+            }    
+    
+    if (canProceed && UserProceed)  {
+
+        addedNewUser = true
+        
+        let employee = new Employee({
+
+            emp_code: nEmpCode,
+            last_name: nLName,
+            first_name: nFName,
+            middle_name: nMName,
+            position_code: opDED_ID,
+            assign_code: empID,
+            status: "Active",
+            po_number: 'N/A',
+            unit: 'N/A',
+            branch: 'N/A',
+            area: 'N/A',
+            region: "N/A",
+            status: "Active"
+        })
+        
+        const newCoa = employee.save()
+
+        let nUser = new User({
+            email: nEmail,
+            password: hashedPassword,
+            name: nName,
+            emp_code: nEmpCode,
+            assCode: empID,
+            role: 'DED',
+            region: "",
+            area: "",
+        })
+        const saveUser = nUser.save()
+
+        res.redirect('/admins/employees/'+ 'ADMIN')
+    } 
+    else {
+        // let psitCode = []
+        // const foundRegion = await Region.find({region: "empRegCod"}, function (err, fnd_Post) {
+        //      psitCode = fnd_Post
+        // })
+        // console.log(psitCode)
+        let errEmp = []
+        let errUser = []
+
+            errUser.push({email: nEmail, password: req.body.password})
+
+            errEmp.push({emp_code: nEmpCode, region: "", last_name: nLName, first_name: nFName, middle_name: nMName, position_code: opDED_ID})
+            console.log(errEmp)
+
+            res.render('admins/newEmployee', { 
+                emp: errEmp, 
+                empStatus: empStatus,
+                user: errUser,
+                admin: "ADMIN",
+                 yuser: _user,
+                newEmp: true,
+                resetPW: false,
+                locals: locals
+            })
+}
+
+
+} catch (err) {
+    console.log(err)
+   let locals = {errorMessage: 'Something WENT went wrong.'}
+    res.redirect('/admins/employees/'+ 'ADMIN')
+}
+})
+
+// Get an Employee for EDIT
+router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.ADMIN), async (req, res) => {
+
+
+    const parame = req.params.id // admin + region.id
+    const ded = parame.substr(0,3)
+    const empCode = _.trim(parame.substr(3,10))
+
+    // areaCod = req.body.area
+
+    console.log(empCode)
+    const _user = req.user
+    let locals = ""
+    let foundEmploy = []
+    let adminRegions = []
+    const empStatus = ["Active","Deactivate"]
+
+     
+   try {
+        let brnCod
+        // const emRegion = await Region.find({}, function (err, fnd_Post) {
+        //     dedRegions = fnd_Post
+        // })
+        // console.log(dedRegions)
+
+        const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
+//            console.log(foundlist)
+            foundEmploy = foundEmp
+            // brnCod = foundEmp.region
+        })
+        console.log(employe)
+        const newUser = new User()
+
+        res.render('admins/editEmployee', {
+            ded: ded,
+            empStatus: empStatus,
+            user: newUser,
+            emp: employe, 
+            locals: locals,
+            yuser: _user,
+            newEmp: false,
+            resetPW: false
+       })
+
+//        res.render('centers/edit', { centers: center, coaClass: coaClass })
+
+   } catch (err) {
+       console.log(err)
+       res.redirect('admins/employees/'+ ded)
+   }
+})
+
+// SAVE EDITed Employee
+
+router.put('/putEditedEmp/:id', authUser, authRole(ROLE.ADMIN), async function(req, res){
+
+    const paramsID = req.params.id // admin + emp.ID
+        console.log(paramsID)
+
+    const ded = paramsID.substr(0,3)
+    const empID = _.trim(paramsID.substr(3,45))
+
+    // const assCode = req.body.region
+    // const regionCod = req.body.region
+    const empStatus = req.body.empStat
+
+    // const eAssCode = assCode
+    
+    const eCode = _.trim(req.body.empCode)
+    const eLName = _.trim(req.body.lName).toUpperCase()
+    const eFName = _.trim(req.body.fName).toUpperCase()
+    const eMName = _.trim(req.body.mName).toUpperCase()
+    const nName =  eLName + ", " + eFName + " " + eMName
+        
+        try {
+
+            employee = await Employee.findById(empID)
+            console.log(employee)
+
+            employee.emp_code = eCode
+            employee.last_name = eLName
+            employee.first_name = eFName
+            employee.middle_name = eMName
+            employee.status = empStatus
+        
+            await employee.save()
+        
+                // const poAssignCode = await Region.findOneAndUpdate({"region": regionCod}, {$set:{"emp_code": eCode}})
+
+                // const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": eCode, "region": regionCod}})
+
+                res.redirect('/admins/employees/'+ ded)
+
+        } catch (err) {
+            console.log(err)
+            let locals = {errorMessage: 'Something WENT went wrong.'}
+            res.redirect('/admins/employees/'+ ded, {
+            locals: locals
+            })
+        }
+  
+})
+
+// GET Employee User for RESET PASSWORD
+router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.ADMIN), async (req, res) => {
+
+    const parame = req.params.id // admin + emp_code
+    const admin = parame.substr(0,3)
+    const empCode = _.trim(parame.substr(3,10))
+
+
+   const paramsID = req.params.id
+        console.log(paramsID)
+    const branCod = req.body.branCode
+    const empID = req.params.id
+
+    const _user = req.user
+    let locals = ""
+    let regionAsignCode = ""
+    let areaAsignDesc = ""
+    let foundEmploy = []
+
+    let ass_Code = ""
+
+   try {
+        const employe = await Employee.findOne({emp_code: empCode}) //, function (err, foundEmp) {
+        
+        if (!isNull(employe)) {
+            foundEmploy = employe
+            brnCod = employe.branch
+            possit = _.trim(employe.position_code)
+           console.log(possit)
+           regionAsignCode = employe.assign_code
+
+        }
+//            console.log(foundlist)
+        
+        // const region = await Region.findOne({region: regionAsignCode}) //, function (err, fndArea) {
+        
+        // if (!isNull(region)) {
+        //     areaAsignDesc = region.region_desc
+        //     dedRegions = region
+
+        // }
+    
+            // console.log(employe)
+        const editUser = await User.findOne({assCode: regionAsignCode}) //, function (err, foundUser) {
+        
+        if (!isNull(editUser)) {
+            fndUser = editUser
+            console.log(fndUser)
+
+        }
+            //            console.log(foundlist)
+
+            editUser.password = ""
+            
+        res.render('admins/resetPassword', {
+            ded: "DED",
+            user: editUser,
+            emp: employe, 
+            locals: locals,
+            yuser: _user,
+            newEmp: false,
+            resetPW: true
+       })
+
+//        res.render('centers/edit', { centers: center, coaClass: coaClass })
+
+   } catch (err) {
+       console.log(err)
+       res.redirect('admins/'+ 'ADMIN')
+   }
+})
+
+router.put('/putEditedPass/:id', authUser, authRole(ROLE.ADMIN), async function(req, res){
+
+    const paramsID = req.params.id // 'ADMIN' + emp.id
+
+    const regionCod = _.trim(paramsID.substr(3,3))
+    // empID = req.params.id
+    const ded = _.trim(paramsID.substr(0,3))
+    // const regionCod = _.trim(paramsID.substr(3,10))
+    const newPassword = _.trim(req.body.password)
+    const userID = req.body.user_id
+
+    // let getExistingUser
+    
+        try {
+            const hashdPassword = await bcrypt.hash(newPassword, 10)
+            let getExistingUser = await User.findOne({assCode: ded})
+
+                getExistingUser.password = hashdPassword
+                const savedNewPW = getExistingUser.save()
+        
+            res.redirect('/admins/employees/'+ ded)
+
+        } catch (err) {
+            console.log(err)
+            let locals = {errorMessage: 'Something WENT went wrong.'}
+            res.redirect('/admins/employees/'+ ded)
+        }
+  
+})
+
+
+// REGISTER ROUTE
 router.get('/register/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => {
     // res.send('User Registration Page!')
-    res.render('admins/register')
+    const regUser = new User()
+    res.render('admins/register', {
+        regUser: regUser
+    })
 })
 
 router.post('/saveRegister', async (req, res) => {
@@ -167,13 +659,11 @@ router.post('/saveRegister', async (req, res) => {
         
         const getExistingUser = await User.findOne({email: eMail}, function (err, foundUser) {
 
-            if (!err) {
-                if (!foundUser) {
-                    canProceed = true 
-                } else {
+            if (!isNull(foundUser)) {
                     canProceed = false
                     locals = {errorMessage: "USER already exist!"}
-                }
+            } else {
+                canProceed = true 
             }
         })
         console.log(canProceed)
@@ -194,7 +684,7 @@ router.post('/saveRegister', async (req, res) => {
             res.redirect('/login')
 
         } else {
-            res.redirect('/admins/register')
+            res.render('/admins/register')
         }
 
     } catch (err) {
@@ -202,7 +692,6 @@ router.post('/saveRegister', async (req, res) => {
         res.redirect('/admins/register')
     }
 })  
-
 
 router.get('/region', authUser, authRole(ROLE.ADMIN), async (req, res) => {
 
@@ -217,6 +706,7 @@ router.get('/region', authUser, authRole(ROLE.ADMIN), async (req, res) => {
 
     let empName = []
 
+    console.log(_user + "View Region")
     try {
 
         fndRegion = await Region.find()
@@ -270,6 +760,107 @@ router.get('/region', authUser, authRole(ROLE.ADMIN), async (req, res) => {
         console.log(err)
         res.redirect('/')
     }
+})
+
+// GET  USER for RESET PASSWORD
+router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.ADMIN), async (req, res) => {
+
+    const parame = req.params.id // admin + emp_code
+    const admin = parame.substr(0,3)
+    const empCode = _.trim(parame.substr(3,10))
+
+
+   const paramsID = req.params.id
+        console.log(paramsID)
+    const branCod = req.body.branCode
+    const empID = req.params.id
+
+    const _user = req.user
+    let locals = ""
+    let regionAsignCode = ""
+    let areaAsignDesc = ""
+    let foundEmploy = []
+
+    let ass_Code = ""
+
+   try {
+        // const employe = await Employee.findOne({emp_code: empCode}) //, function (err, foundEmp) {
+        
+        // if (!isNull(employe)) {
+        //     foundEmploy = employe
+        //     brnCod = employe.branch
+        //     possit = _.trim(employe.position_code)
+        //    console.log(possit)
+        //    regionAsignCode = employe.assign_code
+
+        // }
+//            console.log(foundlist)
+        
+        // const region = await Region.findOne({region: regionAsignCode}) //, function (err, fndArea) {
+        
+        // if (!isNull(region)) {
+        //     areaAsignDesc = region.region_desc
+        //     dedRegions = region
+
+        // }
+    
+            // console.log(employe)
+        const yoser = await User.findOne({assCode: "ADMIN"}) //, function (err, foundUser) {
+        
+        if (!isNull(yoser)) {
+            fndUser = yoser
+            console.log(fndUser)
+
+        }
+            //            console.log(foundlist)
+
+        yoser.password = ""
+            
+        res.render('admins/resetPassword', {
+            admin: "ADMIN",
+            yoser: yoser,
+            locals: locals,
+            yuser: _user,
+            newEmp: false,
+            resetPW: true
+       })
+
+//        res.render('centers/edit', { centers: center, coaClass: coaClass })
+
+   } catch (err) {
+       console.log(err)
+       res.redirect('admins/'+ 'ADMIN')
+   }
+})
+
+router.put('/putEditedPass/:id', authUser, authRole(ROLE.ADMIN), async function(req, res){
+
+    const paramsID = req.params.id // 'DED' + emp.id
+
+    const regionCod = _.trim(paramsID.substr(3,3))
+    // empID = req.params.id
+    const admin = _.trim(paramsID.substr(0,3))
+    // const regionCod = _.trim(paramsID.substr(3,10))
+    const newPassword = _.trim(req.body.password)
+    const userID = req.body.user_id
+
+    // let getExistingUser
+    
+        try {
+            const hashdPassword = await bcrypt.hash(newPassword, 10)
+            let getExistingUser = await User.findOne({assCode: "ADMIN"})
+
+                getExistingUser.password = hashdPassword
+                const savedNewPW = getExistingUser.save()
+        
+            res.redirect('/admins/employees/'+ admin)
+
+        } catch (err) {
+            console.log(err)
+            let locals = {errorMessage: 'Something WENT went wrong.'}
+            res.redirect('/admins/getEmpEditPass/'+ admin + '/edit')
+        }
+  
 })
 
 // GET AREAS PER REGION
@@ -393,7 +984,7 @@ router.post('/postNewRegion', async (req, res) => {
 
     } catch (err) {
         console.log(err)
-        res.redirect('/admins//register')
+        res.redirect('/admins/register')
     }
 })  
 
@@ -436,9 +1027,260 @@ router.post('/postNewRegions', async (req, res) => {
 
     } catch (err) {
         console.log(err)
-        res.redirect('/admins//register')
+        res.redirect('/admins/register')
     }
 })  
+
+router.get('/regionView/:id', async (req, res) => {
+
+    const ded = req.params.id
+    const _user = req.user
+
+    let foundRegion = []
+    let sortedEmp = []
+    let fndRegion = []
+    let fndRegions = []
+    let doneReadRegion = false
+
+    let empName = []
+
+    try {
+
+        fndRegion = await Region.find()
+        
+        let fndEmployee = await Employee.find()
+        
+    //            const fndEmployees = foundEmployees
+    //            const empStatus = fndEmployees.status
+        if (isNull(fndRegion)) {
+        } else {
+            fndRegion.forEach(fndRegions =>{
+                id = fndRegions._id
+                regionCode = fndRegions.region
+                regionDesc = fndRegions.region_desc
+                regionEmp = fndRegions.emp_code
+
+                // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
+                empName = _.filter(fndEmployee, {'emp_code': regionEmp})
+
+                if (empName.length === 0) {
+                } else {
+                    employeeName = empName.first_name + " " + _.trim(empName.middle_name).substr(0,1) + ". " + empName.last_name
+                }
+                foundRegion.push({id: id, regionCode: regionCode, regionDesc: regionDesc, regionEmp: regionEmp, empName: empName})
+
+                doneReadRegion = true
+            })
+
+                console.log(foundRegion)
+            
+                sortedRegions= foundRegion.sort( function (a,b) {
+                    if ( a.regionCode < b.regionCode ){
+                        return -1;
+                    }
+                    if ( a.regionCode > b.regionCode ){
+                        return 1;
+                    }
+                    return 0;
+                })
+        }
+
+        if (doneReadRegion || fndRegion.length === 0) {
+            res.render('admins/regionView', {
+            admin: 'admin',
+            fondRegions: sortedRegions,
+            searchOptions: req.query,
+            yuser: _user
+            })
+        }
+
+    } catch (err) {
+        console.log(err)
+        res.redirect('/')
+    }
+})
+
+// GET AREA for display
+router.get('/areaView/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => {
+
+    // const regionCode = req.params.id
+    const _user = req.user
+
+    let foundArea = []
+    let sortedEmp = []
+    let fndArea = []
+    let fndAreas = []
+    let sortedAreas = []
+    let doneReadRegion = false
+
+    let empName = []
+    let areaCode = ""
+    let areaDesc = ""
+    let areaEmp = ""
+    let areaMgrID = ""
+
+    fndPositi = posisyon
+
+    fndPositi.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii.id
+        if (fndPositionEmp === "AREA_MGR") {
+            areaMgrID = fndPositID
+        }
+    })
+
+
+    // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
+
+    try {
+
+        const fnd_area = await Area.find({}, function (err, fnd_Areas) {
+            fndArea = fnd_Areas
+        })
+        
+        let fndEmployee = await Employee.find({position_code: areaMgrID})
+        
+    //            const fndEmployees = foundEmployees
+    //            const empStatus = fndEmployees.status
+        if (fndArea.length === 0) {
+            doneReadRegion = true
+        } else {
+            fndArea.forEach(fndAreas =>{
+                id = fndAreas._id
+                areaCode = fndAreas.area
+                areaDesc = fndAreas.area_desc
+                areaEmp = fndAreas.emp_code
+                regionCode = fndAreas.region
+
+                // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
+                empName = _.filter(fndEmployee, {'emp_code': areaEmp})
+
+                if (empName.length === 0) {
+                } else {
+                    employeeName = empName.first_name + " " + _.trim(empName.middle_name).substr(0,1) + ". " + empName.last_name
+                }
+                foundArea.push({id: id, sortkey: regionCode + areaCode, regionCode: regionCode, areaCode: areaCode, areaDesc: areaDesc, areaEmp: areaEmp, empName: empName})
+
+                doneReadRegion = true
+            })
+
+                console.log(foundArea)
+            
+                sortedAreas= foundArea.sort( function (a,b) {
+                    if ( a.sortkey < b.sortkey ){
+                        return -1;
+                    }
+                    if ( a.sortkey > b.sortkey ){
+                        return 1;
+                    }
+                    return 0;
+                })
+        }
+
+        if (doneReadRegion) {
+            res.render('admins/areaView', {
+            regionCode: regionCode,
+            fondAreas: sortedAreas,
+            searchOptions: req.query,
+            yuser: _user
+            })
+        }
+
+    } catch (err) {
+        console.log(err)
+        res.redirect('/')
+    }
+})
+
+// Get BRANCHES for Display
+router.get('/branchView/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => {
+
+    // const areaCode = req.params.id
+    const _user = req.user
+
+    let foundBranch = []
+    let sortedEmp = []
+    let fndBranch = []
+    let fndBranchs = []
+    let sortedBranchs = []
+    let doneReadarea = false
+    let branchStat = ""
+    let empName = []
+    let branchMgrID = ""
+
+    fndPositi = posisyon
+
+    fndPositi.forEach(fndPosii => {
+        const fndPositionEmp = fndPosii.code
+        const fndPositID = fndPosii.id
+        if (fndPositionEmp === "BRN_MGR") {
+            branchMgrID = fndPositID
+        }
+    })
+
+
+    try {
+
+        const fnd_branch = await Branch.find({}, function (err, fnd_Branchs) {
+            fndBranch = fnd_Branchs
+        })
+        
+        let fndEmployee = await Employee.find({position_code: branchMgrID})
+        
+    //            const fndEmployees = foundEmployees
+    //            const empStatus = fndEmployees.status
+        if (fndBranch.length === 0) {
+            doneReadarea = true
+        } else {
+            fndBranch.forEach(fndBranchs =>{
+                id = fndBranchs._id
+                branchCode = fndBranchs.branch
+                branchDesc = fndBranchs.branch_desc
+                branchEmp = fndBranchs.emp_code
+                branchStat = fndBranchs.status
+                branchCategory = fndBranchs.branch_category
+                areaCode = fndBranchs.area
+                regionCode = fndBranchs.region
+
+                // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
+                empName = _.filter(fndEmployee, {'emp_code': branchEmp})
+
+                if (empName.length === 0) {
+                } else {
+                    employeeName = empName.first_name + " " + _.trim(empName.middle_name).substr(0,1) + ". " + empName.last_name
+                }
+                foundBranch.push({id: id, sortkey: regionCode + areaCode + branchCode, regionCode: regionCode, areaCode: areaCode, branchCode: branchCode, branchDesc: branchDesc, branchCategory: branchCategory, emp_code: branchEmp, empName: empName, branchStat: branchStat})
+
+                doneReadarea = true
+            })
+
+                console.log(foundBranch)
+            
+                sortedBranchs= foundBranch.sort( function (a,b) {
+                    if ( a.sortkey < b.sortkey ){
+                        return -1;
+                    }
+                    if ( a.sortkey > b.sortkey ){
+                        return 1;
+                    }
+                    return 0;
+                })
+        }
+
+        if (doneReadarea) {
+            res.render('admins/branchView', {
+            // areaCode: areaCode,
+            fondBranchs: sortedBranchs,
+            searchOptions: req.query,
+            yuser: _user
+            })
+        }
+
+    } catch (err) {
+        console.log(err)
+        res.redirect('/')
+    }
+})
 
 router.get('/users', authUser, authRole(ROLE.ADMIN), async (req, res) => {
     res.send('System USERS VIEW Page! - ONGOING DEVELOPMENT.')

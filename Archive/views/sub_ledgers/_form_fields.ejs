@@ -1,0 +1,38 @@
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Code</label>
+        <input type="text" name="code" value="<%= sub_ledger.code %>" autocomplete="off">
+    </div>
+    <div class="form-item-column">
+            <label>Description</label>
+        <input type="text" name="description" size=50 value="<%= sub_ledger.description %>" autocomplete="off">
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Chart of Account</label>
+        <select name="coa">
+            <option value="">Select CAO</option>
+            <% coas.forEach(coa => { %>
+                <% if (coa.id == sub_ledger.coa) { %>
+                   <option label="<%= coa.title %>" value="<%= coa.id %>"></option>
+                <% } else { %>
+                    <option selected label="<%= coa.title %>" value="<%= coa.id %>"></option>
+                <%  } %>
+            <% }) %> 
+        </select>
+    </div>
+    <div class="form-item-column">
+        <label>Type</label>
+        <input type="text" name="type" value="<%= sub_ledger.type %>" autocomplete="off">
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Creation Date</label>
+        <input type="date" name="createDate" 
+           value="<%= sub_ledger.createAt == null ? '' : 
+           sub_ledger.createAt.toISOString().split('T')[0] %>">
+    </div>
+
+</div>

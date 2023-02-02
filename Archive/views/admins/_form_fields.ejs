@@ -1,0 +1,54 @@
+<div class="form-row">
+    <div class="form-item-column">
+        <label>NAME:</label>
+        <% if (resetPW) { %>
+            <input type="text" name="lName" value="<%= yoser.name %>" autocomplete="off" disabled>
+        <% } else { %>
+            <input type="text" name="lName" value="<%= yoser.name %>" autocomplete="off"  required>
+        <% } %>
+    </div>
+    <div class="form-item-column">
+        <label>ROLE</label>
+        <% if (resetPW) { %>
+            <input type="text" name="fName" value="<%= yoser.role %>" autocomplete="off" disabled>
+        <% } else { %>
+            <input type="text" name="fName" value="<%= yoser.role %>" autocomplete="off" required>
+        <% } %>
+    </div>
+    <div class="form-item-column">
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-item-column">
+    </div>
+    <div class="form-item-column">
+    </div>
+</div>
+<div>
+    <p></p>
+</div>
+<div>
+    <hr>
+</div>
+<div>
+<p></p>
+</div>
+<div class="form-row">
+    <% if (newEmp || resetPW) { %> 
+        <div class="form-item-columnUSER">
+            <label>System's User Name</label>
+            <% if (newEmp) { %> 
+                <input type="email" id="email" name="email" value="<%= yoser.email %>" onclick="setOffEmailUser()" autocomplete="off">
+            <% } else { %>
+                <input type="email" name="email" value="<%= yoser.email %>" autocomplete="off" disabled>
+                <input type="yoser_id" name="user_id" value="<%= yoser.id %>" autocomplete="off" hidden>
+            <% } %>
+        </div>
+        <div class="form-item-columnUSER">
+            <label>Password</label>
+            <input type="password" name="password" value="<%= yoser.password %>">
+        </div>
+    <% } %>
+    <div class="form-item-column">
+    </div>
+</div>

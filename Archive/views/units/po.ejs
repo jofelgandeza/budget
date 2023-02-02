@@ -1,0 +1,40 @@
+
+<section class="s1">
+    <div class="main-container">
+       <h4> UNIT PO MAINTENANCE - <%= uniCod %></h4>
+        <table class="content-table">
+            <tr>
+                <% if (fondPos.length > 0) { %>
+                <% } else { %>
+                    <a class="btn btn-primary" href='/units/setNewPOs/<%= uniCod %>'>SET NEW PO's</a>
+                <% } %>
+            </tr>
+            <tr>
+                <th> PO NO.</th>
+                <th> ASSIGNED PO</th>
+                <th> LOAN PRODUCT</th>
+                <th> STATUS</th>
+            </tr>
+            <% fondPos.forEach(fndPOs => { %>
+                <tr>
+                    <td><%= fndPOs.poNum %> </td>
+                    <td><%= fndPOs.poName %> </td>
+                    <td><%= fndPOs.poLoanProd %> </td>
+                    <td><%= fndPOs.poStatus %> </td>
+                    <td>
+                        <div class="btn-row">
+                            <a class="btn btn-primary" href='/units/getPOForEdit/<%= fndPOs.realPOCode %>/edit'>Edit</a>
+                            <a class="btn btn-primary" href='/units/setPOCenters/<%= fndPOs.poCode %>'>Centers</a>
+                            <!-- <%- include('../partials/deleteForm', { url: `/units/deletePO/${fndPOs.poCode+fndPOs.poID}` }) %> -->
+                        </div>        
+                    </td>
+                </tr>
+            <% }) %> 
+        </table>
+        <div>
+            <a class="btn btn-primary" href="/units/newPO/<%= uniCod %>">ADD NEW PROGRAM OFFICER</a>
+            <a class="btn btn-primary" href="/units/<%= uniCod %>">BACK</a>
+        </div>
+    </div>
+</section>
+

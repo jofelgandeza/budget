@@ -1,0 +1,35 @@
+<div class="form-row">
+    <div class="form-item">
+        <label>Month </label>
+        <input type="text" name="code" value="<%= coa.code %>" autocomplete="off">
+    </div>
+    <div class="form-item">
+        <label>Period </label>
+        <input type="text" name="title" value="<%= coa.title %>" autocomplete="off">
+    </div>  
+    <div class="form-item">
+        <label>Number of Clients </label>
+        <select name="class">
+            <% coaClass.forEach(function(item, index) { %>
+                <% if (item === coa.class) { %>
+                    <option select label="<%= item %>" value="<% coa.class  %>"></option>
+                 <% } else { %>
+                     <option label="<%= item %>" value="<%= item  %>"></option>
+                 <%  } %> 
+            <% }) %>
+        </select>
+    </div>  
+</div>
+<div class="form-row">
+    <div class="form-item">
+        <label>Description </label>
+        <textarea name="description" value="<%= coa.description %>" autocomplete="off"> </textarea>
+    </div>
+    <div class="form-item">
+        <label>Profit and Loss </label>
+        <input type="text" name="type" value="<%= coa.type %>" autocomplete="off">
+    </div>  
+    <div class="form-item">
+        <label> </label>
+    </div>  
+</div>

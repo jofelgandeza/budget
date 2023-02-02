@@ -2,7 +2,7 @@ const express = require('express')
 const router  = express.Router()
 const Swal = require('sweetalert2')
 const excel = require('exceljs')
-
+const stringify = require('json-stringify-safe')
 const Center = require('../models/center')
 const Employee = require('../models/employee')
 const Position = require('../models/position')
@@ -15,7 +15,7 @@ const User = require('../models/user')
 const Budg_exec_sum = require('../models/budg_exec_sum')
 const Setting = require('../models/setting')
 
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 const { forEach, isNull } = require('lodash')
 
 const _ = require('lodash')
@@ -25,6 +25,7 @@ const { authUser, authRole } = require('../public/javascripts/basicAuth.js')
 const { canViewProject, canDeleteProject, scopedProjects } = require('../public/javascripts/permissions/project.js')
 const user = require('../models/user')
 const { ROLE } = require('../public/javascripts/data.js')
+const employee = require('../models/employee')
 
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
 
@@ -101,7 +102,11 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
         }
     })
 
-    budgetYear = budget_Year[0].budget_year
+    if (!isNull(budget_Year)) {
+        budget_Year.forEach(budgYear => {
+            budgetYear = budgYear.budget_year
+        })
+    }
 
     try {
 
@@ -128,7 +133,7 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
         // console.log(foundPOunits)
         // console.log(foundPOs)
 
-        ctrResBudgDet = await Center_budget_det.find({branch: branchCode, view_code: "ResClientCount"})
+        ctrResBudgDet = await Center_budget_det.find({branch: branchCode, view_code: "ResClientCount", target_year: budgetYear})
 
         const loanType = await Loan_type.find({})
 
@@ -209,7 +214,7 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
                         BudgBegBal = center.budget_BegBal
                     }
                     centerTargets.forEach(centerLoan => {
-                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
+                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan) && centerLoan.target_year === budgetYear) {
                             const loanRem = centerLoan.remarks
                             if (_.trim(loanRem) === "New Loan") {
                                 nloanTot = nloanTot + centerLoan.totAmount
@@ -223,7 +228,7 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
                     })
 
                     LoanBegBal.forEach(centerBegBal => {
-                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
+                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan) && centerBegBal.target_year === budgetYear) {
                             begLoanTot = centerBegBal.beg_amount
                             bClientCnt = centerBegBal.beg_client_count
                             uBegClientTot = uBegClientTot + bClientCnt
@@ -235,7 +240,7 @@ router.get('/:id', authUser, authRole(ROLE.BM),  async (req, res) => {
 
             if (!isNull(ctrResBudgDet)) {
                 ctrResBudgDet.forEach(fndResCli => {
-                    if (fndResCli.loan_type === typeLoan  && fndResCli.unit === uniCode) {
+                    if (fndResCli.loan_type === typeLoan  && fndResCli.unit === uniCode && fndResCli.target_year === budgetYear) {
                         const totalResCnt = fndResCli.jan_budg + fndResCli.feb_budg + fndResCli.mar_budg + fndResCli.apr_budg + fndResCli.may_budg + fndResCli.jun_budg + 
                             fndResCli.jul_budg + fndResCli.aug_budg + fndResCli.sep_budg + fndResCli.oct_budg + fndResCli.nov_budg + fndResCli.dec_budg 
     
@@ -413,6 +418,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
     try {
 
+        const center = await Center.find({branch: branchCode}) //, function (err, foundCenters) {
 
         const branchManager = await Employee.find({branch: branchCode, position_code: postManager}, function (err, foundBMs){
             foundManager = foundBMs
@@ -431,7 +437,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
             foundPOs = foundPO
             })
 
-        ctrResBudgDet = await Center_budget_det.find({branch: branchCode, view_code: "ResClientCount"})
+        ctrResBudgDet = await Center_budget_det.find({branch: branchCode, view_code: "ResClientCount", target_year: budgetYear})
 
         // console.log(officerName)
         // console.log(foundPOunits)
@@ -439,9 +445,8 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
         const loanType = await Loan_type.find({})
 
-        const center = await Center.find({branch: branchCode}) //, function (err, foundCenters) {
 //        const center = await Center.find(searchOptions)
-            if (center.length === 0) {
+            if (isNull(center) || center.length === 0) {
                 doneReadCenter = true
             
             } else {
@@ -519,7 +524,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
                     // console.log(resloanTot)
 
                     centerTargets.forEach(centerLoan => {
-                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
+                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan) && centerLoan.target_year === budgetYear) {
                             const loanRem = centerLoan.remarks
                             if (_.trim(loanRem) === "New Loan") {
                                 nloanTot = nloanTot + centerLoan.totAmount
@@ -533,7 +538,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.BM), async (req, res) => {
                     })
 
                     LoanBegBal.forEach(centerBegBal => {
-                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
+                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan) && centerBegBal.target_year === budgetYear) {
                             begLoanTot = centerBegBal.beg_amount
                             bClientCnt = centerBegBal.beg_client_count
                             uBegClientTot = uBegClientTot + bClientCnt
@@ -789,7 +794,7 @@ router.get('/perUnitsss/:id', authUser, authRole(ROLE.PUH), async (req, res) => 
                     // console.log(resloanTot)
 
                     centerTargets.forEach(centerLoan => {
-                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
+                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)  && centerLoan.target_year === budgetYear) {
                             const loanRem = centerLoan.remarks
                             if (_.trim(loanRem) === "New Loan") {
                                 nloanTot = nloanTot + centerLoan.totAmount
@@ -803,7 +808,7 @@ router.get('/perUnitsss/:id', authUser, authRole(ROLE.PUH), async (req, res) => 
                     })
 
                     LoanBegBal.forEach(centerBegBal => {
-                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
+                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)  && centerBegBal.target_year === budgetYear) {
                             begLoanTot = centerBegBal.beg_amount
                             bClientCnt = centerBegBal.beg_client_count
                             uBegClientTot = uBegClientTot + bClientCnt
@@ -867,106 +872,6 @@ router.get('/perUnitsss/:id', authUser, authRole(ROLE.PUH), async (req, res) => 
     }
 })
 
-
-//View EMPLOYEES per BRANCH Level - TUG
-
-router.get('/employees/:id', authUser, authRole(ROLE.BM), async (req, res) => {
-
-    const brnCode = req.params.id
-    const _user = req.user
-
-
-    let fondEmploy = []
-    let sortedEmp = []
-    let fndPosition = {}
-    let empCode = ""
-    let empName = ""
-    let empPostCode = ""
-    let empPost = ""
-    let empSortKey = ""
-    let empPst
-    let empAssign = ""
-    let empID = ""
-    let empUnit = ""
-
-    let empCanProceed = false
-    
-    try {
-        const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
-            fndPosition = foundPosit
-        })
-
-        const brnEmployees = await Employee.find({branch: brnCode}, function (err, foundEmployees) {
-            const fndEmployees = foundEmployees
-
-//            const empStatus = fndEmployees.status
-            
-            fndEmployees.forEach(foundEmp =>{
-                empPst = foundEmp.position_code
-                empID = foundEmp._id
-                empName = foundEmp.last_name + ", " + foundEmp.first_name + " " + foundEmp.middle_name.substr(0,1) + "."
-                empCode = foundEmp.emp_code
-                empUnit = foundEmp.unit
-                empUnitPOnum = foundEmp.unit + foundEmp.po_number
-                let exist = false
-//                console.log(empID)
-                // console.log(empPst)
-
-                brnPosition.forEach(branchPost => {
-                    const empPosit = branchPost._id
-
-                    if (_.trim(empPosit) === _.trim(empPst) ) {
-                        empPostCode = empPosit
-                        if (branchPost.code === "BRN_MGR" || branchPost.code === "BRN_ACT" || branchPost.code === "BRN_AST") {
-                            empPost = branchPost.title 
-                        }
-                        if (branchPost.code === "UNI_HED") {
-                            empPost = branchPost.title + " - " + empUnit
-                        }
-                        if (branchPost.code === "PRO_OFR") {
-                            empPost = branchPost.title + " - " + empUnitPOnum
-                        }
-                        
-                        empSortKey = branchPost.sort_key.toString() + empUnitPOnum + empName
-                        exist = true
-                    }
-                })
-                if (exist) {
-                    fondEmploy.push({empID: empID, branchC: brnCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empPost, empSortKey: empSortKey})
-                }    
-                empCanProceed = true            
-            })
-
-        })
-
-        sortedEmp = fondEmploy.sort( function (a,b) {
-            if ( a.empSortKey < b.empSortKey ){
-                return -1;
-              }
-              if ( a.empSortKey > b.empSortKey ){
-                return 1;
-              }
-               return 0;
-        })        
-
-        if (brnEmployees.length === 0) {
-            empCanProceed = true
-        }
-
-    if (empCanProceed)
-        res.render('branches/employee', {
-            branchCode: brnCode,
-            fndEmploy: sortedEmp,
-            fndPosition: fndPosition,
-            searchOptions: req.query,
-            yuser: _user
-        })
-
-} catch (err) {
-        console.log(err)
-        res.redirect('/')
-    }
-})
 
 // PAR rate and Amount Entry
 router.get('/PARentry/:id', authUser, authRole(ROLE.BM), async (req, res) => {
@@ -1168,12 +1073,14 @@ router.get('/perPOforEdit/:id', authUser, authRole(ROLE.BM), async (req, res) =>
                                 resPOLoanTot = resPOLoanTot + (center.resClient +  + center.resClient2)
 
                                 LoanBegBal.forEach(centerBegBal => {
-                                    if (_.trim(centerBegBal.loan_type) === "Group Loan" || _.trim(centerBegBal.loan_type) === "Agricultural Loan") {
-                                        begCtrLoanTotCli = centerBegBal.beg_client_count
-                                        begCtrClientTotAmt = centerBegBal.beg_amount
-
-                                        begPOClientTotAmt = begPOClientTotAmt + centerBegBal.beg_amount
-                                        begPOLoanTotCli = begPOLoanTotCli+ centerBegBal.beg_client_count
+                                    if ( centerBegBal.target_year === budgetYear) {
+                                        if (_.trim(centerBegBal.loan_type) === "Group Loan" || _.trim(centerBegBal.loan_type) === "Agricultural Loan") {
+                                            begCtrLoanTotCli = centerBegBal.beg_client_count
+                                            begCtrClientTotAmt = centerBegBal.beg_amount
+    
+                                            begPOClientTotAmt = begPOClientTotAmt + centerBegBal.beg_amount
+                                            begPOLoanTotCli = begPOLoanTotCli+ centerBegBal.beg_client_count
+                                        }    
                                     }
                                 })        
                                 CtrTotAmtDisb = nCtrLoanTotAmt + oCtrLoanTotAmt
@@ -1237,35 +1144,155 @@ router.get('/perPOforEdit/:id', authUser, authRole(ROLE.BM), async (req, res) =>
     }
 })
 
+//View EMPLOYEES per BRANCH Level - TUG
 
-// New EMPLOYEE Route
+router.get('/employees/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+
+    const brnCode = req.params.id
+    const _user = req.user
+
+
+    let fondEmploy = []
+    let sortedEmp = []
+    let fndPosition = {}
+    let empCode = ""
+    let empName = ""
+    let empPostCode = ""
+    let empPost = ""
+    let empSortKey = ""
+    let empPst
+    let empAssign = ""
+    let empID = ""
+    let empUnit = ""
+    let empAssCode = ""
+
+    let empCanProceed = false
+    
+    try {
+        const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
+            fndPosition = foundPosit
+        })
+
+        const brnEmployees = await Employee.find({branch: brnCode}) //, function (err, foundEmployees) {
+            const fndEmployees = brnEmployees
+
+//            const empStatus = fndEmployees.status
+            
+            brnEmployees.forEach(foundEmp =>{
+                empPst = foundEmp.position_code
+                empID = foundEmp._id
+                empName = foundEmp.last_name + ", " + foundEmp.first_name + " " + foundEmp.middle_name.substr(0,1) + "."
+                empCode = foundEmp.emp_code
+                empUnit = foundEmp.unit
+                empAssCode = foundEmp.assign_code
+                empUnitPOnum = foundEmp.unit + foundEmp.po_number
+                let exist = false
+
+                brnPosition.forEach(branchPost => {
+                    const empPosit = branchPost._id
+
+                    if (_.trim(empPosit) === _.trim(empPst) ) {
+                        empPostCode = empPosit
+                        if (branchPost.code === "BRN_MGR" || branchPost.code === "BRN_ACT" || branchPost.code === "BRN_AST") {
+                            empPost = branchPost.title 
+                        }
+                        if (branchPost.code === "UNI_HED") {
+                            empPost = branchPost.title //+ " - " + empUnit
+                        }
+                        if (branchPost.code === "PRO_OFR") {
+                            empPost = branchPost.title //+ " - " + empUnitPOnum
+                        }
+                        
+                        empSortKey = branchPost.sort_key.toString() + empAssCode //empUnitPOnum + empName
+                        exist = true
+                    }
+                })
+                if (exist) {
+                    fondEmploy.push({empID: empID, branchC: brnCode, empName: empName, empCode: empCode, assign_code: empAssCode, empPostCode: empPostCode, empPost: empPost, empSortKey: empSortKey})
+                }    
+                empCanProceed = true            
+            })
+
+//        })
+
+        sortedEmp = fondEmploy.sort( function (a,b) {
+            if ( a.empSortKey < b.empSortKey ){
+                return -1;
+              }
+              if ( a.empSortKey > b.empSortKey ){
+                return 1;
+              }
+               return 0;
+        })        
+
+        if (brnEmployees.length === 0) {
+            empCanProceed = true
+        }
+
+    if (empCanProceed)
+        res.render('branches/employee', {
+            branchCode: brnCode,
+            fndEmploy: sortedEmp,
+            fndPosition: fndPosition,
+            searchOptions: req.query,
+            yuser: _user
+        })
+
+} catch (err) {
+        console.log(err)
+        res.redirect('/')
+    }
+})
+
+
+// New EMPLOYEE ALL Route
 router.get('/newEmployee/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     
     const branchCode = req.params.id
     const _user = req.user
     const empStatus = ["Active","Deactivate"]
 
-
+    let fndPost = []
     try {
 
-        const newEmpPost = await Position.find({group_code: "BRN"}, function (err, fndPost) {
-            const pstCode = fndPost
-           console.log(branchCode)
-           const newEmp = new Employee()
-           const newUser = new User()
-           newEmp.branch = branchCode
-   
+        const foundBranchUnits = await Unit.find({branch: branchCode, emp_code: ""})
+
+        const foundBranchPOs = await Po.find({branch: branchCode, emp_code: ""})
+
+        const newEmpPost = await Position.find({group_code: "BRN"}) //, function (err, fndPost) {
+            
+
+        if (newEmpPost) {
+            newEmpPost.forEach( posit => {
+                const fnPostCode = posit.code
+                const fnPostTitle = posit.title
+                const fndPostID = posit._id
+                if (fnPostTitle === "BRANCH MANAGER") {
+                    
+                } else {
+                    fndPost.push({id: fndPostID, code: fnPostCode, title: fnPostTitle})
+
+                }
+            })
+        }
+
+        console.log(branchCode)
+        const newEmp = new Employee()
+        const newUser = new User()
+        newEmp.branch = branchCode
+
             res.render('branches/newEmployee', { 
                emp: newEmp, 
                empStatus: empStatus,
                user: newUser,
                posit: fndPost,
+               brnUnits: foundBranchUnits,
+               brnPOs: foundBranchPOs,
                branchCode: branchCode,
                yuser: _user,
                newEmp: true,
                resetPW: false
            })
-       })
    
     } catch (err) {
         console.log(err)
@@ -1286,11 +1313,42 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
     const nLName = _.trim(req.body.lName).toUpperCase()
     const nFName = _.trim(req.body.fName).toUpperCase()
     const nMName = _.trim(req.body.mName).toUpperCase()
+    const nPosit_Class = _.trim(req.body.position_class).toUpperCase()
+    const empStat = req.body.empStat
     const nName =  nLName + ", " + nFName + " " + nMName
+    const nUnitLetter = _.trim(req.body.poUnit).toUpperCase()
     const branCod = req.params.id
 
-    console.log(req.body.password)
+    const validEmpCode = /[^a-zA-Z0-9-]/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
+    const trimmedEmpCode = _.replace(nEmpCode, " ", "")
+    const validLName = /[^a-zA-Z. ]/.test(nLName)
+    const validFName = /[^a-zA-Z. ]/.test(nFName)
+    const validMName = /[^a-zA-Z. ]/.test(nMName)
+    const validUnit = /[^A-C]/.test(nUnitLetter)
 
+    let nameCanProceed = false
+    let fieldsOkay = false
+    let locals
+    
+    if (validEmpCode) {
+        locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+    } else if (validLName) {
+        locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+    } else if (validFName) {
+        locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+    } else if (validMName) {
+        locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+    } else if (validUnit) {
+        locals = {errorMessage: "Values for UNIT must be A, B or C ONLY!"}
+    } else if (nEmpCode.length == 0 || nLName.length == 0 || nFName.length == 0 || nMName.length == 0 || nUnitLetter.length == 0) {
+        locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+        // nameCanProceed = true
+    } else {
+
+        fieldsOkay = true
+    }
+
+    
     const branchPosition = posisyon
 
     const fndPosition = branchPosition.find(posit => posit.id === emPostCod)
@@ -1300,6 +1358,8 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
     console.log(ePosition)
 
     let eShortTitle
+    let assignUnit = ""
+
     if (ePosition === "BRN_MGR" || ePosition === "BRN_ACT" || ePosition === "BRN_AST") {
         eShortTitle = "BM"
         eUnit = "N/A"
@@ -1309,15 +1369,14 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
         eShortTitle = "PUH"
         eUnit = _.trim(req.body.poUnit).toUpperCase()
         ePONum = "N/A"
+        assignUnit = _.trim(req.body.poUnit).toUpperCase()
     }
     if (ePosition === "PRO_OFR") {
         eShortTitle = "PO"
         eUnit = _.trim(req.body.poUnit).toUpperCase()
         ePONum = req.body.poNumber
+        assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
     }
-
-    let assignUnit = ""
-    assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
 
     if (ePosition === "BRN_ACT") {
         assignUnit = "BA"
@@ -1333,21 +1392,18 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
     const empCod = req.body.empCode
     const empStatus = ["Active","Deactivate"]
 
-
-let locals
-//console.log(brnCode)
-let getExistingUser = []
-let canProceed = false
-let UserProceed = false
-let foundBranchEmp = []
+    let canProceed = false
+    let UserProceed = false
+    let foundBranchEmp = []
+    let branchArea = ""
+    let branchRegion = ""
 
 try {
 
-    const branchEmployees = await Employee.find({branch: brnCode}, function (err, fndBranchEmp) {
-        foundBranchEmp = fndBranchEmp
-    })
+    const branchEmployees = await Employee.find({}) //, function (err, fndBranchEmp) {
+        foundBranchEmp = branchEmployees
 
-    if (foundBranchEmp.length > 0) {
+    if (branchEmployees) {
         const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
 
         const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
@@ -1372,20 +1428,21 @@ try {
     } else {
         canProceed = true
     }
+    // const nEmail = _.trim(req.body.email).toLowerCase()
 
-        const hashedPassword = await bcrypt.hash(req.body.password, 10)
+        // const hashedPassword = await bcrypt.hash(req.body.password, 10)
                 
-        getExistingUser = await User.findOne({email: nEmail})
-            // console.log(foundUser)
-            if (!getExistingUser) {
-                    UserProceed = true 
-            } else {
-                    UserProceed = true
-                    const userAssignCode = await User.findOneAndUpdate({assCode: assCode}, {$set:{"emp_code": req.body.empCode, "password": hashedPassword }})
-                    // locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
-            }    
+        // const getExistingUser = await User.findOne({email: nEmail})
+        //     // console.log(foundUser)
+        //     if (getExistingUser) {
+        //             UserProceed = false 
+        //             locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
+        //         } else {
+        //             UserProceed = true
+        //             // const userAssignCode = await User.findOneAndUpdate({assCode: assCode}, {$set:{"emp_code": req.body.empCode, "password": hashedPassword }})
+        //     }    
     
-    if (canProceed && UserProceed)  {
+    if (canProceed && fieldsOkay)  {
         if (ePosition === "PRO_OFR") {
             const poAssignCode = await Po.findOneAndUpdate({"po_code": assCode}, {$set:{"emp_code": req.body.empCode}})
         } 
@@ -1402,6 +1459,7 @@ try {
             first_name: nFName,
             middle_name: nMName,
             position_code: emPostCod,
+            position_class: nPosit_Class,
             assign_code: assCode,
             po_number: ePONum,
             branch: req.body.brnCode,
@@ -1413,18 +1471,18 @@ try {
         
         const newCoa = employee.save()
 
-        let nUser = new User({
-            email: nEmail,
-            password: hashedPassword,
-            name: nName,
-            emp_code: nEmpCode,
-            assCode: assCode,
-            role: eShortTitle,
-            region: _user.region,
-            area: _user.area,
-            branch: brnCode
-        })
-        const saveUser = nUser.save()
+        // let nUser = new User({
+        //     email: nEmail,
+        //     password: hashedPassword,
+        //     name: nName,
+        //     emp_code: nEmpCode,
+        //     assCode: assCode,
+        //     role: eShortTitle,
+        //     region: _user.region,
+        //     area: _user.area,
+        //     branch: brnCode
+        // })
+        // const saveUser = nUser.save()
 
         res.redirect('/branches/employees/'+ brnCode)
     } 
@@ -1469,43 +1527,149 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, r
     paramsID = req.params.id
         console.log(paramsID)
 
-    branCod = req.body.branCode
-    empID = req.params.id
-    empCode = _.trim(paramsID.substr(3,9))
+    let branCod = _.trim(paramsID.substr(0,3))
+    const empID = req.params.id
+    const empCode = _.trim(paramsID.substr(3,9))
         console.log(empCode)
     const _user = req.user
+    
     let locals = ""
     let possit
     let foundEmploy = []
+    let pst_Code = []
     const empStatus = ["Active","Deactivate"]
-    const emPosit = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
-         pst_Code = fnd_Post
-    })
-     
+    let branchUnits = []
+    let branchPOs = []
+    let doneRedEmp = false
+    let empHasUnitAss
+    let empHasPOAss
    try {
+
         let brnCod
-        const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
-//            console.log(foundlist)
-            foundEmploy = foundEmp
-            brnCod = foundEmp.branch
-            possit = _.trim(foundEmploy.position_code)
-            empStat = foundEmp.status
-           console.log(possit)
-        })
-        // console.log(employe)
+        let positID
+        let editEmpAssCode = ""
+        let editEmpPosit = ""
+
+        const employe = await Employee.findOne({emp_code: empCode}) //, function (err, fndEmploye) {
+
+            editEmpAssCode = employe.assign_code
+            // editEmpPosit = 
+            // branCod = employe.branch
+            positID =  _.trim(stringify(employe.position_code),'"')
+
+            foundEmploy.push({last_name: employe.last_name, first_name: employe.first_name, middle_name: employe.middle_name,
+                status: employe.status, emp_code : employe.emp_code, position_code: positID})
+
+                doneRedEmp = true                
+    
+            const foundBranchPOs = await Po.find({branch: branCod})
+
+                foundBranchPOs.forEach( pOSelection => {
+                    const region_Code = pOSelection.region    
+                    const branch_Code = pOSelection.branch
+                    const unit_Code = pOSelection.unit_code
+                    const po_Code = pOSelection.po_code
+                    const po_EmpCode = pOSelection.emp_code
+    
+                    if (po_EmpCode === "" || po_EmpCode=== empCode) {
+                        branchPOs.push({po_code: po_Code, po_desc : po_Code, branch: branch_Code})
+                    }
+                })
+                branchPOs.push({unit_code: "", unit_desc : "", branch: ""})
+                console.log(branchPOs)
+    
+                const empHasPO = _.find(foundBranchPOs, {emp_code: empCode})
+    
+                if (empHasPO) {
+                    empHasPOAss = true
+                    locals = {errorMessage: "Employee Code is locked for editing, already has transactions."}
+                }
+    
+        // Get Unit Assignment for a certain PUH
+        const foundBranchUnits = await Unit.find({branch: branCod})
+
+            foundBranchUnits.forEach( unitSelection => {
+                const region_Code = unitSelection.region    
+                const branch_Code = unitSelection.branch
+                const unit_Code = unitSelection.unit_code
+                const unit_EmpCode = unitSelection.emp_code
+
+                if (unit_EmpCode === "" || unit_EmpCode=== empCode) {
+                    branchUnits.push({unit_code: unit_Code, unit_desc : unit_Code, branch: branch_Code})
+                }
+            })
+            branchUnits.push({unit_code: "", unit_desc : "", branch: ""})
+            console.log(branchUnits)
+
+            const empHasUnit = _.find(foundBranchUnits, {emp_code: empCode})
+
+            if (empHasUnit) {
+                empHasUnitAss = true
+                locals = {errorMessage: "Employee Code is locked for editing, already has transactions."}
+            }
+    
+        let empUnitForEdit = false
+
+        const emPosit = await Position.find({group_code: "BRN"}) //, function (err, fnd_Post) {
+         
+            emPosit.forEach( dispPosit => {
+               const dPostCode = dispPosit.code
+               const dPostID = _.trim(dispPosit._id)
+               const dPostDesc = dispPosit.title
+
+               if (dPostID === positID) {
+
+                    if (dPostCode === "UNI_HED") {
+                        empUnitForEdit = true
+                    }
+                    pst_Code.push({id: _.trim(dispPosit._id), code: dPostCode, title: dPostDesc})
+
+               } else {
+               }
+            })
+       // })
+       console.log(pst_Code)
+               
+        console.log(foundEmploy)
+        console.log(employe)
         const newUser = new User()
 
-        res.render('branches/editEmployee', {
-            branchCode: brnCod,
-            empStatus: empStatus,
-            posit: pst_Code,
-            user: newUser,
-            emp: employe, 
-            locals: locals,
-            yuser: _user,
-            newEmp: false,
-            resetPW: false
-       })
+        if (doneRedEmp) {
+            // employe.position_code = positID
+            // employe.save()
+            if (empUnitForEdit) {
+                res.render('branches/editEmployee', {
+                    branchCode: brnCod,
+                    empStatus: empStatus,
+                    posit: pst_Code,
+                    user: newUser,
+                    emp: employe, 
+                    brnUnits: branchUnits,
+                    brnPOs: branchPOs,
+                    locals: locals,
+                    yuser: _user,
+                    newEmp: false,
+                    resetPW: false
+               })
+                    
+            } else {
+
+                res.render('branches/editPOEmployee', {
+                    branchCode: brnCod,
+                    empStatus: empStatus,
+                    posit: pst_Code,
+                    user: newUser,
+                    emp: employe, 
+                    brnUnits: branchUnits,
+                    brnPOs: branchPOs,
+                    locals: locals,
+                    yuser: _user,
+                    newEmp: false,
+                    resetPW: false
+               })
+                }
+    
+        }
 
 //        res.render('centers/edit', { centers: center, coaClass: coaClass })
 
@@ -1522,29 +1686,86 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
     paramsID = req.params.id
         console.log(paramsID)
     const _user = req.user
-    branCod = paramsID.substr(0,3)
+    const branCod = paramsID.substr(0,3)
     // empID = req.params.id
-    empID = _.trim(paramsID.substr(3,45))
+    const empID = _.trim(paramsID.substr(3,45))
 
-    const assignUnit = _.trim(req.body.poUnit) + _.trim(req.body.poNumber)
+    // const assignUnit = _.trim(req.body.poUnit) + _.trim(req.body.poNumber)
     const brnCode = req.body.brnCode 
-    let assCode = ""
-
+    
     const emPost =  req.body.ayPost
     const empStatus = req.body.empStat
+
+    const eCode = _.trim(req.body.empCode)
+    const eLName = _.trim(req.body.lName).toUpperCase()
+    const eFName = _.trim(req.body.fName).toUpperCase()
+    const eMName = _.trim(req.body.mName).toUpperCase()
+    const ePosit_Class = _.trim(req.body.position_class)
+    const nUnitLetter = _.trim(req.body.poUnit).toUpperCase()
+
+    const eStatus = req.body.empStat
+    const HidAssCode = req.body.HideAssCode
+    const HidEmpCode = req.body.HideEmpCode
+    const nName =  eLName + ", " + eFName + " " + eMName
+
+    const validEmpCode = /[^a-zA-Z0-9]-/.test(eCode) // /[^a-zA-Z0-9]+/g
+    const trimmedEmpCode = _.replace(eCode, " ", "")
+    const validLName = /[^a-zA-Z ]/.test(eLName)
+    const validFName = /[^a-zA-Z ]/.test(eFName)
+    const validMName = /[^a-zA-Z ]/.test(eMName)
+    const validUnit = /[^A-C]/.test(nUnitLetter)
+
+    let canProceed = false
+    let fieldsOkay = false
     
+    if (validEmpCode) {
+        locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+    } else if (validLName) {
+        locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+    } else if (validFName) {
+        locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+    } else if (validMName) {
+        locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+    } else if (validUnit) {
+        locals = {errorMessage: "Values for UNIT must be A, B or C ONLY!"}
+    } else if (HidEmpCode.length == 0 || eLName.length == 0 || eFName.length == 0 || eMName.length == 0) {
+        locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+        // nameCanProceed = true
+    } else {
+
+        fieldsOkay = true
+    }
+    
+
     let ePONum = "NA"
     let eUnit = "NA"
     
-        const emPosition =  await Position.findById(req.body.ayPost)
+    let assignUnit = ""
+    assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
+
+    const empCod = req.body.empCode
+    
+        let employee
+        let empPost
+
+        try {
+
+            const branchEmployees = await Employee.find({}) //, function (err, fndBranchEmp) {
+                foundBranchEmp = branchEmployees
+        
+            const emPosition =  await Position.findById(emPost)
             const ePosition = emPosition.code
             const eShortTitle = emPosition.short_title
 
-            const eCode = _.trim(req.body.empCode)
-            const eLName = _.trim(req.body.lName).toUpperCase()
-            const eFName = _.trim(req.body.fName).toUpperCase()
-            const eMName = _.trim(req.body.mName).toUpperCase()
-            const nName =  eLName + ", " + eFName + " " + eMName
+            if (ePosition === "BRN_ACT") {
+                assignUnit = "BA"
+            }
+            if (ePosition === "BRN_AST") {
+                assignUnit = "BAA"
+        
+            }
+        
+            let assCode = brnCode + "-" + assignUnit
         
             if (ePosition === "BRN_MGR") {
             }
@@ -1564,43 +1785,1138 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
                 eUnit = req.body.poUnit
                 ePONum = req.body.poNumber    
             } 
-        const eAssCode = assCode
-        console.log(req.params.id)
-        let employee
-        let empPost
 
-        try {
+            console.log(req.params.id)
+
             const mPost = await Position.findOne({_id: emPost}, function (err, fndEmPost) {
                 empPost = fndEmPost.code
             } )
 
-            employee = await Employee.findById(empID)
-            console.log(employee)
+            const eAssCode = assCode    
 
-            employee.emp_code = eCode
-            employee.last_name = eLName
-            employee.first_name = eFName
-            employee.middle_name = eMName
-            employee.position_code = emPost
-            employee.assign_code = eAssCode
-            employee.po_number = ePONum
-            employee.branch = brnCode
-            employee.status = empStatus
-            employee.unit = eUnit
-            employee.area = _user.area
-            employee.region = _user.region
+            if (HidEmpCode === eCode) {
+
+            } else {
+
+            }
+
+            if (branchEmployees) {
+                const sameName = _.find(branchEmployees, {last_name: eLName, first_name: eFName, middle_name: eMName})
         
-            await employee.save()
+                const sameCode = _.find(branchEmployees, {emp_code: eCode})
+            
+                const sameAssign = _.find(branchEmployees, {assign_code: assCode})
+                console.log(sameAssign)
+
+                const strEmpID = _.trim(stringify(sameName._id),'"')
+                const strSameAssign = _.trim(stringify(sameAssign._id),'"')
+                const strSameACode = _.trim(stringify(sameCode._id),'"')
+
+                if (sameName && strEmpID !== empID) {
+                    locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+                    canProceed = false    
+                } else if (sameAssign && strSameAssign !== empID) {
+                    locals = {errorMessage: 'Assign Code: ' + assCode + ' already exists!'}
+                    canProceed = false
+                } else if (sameCode && strSameACode !== empID) {
+                    locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                    canProceed = false
+                } else {
+                    canProceed = true
+
+                }
         
-            if (empPost === "PRO_OFR") {
-                const poAssignCode = await Po.findOneAndUpdate({"po_code": eAssCode}, {$set:{"emp_code": eCode}})
-            } 
+            } else {
+                canProceed = true
+            }
+        
+            if (fieldsOkay && canProceed) {
+
+                employee = await Employee.findById(empID)
+                console.log(employee)
+    
+                employee.emp_code = eCode
+                employee.last_name = eLName
+                employee.first_name = eFName
+                employee.middle_name = eMName
+                employee.position_code = emPost
+                employee.assign_code = eAssCode
+                employee.po_number = ePONum
+                employee.branch = brnCode
+                employee.status = empStatus
+                employee.position_class = ePosit_Class
+                employee.unit = eUnit
+                employee.area = _user.area
+                employee.region = _user.region
+            
+                await employee.save()
+            
+                if (empPost === "PRO_OFR") {
+                    const poAssignCode = await Po.findOneAndUpdate({"po_code": eAssCode}, {$set:{"emp_code": eCode}})
+                } 
+                if (ePosition === "UNI_HED") {
+                    const unAssignCode = await Unit.findOneAndUpdate({"unit_code": eAssCode}, {$set:{"emp_code": eCode}})
+                } 
+                const userAssignCode = await User.findOneAndUpdate({"emp_code": eCode}, {$set:{"name": nName, "assCode": eAssCode, "region": req.user.region, "area": req.user.area, "short_title": eShortTitle }})
+              
+                res.redirect('/branches/employees/'+ brnCode)
+    
+            } else {
+
+                const empForEdit = await Employee.findById(empID)
+                
+                let pst_Code = []
+                const empStatus = ["Active","Deactivate"]
+                const emPosit = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
+                     
+                     fnd_Post.forEach( dispPosit => {
+                        const dPostCode = dispPosit.code
+                        const dPostDesc = dispPosit.title
+                        if (dPostCode === "BRN_MGR") {
+            
+                        } else {
+                            pst_Code.push({id: _.trim(dispPosit._id), code: dPostCode, title: dPostDesc})
+                        }
+                     })
+                })
+            
+                res.render('branches/editEmployee', {
+                    branchCode: brnCode,
+                    empStatus: empStatus,
+                    posit: pst_Code,
+                    user: new User(),
+                    emp: empForEdit, 
+                    locals: locals,
+                    yuser: req.user,
+                    newEmp: false,
+                    resetPW: false
+               })
+    
+            }
+
+
+        } catch (err) {
+            console.log(err)
+            let locals = {errorMessage: 'Something WENT went wrong.'}
+            res.redirect('/branches/employees/'+ brnCode, {
+            locals: locals
+            })
+        }
+  
+})
+
+
+// New EMPLOYEE PUH Route
+router.get('/newEmpPUH/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+    
+    const branchCode = req.params.id
+    const _user = req.user
+    const empStatus = ["Active","Deactivate"]
+
+    let fndPost = []
+    try {
+
+        const foundBranchUnits = await Unit.find({branch: branchCode, emp_code: ""})
+
+        const foundBranchPOs = await Po.find({branch: branchCode, emp_code: ""})
+
+        const newEmpPost = await Position.find({group_code: "BRN"}) //, function (err, fndPost) {
+            
+
+        if (newEmpPost) {
+            newEmpPost.forEach( posit => {
+                const fnPostCode = posit.code
+                const fnPostTitle = posit.title
+                const fndPostID = posit._id
+                if (fnPostCode === "UNI_HED") {
+                    fndPost.push({id: fndPostID, code: fnPostCode, title: fnPostTitle})
+                    
+                } else {
+
+                }
+            })
+        }
+
+        console.log(branchCode)
+        const newEmp = new Employee()
+        const newUser = new User()
+        newEmp.branch = branchCode
+
+            res.render('branches/newUnitEmployee', { 
+               emp: newEmp, 
+               empStatus: empStatus,
+               user: newUser,
+               posit: fndPost,
+               brnUnits: foundBranchUnits,
+               brnPOs: foundBranchPOs,
+               branchCode: branchCode,
+               yuser: _user,
+               newEmp: true,
+               resetPW: false
+           })
+   
+    } catch (err) {
+        console.log(err)
+        res.redirect('/')
+    }
+//    console.log(position)
+
+})
+
+// POST or Save new Employee
+router.post('/postNewUnitEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+    const _user = req.user
+   let eUnit
+   let ePONum
+   const emPostCod = req.body.ayPost
+    const nEmpCode = _.trim(req.body.empCode).toUpperCase()
+    const nEmail = _.trim(req.body.email).toLowerCase()
+    const nLName = _.trim(req.body.lName).toUpperCase()
+    const nFName = _.trim(req.body.fName).toUpperCase()
+    const nMName = _.trim(req.body.mName).toUpperCase()
+    const nPosit_Class = _.trim(req.body.position_class).toUpperCase()
+    const empStat = req.body.empStat
+    const nName =  nLName + ", " + nFName + " " + nMName
+    // const nUnitLetter = _.trim(req.body.poUnit).toUpperCase()
+    const branCod = req.params.id
+    const assignedUnit = req.body.unitAss
+
+    const validEmpCode = /[^a-zA-Z0-9-]/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
+    const trimmedEmpCode = _.replace(nEmpCode, " ", "")
+    const validLName = /[^a-zA-Z. ]/.test(nLName)
+    const validFName = /[^a-zA-Z. ]/.test(nFName)
+    const validMName = /[^a-zA-Z. ]/.test(nMName)
+    // const validUnit = /[^A-C]/.test(nUnitLetter)
+
+    let nameCanProceed = false
+    let fieldsOkay = false
+    let locals
+    
+    if (validEmpCode) {
+        locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+    } else if (validLName) {
+        locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+    } else if (validFName) {
+        locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+    } else if (validMName) {
+        locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+    } else if (nEmpCode.length == 0 || nLName.length == 0 || nFName.length == 0 || nMName.length == 0) {
+        locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+        // nameCanProceed = true
+    } else {
+
+        fieldsOkay = true
+    }
+
+    
+    const branchPosition = posisyon
+
+    const fndPosition = branchPosition.find(posit => posit.id === emPostCod)
+
+    const ePosition = fndPosition.code
+
+    console.log(ePosition)
+
+    let eShortTitle
+    let assignUnit = ""
+
+    if (ePosition === "UNI_HED") {
+        eShortTitle = "PUH"
+        eUnit = assignedUnit.substr(4,1)   //_.trim(req.body.poUnit).toUpperCase()
+        ePONum = "N/A"
+    }
+
+    const brnCode = _.trim(req.body.brnCode).toUpperCase()
+    
+    const assCode = assignedUnit
+    const empCod = nEmpCode
+    const empStatus = ["Active","Deactivate"]
+
+    let canProceed = false
+    let UserProceed = false
+    let foundBranchEmp = []
+    let branchArea = ""
+    let branchRegion = ""
+
+try {
+
+    const branchEmployees = await Employee.find({}) //, function (err, fndBranchEmp) {
+        foundBranchEmp = branchEmployees
+
+    if (branchEmployees) {
+        const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
+
+        const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
+    
+        const sameAssign = _.find(branchEmployees, {assign_code: assCode})
+        console.log(sameAssign)
+        
+        if (sameName) {
+            locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+            canProceed = false
+        } else if (sameAssign) {
+            locals = {errorMessage: 'Assign Code: ' + assCode + ' already exists!'}
+            canProceed = false
+
+          } else if (sameCode) {
+                locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                canProceed = false
+            } else {
+                canProceed = true
+            }
+
+    } else {
+        canProceed = true
+    }
+    // const nEmail = _.trim(req.body.email).toLowerCase()
+
+        // const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                
+        // const getExistingUser = await User.findOne({email: nEmail})
+        //     // console.log(foundUser)
+        //     if (getExistingUser) {
+        //             UserProceed = false 
+        //             locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
+        //         } else {
+        //             UserProceed = true
+        //             // const userAssignCode = await User.findOneAndUpdate({assCode: assCode}, {$set:{"emp_code": req.body.empCode, "password": hashedPassword }})
+        //     }    
+    
+    if (canProceed && fieldsOkay)  {
+        if (ePosition === "PRO_OFR") {
+            const poAssignCode = await Po.findOneAndUpdate({"po_code": assCode}, {$set:{"emp_code": req.body.empCode}})
+        } 
+        if (ePosition === "UNI_HED") {
+          const unAssignCode = await Unit.findOneAndUpdate({"unit_code": assCode}, {$set:{"emp_code": req.body.empCode}})
+        } 
+
+        addedNewUser = true
+        
+        let employee = new Employee({
+
+            emp_code: nEmpCode,
+            last_name: nLName,
+            first_name: nFName,
+            middle_name: nMName,
+            position_code: emPostCod,
+            position_class: nPosit_Class,
+            assign_code: assCode,
+            po_number: ePONum,
+            branch: req.body.brnCode,
+            area: _user.area,
+            region: _user.region,
+            unit: eUnit,
+            status: "Active"
+        })
+        
+        const newCoa = employee.save()
+
+        res.redirect('/branches/employees/'+ brnCode)
+    } 
+    else {  
+        let psitCode = []
+        const rePosition = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
+             psitCode = fnd_Post
+        })
+        console.log(psitCode)
+        let errEmp = []
+        let errUser = []
+
+            errUser.push({email: nEmail, password: req.body.password})
+
+            errEmp.push({emp_code: nEmpCode, branch: brnCode, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: emPostCod, unit: eUnit, po_number: ePONum})
+            console.log(errEmp)
+
+            res.render('branches/newEmployee', { 
+                emp: errEmp, 
+                empStatus: empStatus,
+                user: errUser,
+                posit: psitCode,
+                branchCode: brnCode,
+                yuser: _user,
+                newEmp: true,
+                resetPW: false,
+                locals: locals
+            })
+    }
+
+
+} catch (err) {
+    console.log(err)
+   let locals = {errorMessage: 'Something WENT went wrong.'}
+    res.redirect('/branches/employees/'+ brnCode)
+}
+})
+
+
+router.put('/putEditedUnitEmp/:id', authUser, authRole(ROLE.BM), async function(req, res){
+
+    paramsID = req.params.id
+        console.log(paramsID)
+    const _user = req.user
+    const branCod = paramsID.substr(0,3)
+    // empID = req.params.id
+    const empID = _.trim(paramsID.substr(3,45))
+
+    // const assignUnit = _.trim(req.body.poUnit) + _.trim(req.body.poNumber)
+    const brnCode = req.body.brnCode 
+    
+    const emPost =  req.body.ayPost
+    const empStatus = req.body.empStat
+
+    const eCode = _.trim(req.body.empCode)
+    const eLName = _.trim(req.body.lName).toUpperCase()
+    const eFName = _.trim(req.body.fName).toUpperCase()
+    const eMName = _.trim(req.body.mName).toUpperCase()
+    const ePosit_Class = _.trim(req.body.position_class)
+    const nUnitLetter = _.trim(req.body.poUnit).toUpperCase()
+
+    const eStatus = req.body.empStat
+    const HidAssCode = req.body.HideAssCode
+    const HidEmpCode = req.body.HideEmpCode
+    const assignedUnit = req.body.unitAss
+    const nName =  eLName + ", " + eFName + " " + eMName
+
+    const validEmpCode = /[^a-zA-Z0-9]-/.test(eCode) // /[^a-zA-Z0-9]+/g
+    const trimmedEmpCode = _.replace(eCode, " ", "")
+    const validLName = /[^a-zA-Z ]/.test(eLName)
+    const validFName = /[^a-zA-Z ]/.test(eFName)
+    const validMName = /[^a-zA-Z ]/.test(eMName)
+    const validUnit = /[^A-C]/.test(nUnitLetter)
+
+    let canProceed = false
+    let fieldsOkay = false
+    
+    if (validEmpCode) {
+        locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+    } else if (validLName) {
+        locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+    } else if (validFName) {
+        locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+    } else if (validMName) {
+        locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+    } else if (validUnit) {
+        locals = {errorMessage: "Values for UNIT must be A, B or C ONLY!"}
+    } else if (HidEmpCode.length == 0 || eLName.length == 0 || eFName.length == 0 || eMName.length == 0) {
+        locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+        // nameCanProceed = true
+    } else {
+
+        fieldsOkay = true
+    }
+    
+
+    let ePONum = "NA"
+    let eUnit = "NA"
+    
+    let assignUnit = ""
+    assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
+
+    const empCod = req.body.empCode
+    
+        let empPost
+
+        try {
+
+            const branchEmployees = await Employee.find({}) //, function (err, fndBranchEmp) {
+                // branchEmployees = employees
+        
+            const emPosition =  await Position.findById(emPost)
+            const ePosition = emPosition.code
+            const eShortTitle = emPosition.short_title
+
+            if (ePosition === "BRN_ACT") {
+                assignUnit = "BA"
+            }
+            if (ePosition === "BRN_AST") {
+                assignUnit = "BAA"
+        
+            }
+        
+            let assCode = brnCode + "-" + assignUnit
+        
+            if (ePosition === "BRN_MGR" || ePosition === "BRN_ACT" || ePosition === "BRN_AST") {
+                eUnit = "NA"
+                ePONum = "NA"
+                assCode = brnCode
+            } else {
+                assCode = brnCode + "-" + assignUnit
+            }
+
             if (ePosition === "UNI_HED") {
-                const unAssignCode = await Unit.findOneAndUpdate({"unit_code": eAssCode}, {$set:{"emp_code": eCode}})
+                eUnit = HidAssCode.substr(4,1) // check the value for eUnit variable
+                ePONum = "NA"
+                assCode = brnCode + "-" + eUnit
             } 
-            const userAssignCode = await User.findOneAndUpdate({"emp_code": eCode}, {$set:{"name": nName, "assCode": eAssCode, "region": req.user.region, "area": req.user.area, "short_title": eShortTitle }})
-          
-            res.redirect('/branches/employees/'+ brnCode)
+            if (ePosition === "PRO_OFR") {
+                eUnit = HidAssCode.substr(4,1)
+                ePONum = HidAssCode.substr(5,1)
+                assCode = brnCode + "-" + eUnit + ePONum
+            } 
+
+            console.log(req.params.id)
+
+            const mPost = await Position.findOne({_id: emPost}, function (err, fndEmPost) {
+                empPost = fndEmPost.code
+            } )
+
+            const eAssCode = assignedUnit    
+
+            if (fieldsOkay) {
+            }
+
+            if (branchEmployees) {
+                const sameName = _.find(branchEmployees, {last_name: eLName, first_name: eFName, middle_name: eMName})
+        
+                const sameCode = _.find(branchEmployees, {emp_code: eCode})
+            
+                const sameAssign = _.find(branchEmployees, {assign_code: eAssCode})
+                console.log(sameAssign)
+
+                if (sameName) {
+                    const strEmpID = _.trim(stringify(sameName._id),'"')
+                    if (strEmpID === empID) {
+                        canProceed = true
+                    } else {
+                        locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+                        canProceed = false        
+                    }
+                } else {
+                    canProceed = true
+
+                }
+                if (sameAssign) {
+                    const strSameAssign = _.trim(stringify(sameAssign._id),'"')
+                    if (strSameAssign === empID) {
+                        canProceed = true
+                    } else {
+                        locals = {errorMessage: 'Assign Code: ' + assCode + ' already exists!'}
+                        canProceed = false
+
+                    }
+                } else {
+                    canProceed = true
+
+                }
+                if (sameCode) {
+                    const strSameACode = _.trim(stringify(sameCode._id),'"')
+                     if (strSameACode === empID) {
+                        canProceed = true
+                    } else {
+                        locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                        canProceed = false    
+                    }
+                } else {
+                        canProceed = true
+    
+                }
+            
+            } else {
+                canProceed = true
+            }
+        
+            if (fieldsOkay && canProceed) {
+
+                const employee = await Employee.findById(empID)
+                console.log(employee)
+
+                employee.emp_code = HidEmpCode
+                employee.last_name = eLName
+                employee.first_name = eFName
+                employee.middle_name = eMName
+                employee.status = eStatus
+                employee.position_class = ePosit_Class
+    
+                if (eAssCode === HidAssCode) {
+                    employee.unit = eUnit
+                    employee.assign_code = eAssCode
+
+                    const userAssignCode = await User.findOneAndUpdate({"assCode": HidAssCode}, {$set:{"name": nName}})
+    
+                } else {
+    
+                    if (eAssCode === "") {
+                        const unitOldAssCode = await Unit.findOneAndUpdate({"unit_code": HidAssCode}, {$set:{"emp_code": ""}})
+    
+                        const userAssignCode = await User.findOneAndUpdate({"assCode": HidAssCode}, {$set:{"name": "", "emp_code": "",}})
+    
+                        employee.assign_code = ""
+                        employee.unit = eUnit
+    
+                    } else {
+            
+                        if (HidAssCode === "") {     // if former Assign Code has NO Value OR, has NO Assign Code
+                            
+                            const unitNewAssCode = await Unit.findOneAndUpdate({"unit_code": eAssCode}, {$set:{"emp_code": HidEmpCode}})
+    
+                            const userNewAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": HidEmpCode }})
+
+                            employee.assign_code = eAssCode
+                            employee.unit = eAssCode.substr(4,1)
+    
+                        } else {      // if !empty(HidAssCode) && !empty(eAssCode)   if former Assign Code has Value and to be changed to changed to ""
+
+                            const unitOldAssCode = await Unit.findOneAndUpdate({"unit_code": HidAssCode}, {$set:{"emp_code": ""}})
+    
+                            const userOldAssignCode = await User.findOneAndUpdate({"assCode": HidAssCode}, {$set:{"name": "", "emp_code": "" }})
+        
+                            const unitNewAssCode = await Unit.findOneAndUpdate({"unit_code": eAssCode}, {$set:{"emp_code": HidEmpCode}})
+    
+                            const userNewAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": HidEmpCode }})
+
+                            employee.assign_code = eAssCode
+                            employee.unit = eUnit
+        
+                            }
+    
+                    }                            
+                }
+    
+                await employee.save()
+
+              
+                res.redirect('/branches/employees/'+ brnCode)
+
+    
+            } else {
+
+                const empForEdit = await Employee.findById(empID)
+                
+                let pst_Code = []
+                const empStatus = ["Active","Deactivate"]
+                const emPosit = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
+                     
+                     fnd_Post.forEach( dispPosit => {
+                        const dPostCode = dispPosit.code
+                        const dPostDesc = dispPosit.title
+                        if (dPostCode === "BRN_MGR") {
+            
+                        } else {
+                            pst_Code.push({id: _.trim(dispPosit._id), code: dPostCode, title: dPostDesc})
+                        }
+                     })
+                })
+            
+                res.render('branches/editEmployee', {
+                    branchCode: brnCode,
+                    empStatus: empStatus,
+                    posit: pst_Code,
+                    user: new User(),
+                    emp: empForEdit, 
+                    locals: locals,
+                    yuser: req.user,
+                    newEmp: false,
+                    resetPW: false
+               })
+    
+            }
+
+
+        } catch (err) {
+            console.log(err)
+            let locals = {errorMessage: 'Something WENT went wrong.'}
+            res.redirect('/branches/employees/'+ brnCode, {
+            locals: locals
+            })
+        }
+  
+})
+
+
+// New EMPLOYEE PUH Route
+router.get('/newEmpPO/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+    
+    const branchCode = req.params.id
+    const _user = req.user
+    const empStatus = ["Active","Deactivate"]
+
+    let fndPost = []
+    try {
+
+        const foundBranchUnits = await Unit.find({branch: branchCode, emp_code: ""})
+
+        const foundBranchPOs = await Po.find({branch: branchCode, emp_code: ""})
+
+        const newEmpPost = await Position.find({group_code: "BRN"}) //, function (err, fndPost) {
+            
+
+        if (newEmpPost) {
+            newEmpPost.forEach( posit => {
+                const fnPostCode = posit.code
+                const fnPostTitle = posit.title
+                const fndPostID = posit._id
+                if (fnPostCode === "PRO_OFR") {
+                    fndPost.push({id: fndPostID, code: fnPostCode, title: fnPostTitle})
+                    
+                } else {
+
+                }
+            })
+        }
+
+        console.log(branchCode)
+        const newEmp = new Employee()
+        const newUser = new User()
+        newEmp.branch = branchCode
+
+            res.render('branches/newPOEmployee', { 
+               emp: newEmp, 
+               empStatus: empStatus,
+               user: newUser,
+               posit: fndPost,
+               brnUnits: foundBranchUnits,
+               brnPOs: foundBranchPOs,
+               branchCode: branchCode,
+               yuser: _user,
+               newEmp: true,
+               resetPW: false
+           })
+   
+    } catch (err) {
+        console.log(err)
+        res.redirect('/')
+    }
+//    console.log(position)
+
+})
+
+// POST or Save new Employee
+router.post('/postNewPOEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+    const _user = req.user
+   let eUnit
+   let ePONum
+   const emPostCod = req.body.ayPost
+    const nEmpCode = _.trim(req.body.empCode).toUpperCase()
+    const nEmail = _.trim(req.body.email).toLowerCase()
+    const nLName = _.trim(req.body.lName).toUpperCase()
+    const nFName = _.trim(req.body.fName).toUpperCase()
+    const nMName = _.trim(req.body.mName).toUpperCase()
+    const nPosit_Class = _.trim(req.body.position_class).toUpperCase()
+    const empStat = req.body.empStat
+    const nName =  nLName + ", " + nFName + " " + nMName
+    // const nUnitLetter = _.trim(req.body.poUnit).toUpperCase()
+    const branCod = req.params.id
+    const assignedPO = req.body.poAss
+    const nUnitLetter = _.trim(req.body.poAss).substr(4,1)
+    const poNumber = _.trim(req.body.poAss).substr(5,1)
+
+    const validEmpCode = /[^a-zA-Z0-9-]/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
+    const trimmedEmpCode = _.replace(nEmpCode, " ", "")
+    const validLName = /[^a-zA-Z. ]/.test(nLName)
+    const validFName = /[^a-zA-Z. ]/.test(nFName)
+    const validMName = /[^a-zA-Z. ]/.test(nMName)
+    // const validUnit = /[^A-C]/.test(nUnitLetter)
+
+    let nameCanProceed = false
+    let fieldsOkay = false
+    let locals
+    
+    if (validEmpCode) {
+        locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+    } else if (validLName) {
+        locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+    } else if (validFName) {
+        locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+    } else if (validMName) {
+        locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+    } else if (nEmpCode.length == 0 || nLName.length == 0 || nFName.length == 0 || nMName.length == 0) {
+        locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+        // nameCanProceed = true
+    } else {
+
+        fieldsOkay = true
+    }
+
+    
+    const branchPosition = posisyon
+
+    const fndPosition = branchPosition.find(posit => posit.id === emPostCod)
+
+    const ePosition = fndPosition.code
+
+    console.log(ePosition)
+
+    let eShortTitle
+    let assignUnit = ""
+
+    if (ePosition === "PRO_OFR") {
+        eShortTitle = "PO"
+        eUnit = assignedPO.substr(4,1)   //_.trim(req.body.poUnit).toUpperCase()
+        ePONum = assignedPO.substr(5,1)   //_.trim(req.body.poUnit).toUpperCase()
+    }
+
+    const brnCode = _.trim(req.body.brnCode).toUpperCase()
+    
+    const assCode = assignedPO
+    const empCod = nEmpCode
+    const empStatus = ["Active","Deactivate"]
+
+    let canProceed = false
+    let UserProceed = false
+    let foundBranchEmp = []
+    let branchArea = ""
+    let branchRegion = ""
+
+try {
+
+    const branchEmployees = await Employee.find({}) //, function (err, fndBranchEmp) {
+        foundBranchEmp = branchEmployees
+
+    if (branchEmployees) {
+        const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
+
+        const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
+    
+        const sameAssign = _.find(branchEmployees, {assign_code: assCode})
+        console.log(sameAssign)
+        
+        if (sameName) {
+            locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+            canProceed = false
+        } else if (sameAssign) {
+            locals = {errorMessage: 'Assign Code: ' + assCode + ' already exists!'}
+            canProceed = false
+
+          } else if (sameCode) {
+                locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                canProceed = false
+            } else {
+                canProceed = true
+            }
+
+    } else {
+        canProceed = true
+    }
+    
+    if (canProceed && fieldsOkay)  {
+        if (ePosition === "PRO_OFR") {
+            const poAssignCode = await Po.findOneAndUpdate({"po_code": assCode}, {$set:{"emp_code": req.body.empCode}})
+        } 
+
+        addedNewUser = true
+        
+        let employee = new Employee({
+
+            emp_code: nEmpCode,
+            last_name: nLName,
+            first_name: nFName,
+            middle_name: nMName,
+            position_code: emPostCod,
+            position_class: nPosit_Class,
+            assign_code: assCode,
+            po_number: ePONum,
+            branch: req.body.brnCode,
+            area: _user.area,
+            region: _user.region,
+            unit: eUnit,
+            status: "Active"
+        })
+        
+        const newCoa = employee.save()
+
+        res.redirect('/branches/employees/'+ brnCode)
+    } 
+    else {  
+        let psitCode = []
+        const rePosition = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
+             psitCode = fnd_Post
+        })
+        console.log(psitCode)
+        let errEmp = []
+        let errUser = []
+
+            errUser.push({email: nEmail, password: req.body.password})
+
+            errEmp.push({emp_code: nEmpCode, branch: brnCode, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: emPostCod, unit: eUnit, po_number: ePONum})
+            console.log(errEmp)
+
+            res.render('branches/newEmployee', { 
+                emp: errEmp, 
+                empStatus: empStatus,
+                user: errUser,
+                posit: psitCode,
+                branchCode: brnCode,
+                yuser: _user,
+                newEmp: true,
+                resetPW: false,
+                locals: locals
+            })
+    }
+
+
+} catch (err) {
+    console.log(err)
+   let locals = {errorMessage: 'Something WENT went wrong.'}
+    res.redirect('/branches/employees/'+ brnCode)
+}
+})
+
+
+router.put('/putEditedPOEmp/:id', authUser, authRole(ROLE.BM), async function(req, res){
+
+    paramsID = req.params.id
+        console.log(paramsID)
+    const _user = req.user
+    const branCod = paramsID.substr(0,3)
+    // empID = req.params.id
+    const empID = _.trim(paramsID.substr(3,45))
+
+    // const assignUnit = _.trim(req.body.poUnit) + _.trim(req.body.poNumber)
+    const brnCode = req.body.brnCode 
+    
+    const emPost =  req.body.ayPost
+    const empStatus = req.body.empStat
+
+    const eCode = _.trim(req.body.empCode)
+    const eLName = _.trim(req.body.lName).toUpperCase()
+    const eFName = _.trim(req.body.fName).toUpperCase()
+    const eMName = _.trim(req.body.mName).toUpperCase()
+    const ePosit_Class = _.trim(req.body.position_class)
+    const nUnitLetter = _.trim(req.body.poAss).substr(4,1)
+    const poNumber = _.trim(req.body.poAss).substr(5,1)
+
+    const eStatus = req.body.empStat
+    const HidAssCode = req.body.HideAssCode
+    const HidEmpCode = req.body.HideEmpCode
+    const assignedPO = req.body.poAss
+    const nName =  eLName + ", " + eFName + " " + eMName
+
+    const validEmpCode = /[^a-zA-Z0-9]-/.test(eCode) // /[^a-zA-Z0-9]+/g
+    const trimmedEmpCode = _.replace(eCode, " ", "")
+    const validLName = /[^a-zA-Z ]/.test(eLName)
+    const validFName = /[^a-zA-Z ]/.test(eFName)
+    const validMName = /[^a-zA-Z ]/.test(eMName)
+    const validUnit = /[^A-C]/.test(nUnitLetter)
+
+    let canProceed = false
+    let fieldsOkay = false
+    
+    if (validEmpCode) {
+        locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+    } else if (validLName) {
+        locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+    } else if (validFName) {
+        locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+    } else if (validMName) {
+        locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+    } else if (validUnit) {
+        locals = {errorMessage: "Values for UNIT must be A, B or C ONLY!"}
+    } else if (HidEmpCode.length == 0 || eLName.length == 0 || eFName.length == 0 || eMName.length == 0) {
+        locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+        // nameCanProceed = true
+    } else {
+
+        fieldsOkay = true
+    }
+    
+
+    let ePONum = "NA"
+    let eUnit = "NA"
+    
+    let assignUnit = ""
+    // assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
+
+    const empCod = req.body.empCode
+    
+        let empPost
+
+        try {
+
+            const branchEmployees = await Employee.find({}) //, function (err, fndBranchEmp) {
+                // branchEmployees = employees
+        
+            const emPosition =  await Position.findById(emPost)
+            const ePosition = emPosition.code
+            const eShortTitle = emPosition.short_title
+
+            if (ePosition === "BRN_ACT") {
+                assignUnit = "BA"
+            }
+            if (ePosition === "BRN_AST") {
+                assignUnit = "BAA"
+        
+            }
+        
+            let assCode = brnCode + "-" + assignUnit
+        
+            if (ePosition === "BRN_MGR" || ePosition === "BRN_ACT" || ePosition === "BRN_AST") {
+                eUnit = "NA"
+                ePONum = "NA"
+                assCode = brnCode
+            } else {
+                assCode = brnCode + "-" + assignUnit
+            }
+
+            if (ePosition === "UNI_HED") {
+                eUnit = HidAssCode.substr(4,1) // check the value for eUnit variable
+                ePONum = "NA"
+                assCode = brnCode + "-" + eUnit
+            } 
+            if (ePosition === "PRO_OFR") {
+                eUnit = HidAssCode.substr(4,1)
+                ePONum = HidAssCode.substr(5,1)
+                assCode = brnCode + "-" + eUnit + ePONum
+            } 
+
+            console.log(req.params.id)
+
+            const mPost = await Position.findOne({_id: emPost}, function (err, fndEmPost) {
+                empPost = fndEmPost.code
+            } )
+
+            const eAssCode = assignedPO    
+
+            if (fieldsOkay) {
+            }
+
+            if (branchEmployees) {
+                const sameName = _.find(branchEmployees, {last_name: eLName, first_name: eFName, middle_name: eMName})
+        
+                const sameCode = _.find(branchEmployees, {emp_code: eCode})
+            
+                const sameAssign = _.find(branchEmployees, {assign_code: eAssCode})
+                console.log(sameAssign)
+
+                if (sameName) {
+                    const strEmpID = _.trim(stringify(sameName._id),'"')
+                    if (strEmpID === empID) {
+                        canProceed = true
+                    } else {
+                        locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+                        canProceed = false        
+                    }
+                } else {
+                    canProceed = true
+
+                }
+                if (sameAssign) {
+                    const strSameAssign = _.trim(stringify(sameAssign._id),'"')
+                    if (strSameAssign === empID) {
+                        canProceed = true
+                    } else {
+                        locals = {errorMessage: 'Assign Code: ' + assCode + ' already exists!'}
+                        canProceed = false
+
+                    }
+                } else {
+                    canProceed = true
+
+                }
+                if (sameCode) {
+                    const strSameACode = _.trim(stringify(sameCode._id),'"')
+                     if (strSameACode === empID) {
+                        canProceed = true
+                    } else {
+                        locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                        canProceed = false    
+                    }
+                } else {
+                        canProceed = true
+    
+                }
+            
+            } else {
+                canProceed = true
+            }
+        
+            if (fieldsOkay && canProceed) {
+
+                const employee = await Employee.findById(empID)
+                console.log(employee)
+
+                employee.emp_code = HidEmpCode
+                employee.last_name = eLName
+                employee.first_name = eFName
+                employee.middle_name = eMName
+                employee.status = eStatus
+                employee.position_class = ePosit_Class
+    
+                if (eAssCode === HidAssCode) {
+                    employee.unit = eUnit
+                    employee.assign_code = eAssCode
+                    employee.po_number = ePONum
+
+                    const userAssignCode = await User.findOneAndUpdate({"assCode": HidAssCode}, {$set:{"name": nName}})
+    
+                } else {
+    
+                    if (eAssCode === "") {
+                        const unitOldAssCode = await Po.findOneAndUpdate({"po_code": HidAssCode}, {$set:{"emp_code": ""}})
+    
+                        const userAssignCode = await User.findOneAndUpdate({"assCode": HidAssCode}, {$set:{"name": "", "emp_code": "",}})
+    
+                        employee.assign_code = ""
+                        employee.unit = eUnit
+                        employee.po_number = ePONum
+    
+                    } else {
+            
+                        if (HidAssCode === "") {     // if former Assign Code has NO Value OR, has NO Assign Code
+                            
+                            const unitNewAssCode = await Po.findOneAndUpdate({"po_code": eAssCode}, {$set:{"emp_code": HidEmpCode}})
+    
+                            const userNewAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": HidEmpCode }})
+
+                            employee.assign_code = eAssCode
+                            employee.unit = eAssCode.substr(4,1)
+    
+                        } else {      // if !empty(HidAssCode) && !empty(eAssCode)   if former Assign Code has Value and to be changed to changed to ""
+
+                            const unitOldAssCode = await Po.findOneAndUpdate({"po_code": HidAssCode}, {$set:{"emp_code": ""}})
+    
+                            const userOldAssignCode = await User.findOneAndUpdate({"assCode": HidAssCode}, {$set:{"name": "", "emp_code": "" }})
+        
+                            const unitNewAssCode = await Po.findOneAndUpdate({"po_code": eAssCode}, {$set:{"emp_code": HidEmpCode}})
+    
+                            const userNewAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": HidEmpCode }})
+
+                            employee.assign_code = eAssCode
+                            employee.unit = eUnit
+                            employee.po_number = ePONum
+        
+                            }
+    
+                    }                            
+                }
+    
+                await employee.save()
+              
+                res.redirect('/branches/employees/'+ brnCode)
+
+    
+            } else {
+
+                const empForEdit = await Employee.findById(empID)
+                
+                let pst_Code = []
+                const empStatus = ["Active","Deactivate"]
+                const emPosit = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
+                     
+                     fnd_Post.forEach( dispPosit => {
+                        const dPostCode = dispPosit.code
+                        const dPostDesc = dispPosit.title
+                        if (dPostCode === "BRN_MGR") {
+            
+                        } else {
+                            pst_Code.push({id: _.trim(dispPosit._id), code: dPostCode, title: dPostDesc})
+                        }
+                     })
+                })
+            
+                res.render('branches/editEmployee', {
+                    branchCode: brnCode,
+                    empStatus: empStatus,
+                    posit: pst_Code,
+                    user: new User(),
+                    emp: empForEdit, 
+                    locals: locals,
+                    yuser: req.user,
+                    newEmp: false,
+                    resetPW: false
+               })
+    
+            }
+
 
         } catch (err) {
             console.log(err)
@@ -1619,8 +2935,8 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.BM), async (req, 
         console.log(paramsID)
     const branCod = req.body.branCode
     const empID = req.params.id
-    const empCode = _.trim(paramsID.substr(3,9))
-
+    const unitLetter = _.trim(paramsID.substr(3,2))
+    const eUnitCode = paramsID
     const _user = req.user
     let locals = ""
     let possit = ""
@@ -1630,22 +2946,16 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.BM), async (req, 
 
    try {
         let brnCod
-        const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
-//            console.log(foundlist)
-            foundEmploy = foundEmp
-            brnCod = foundEmp.branch
-            possit = _.trim(foundEmploy.position_code)
-           console.log(possit)
-           ass_Code = foundEmploy.assign_code
+        const loanType = await Loan_type.find({})
+
+        const units = await Unit.findOne({unit_code: eUnitCode}, function (err, fndUnit) {
+            const fondUnit = fndUnit
         })
-        
-        const emPosit = await Position.findById(possit)
-        const positsyon = emPosit.title
     
             // console.log(employe)
-        const yoser = await User.findOne({assCode: ass_Code}, function (err, foundUser) {
+        const yoser = await User.findOne({assCode: eUnitCode}, function (err, foundUser) {
             //            console.log(foundlist)
-            fndUser = foundUser
+            const fndUser = foundUser
             console.log(fndUser)
         })
 
@@ -1653,12 +2963,12 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.BM), async (req, 
             
         res.render('branches/resetPassword', {
             branchCode: brnCod,
-            posit: positsyon,
+            unit: units,
             user: yoser,
-            emp: employe, 
-            locals: locals,
+            lonType: loanType,
             yuser: _user,
-            newEmp: false,
+            newUnit: false,
+            editUnit : false,
             resetPW: true
        })
 
@@ -1666,7 +2976,7 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.BM), async (req, 
 
    } catch (err) {
        console.log(err)
-       res.redirect('employees/'+ branCod)
+       res.redirect('branches/units/'+ branCod)
    }
 })
 
@@ -1689,12 +2999,12 @@ router.put('/putEditedPass/:id', authUser, authRole(ROLE.BM), async function(req
                 getExistingUser.password = hashdPassword
                 const savedNewPW = getExistingUser.save()
         
-            res.redirect('/branches/employees/'+ branCod)
+            res.redirect('/branches/units/'+ branCod)
 
         } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.render('/branches/employee/'+ branCod, {
+            res.render('/branches/units/'+ branCod, {
             locals: locals
             })
         }
@@ -1717,11 +3027,17 @@ router.get('/units/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     // const brnPosition = await Position.find({group_code: "BRN"}, function (err, foundPosit) {
     //     fndPosition = foundPosit
     // })
-    // const brnEmployees = await Employee.find({branch: brnCode}, function (err, fndEmployees) {
-    //     foundEmployee = fndEmployees
-    // })
 
     try {
+
+    const brnEmployees = await Employee.find({branch: brnCode}) 
+
+    const unitUser = await User.find({branch: brnCode, role: "PUH"})
+
+        if (unitUser) {
+            // const sameName = _.find(brnEmployees, {em})
+        }
+
         const brnUnits = await Unit.find({branch: brnCode}, function (err, foundUnits) {
 //            const fndEmployees = foundEmployees
 //            const empStatus = fndEmployees.status
@@ -1738,10 +3054,18 @@ router.get('/units/:id', authUser, authRole(ROLE.BM), async (req, res) => {
                 unitCenterNum = fndUnits.num_centers
                 unitStatus = fndUnits.status
 
-                foundEmployee.forEach(fndEmp => {
-                    empName = fndEmp.first_name + " " + fndEmp.middle_name.substr(0,1) + ". " + fndEmp.last_name
-                })
-                fndUnit.push({id: id, unitCode: unitCode, unitUnit: unitUnit, unitHead: unitHead, unitLoanProd: unitLoanProd, unitOffLoc: unitOffLoc})
+                // brnEmployees.forEach(fndEmp => {
+                //     empName = fndEmp.first_name + " " + fndEmp.middle_name.substr(0,1) + ". " + fndEmp.last_name
+                // })
+
+                const empUnitName = _.find(brnEmployees, {emp_code: unitHead})
+                if (empUnitName) {
+                    empName = empUnitName.first_name + " " + empUnitName.middle_name.substr(0,1) + ". " + empUnitName.last_name
+                } else {
+                    empName = ""
+                }
+
+                fndUnit.push({id: id, branch: brnCode, unitCode: unitCode, unitUnit: unitUnit, empName: empName, unitHead: unitHead, unitLoanProd: unitLoanProd, unitOffLoc: unitOffLoc})
                 doneReadUnit = true
             })
 
@@ -1783,10 +3107,12 @@ router.get('/newUnit/:id', authUser, authRole(ROLE.BM), async (req, res) => {
             unit: new Unit(), 
             lonType: loanType,
             branchCode: branchCode,
-            yuser: _user
+            yuser: _user,
+            newUnit : true,
+            resetPW: false,
+            user: new User(),
+            editUnit : false
         })
-    // })
-//    console.log(position)
 
 })
 
@@ -1797,38 +3123,80 @@ router.post('/postNewUnit/:id', authUser, authRole(ROLE.BM), async (req, res) =>
     const brnCod = _.trim(req.params.id)
     const uUnit = _.trim(req.body.uUnit).toUpperCase()
     const uUnitCode = _.trim(brnCod + '-' + uUnit)
- 
-    let canProceed = true
+    const nEmail = _.trim(req.body.email).toLowerCase()
+
+    const validUnit = /[^A-C]/.test(uUnit)
+
+    let nameCanProceed = false
+    let fieldsOkay = false
     let locals
-    
+
+    if (validUnit) {
+        locals = {errorMessage: "Values for UNIT must be A, B or C ONLY!"}
+    } else {
+
+        fieldsOkay = true
+    }
+
+    let canProceed = true
+    let UserProceed = false    
  
  try {
+    
     const unit = await Unit.findOne({unit_code: uUnitCode}, function (err, fndUnit) {
     })
+
+    const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                
+    const getExistingUser = await User.findOne({email: nEmail})
+        // console.log(foundUser)
+        if (getExistingUser) {
+                UserProceed = false 
+                locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
+            } else {
+                UserProceed = true
+                // const userAssignCode = await User.findOneAndUpdate({assCode: assCode}, {$set:{"emp_code": req.body.empCode, "password": hashedPassword }})
+        }    
+
 
     if (unit === null) {
         canProceed = true
     } else {
+        locals = {errorMessage: 'UNIT already exists!'}
         canProceed = false
     }
 
-    if (canProceed) {
+    if (canProceed && fieldsOkay && UserProceed) {
         let unit = new Unit({
-            region: "NLO",
-            area: "NEL",
+            region: req.user.region,
+            area: req.user.area,
             unit_code: uUnitCode,
             unit: uUnit,
             branch: brnCod,
             loan_type: req.body.loanTyp,
             office_loc: req.body.office_loc,
             address: req.body.unitAdd,
-            status: "New"
+            status: "New",
+            emp_code: ""
        })
        const newUnit = await unit.save()
-       res.redirect('/branches/units/'+ brnCode)
+
+        let nUser = new User({
+            email: nEmail,
+            password: hashedPassword,
+            name: "",
+            emp_code: "",
+            assCode: uUnitCode,
+            role: "PUH",
+            region: req.user.region,
+            area: req.user.area,
+            branch: brnCod
+        })
+        const saveUser = nUser.save()
+
+        res.redirect('/branches/units/'+ brnCod)
      
     } else {
-        locals = {errorMessage: 'UNIT already exists!'}
 
         const loanType = await Loan_type.find({})
 
@@ -1836,8 +3204,12 @@ router.post('/postNewUnit/:id', authUser, authRole(ROLE.BM), async (req, res) =>
            unit: new Unit(), 
            lonType: loanType,
            branchCode: brnCod,
-           locals: locals
-         })
+           locals: locals,
+           newUnit : true,
+           resetPW: false,
+           user: new User(),
+           editUnit : false
+        })
     }
 
 
@@ -1856,26 +3228,51 @@ router.get('/getUnitForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, 
     const uUnitCode = param
     const _user = req.user
 
-    let fondUnit = []
+    let locals = ""
+
+    let canEditUnit = false
+    let editUnit = false
+    let canResetPass = false
 
     try {
 
         const loanType = await Loan_type.find({})
 
-        const units = await Unit.findOne({unit_code: uUnitCode}, function (err, fndUnit) {
-            fondUnit = fndUnit
-        })
+        const units = await Unit.findOne({unit_code: uUnitCode}) 
+
+        const yoser = await User.findOne({assCode: uUnitCode}) 
+
+        if (!isNull(yoser)) {
+            fndUser = yoser
+            console.log(yoser)
+
+            doneReadYoser = true
+
+            yoser.password = ""
+        }
+
+        if (_.trim(units.emp_code) === "") {
+            canEditUnit = true
+        } else {
+            editUnit = true
+            locals = {errorMessage: "UNIT Code is locked for editing, already has transactions."}
+        }
 
         res.render('branches/editUnit', { 
-           unit: fondUnit, 
+           unit: units,
+           user: yoser, 
+           newUnit : canEditUnit,
+           editUnit : editUnit,
+           resetPW: false,
            lonType: loanType,
            branchCode: brnCod,
-           yuser : _user
+           yuser : _user,
+           locals: locals
        })
 
     } catch (err) {
             console.log(err)
-            let locals = {errorMessage: 'Something WENT went wrong.'}
+            locals = {errorMessage: 'Something WENT went wrong.'}
             res.redirect('/branches/units/'+ brnCod)
     }
 })
@@ -1885,30 +3282,126 @@ router.get('/getUnitForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, 
 router.put('/putEditedUnit/:id', authUser, authRole(ROLE.BM), async function(req, res){
     const param = req.params.id
     const brnCod = param.substring(0,3)
-    const uUnit = req.body.uUnit
+    const ueUnit = req.body.uUnit.toUpperCase()
     const uUnitCode = param
     const ln_Typ = req.body.loanTyp
+    const hidUnitLet = req.body.hiddenUnit
+    const hidUnitCode = req.body.hiddenUnitCode
+    const editUnit = req.body.editUnit
+    const newUnit = req.body.newUnit
 
+    let fieldsOkay = false
+    let locals = ""
+    let uUnit = ""
+    if (ueUnit) {
+        uUnit = ueUnit.toUpperCase()
+        const validUnit = /[^A-C]/.test(uUnit)
+        if (validUnit) {
+            locals = {errorMessage: "Values for UNIT must be A, B or C ONLY!"}
+        } else {
+            fieldsOkay = true
+        }
+
+    } else {
+        fieldsOkay = true
+    }
+
+    let nameCanProceed = false
+    let canProceed = false
+    let editUserProceed = false    
+ 
     console.log(req.params.id)
 
-    let unit
-        try {
+    let unitforEdit
+    let newUnitCode = ""
+    let emailForEdit = ""
+    let newUserPassword = ""
+    let newEmail = ""
 
-            unit = await Unit.findOne({unit_code: uUnitCode})
+    try {
 
-            unit.unit_code = uUnitCode
-            unit.unit = uUnit.toUpperCase()
-            unit.branch = brnCod
-            unit.area = "TEST"
-            unit.region = "TEST"
-            unit.loan_type = ln_Typ
-            unit.office_loc = req.body.office_loc
-            unit.address = req.body.unitAdd
-            unit.status = "Active"
-        
-            await unit.save()
-        
-            res.redirect('/branches/units/'+ brnCod)
+            const branchUnits = await Unit.find({branch: brnCod})
+
+            const unit = await Unit.findOne({unit_code: uUnitCode})
+
+            if (ueUnit) { // can EDIT Unit Letter
+
+                if (hidUnitLet === ueUnit) { // NEW Unit & OLD Unit are the same
+                    canProceed = true
+
+                    unitforEdit= await Unit.findOne({unit_code: uUnitCode})
+
+                } else {
+                    const unitLetFOund = _.find(branchUnits, {unit: ueUnit}) 
+
+                    if (unitLetFOund) { // Nagbago ang Unit Letter & may Existing na Unit Letter
+                        locals = {errorMessage: "ERROR: UNIT " + ueUnit + " already exists!"}
+                        
+                    } else {
+                        canProceed = true
+                        editUserProceed = true 
+
+                        newUnitCode = brnCod + '-' + ueUnit
+                        
+                        unit.unit = ueUnit
+                        unit.unit_code = newUnitCode
+
+                        emailForEdit = hidUnitCode.toLowerCase() + '@kmbi.org.ph'
+                        newEmail = newUnitCode.toLowerCase() + '@kmbi.org.ph'
+                        newUserPassword = newUnitCode.toLowerCase()
+                    }
+                }
+    
+            } else {
+                canProceed = true
+
+            }
+
+            if (fieldsOkay && canProceed) {
+
+                unit.loan_type = ln_Typ
+                unit.office_loc = req.body.office_loc
+                unit.address = _.trim(req.body.unitAdd).toUpperCase()
+            
+                await unit.save()
+
+                if (editUserProceed) {
+
+                    const hashedPassword = await bcrypt.hash(newUserPassword, 10)
+                
+                    const getExistingUser = await User.findOneAndUpdate({email: emailForEdit}, {$set:{"email": newEmail, "password": hashedPassword }})
+                
+                }
+            
+                res.redirect('/branches/units/'+ brnCod)
+    
+            } else {
+
+                const loanType = await Loan_type.find({})
+
+                let _canEditUnit = false
+                let _editUnit = false
+
+                if (editUnit === 'true') {
+                    _canEditUnit = true
+                }
+                if (newUnit === 'true') {
+                    _editUnit = true
+                }
+
+                res.render('branches/editUnit', { 
+                    unit: unit,
+                    user: req.user, 
+                    newUnit : _editUnit,
+                    editUnit : _canEditUnit,
+                    resetPW: false,
+                    lonType: loanType,
+                    branchCode: brnCod,
+                    yuser : req.user,
+                    locals: locals
+                })                         
+            }
+
 
         } catch (err) {
             console.log(err)
@@ -2111,7 +3604,7 @@ router.delete('/deleteEmp/:id', authUser, authRole(ROLE.BM), async (req, res) =>
         const delBranCode = empYee.branch
         const assCod = empYee.assign_code
 
-        await empYee.remove()  
+        await empYee.remove()
 
         empUser = await User.findOne({assCode: assCod})
 
@@ -2163,7 +3656,7 @@ router.get('/viewBranchProjInc/:id', authUser, authRole(ROLE.BM), async (req, re
 
             let fndUnitBudgExecTotLonAmt = []
 
-            const poBudgExecTotLonAmt = await Budg_exec_sum.findOne({branch: viewBranCode, view_code: "TotLoanAmt"}, function (err, fndTotLonAmt) {
+            const poBudgExecTotLonAmt = await Budg_exec_sum.findOne({branch: viewBranCode, view_code: "TotLoanAmt", target_year: budgetYear}, function (err, fndTotLonAmt) {
             fndUnitBudgExecTotLonAmt = fndTotLonAmt
 
                 let jan_totLonReleaseInt = 0 
@@ -2393,7 +3886,7 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
     // let foundCenterDet = []
 
     const vwloanType = await Loan_type.find({})
-    const brnBudgExecViews = await Budg_exec_sum.find({branch: viewBranchCode})
+    const brnBudgExecViews = await Budg_exec_sum.find({branch: viewBranchCode, target_year: budgetYear})
 
     // console.log(vwloanType)
 
@@ -2611,21 +4104,21 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                         
                         break;
                     
-                        case "TotLoanAmt":
+                        // case "TotLoanAmt":
                             
-                            janTotAmtLoan = janTotAmtLoan + TotNumCenter.jan_budg
-                            febTotAmtLoan = febTotAmtLoan + TotNumCenter.feb_budg
-                            marTotAmtLoan = marTotAmtLoan + TotNumCenter.mar_budg
-                            aprTotAmtLoan = aprTotAmtLoan + TotNumCenter.apr_budg
-                            mayTotAmtLoan = mayTotAmtLoan + TotNumCenter.may_budg
-                            junTotAmtLoan = junTotAmtLoan + TotNumCenter.jun_budg
-                            julTotAmtLoan = julTotAmtLoan + TotNumCenter.jul_budg
-                            augTotAmtLoan = augTotAmtLoan + TotNumCenter.aug_budg
-                            sepTotAmtLoan = sepTotAmtLoan + TotNumCenter.sep_budg
-                            octTotAmtLoan = octTotAmtLoan + TotNumCenter.oct_budg
-                            novTotAmtLoan = novTotAmtLoan + TotNumCenter.nov_budg
-                            decTotAmtLoan = decTotAmtLoan + TotNumCenter.dec_budg
-                                break;
+                            // janTotAmtLoan = janTotAmtLoan + TotNumCenter.jan_budg
+                            // febTotAmtLoan = febTotAmtLoan + TotNumCenter.feb_budg
+                            // marTotAmtLoan = marTotAmtLoan + TotNumCenter.mar_budg
+                            // aprTotAmtLoan = aprTotAmtLoan + TotNumCenter.apr_budg
+                            // mayTotAmtLoan = mayTotAmtLoan + TotNumCenter.may_budg
+                            // junTotAmtLoan = junTotAmtLoan + TotNumCenter.jun_budg
+                            // julTotAmtLoan = julTotAmtLoan + TotNumCenter.jul_budg
+                            // augTotAmtLoan = augTotAmtLoan + TotNumCenter.aug_budg
+                            // sepTotAmtLoan = sepTotAmtLoan + TotNumCenter.sep_budg
+                            // octTotAmtLoan = octTotAmtLoan + TotNumCenter.oct_budg
+                            // novTotAmtLoan = novTotAmtLoan + TotNumCenter.nov_budg
+                            // decTotAmtLoan = decTotAmtLoan + TotNumCenter.dec_budg
+                            //     break;
                                 
                         case "NewClients":
                             
@@ -2780,6 +4273,20 @@ router.get('/viewBranchTargetMon/:id', authUser, authRole(ROLE.BM), async (req, 
                     dec_centerCount = dec_centerCount + nov_centerCount
     
                     doneReadNumCenters = true  // ****-----
+
+                    // total Disbursement Amount - for Copying to Area conso and Up
+                    janTotAmtLoan = jan_newAtotValue + jan_oldAtotValue
+                    febTotAmtLoan = feb_newAtotValue + feb_oldAtotValue
+                    marTotAmtLoan = mar_newAtotValue + mar_oldAtotValue
+                    aprTotAmtLoan = apr_newAtotValue + apr_oldAtotValue
+                    mayTotAmtLoan = may_newAtotValue + may_oldAtotValue
+                    junTotAmtLoan = jun_newAtotValue + jun_oldAtotValue
+                    julTotAmtLoan = jul_newAtotValue + jul_oldAtotValue
+                    augTotAmtLoan = aug_newAtotValue + aug_oldAtotValue
+                    sepTotAmtLoan = sep_newAtotValue + sep_oldAtotValue
+                    octTotAmtLoan = oct_newAtotValue + oct_oldAtotValue
+                    novTotAmtLoan = nov_newAtotValue + nov_oldAtotValue
+                    decTotAmtLoan = dec_newAtotValue + dec_oldAtotValue
 
                     totTotAmtLoan = janTotAmtLoan + febTotAmtLoan + marTotAmtLoan + aprTotAmtLoan + mayTotAmtLoan + junTotAmtLoan + julTotAmtLoan + augTotAmtLoan +
                         sepTotAmtLoan + octTotAmtLoan + novTotAmtLoan + decTotAmtLoan
@@ -3694,6 +5201,575 @@ module.exports = router
     //          //write what you want to do
     //         }
     //    })); };
-       
+    
+
+// // New EMPLOYEE Route
+// router.get('/newEmployee/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+    
+//     const branchCode = req.params.id
+//     const _user = req.user
+//     const empStatus = ["Active","Deactivate"]
+
+//     let fndPost = []
+//     try {
+
+//         const newEmpPost = await Position.find({group_code: "BRN"}) //, function (err, fndPost) {
+            
+
+//         if (newEmpPost) {
+//             newEmpPost.forEach( posit => {
+//                 const fnPostCode = posit.code
+//                 const fnPostTitle = posit.title
+//                 const fndPostID = posit._id
+//                 if (fnPostTitle === "BRANCH MANAGER") {
+                    
+//                 } else {
+//                     fndPost.push({id: fndPostID, code: fnPostCode, title: fnPostTitle})
+
+//                 }
+//             })
+//         }
+
+//         console.log(branchCode)
+//         const newEmp = new Employee()
+//         const newUser = new User()
+//         newEmp.branch = branchCode
+
+//             res.render('branches/newEmployee', { 
+//                emp: newEmp, 
+//                empStatus: empStatus,
+//                user: newUser,
+//                posit: fndPost,
+//                branchCode: branchCode,
+//                yuser: _user,
+//                newEmp: true,
+//                resetPW: false
+//            })
+   
+//     } catch (err) {
+//         console.log(err)
+//         res.redirect('/')
+//     }
+// //    console.log(position)
+
+// })
+
+// // POST or Save new Employee
+// router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+//     const _user = req.user
+//    let eUnit
+//    let ePONum
+//    const emPostCod = req.body.ayPost
+//     const nEmpCode = _.trim(req.body.empCode)
+//     const nEmail = _.trim(req.body.email).toLowerCase()
+//     const nLName = _.trim(req.body.lName).toUpperCase()
+//     const nFName = _.trim(req.body.fName).toUpperCase()
+//     const nMName = _.trim(req.body.mName).toUpperCase()
+//     const nPosit_Class = _.trim(req.body.position_class).toUpperCase()
+//     const empStat = req.body.empStat
+//     const nName =  nLName + ", " + nFName + " " + nMName
+//     const nUnitLetter = _.trim(req.body.poUnit).toUpperCase()
+//     const branCod = req.params.id
+
+//     const validEmpCode = /[^a-zA-Z0-9-]/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
+//     const trimmedEmpCode = _.replace(nEmpCode, " ", "")
+//     const validLName = /[^a-zA-Z. ]/.test(nLName)
+//     const validFName = /[^a-zA-Z. ]/.test(nFName)
+//     const validMName = /[^a-zA-Z. ]/.test(nMName)
+//     const validUnit = /[^A-C]/.test(nUnitLetter)
+
+//     let nameCanProceed = false
+//     let fieldsOkay = false
+//     let locals
+    
+//     if (validEmpCode) {
+//         locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+//     } else if (validLName) {
+//         locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+//     } else if (validFName) {
+//         locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+//     } else if (validMName) {
+//         locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+//     } else if (validUnit) {
+//         locals = {errorMessage: "Values for UNIT must be A, B or C ONLY!"}
+//     } else if (nEmpCode.length == 0 || nLName.length == 0 || nFName.length == 0 || nMName.length == 0 || nUnitLetter.length == 0) {
+//         locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+//         // nameCanProceed = true
+//     } else {
+
+//         fieldsOkay = true
+//     }
+
+    
+//     const branchPosition = posisyon
+
+//     const fndPosition = branchPosition.find(posit => posit.id === emPostCod)
+
+//     const ePosition = fndPosition.code
+
+//     console.log(ePosition)
+
+//     let eShortTitle
+//     let assignUnit = ""
+
+//     if (ePosition === "BRN_MGR" || ePosition === "BRN_ACT" || ePosition === "BRN_AST") {
+//         eShortTitle = "BM"
+//         eUnit = "N/A"
+//         ePONum = "N/A"
+//     }
+//     if (ePosition === "UNI_HED") {
+//         eShortTitle = "PUH"
+//         eUnit = _.trim(req.body.poUnit).toUpperCase()
+//         ePONum = "N/A"
+//         assignUnit = _.trim(req.body.poUnit).toUpperCase()
+//     }
+//     if (ePosition === "PRO_OFR") {
+//         eShortTitle = "PO"
+//         eUnit = _.trim(req.body.poUnit).toUpperCase()
+//         ePONum = req.body.poNumber
+//         assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
+//     }
+
+//     if (ePosition === "BRN_ACT") {
+//         assignUnit = "BA"
+//     }
+//     if (ePosition === "BRN_AST") {
+//         assignUnit = "BAA"
+
+//     }
+
+//     const brnCode = _.trim(req.body.brnCode).toUpperCase()
+    
+//     const assCode = brnCode + "-" + assignUnit
+//     const empCod = req.body.empCode
+//     const empStatus = ["Active","Deactivate"]
+
+//     let canProceed = false
+//     let UserProceed = false
+//     let foundBranchEmp = []
+//     let branchArea = ""
+//     let branchRegion = ""
+
+// try {
+
+//     const branchEmployees = await Employee.find({}) //, function (err, fndBranchEmp) {
+//         foundBranchEmp = branchEmployees
+
+//     if (branchEmployees) {
+//         const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
+
+//         const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
+    
+//         const sameAssign = _.find(branchEmployees, {assign_code: assCode})
+//         console.log(sameAssign)
+        
+//         if (sameName) {
+//             locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+//             canProceed = false
+//         } else if (sameAssign) {
+//             locals = {errorMessage: 'Assign Code: ' + assCode + ' already exists!'}
+//             canProceed = false
+
+//           } else if (sameCode) {
+//                 locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+//                 canProceed = false
+//             } else {
+//                 canProceed = true
+//             }
+
+//     } else {
+//         canProceed = true
+//     }
+//     // const nEmail = _.trim(req.body.email).toLowerCase()
+
+//         // const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                
+//         // const getExistingUser = await User.findOne({email: nEmail})
+//         //     // console.log(foundUser)
+//         //     if (getExistingUser) {
+//         //             UserProceed = false 
+//         //             locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
+//         //         } else {
+//         //             UserProceed = true
+//         //             // const userAssignCode = await User.findOneAndUpdate({assCode: assCode}, {$set:{"emp_code": req.body.empCode, "password": hashedPassword }})
+//         //     }    
+    
+//     if (canProceed && fieldsOkay)  {
+//         if (ePosition === "PRO_OFR") {
+//             const poAssignCode = await Po.findOneAndUpdate({"po_code": assCode}, {$set:{"emp_code": req.body.empCode}})
+//         } 
+//         if (ePosition === "UNI_HED") {
+//           const unAssignCode = await Unit.findOneAndUpdate({"unit_code": assCode}, {$set:{"emp_code": req.body.empCode}})
+//         } 
+
+//         addedNewUser = true
+        
+//         let employee = new Employee({
+
+//             emp_code: nEmpCode,
+//             last_name: nLName,
+//             first_name: nFName,
+//             middle_name: nMName,
+//             position_code: emPostCod,
+//             position_class: nPosit_Class,
+//             assign_code: assCode,
+//             po_number: ePONum,
+//             branch: req.body.brnCode,
+//             area: _user.area,
+//             region: _user.region,
+//             unit: eUnit,
+//             status: "Active"
+//         })
+        
+//         const newCoa = employee.save()
+
+//         // let nUser = new User({
+//         //     email: nEmail,
+//         //     password: hashedPassword,
+//         //     name: nName,
+//         //     emp_code: nEmpCode,
+//         //     assCode: assCode,
+//         //     role: eShortTitle,
+//         //     region: _user.region,
+//         //     area: _user.area,
+//         //     branch: brnCode
+//         // })
+//         // const saveUser = nUser.save()
+
+//         res.redirect('/branches/employees/'+ brnCode)
+//     } 
+//     else {  
+//         let psitCode = []
+//         const rePosition = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
+//              psitCode = fnd_Post
+//         })
+//         console.log(psitCode)
+//         let errEmp = []
+//         let errUser = []
+
+//             errUser.push({email: nEmail, password: req.body.password})
+
+//             errEmp.push({emp_code: nEmpCode, branch: brnCode, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: emPostCod, unit: eUnit, po_number: ePONum})
+//             console.log(errEmp)
+
+//             res.render('branches/newEmployee', { 
+//                 emp: errEmp, 
+//                 empStatus: empStatus,
+//                 user: errUser,
+//                 posit: psitCode,
+//                 branchCode: brnCode,
+//                 yuser: _user,
+//                 newEmp: true,
+//                 resetPW: false,
+//                 locals: locals
+//             })
+//     }
 
 
+// } catch (err) {
+//     console.log(err)
+//    let locals = {errorMessage: 'Something WENT went wrong.'}
+//     res.redirect('/branches/employees/'+ brnCode)
+// }
+// })
+
+// // Get an Employee for EDIT
+// router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, res) => {
+
+//     paramsID = req.params.id
+//         console.log(paramsID)
+
+//     branCod = req.body.branCode
+//     empID = req.params.id
+//     empCode = _.trim(paramsID.substr(3,9))
+//         console.log(empCode)
+//     const _user = req.user
+    
+//     let locals = ""
+//     let possit
+//     let foundEmploy = []
+//     let pst_Code = []
+//     const empStatus = ["Active","Deactivate"]
+//     const emPosit = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
+         
+//          fnd_Post.forEach( dispPosit => {
+//             const dPostCode = dispPosit.code
+//             const dPostDesc = dispPosit.title
+//             if (dPostCode === "BRN_MGR") {
+
+//             } else {
+//                 pst_Code.push({id: _.trim(dispPosit._id), code: dPostCode, title: dPostDesc})
+//             }
+//          })
+//     })
+//     console.log(pst_Code)
+     
+//     let doneRedEmp = false
+//    try {
+//         let brnCod
+//         let positID
+//         const employe = await Employee.findOne({emp_code: empCode}, function (err, fndEmploye) {
+
+//             positID =  _.trim(stringify(fndEmploye.position_code))
+
+//             foundEmploy.push({last_name: fndEmploye.last_name, first_name: fndEmploye.first_name, middle_name: fndEmploye.middle_name,
+//                 status: fndEmploye.status, emp_code : fndEmploye.emp_code, position_code: positID})
+
+//                 doneRedEmp = true                
+//         })
+
+//         console.log(foundEmploy)
+//         console.log(employe)
+//         const newUser = new User()
+
+//         if (doneRedEmp) {
+//             // employe.position_code = positID
+//             // employe.save()
+
+//             res.render('branches/editEmployee', {
+//                 branchCode: brnCod,
+//                 empStatus: empStatus,
+//                 posit: pst_Code,
+//                 user: newUser,
+//                 emp: employe, 
+//                 locals: locals,
+//                 yuser: _user,
+//                 newEmp: false,
+//                 resetPW: false
+//            })
+    
+//         }
+
+// //        res.render('centers/edit', { centers: center, coaClass: coaClass })
+
+//    } catch (err) {
+//        console.log(err)
+//        res.redirect('employees/'+ branCod)
+//    }
+// })
+
+// // SAVE EDITed Employee
+
+// router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req, res){
+
+//     paramsID = req.params.id
+//         console.log(paramsID)
+//     const _user = req.user
+//     const branCod = paramsID.substr(0,3)
+//     // empID = req.params.id
+//     const empID = _.trim(paramsID.substr(3,45))
+
+//     // const assignUnit = _.trim(req.body.poUnit) + _.trim(req.body.poNumber)
+//     const brnCode = req.body.brnCode 
+    
+//     const emPost =  req.body.ayPost
+//     const empStatus = req.body.empStat
+
+//     const eCode = _.trim(req.body.empCode)
+//     const eLName = _.trim(req.body.lName).toUpperCase()
+//     const eFName = _.trim(req.body.fName).toUpperCase()
+//     const eMName = _.trim(req.body.mName).toUpperCase()
+//     const ePosit_Class = _.trim(req.body.position_class)
+//     const nUnitLetter = _.trim(req.body.poUnit).toUpperCase()
+
+//     const eStatus = req.body.empStat
+//     const HidAssCode = req.body.HideAssCode
+//     const HidEmpCode = req.body.HideEmpCode
+//     const nName =  eLName + ", " + eFName + " " + eMName
+
+//     const validEmpCode = /[^a-zA-Z0-9]-/.test(eCode) // /[^a-zA-Z0-9]+/g
+//     const trimmedEmpCode = _.replace(eCode, " ", "")
+//     const validLName = /[^a-zA-Z ]/.test(eLName)
+//     const validFName = /[^a-zA-Z ]/.test(eFName)
+//     const validMName = /[^a-zA-Z ]/.test(eMName)
+//     const validUnit = /[^A-C]/.test(nUnitLetter)
+
+//     let canProceed = false
+//     let fieldsOkay = false
+    
+//     if (validEmpCode) {
+//         locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+//     } else if (validLName) {
+//         locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+//     } else if (validFName) {
+//         locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+//     } else if (validMName) {
+//         locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+//     } else if (validUnit) {
+//         locals = {errorMessage: "Values for UNIT must be A, B or C ONLY!"}
+//     } else if (HidEmpCode.length == 0 || eLName.length == 0 || eFName.length == 0 || eMName.length == 0) {
+//         locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+//         // nameCanProceed = true
+//     } else {
+
+//         fieldsOkay = true
+//     }
+    
+
+//     let ePONum = "NA"
+//     let eUnit = "NA"
+    
+//     let assignUnit = ""
+//     assignUnit = _.trim(req.body.poUnit).toUpperCase() + _.trim(req.body.poNumber)
+
+//     const empCod = req.body.empCode
+    
+//         let employee
+//         let empPost
+
+//         try {
+
+//             const branchEmployees = await Employee.find({}) //, function (err, fndBranchEmp) {
+//                 foundBranchEmp = branchEmployees
+        
+//             const emPosition =  await Position.findById(emPost)
+//             const ePosition = emPosition.code
+//             const eShortTitle = emPosition.short_title
+
+//             if (ePosition === "BRN_ACT") {
+//                 assignUnit = "BA"
+//             }
+//             if (ePosition === "BRN_AST") {
+//                 assignUnit = "BAA"
+        
+//             }
+        
+//             let assCode = brnCode + "-" + assignUnit
+        
+//             if (ePosition === "BRN_MGR") {
+//             }
+                
+//             if (ePosition === "BRN_MGR" || ePosition === "BRN_ACT" || ePosition === "BRN_AST") {
+//                 eUnit = "NA"
+//                 ePONum = "NA"
+//                 assCode = brnCode
+//             } else {
+//                 assCode = brnCode + "-" + assignUnit
+//             }
+//             if (ePosition === "UNI_HED") {
+//                 eUnit = req.body.poUnit
+//                 ePONum = "NA"
+//             } 
+//             if (ePosition === "PRO_OFR") {
+//                 eUnit = req.body.poUnit
+//                 ePONum = req.body.poNumber    
+//             } 
+
+//             console.log(req.params.id)
+
+//             const mPost = await Position.findOne({_id: emPost}, function (err, fndEmPost) {
+//                 empPost = fndEmPost.code
+//             } )
+
+//             const eAssCode = assCode    
+
+//             if (HidEmpCode === eCode) {
+
+//             } else {
+
+//             }
+
+//             if (branchEmployees) {
+//                 const sameName = _.find(branchEmployees, {last_name: eLName, first_name: eFName, middle_name: eMName})
+        
+//                 const sameCode = _.find(branchEmployees, {emp_code: eCode})
+            
+//                 const sameAssign = _.find(branchEmployees, {assign_code: assCode})
+//                 console.log(sameAssign)
+
+//                 const strEmpID = _.trim(stringify(sameName._id),'"')
+//                 const strSameAssign = _.trim(stringify(sameAssign._id),'"')
+//                 const strSameACode = _.trim(stringify(sameCode._id),'"')
+
+//                 if (sameName && strEmpID !== empID) {
+//                     locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+//                     canProceed = false    
+//                 } else if (sameAssign && strSameAssign !== empID) {
+//                     locals = {errorMessage: 'Assign Code: ' + assCode + ' already exists!'}
+//                     canProceed = false
+//                 } else if (sameCode && strSameACode !== empID) {
+//                     locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+//                     canProceed = false
+//                 } else {
+//                     canProceed = true
+
+//                 }
+        
+//             } else {
+//                 canProceed = true
+//             }
+        
+//             if (fieldsOkay && canProceed) {
+
+//                 employee = await Employee.findById(empID)
+//                 console.log(employee)
+    
+//                 employee.emp_code = eCode
+//                 employee.last_name = eLName
+//                 employee.first_name = eFName
+//                 employee.middle_name = eMName
+//                 employee.position_code = emPost
+//                 employee.assign_code = eAssCode
+//                 employee.po_number = ePONum
+//                 employee.branch = brnCode
+//                 employee.status = empStatus
+//                 employee.position_class = ePosit_Class
+//                 employee.unit = eUnit
+//                 employee.area = _user.area
+//                 employee.region = _user.region
+            
+//                 await employee.save()
+            
+//                 if (empPost === "PRO_OFR") {
+//                     const poAssignCode = await Po.findOneAndUpdate({"po_code": eAssCode}, {$set:{"emp_code": eCode}})
+//                 } 
+//                 if (ePosition === "UNI_HED") {
+//                     const unAssignCode = await Unit.findOneAndUpdate({"unit_code": eAssCode}, {$set:{"emp_code": eCode}})
+//                 } 
+//                 const userAssignCode = await User.findOneAndUpdate({"emp_code": eCode}, {$set:{"name": nName, "assCode": eAssCode, "region": req.user.region, "area": req.user.area, "short_title": eShortTitle }})
+              
+//                 res.redirect('/branches/employees/'+ brnCode)
+    
+//             } else {
+
+//                 const empForEdit = await Employee.findById(empID)
+                
+//                 let pst_Code = []
+//                 const empStatus = ["Active","Deactivate"]
+//                 const emPosit = await Position.find({group_code: "BRN"}, function (err, fnd_Post) {
+                     
+//                      fnd_Post.forEach( dispPosit => {
+//                         const dPostCode = dispPosit.code
+//                         const dPostDesc = dispPosit.title
+//                         if (dPostCode === "BRN_MGR") {
+            
+//                         } else {
+//                             pst_Code.push({id: _.trim(dispPosit._id), code: dPostCode, title: dPostDesc})
+//                         }
+//                      })
+//                 })
+            
+//                 res.render('branches/editEmployee', {
+//                     branchCode: brnCode,
+//                     empStatus: empStatus,
+//                     posit: pst_Code,
+//                     user: new User(),
+//                     emp: empForEdit, 
+//                     locals: locals,
+//                     yuser: req.user,
+//                     newEmp: false,
+//                     resetPW: false
+//                })
+    
+//             }
+
+
+//         } catch (err) {
+//             console.log(err)
+//             let locals = {errorMessage: 'Something WENT went wrong.'}
+//             res.redirect('/branches/employees/'+ brnCode, {
+//             locals: locals
+//             })
+//         }
+  
+// })

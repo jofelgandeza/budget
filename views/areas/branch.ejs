@@ -12,15 +12,20 @@
             <tr>
                 <th> BRANCH CODE</th>
                 <th> BRANCH DESCRIPTION</th>
+                <th> BRANCH CATEGORY</th>
+                <th> ASSIGNED BRANCH MANAGER</th>
                 <th> LINKS</th>
             </tr>
             <% fondBranchs.forEach(areaBranch => { %>
                 <tr>
                     <td><%= areaBranch.branchCode %> </td>
                     <td><%= areaBranch.branchDesc %> </td>
+                    <td><%= areaBranch.branchCategory %> </td>
+                    <td><%= areaBranch.empName %> </td>
                     <td>
                         <div class="btn-row">
                             <a class="btn btn-primary" href="/areas/getBranchForEdit/<%= areaCode + areaBranch.id %>/edit">Edit</a>
+                            <a class="btn btn-primary" href="/areas/getEmpEditPass/<%= areaCode + areaBranch.branchCode %>/edit">Reset Password</a>
                             <!-- <%- include('../partials/deleteForm', { url: `/areas/deleteArea/${areaBranch.id}` }) %> -->
                         </div>        
                     </td>

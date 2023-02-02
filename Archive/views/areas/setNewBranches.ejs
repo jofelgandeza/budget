@@ -1,0 +1,12 @@
+
+<h2 class="page-header">SET NEW BRANCHES Entry </h2>
+<form action='/areas/postBranches' method="POST">
+            <%- include('../partials/errorMessage') %>    
+            <%- include('_setBranch_form_fields') %>
+<div class="btn-row">
+    <div></div>
+    <div></div>
+        <button class="btn btn-primary" type="submit">Create</button>
+        <a class="btn btn-primary" href='/areas/branch'>Cancel</a>
+</div>
+</form>

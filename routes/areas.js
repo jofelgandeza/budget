@@ -15,7 +15,7 @@ const User = require('../models/user')
 const Budg_exec_sum = require('../models/budg_exec_sum')
 const Setting = require('../models/setting')
 
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 const { forEach, isNull } = require('lodash')
 
 const _ = require('lodash')
@@ -26,12 +26,11 @@ const { canViewProject, canDeleteProject, scopedProjects } = require('../public/
 const user = require('../models/user')
 const { ROLE } = require('../public/javascripts/data.js')
 const region = require('../models/region')
+const unit = require('../models/unit')
 
 const monthSelect = ["January","February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
 
 let poSumView = []
-let LonType = []
-let AreaEmp = []
 let budgetYear = ""
 
 // authUser, authRole("BM", "ADMIN"), 
@@ -88,7 +87,7 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
     let doneReadCenter = false
     let doneFoundPO = false
     let doneReadLonTyp = false
-   
+
     const budget_Year = await Setting.find({})
 
     fndPositi.forEach(fndPosii => {
@@ -107,18 +106,17 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
             postProgOfr = fndPositID
         }
     })
-    
+
     if (!isNull(budget_Year)) {
         budget_Year.forEach(budgYear => {
             budgetYear = budgYear.budget_year
         })
     }
 
-    console.log(budgetYear)
-
-    console.log(budget_Year)
 
     try {
+
+        const center = await Center.find({area: areaCode}) //, function (err, foundCenters) {
 
         const areaManager = await Employee.find({area: areaCode}, function (err, foundAreaEmp){
             fndAreaEmps = foundAreaEmp
@@ -154,13 +152,12 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
             totPOs = foundAreaPOs.length
             // })
 
-        ctrResBudgDet = await Center_budget_det.find({area: areaCode, view_code: "ResClientCount"})
+        const ctrResBudgDet = await Center_budget_det.find({area: areaCode, view_code: "ResClientCount", target_year: budgetYear})
 
-        LonType = await Loan_type.find({})
+        const loanType = await Loan_type.find({})
 
-        const center = await Center.find({area: areaCode}) //, function (err, foundCenters) {
 //        const center = await Center.find(searchOptions)
-            if (center.length === 0) {
+            if (isNull(center) || center.length === 0) {
                 doneReadCenter = true
             
             } else {
@@ -204,7 +201,7 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
         let typeLoan = ""
         let count = 0 
     
-        LonType.forEach(loan_type => {
+        loanType.forEach(loan_type => {
             typeLoan = loan_type.title
             let nloanTot = 0
             let nloanTotCount = 0
@@ -239,7 +236,7 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
                         BudgBegBal = center.budget_BegBal
                     }
                     centerTargets.forEach(centerLoan => {
-                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
+                        if (_.trim(centerLoan.loan_type) === _.trim(typeLoan) && centerLoan.target_year === budgetYear) {
                             const loanRem = centerLoan.remarks
                             if (_.trim(loanRem) === "New Loan") {
                                 nloanTot = nloanTot + centerLoan.totAmount
@@ -253,7 +250,7 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
                     })
 
                     LoanBegBal.forEach(centerBegBal => {
-                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
+                        if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan) && centerBegBal.target_year === budgetYear) {
                             begLoanTot = centerBegBal.beg_amount
                             bClientCnt = centerBegBal.beg_client_count
                             uBegClientTot = uBegClientTot + bClientCnt
@@ -312,7 +309,7 @@ router.get('/:id', authUser, authRole(ROLE.AM),  async (req, res) => {
     let gtBegBalClient = 0
     let gtBegBalAmt = 0
 
-    LonType.forEach(loan_type => {
+    loanType.forEach(loan_type => {
         const typeLoan = loan_type.title
         let nloanTot = 0
         let nloanTotCount = 0
@@ -402,6 +399,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let brnLoanTotals = []
     let brnLoanGrandTot = []
     let foundCenter = []
+    let loanType = []
 
     let newClients = 0
     let nClientAmt = 0
@@ -424,9 +422,8 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let doneReadCenter = false
     let doneFoundMgr = false
     let doneReadLonTyp = false
-    let doneFoundPO = false
 
-    // console.log(fndPositi)
+    console.log(fndPositi)
    
     fndPositi.forEach(fndPosii => {
         const fndPositionEmp = fndPosii.code
@@ -442,41 +439,44 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
         }
     })
 
-    const ctrResBudgDet = await Center_budget_det.find({area: areaCode, view_code: "ResClientCount"})
-
-    const areaManager = await Employee.find({area: areaCode}) 
-
-    const areaCenters = await Center.find({area: areaCode})    //, function (err, fndCenters) {
-
-    // console.log(postAreaMgr)
+    console.log(postAreaMgr)
     try {
 
+        const ctrResBudgDet = await Center_budget_det.find({area: areaCode, view_code: "ResClientCount", target_year: budgetYear})
 
+        const center = await Center.find({area: areaCode}, function (err, fndCenters) {
             //        const center = await Center.find(searchOptions)
+                            foundCenter = fndCenters.sort()
+                    })
+            
+            
+        const areaManager = await Employee.find({area: areaCode, position_code: postAreaMgr}, function (err, foundBMs){
+            foundBranchMgr = foundBMs
+
+           })
         
-            if (!isNull(areaManager)) {
-                areaManager.forEach( foundAMs =>{
-                    const positCode = _.trim(foundAMs.position_code)
-    
-                    if (positCode === postAreaMgr) {
-                        officerName = foundAMs.first_name + " " + foundAMs.middle_name.substr(0,1) + ". " + foundAMs.last_name
-                    }
-        
-                    if (positCode === branchMgrID) {
-                        foundAMBranches.push({branch: foundAMs.branch, last_name: foundAMs.last_name, first_name: foundAMs.first_name, middle_name: foundAMs.middle_name, 
-                            assign_code: foundAMs.assign_code, position_code : positCode})
-                    }
-        
+           if (areaManager) {
+                areaManager.forEach(manager => {
+                    officerName = manager.first_name + " " + manager.middle_name.substr(0,1) + ". " + manager.last_name
                 })
-    
-                doneFoundMgr = true 
-    
-            }
+            } 
+        const branMgrs = await Employee.find({area: areaCode, position_code: postManager}, function (err, foundUHs){
+            foundAMBranches = foundUHs
+            doneFoundMgr = true
+            })
 
-            if (!isNull(areaCenters)) {
-                foundCenter = areaCenters.sort()
+          const loan_Type= await Loan_type.find({}, function (err, fndLoanTyp) {
+            loanType = fndLoanTyp
+            doneReadLonTyp = true
+          })
 
-                areaCenters.forEach( fndCtr => {
+
+            if (isNull(center)) {
+                doneReadCenter = true
+            
+            } else {
+
+                center.forEach( fndCtr => {
                     newClients = newClients + fndCtr.newClient
                     nClientAmt = nClientAmt + fndCtr.newClientAmt
                     oClient = oClient + fndCtr.oldClient
@@ -484,140 +484,40 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                     rClient1 = rClient1 + fndCtr.resClient
                     rClient2 = rClient2 + fndCtr.resClient2
                     budgBegBal = budgBegBal + fndCtr.budget_BegBalCli
-            
+    
                 })
-        
+
                 totDisburse = nClientAmt + oClientAmt
                 tbudgEndBal = (budgBegBal + newClients) - (rClient1 + rClient2)
+                
+                doneReadCenter = true   
+            }
 
-            
-                foundAMBranches.forEach(am => {   // to get Budget Breakdown per Manager
+        // console.log(newClients)
+        // console.log(foundAMBranches)
 
-                    let brCode = _.trim(am.branch)
-                    let br_Cod = brCode
-                    let unHeadName = am.first_name + " " + am.middle_name.substr(0,1) + ". " + am.last_name
+        if (doneReadCenter && doneFoundMgr && doneReadLonTyp) {
+            foundAMBranches.forEach(am => {   // to get Budget Breakdown per Manager
+
+                let brCode = _.trim(am.branch)
+                let br_Cod = brCode
+                let unHeadName = am.first_name + " " + am.middle_name.substr(0,1) + ". " + am.last_name
+        
+                let nUnitLoanTot = 0
+                let nUnitLoanTotCount = 0
+                let oUnitLoanTot = 0
+                let oUnitLoanTotCount = 0
+                let resUnitLoanTot = 0
+                let begUnitLoanTot = 0
+                let begUnitClientTot = 0
+                let bUnitClient = 0
+                let bUnitClientCnt = 0
+        
+                let typeLoan = ""
+                let count = 0 
             
-                    let nUnitLoanTot = 0
-                    let nUnitLoanTotCount = 0
-                    let oUnitLoanTot = 0
-                    let oUnitLoanTotCount = 0
-                    let resUnitLoanTot = 0
-                    let begUnitLoanTot = 0
-                    let begUnitClientTot = 0
-                    let bUnitClient = 0
-                    let bUnitClientCnt = 0
-            
-                    let typeLoan = ""
-                    let count = 0 
-                
-                    LonType.forEach(loan_type => {
-                        typeLoan = loan_type.title
-                        let nloanTot = 0
-                        let nloanTotCount = 0
-                        let oloanTot = 0
-                        let oloanTotCount = 0
-                        let resloanTot = 0
-                        let begLoanTot = 0
-                        let begClientTot = 0
-                        let bClientAmt = 0
-                        let bClientCnt = 0
-                        lnType = loan_type.loan_type
-            
-                        count = count + 1
-                        if (count !== 1) {
-                            brCode = " "
-                            unHeadName = ""
-                        } 
-            
-                        foundCenter.forEach(center => {
-                            const br_Code = center.branch
-                            if (br_Code === br_Cod) { 
-                                const lnType = center.loan_code
-                                let centerTargets = center.Targets
-                                let LoanBegBal = center.Loan_beg_bal
-                            //  let centerLoanBegBal = center.Loan_beg_bal                
-                                let resignClient = center.resClient
-                        
-                                if (lnType === _.trim(lnType)) {
-                                    BudgBegBal = center.budget_BegBal
-                                }
-                                // console.log(resignClient)
-                                // console.log(resloanTot)
-            
-                                centerTargets.forEach(centerLoan => {
-                                    if (_.trim(centerLoan.loan_type) === _.trim(typeLoan)) {
-                                        const loanRem = centerLoan.remarks
-                                        if (_.trim(loanRem) === "New Loan") {
-                                            nloanTot = nloanTot + centerLoan.totAmount
-                                            nloanTotCount = nloanTotCount + centerLoan.numClient
-                                        } else {
-                                            oloanTot = oloanTot + centerLoan.totAmount
-                                            oloanTotCount = oloanTotCount + centerLoan.numClient
-                                            // resloanTot = resloanTot + resignClient
-                                        }
-                                    }
-                                })
-            
-                                LoanBegBal.forEach(centerBegBal => {
-                                    if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan)) {
-                                        begLoanTot = centerBegBal.beg_amount
-                                        begClientTot = centerBegBal.beg_client_count
-                                        bClientCnt = bClientCnt + begClientTot
-                                        bClientAmt = bClientAmt + begLoanTot
-                                    }
-                                })
-                            }
-                        })
-    
-                        if (!isNull(ctrResBudgDet)) {
-                            ctrResBudgDet.forEach(fndResCli => {
-                                if (fndResCli.loan_type === typeLoan  && fndResCli.branch === br_Cod) {
-                                    const totalResCnt = fndResCli.jan_budg + fndResCli.feb_budg + fndResCli.mar_budg + fndResCli.apr_budg + fndResCli.may_budg + fndResCli.jun_budg + 
-                                        fndResCli.jul_budg + fndResCli.aug_budg + fndResCli.sep_budg + fndResCli.oct_budg + fndResCli.nov_budg + fndResCli.dec_budg 
-                
-                                    resloanTot = resloanTot + totalResCnt
-                
-                                    rClient = rClient + totalResCnt
-                                }
-                            })
-                        }
-            
-            
-                        let totAmounts = nloanTot + oloanTot 
-                        let budgEndBal = (oloanTotCount + nloanTotCount + bClientCnt) - resloanTot
-            //            let amtDisburse = oloanTot + oloanTot
-                        
-                        unitLoanTotals.push({area: brCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClientCnt,
-                            begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: budgEndBal})
-            
-                        nUnitLoanTot = nUnitLoanTot + nloanTot
-                        nUnitLoanTotCount = nUnitLoanTotCount + nloanTotCount
-                        oUnitLoanTot = oUnitLoanTot + oloanTot
-                        oUnitLoanTotCount = oUnitLoanTotCount + oloanTotCount
-                        resUnitLoanTot = resUnitLoanTot + resloanTot
-                        begUnitLoanTot = begUnitLoanTot + bClientAmt
-                        begUnitClientTot = begUnitClientTot + bClientCnt
-                        
-                    })
-            
-                    typeLoan = "BRANCH TOTALS"
-                    let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
-                    let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
-            
-                    unitLoanTotals.push({area: brCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
-                        begClientAmt: begUnitLoanTot, ntotAmount: nUnitLoanTot, onumClient: oUnitLoanTotCount, ototAmount: oUnitLoanTot, resiloanTot: resUnitLoanTot, budgEndBal: budgUnitEndBal})
-            
-                        doneFoundPO = true
-                })
-            
-                console.log(unitLoanTotals)
-            
-            // LOOP for getting Different Loan products totals in the branch
-                let gtBegBalClient = 0
-                let gtBegBalAmt = 0
-            
-                LonType.forEach(loan_type => {
-                    const typeLoan = loan_type.title
+                loanType.forEach(loan_type => {
+                    typeLoan = loan_type.title
                     let nloanTot = 0
                     let nloanTotCount = 0
                     let oloanTot = 0
@@ -625,60 +525,168 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                     let resloanTot = 0
                     let begLoanTot = 0
                     let begClientTot = 0
-                    let bClient = 0
+                    let bClientAmt = 0
                     let bClientCnt = 0
-                    const lonType = loan_type.loan_type
-            //        let unCode = ""
-                    unitLoanTotals.forEach(uLoanTots => {
-                        const ulnType = uLoanTots.loan_type
-                        if (ulnType === typeLoan) {
-                            nloanTot = nloanTot + uLoanTots.ntotAmount
-                            nloanTotCount = nloanTotCount + uLoanTots.nnumClient
-                            oloanTot = oloanTot + uLoanTots.ototAmount
-                            oloanTotCount = oloanTotCount + uLoanTots.onumClient
-                            resloanTot = resloanTot + uLoanTots.resiloanTot
-                            begLoanTot = begLoanTot + uLoanTots.begClientAmt
-                            begClientTot = begClientTot + uLoanTots.begClientTot
-            
-                            gtBegBalClient = gtBegBalClient + uLoanTots.begClientTot
-                            gtBegBalAmt = gtBegBalAmt + uLoanTots.begClientAmt
+                    lnType = loan_type.loan_type
+        
+                    count = count + 1
+                    if (count !== 1) {
+                        brCode = " "
+                        unHeadName = ""
+                    } 
+        
+                    foundCenter.forEach(center => {
+                        const br_Code = center.branch
+                        if (br_Code === br_Cod) { 
+                            const lnType = center.loan_code
+                            let centerTargets = center.Targets
+                            let LoanBegBal = center.Loan_beg_bal
+        //                  let centerLoanBegBal = center.Loan_beg_bal                
+                            let resignClient = center.resClient
+                    
+                            if (lnType === _.trim(lnType)) {
+                                BudgBegBal = center.budget_BegBal
+                            }
+                            // console.log(resignClient)
+                            // console.log(resloanTot)
+        
+                            centerTargets.forEach(centerLoan => {
+                                if (_.trim(centerLoan.loan_type) === _.trim(typeLoan) && centerLoan.target_year === budgetYear) {
+                                    const loanRem = centerLoan.remarks
+                                    if (_.trim(loanRem) === "New Loan") {
+                                        nloanTot = nloanTot + centerLoan.totAmount
+                                        nloanTotCount = nloanTotCount + centerLoan.numClient
+                                    } else {
+                                        oloanTot = oloanTot + centerLoan.totAmount
+                                        oloanTotCount = oloanTotCount + centerLoan.numClient
+                                        // resloanTot = resloanTot + resignClient
+                                    }
+                                }
+                            })
+        
+                            LoanBegBal.forEach(centerBegBal => {
+                                if (_.trim(centerBegBal.loan_type) === _.trim(typeLoan) && centerBegBal.target_year === budgetYear) {
+                                    begLoanTot = centerBegBal.beg_amount
+                                    begClientTot = centerBegBal.beg_client_count
+                                    bClientCnt = bClientCnt + begClientTot
+                                    bClientAmt = bClientAmt + begLoanTot
+                                }
+                            })
                         }
-            
                     })
-                    let totBranchAmounts = nloanTot + oloanTot 
-                    let budgBranchEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
+
+                    if (!isNull(ctrResBudgDet)) {
+                        ctrResBudgDet.forEach(fndResCli => {
+                            if (fndResCli.loan_type === typeLoan  && fndResCli.branch === br_Cod && fndResCli.target_year === budgetYear) {
+                                const totalResCnt = fndResCli.jan_budg + fndResCli.feb_budg + fndResCli.mar_budg + fndResCli.apr_budg + fndResCli.may_budg + fndResCli.jun_budg + 
+                                    fndResCli.jul_budg + fndResCli.aug_budg + fndResCli.sep_budg + fndResCli.oct_budg + fndResCli.nov_budg + fndResCli.dec_budg 
             
-                    brnLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totBranchAmounts, begClientTot: begClientTot,
-                        begClientAmt: begLoanTot, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgBranchEndBal})
+                                resloanTot = resloanTot + totalResCnt
             
-                        doneReadLonTyp = true
-            
+                                rClient = rClient + totalResCnt
+                            }
+                        })
+                    }
+        
+        
+                    let totAmounts = nloanTot + oloanTot 
+                    let budgEndBal = (oloanTotCount + nloanTotCount + bClientCnt) - resloanTot
+        //            let amtDisburse = oloanTot + oloanTot
+                    
+                    unitLoanTotals.push({area: brCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totAmounts, begClientTot: bClientCnt,
+                        begClientAmt: bClientAmt, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resiloanTot: resloanTot, budgEndBal: budgEndBal})
+        
+                    nUnitLoanTot = nUnitLoanTot + nloanTot
+                    nUnitLoanTotCount = nUnitLoanTotCount + nloanTotCount
+                    oUnitLoanTot = oUnitLoanTot + oloanTot
+                    oUnitLoanTotCount = oUnitLoanTotCount + oloanTotCount
+                    resUnitLoanTot = resUnitLoanTot + resloanTot
+                    begUnitLoanTot = begUnitLoanTot + bClientAmt
+                    begUnitClientTot = begUnitClientTot + bClientCnt
+                    
                 })
-                totBudgEndBal = (gtBegBalClient + oClient + newClients) - rClient
-    
-                brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
-                    rClient: rClient, budgBegBal: budgBegBal, budgEndBal: totBudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
-    
-                // console.log(brnLoanGrandTot)
-    
-            if (doneFoundPO && doneReadLonTyp) {
-                res.render('areas/budget', {
-                    listTitle: areaCode,
-                    officerName: officerName,
-                    loanTots: brnLoanTotals,
-                    poGrandTot: brnLoanGrandTot,
-                    unitLoanTots: unitLoanTotals,
-                    searchOptions: req.query,
-                    yuser: _user,
-                    dateToday: new Date()
-    
-                })
-    
+        
+                typeLoan = "BRANCH TOTALS"
+                let totUnitAmounts = nUnitLoanTot + oUnitLoanTot 
+                let budgUnitEndBal = (oUnitLoanTotCount + nUnitLoanTotCount + begUnitClientTot) - resUnitLoanTot
+        
+                unitLoanTotals.push({area: brCode, unitHead: unHeadName, loan_type: typeLoan, nnumClient: nUnitLoanTotCount, amtDisburse: totUnitAmounts, begClientTot: begUnitClientTot,
+                    begClientAmt: begUnitLoanTot, ntotAmount: nUnitLoanTot, onumClient: oUnitLoanTotCount, ototAmount: oUnitLoanTot, resiloanTot: resUnitLoanTot, budgEndBal: budgUnitEndBal})
+        
+                    doneFoundPO = true
+            })
+        
+            if (foundAMBranches.length === 0) {
+        
+            } else {
+                doneFoundPO = true   
             }
 
+            console.log(unitLoanTotals)
+        
+        // LOOP for getting Different Loan products totals in the branch
+            let gtBegBalClient = 0
+            let gtBegBalAmt = 0
+        
+            loanType.forEach(loan_type => {
+                const typeLoan = loan_type.title
+                let nloanTot = 0
+                let nloanTotCount = 0
+                let oloanTot = 0
+                let oloanTotCount = 0
+                let resloanTot = 0
+                let begLoanTot = 0
+                let begClientTot = 0
+                let bClient = 0
+                let bClientCnt = 0
+                const lonType = loan_type.loan_type
+        //        let unCode = ""
+                unitLoanTotals.forEach(uLoanTots => {
+                    const ulnType = uLoanTots.loan_type
+                    if (ulnType === typeLoan) {
+                        nloanTot = nloanTot + uLoanTots.ntotAmount
+                        nloanTotCount = nloanTotCount + uLoanTots.nnumClient
+                        oloanTot = oloanTot + uLoanTots.ototAmount
+                        oloanTotCount = oloanTotCount + uLoanTots.onumClient
+                        resloanTot = resloanTot + uLoanTots.resiloanTot
+                        begLoanTot = begLoanTot + uLoanTots.begClientAmt
+                        begClientTot = begClientTot + uLoanTots.begClientTot
+        
+                        gtBegBalClient = gtBegBalClient + uLoanTots.begClientTot
+                        gtBegBalAmt = gtBegBalAmt + uLoanTots.begClientAmt
+                    }
+        
+                })
+                let totBranchAmounts = nloanTot + oloanTot 
+                let budgBranchEndBal = (oloanTotCount + nloanTotCount + begClientTot) - resloanTot
+        
+                brnLoanTotals.push({loan_type: typeLoan, nnumClient: nloanTotCount, amtDisburse: totBranchAmounts, begClientTot: begClientTot,
+                    begClientAmt: begLoanTot, ntotAmount: nloanTot, onumClient: oloanTotCount, ototAmount: oloanTot, resloanTot: resloanTot, budgEndBal: budgBranchEndBal})
+        
+                    doneReadLonTyp = true
+        
+            })
+            totBudgEndBal = (gtBegBalClient + oClient + newClients) - rClient
 
+            brnLoanGrandTot.push({nClient: newClients, nClientAmt: nClientAmt, oClient: oClient, oClientAmt: oClientAmt, 
+                rClient: rClient, budgBegBal: budgBegBal, budgEndBal: totBudgEndBal, totalDisburse: totDisburse, budBegBalAmt: gtBegBalAmt, budBegBalClient: gtBegBalClient})
+
+            // console.log(brnLoanGrandTot)
+
+        if (doneReadCenter &&doneFoundPO && doneReadLonTyp) {
+            res.render('areas/budget', {
+                listTitle: areaCode,
+                officerName: officerName,
+                loanTots: brnLoanTotals,
+                poGrandTot: brnLoanGrandTot,
+                unitLoanTots: unitLoanTotals,
+                searchOptions: req.query,
+                yuser: _user,
+                dateToday: new Date()
+
+            })
         }
-    // }
+    }
 
  //   console.log(unitLoanTotals)
 //    console.log(brnLoanTotals)
@@ -708,10 +716,15 @@ router.get('/employees/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let empPostCode = "AREA_MGR"
     let empStat = ""
     let empSortKey = ""
+    let branchCode = ""
+    let empPostClass = ""
     let empPst
-    let empAssign = ""
+    // let empAssign = ""
     let empID = ""
-    let empUnit = ""
+    let branchDesc = ""
+
+    let fndEmployees = []
+    let branches = []
 
     const empStatus = ["Active","Deactivate"]
 
@@ -728,12 +741,13 @@ router.get('/employees/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     try {
         const branches = await Branch.find({area: areaCode})
 
-        const brnEmployees = await Employee.find({position_code: branchMgrID, area: areaCode}, function (err, foundEmployees) {
-            const fndEmployees = foundEmployees
+        const brnEmployees = await Employee.find({position_code: branchMgrID, area: areaCode}) //, function (err, foundEmployees) {
+            // const fndEmployees = foundEmployees
 
 //            const empStatus = fndEmployees.status
 //  - Branch ID
-            fndEmployees.forEach(foundEmp =>{
+        if (!isNull(brnEmployees)) {
+            brnEmployees.forEach(foundEmp =>{
                 empPst = foundEmp.position_code
                 empID = foundEmp._id
                 empName = foundEmp.last_name + ", " + foundEmp.first_name + " " + foundEmp.middle_name.substr(0,1) + "."
@@ -743,17 +757,26 @@ router.get('/employees/:id', authUser, authRole(ROLE.AM), async (req, res) => {
                 empAss = foundEmp.assign_code
                 branchCode = foundEmp.branch
                 empStat = foundEmp.status
+                empPostClass = foundEmp.position_class
                 let exist = false
 //                console.log(empID)
                 // console.log(empPst)
 
-                empAssign = _.find(branches, {branch: empAss})
+                const empAssign = _.find(branches, {branch: empAss})
 
-                    fondEmploy.push({empID: empID, area: areaCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: empAssign.branch_desc, empStat: empStat})
-                empCanProceed = true            
-            })
+                if (empAssign) {
+                    branchDesc = empAssign.branch_desc
+                } else {
+                    branchDesc = ""
+                }
 
-        })
+
+                    fondEmploy.push({empID: empID, area: areaCode, empName: empName, empCode: empCode, empPostCode: empPostCode, empPost: branchDesc, 
+                        empStat: empStat, position_class: empPostClass})
+                empCanProceed = true
+            })            
+
+        }
 
         sortedEmp = fondEmploy.sort( function (a,b) {
             if ( a.empName < b.empName ){
@@ -780,7 +803,8 @@ router.get('/employees/:id', authUser, authRole(ROLE.AM), async (req, res) => {
 
 } catch (err) {
         console.log(err)
-        res.redirect('/')
+        res.render(err)
+        // res.redirect('/')
     }
 })
 
@@ -791,10 +815,10 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.AM), async (req, res) => 
     const areaCode = req.params.id
     const _user = req.user
     let foundBranch = []
+    const empStatus = ["Active","Deactivate"]
 
     try {
 
-        // let foundBranch = await Branch.find({area: areaCode, emp_code: ""})
 
         const newEmpPost = await Branch.find({area: areaCode, emp_code: ""}, function (err, fndPost) {
             foundBranch = fndPost
@@ -808,9 +832,12 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.AM), async (req, res) => 
                areaCode: areaCode,
                branchAsignDesc: "",
                foundBranch: foundBranch,
+               empStatus: empStatus,
+               empHasBranchAss: false,
                yuser: _user,
                newEmp: true,
-               resetPW: false
+               resetPW: false,
+               status: "Active"
            })
        })
    
@@ -827,13 +854,42 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.AM), async (req, res) => 
     const _user = req.user
    let eUnit
    let ePONum
+   let locals
+
    const empBranCod = req.body.branch
     const nEmpCode = _.trim(req.body.empCode)
-    const nEmail = _.trim(req.body.email).toLowerCase()
     const nLName = _.trim(req.body.lName).toUpperCase()
     const nFName = _.trim(req.body.fName).toUpperCase()
     const nMName = _.trim(req.body.mName).toUpperCase()
+    const nPosit_Class = _.trim(req.body.position_class).toUpperCase()
+    const empStat = req.body.empStat
     const nName =  nLName + ", " + nFName + " " + nMName
+    
+    const validEmpCode = /[^a-zA-Z0-9]-/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
+    const trimmedEmpCode = _.replace(nEmpCode, " ", "")
+    const validLName = /[^a-zA-Z] /.test(nLName)
+    const validFName = /[^a-zA-Z] /.test(nFName)
+    const validMName = /[^a-zA-Z] /.test(nMName)
+
+    let nameCanProceed = false
+    let fieldsOkay = false
+    
+    if (validEmpCode) {
+        locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+    } else if (validLName) {
+        locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+    } else if (validFName) {
+        locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+    } else if (validMName) {
+        locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+    } else if (nEmpCode.length == 0 || nLName.length == 0 || nFName.length == 0 || nMName.length == 0) {
+        locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+        // nameCanProceed = true
+    } else {
+
+        fieldsOkay = true
+    }
+
     const areaCod = req.params.id
 
     let branchMgrID = ""
@@ -846,8 +902,7 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.AM), async (req, res) => 
             branchMgrID = fndPositID
         }
     })
-
-let locals
+  
 //console.log(brnCode)
 let getExistingUser = []
 let canProceed = false
@@ -859,7 +914,7 @@ try {
     const getRegCode = await Area.findOne({area: areaCod})
         branchRegion = getRegCode.region
 
-    const branchEmployees = await Employee.find({position: branchMgrID})
+    const branchEmployees = await Employee.find({})
     console.log(branchEmployees)
 
     const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
@@ -877,29 +932,18 @@ try {
             locals = {errorMessage: 'Assign Code: ' + empBranCod + ' already exists!'}
             canProceed = false
 
-          } else if (sameCode) {
-                locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
-                canProceed = false
-            } else {
-                canProceed = true
-            }
+        } else if (sameCode) {
+            locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+            canProceed = false
+        } else {
+            canProceed = true
+        }
 
     } else {
         canProceed = true
     }
 
-        const hashedPassword = await bcrypt.hash(req.body.password, 10)
-                
-        getExistingUser = await User.findOne({email: nEmail})
-            // console.log(foundUser)
-            if (!getExistingUser) {
-                    UserProceed = true 
-            } else {
-                    UserProceed = false
-                    locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
-            }    
-    
-    if (canProceed && UserProceed)  {
+    if (canProceed && fieldsOkay)  {
             const poAssignCode = await Branch.findOneAndUpdate({"branch": empBranCod}, {$set:{"emp_code": nEmpCode}})
 
         addedNewUser = true
@@ -911,29 +955,24 @@ try {
             first_name: nFName,
             middle_name: nMName,
             position_code: branchMgrID,
+            position_class: nPosit_Class,
             assign_code: empBranCod,
             branch: empBranCod,
             area: areaCod,
             region: branchRegion,
             unit: "N/A",
             po_number: "N/A",
-            status: "Active"
-        })
-        
+            status: empStat
+        })        
         const newCoa = employee.save()
 
-        let nUser = new User({
-            email: nEmail,
-            password: hashedPassword,
-            name: nName,
-            emp_code: nEmpCode,
-            assCode: empBranCod,
-            role: 'BM',
-            region: _user.region,
-            area: req.params.id,
-            branch: empBranCod
-        })
-        const saveUser = nUser.save()
+        const getExistingUser = await User.findOne({branch: empBranCod, role: "BM"})
+        if (getExistingUser) {
+
+            getExistingUser.emp_code = nEmpCode
+            getExistingUser.name = nLName + ', ' + nFName + ' ' + nMName.substr(0,1) + '.'
+            const savedNewPW = getExistingUser.save()    
+        }
 
         res.redirect('/areas/employees/'+ areaCod)
     } 
@@ -948,7 +987,7 @@ try {
 
             errUser.push({email: nEmail, password: req.body.password})
 
-            errEmp.push({emp_code: nEmpCode, branch: empBranCod, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: branchMgrID})
+            errEmp.push({emp_code: nEmpCode, branch: empBranCod, last_name: nLName, first_name: nFName, middle_name: nMName, position_class: nPosit_Class, position_code: branchMgrID})
             console.log(errEmp)
 
             res.render('areas/newEmployee', { 
@@ -977,39 +1016,61 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.AM), async (req, r
     const parame = req.params.id // areaCode + emp_code
     const areaCode = parame.substr(0,3)
     const empCode = _.trim(parame.substr(3,10))
+    const empStatus = ["Active","Deactivate"]
 
-    areaCod = req.body.area
+    const areaCod = areaCode
 
     console.log(empCode)
     const _user = req.user
     let locals = ""
     let foundEmploy = []
     let areaBranches = []
+
+    let empHasBranchAss = false
      
    try {
         let brnCod
-        const emArea = await Branch.find({area: areaCode}, function (err, fnd_Post) {
-            areaBranches = fnd_Post
-        })
-        console.log(areaBranches)
+        const emBranch = await Branch.find({area: areaCode}) //, function (err, fnd_Post) {
 
+            emBranch.forEach( branchSelection => {
+                const region_Code = branchSelection.region    
+                const branch_Code = branchSelection.branch
+                const branch_Desc = branchSelection.branch_desc
+                const branch_EmpCode = branchSelection.emp_code
+
+                if (branch_EmpCode === "" || branch_EmpCode=== empCode) {
+                    areaBranches.push({branch: branch_Code, branch_desc : branch_Desc, area: areaCode})
+                }
+            })
+            areaBranches.push({branch: "", branch_desc : "", area: ""})
+            console.log(areaBranches)
+
+            const empHasBranch = _.find(emBranch, {emp_code: empCode})
+
+            if (empHasBranch) {
+                empHasBranchAss = true
+                locals = {errorMessage: "Employee Code is locked for editing, already has transactions."}
+            }
+    
         const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
 //            console.log(foundlist)
             foundEmploy = foundEmp
             brnCod = foundEmp.branch
         })
-        // console.log(employe)
-        const newUser = new User()
+        console.log(employe)
+        // const newUser = new User()
 
         res.render('areas/editEmployee', {
             areaCode: areaCode,
             foundBranch: areaBranches,
-            user: newUser,
             emp: employe, 
+            empHasBranchAss: empHasBranchAss,
+            empStatus : empStatus,
             locals: locals,
             yuser: _user,
             newEmp: false,
-            resetPW: false
+            resetPW: false,
+            empStatus: empStatus
        })
 
 //        res.render('centers/edit', { centers: center, coaClass: coaClass })
@@ -1039,37 +1100,122 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.AM), async function(req,
     const eLName = _.trim(req.body.lName).toUpperCase()
     const eFName = _.trim(req.body.fName).toUpperCase()
     const eMName = _.trim(req.body.mName).toUpperCase()
+    const ePosit_Class = _.trim(req.body.position_class)
+    const eStatus = req.body.empStat
+    const HidBranchAss = req.body.HideBranchAss
+    const HidEmpCode = req.body.HideEmpCode
     const nName =  eLName + ", " + eFName + " " + eMName
         
-        try {
+    const validEmpCode = /[^a-zA-Z0-9]-/.test(eCode) // /[^a-zA-Z0-9]+/g
+    const trimmedEmpCode = _.replace(eCode, " ", "")
+    const validLName = /[^a-zA-Z ]/.test(eLName)
+    const validFName = /[^a-zA-Z ]/.test(eFName)
+    const validMName = /[^a-zA-Z ]/.test(eMName)
 
-            employee = await Employee.findById(empID)
-            console.log(employee)
+    let nameCanProceed = false
+    let fieldsOkay = false
+    
+    if (validEmpCode) {
+        locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+    } else if (validLName) {
+        locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+    } else if (validFName) {
+        locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+    } else if (validMName) {
+        locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+    } else if (HidEmpCode.length == 0 || eLName.length == 0 || eFName.length == 0 || eMName.length == 0) {
+        locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+        // nameCanProceed = true
+    } else {
 
-            employee.emp_code = eCode
+        fieldsOkay = true
+    }
+    // let eFoundBranch = []
+    let employee
+
+    const empStatus = ["Active","Deactivate"]
+
+    try {
+
+       const eFoundBranch = await Branch.find({area: areaCod, emp_code : HidEmpCode})
+
+        employee = await Employee.findById(empID)
+
+        console.log(employee)
+
+        if (fieldsOkay) {
+            employee.emp_code = HidEmpCode
             employee.last_name = eLName
             employee.first_name = eFName
             employee.middle_name = eMName
-            employee.assign_code = eAssCode
-            employee.area = areaCod
-        
+            employee.status = eStatus
+            employee.position_class = ePosit_Class
+
+            if (eAssCode === HidBranchAss) {
+                employee.branch = eAssCode
+                employee.assign_code = eAssCode
+
+            } else {
+
+                if (eAssCode === "") {
+                    const branchOldAssCode = await Branch.findOneAndUpdate({"branch": HidBranchAss}, {$set:{"emp_code": ""}})
+
+                    const userAssignCode = await User.findOneAndUpdate({"assCode": HidBranchAss}, {$set:{"name": "", "emp_code": "",}})
+
+                    employee.assign_code = ""
+                    employee.branch = HidBranchAss
+
+                } else {
+
+                    const branchNewAssCode = await Branch.findOneAndUpdate({"branch": eAssCode}, {$set:{"emp_code": HidEmpCode}})
+
+                    const userNewAssignCode = await User.findOneAndUpdate({"branch": eAssCode}, {$set:{"name": nName, "emp_code": HidEmpCode }})
+    
+                    if (HidBranchAss === "") {                        
+
+                    } else {
+                        const branchOldAssCode = await Branch.findOneAndUpdate({"branch": HidBranchAss}, {$set:{"emp_code": ""}})
+
+                        const userOldAssignCode = await User.findOneAndUpdate({"branch": HidBranchAss}, {$set:{"name": "", "emp_code": "" }})
+    
+                    }
+
+                    employee.assign_code = eAssCode
+                    employee.branch = eAssCode
+
+                }                            
+            }
+
             await employee.save()
-        
-                const poAssignCode = await Branch.findOneAndUpdate({"branch": brnCod}, {$set:{"emp_code": eCode}})
+    
+            res.redirect('/areas/employees/'+ areaCod)
 
-                const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": eCode, "region": req.user.region, "area": areaCod }})
+    } else {
 
-                // const userAssignCode = await User.findOneAndUpdate({"area": areaCod}, {$set:{"name": nName}})
+        // eFoundBranch = await Area.find({area: areaCod, emp_code : ""})
 
-                res.redirect('/areas/employees/'+ areaCod)
+        res.render('areas/editEmployee', {
+            areaCode: areaCod,
+            foundBranch: eFoundBranch,
+            user: req.user,
+            emp: employee, 
+            empHasBranchAss: true,
+            empStatus : empStatus ,
+            locals: locals,
+            yuser: req.user,
+            newEmp: false,
+            resetPW: false
+       })
 
-        } catch (err) {
-            console.log(err)
-            let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.redirect('/areas/employees/'+ areaCod, {
-            locals: locals
-            })
-        }
+    }
+    
+    } catch (err) {
+        console.log(err)
+        let locals = {errorMessage: 'Something WENT went wrong.'}
+        res.redirect('/areas/employees/'+ areaCod, {
+        locals: locals
+        })
+    }
   
 })
 
@@ -1078,13 +1224,15 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.AM), async (req, 
 
     const parame = req.params.id // areaCode + emp_code
     const areaCode = parame.substr(0,3)
-    const empCode = _.trim(parame.substr(3,10))
+    const branchCode = _.trim(parame.substr(3,3))
 
 
    const paramsID = req.params.id
         console.log(paramsID)
     const branCod = req.body.branCode
     const empID = req.params.id
+
+    const brnStatus = ["Active","Deactivate"]
 
     const _user = req.user
     let locals = ""
@@ -1094,42 +1242,58 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.AM), async (req, 
     let areaBranches = []
     
     let ass_Code = ""
+    let doneReadEmp = false
+    let doneReadBranch = false
+    let doneReadYoser = false
 
    try {
 
-        const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
-//            console.log(foundlist)
-            foundEmploy = foundEmp
-            brnCod = foundEmp.branch
-            possit = _.trim(foundEmploy.position_code)
-           console.log(possit)
-           branAsignCode = foundEmploy.assign_code
-        })
-        
-        const emPosit = await Branch.findOne({branch: branAsignCode}, function (err, fndBranch) {
-            branAsignDesc = fndBranch.branch_desc
-            areaBranches = fndBranch
-        })
-    
-            // console.log(employe)
-        const yoser = await User.findOne({assCode: branAsignCode}, function (err, foundUser) {
-            //            console.log(foundlist)
-            fndUser = foundUser
-            console.log(fndUser)
-        })
+//         const employe = await Employee.findOne({emp_code: empCode}) //, function (err, foundEmp) {
+// //            console.log(foundlist)
+//         if (!isNull(employe)) {
+//             foundEmploy = employe
+//             brnCod = employe.branch
+//             possit = _.trim(employe.position_code)
+//            console.log(possit)
+//            branAsignCode = employe.assign_code
 
-        yoser.password = ""
+//         }
+        
+        
+        const emBranch = await Branch.findOne({branch: branchCode}) //, function (err, fndBranch) {
+        
+        if (!isNull(emBranch)) {
+            branAsignDesc = emBranch.branch_desc
+            branAsignCode = emBranch.branch
+            areaBranches = emBranch
+        }
+        
+            // console.log(employe)
+        const yoser = await User.findOne({branch: branchCode, role: "BM"}) //, function (err, foundUser) {
+            //            console.log(foundlist)
+         
+        if (!isNull(yoser)) {
+            fndUser = yoser
+            console.log(yoser)
+
+            yoser.password = ""
+            doneReadYoser = true
+
+        }
+
             
         res.render('areas/resetPassword', {
             areaCode: areaCode,
             branchAsignDesc: branAsignDesc,
-            foundBranch: areaBranches,
+            branch: areaBranches,
             user: yoser,
-            emp: employe, 
+            canEditBranchCode : false,
             locals: locals,
             yuser: _user,
             newEmp: false,
-            resetPW: true
+            resetPW: true,
+            brnStatus: brnStatus,
+            newBranch : false
        })
 
 //        res.render('centers/edit', { centers: center, coaClass: coaClass })
@@ -1146,25 +1310,84 @@ router.put('/putEditedPass/:id', authUser, authRole(ROLE.AM), async function(req
 
     const areaCod = paramsID.substr(0,3)
     // empID = req.params.id
-    const branCod = _.trim(paramsID.substr(3,10))
+    const branCod = _.trim(paramsID.substr(3,3))
     const newPassword = _.trim(req.body.password)
     const userID = req.body.user_id
+
+    let fieldsOkay = false
+    let locals
+    let branchAsignCode = ""
+    let branchAsignDesc = ""
+    
+    if (newPassword.length == 0) {
+        locals = {errorMessage: 'PASSWORD must not be SPACE/S.'}
+    } else {
+        fieldsOkay = true
+    }
+
+    let doneReadBranch = false
+    let doneReadYoser = false
+    const brnStatus = ["Active","Deactivate"]
 
     // let getExistingUser
     
         try {
-            const hashdPassword = await bcrypt.hash(newPassword, 10)
-            let getExistingUser = await User.findOne({assCode: branCod})
 
-                getExistingUser.password = hashdPassword
-                const savedNewPW = getExistingUser.save()
+            if (fieldsOkay) {
+                const hashdPassword = await bcrypt.hash(newPassword, 10)
+
+                const getExistingUser = await User.findOne({branch: branCod, role: "BM"})
+                    if (getExistingUser) {
+                        getExistingUser.password = hashdPassword
+                        const savedNewPW = getExistingUser.save()    
+                    }
+            
+                res.redirect('/areas/branches/'+ areaCod)
+    
+            } else {
+
+                const emBranch = await Branch.findOne({branch: branCod}) //, function (err, fndArea) {
+            
+                    if (!isNull(emBranch)) {
+                        branchAsignDesc = emBranch.area_desc
+                        branchAsignCode = emBranch.area
+                        regionAreas = emBranch
         
-            res.redirect('/areas/employees/'+ areaCod)
+                        doneReadBranch = true
+        
+                    }
+                    const yoser = await User.findOne({branch: branCod, role: "BM"}) //, function (err, foundUser) {
+                        //            console.log(foundlist)
+                    if (!isNull(yoser)) {
+                        fndUser = yoser
+                        console.log(yoser)
+            
+                        doneReadYoser = true
+                        yoser.password = ""
+            
+                    }
+                    
+                    if (doneReadBranch && doneReadYoser) {
+                        res.render('areas/resetPassword', {
+                            areaCode: areaCod,
+                            branchAsignDesc: branchAsignDesc,
+                            branch: emBranch,
+                            user: yoser,
+                            canEditBranchCode : false,
+                            locals: locals,
+                            yuser: yoser,
+                            newEmp: false,
+                            resetPW: true,
+                            brnStatus: brnStatus,
+                            newBranch : false
+                        })
+                    }
+                }
 
         } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
-            res.render('/areas/employees/'+ areaCod, {
+            res.redirect('/areas/branches/'+ areaCod, {
             locals: locals
             })
         }
@@ -1258,15 +1481,20 @@ router.get('/branches/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let sortedBranchs = []
     let doneReadarea = false
     let branchStat = ""
+
     let empName = []
+    let branchCode = ""
+    let branchDesc = ""
+    let branchEmp = ""
+    let employeeName = ""
 
     try {
 
-        const fnd_branch = await Branch.find({area: areaCode}, function (err, fnd_Branchs) {
-            fndBranch = fnd_Branchs
-        })
+        const fndBranch = await Branch.find({area: areaCode}) //, function (err, fnd_Branchs) {
+            // fndBranch = fnd_Branchs
+        // })
         
-        let fndEmployee = await Employee.find({area: areaCode})
+        const fndEmployee = await Employee.find({area: areaCode})
         
     //            const fndEmployees = foundEmployees
     //            const empStatus = fndEmployees.status
@@ -1275,19 +1503,24 @@ router.get('/branches/:id', authUser, authRole(ROLE.AM), async (req, res) => {
         } else {
             fndBranch.forEach(fndBranchs =>{
                 id = fndBranchs._id
-                branchCode = fndBranchs.branch
+                branchCode = fndBranchs.    branch
                 branchDesc = fndBranchs.branch_desc
                 branchEmp = fndBranchs.emp_code
-                branchStat = fndBranch.status
+                branchStat = fndBranchs.status
+                let branchCategory = ""
+                if (fndBranchs.branch_category) {
+                    branchCategory = fndBranchs.branch_category
+                }
+                employeeName = ""
 
                 // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
-                empName = _.filter(fndEmployee, {'emp_code': branchEmp})
+                empName = _.find(fndEmployee, {emp_code: branchEmp})
 
-                if (empName.length === 0) {
+                if (!empName) {
                 } else {
                     employeeName = empName.first_name + " " + _.trim(empName.middle_name).substr(0,1) + ". " + empName.last_name
                 }
-                foundBranch.push({id: id, areaCode: areaCode, branchCode: branchCode, branchDesc: branchDesc, emp_code: branchEmp, empName: empName, branchStat: branchStat})
+                foundBranch.push({id: id, areaCode: areaCode, branchCode: branchCode, branchDesc: branchDesc, branchCategory: branchCategory, emp_code: branchEmp, empName: employeeName, branchStat: branchStat})
 
                 doneReadarea = true
             })
@@ -1310,6 +1543,7 @@ router.get('/branches/:id', authUser, authRole(ROLE.AM), async (req, res) => {
             areaCode: areaCode,
             fondBranchs: sortedBranchs,
             searchOptions: req.query,
+            branchHasTrans: false,
             yuser: _user
             })
         }
@@ -1328,8 +1562,14 @@ router.get('/newBranch/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     res.render('areas/newBranch', {
         areaCode: areaCod,
         branch: new Branch(),
-        brnStatus: brnStatus
-    })
+        branchHasTrans: false,
+        brnStatus: brnStatus,
+        editBranch: true,
+        newBranch : true,
+        resetPW: false,
+        canEditBranchCode: true,
+        user: new User(),
+})
 })
 
 router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) => {
@@ -1339,24 +1579,79 @@ router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) 
     let canProceed = false
     const _user = req.user
     const branch_code = _.trim(req.body.branchCode).toUpperCase()
+    const trimmedBranchCode = _.replace(branch_code, " ", "")
     const branch_desc = _.trim(req.body.branchDesc).toUpperCase()
     const branch_add = _.trim(req.body.branchAdd).toUpperCase()
-    const branch_status = req.body.brnStat
+    const branch_categ = _.trim(req.body.branch_category).toUpperCase()
 
-    let branchareaCode = ""
+    const branch_status = req.body.brnStat
+    
+    const nEmail = _.trim(req.body.email).toLowerCase()
+    const nPassword = _.trim(req.body.password)
+
+    let fieldsOkay = false
+    const validDesc = /[^a-zA-Z0-9 ]/.test(branch_desc) // /[^a-zA-Z0-9]+/g
+
+    let validCode = /[^a-zA-Z0-9]/.test(branch_code) // /[^a-zA-Z0-9]+/g    
+
+    if (branch_code.length == 0 || branch_desc.length == 0 || nPassword.length == 0) {
+        locals = {errorMessage: "Values for the fields must NOT be space/s!"}
+    } else if (trimmedBranchCode.length < 3) {
+        locals = {errorMessage: "Values for the AREA CODE field must NOT contain space/s!"}
+    } else if (validCode) {
+        locals = {errorMessage: "Values for CODE must not contain Special/Space Characters!"}
+
+    } else if (validDesc) {
+        locals = {errorMessage: "Values for DESCRIPTION must not contain Special Characters!"}
+    } else {
+
+        fieldsOkay = true
+    }
+
+    let doneReadBranch = false
+    let fndArea = [ ]
+    let UserProceed = false
+
+    const brnStatus = ["Active","Deactivate"]
+
+    let branchbranchCode = ""
     let fndBranch = [ ]
     let getBrnRegCod = []
     try {
         
-        const getExisBranch = await Branch.findOne({branch: branch_code, area: areaCod}, function (err, foundBranch) {
-            fndBranch = foundBranch
-            if (isNull(fndBranch)) {
+        const getExisBranch = await Branch.findOne({branch: branch_code, area: areaCod}) //, function (err, foundBranch) {
+            fndBranch = getExisBranch
+            if (isNull(getExisBranch)) {
+                canProceed = true 
+            } else {
+                canProceed = false
+                locals = {errorMessage: "Branch Code " + branch_code + " already exists! Please try again."}
+            }
+
+            const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                
+            getExistingUser = await User.findOne({email: nEmail})
+                // console.log(foundUser)
+                if (!getExistingUser) {
+                    if (nPassword.length == 0) {
+                        UserProceed = false
+                        locals = {errorMessage: 'Password must NOT be SPACE/S!'}
+                    } else {
+                        UserProceed = true 
+                    }
+                } else {
+                        UserProceed = false
+                        locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
+                }    
+    
+            if (canProceed && fieldsOkay && UserProceed) {
+                
                 let nBranch  = new Branch({
 
                     branch: branch_code,
                     branch_desc: branch_desc,
                     emp_code: "",
-                    office_loc: "",
+                    branch_category: branch_categ,
                     address: branch_add,
                     num_units: 0,
                     num_pos: 0,
@@ -1369,16 +1664,40 @@ router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) 
                     status: "Active"
                 })
             
-                const saveUser = nBranch.save()
-    
+                const saveBranch = nBranch.save()
+
+                let nUser = new User({
+                    email: nEmail,
+                    password: hashedPassword,
+                    name: "",
+                    emp_code: "",
+                    assCode: trimmedBranchCode,
+                    role: 'BM',
+                    branch: branch_code,
+                    region: _user.region,
+                    area: areaCod,
+                })
+                const saveUser = nUser.save()
+            
                 res.redirect('/areas/branches/' + areaCod)
             } else {
                 canProceed = false
-                locals = {errorMessage: "Branch Code already exists!"}
+                // locals = {errorMessage: "ERROR: Branch Code " + branch_code + " already exists with the information below!"}
 
-                res.redirect('/areas/branches/' + areaCod)
+                res.render('areas/newBranch', {
+                    branch: new Branch(),
+                    areaCode: areaCod,
+                    brnStatus: brnStatus,
+                    branchHasTrans: false,
+                    locals: locals,
+                    editBranch: true,
+                    newBranch : true,
+                    resetPW: false,
+                    canEditBranchCode: true,
+                    user: new User(),
+                })
+                            // res.redirect('/areas/branches/' + areaCod)
             }
-        })
 
     } catch (err) {
         console.log(err)
@@ -1399,23 +1718,61 @@ router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) 
 
     let fondBranch = []
     let branchID = ""
+    let branchHasTrans = false
     const brnStatus = ["Active","Deactivate"]
+
+    let canEditBranchCode = false
+    let doneReadBranch = false
+    let branchEmpCode =""
+    let branchAsignCode = ""
+    let doneReadYoser = false
+    let locals = ""
+    let brnStat = ""
 
     try {
 
-        const regForEdit = await Branch.findById(param)  
-        branchID = regForEdit.id
+        const brnForEdit = await Branch.findById(param)  
         
-        fondBranch = regForEdit
-        console.log(fondBranch)
+        if (!isNull(brnForEdit)) {
+            branchID = brnForEdit.id
+            branchEmpCode = brnForEdit.emp_code
+            branchAsignCode = brnForEdit.branch
+            brnStat = brnForEdit.status
 
-        res.render('areas/editBranch', { 
-            branchID: branchID,
-            brnStatus: brnStatus,
-           branch: fondBranch, 
-           areaCode: areaCod,
-           yuser : _user
-       })
+            if (branchEmpCode === "") {
+                canEditBranchCode = true
+            } else {
+                locals = {errorMessage: "BRANCH CODE is locked for editing, already has transactions."}
+            }
+            doneReadBranch = true 
+        }
+
+        const yoser = await User.findOne({branch: branchAsignCode, role: "BM"}) //, function (err, foundUser) {
+            //            console.log(foundlist)
+        if (!isNull(yoser)) {
+            fndUser = yoser
+            console.log(yoser)
+
+            doneReadYoser = true
+
+            yoser.password = ""
+        }
+
+        if (doneReadBranch && doneReadYoser) {
+            res.render('areas/editBranch', { 
+                branchID: branchID,
+                brnStatus: brnStatus,
+                brnStat: brnStat,
+               branch: brnForEdit, 
+               areaCode: areaCod,
+               yuser : _user,
+               editBranch: true,
+               newBranch : false,
+               resetPW: false,
+               canEditBranchCode: canEditBranchCode,
+               locals: locals
+        })
+            }
 
     } catch (err) {
             console.log(err)
@@ -1432,24 +1789,210 @@ router.put('/putEditedBranch/:id', authUser, authRole(ROLE.AM), async function(r
     const paramsID = parame.substr(0,3)
     const param = _.trim(parame.substr(3,25))
     const branch_code = _.trim(req.body.branchCode).toUpperCase()
+    const trimmedBranchCode = _.replace(branch_code, " ", "") // if Area Code can be Edited
     const branch_desc = _.trim(req.body.branchDesc).toUpperCase()
     const branch_status = req.body.brnStat
+    const branch_categ = _.trim(req.body.branch_category).toUpperCase()
+    const branch_add = _.trim(req.body.branchAdd).toUpperCase()
 
-    console.log(req.params.id)
+    const branchCodeHide = _.trim(req.body.branchCodeHide).toUpperCase()
+    const canEditBranchCode = req.body.canEditBranchCode
+
+    let fieldsOkay = false
+    let locals
+    let validCode
+
+    const validAddress = /[^a-zA-Z0-9 -,.]/.test(branch_add) // /[^a-zA-Z0-9]+/g
+    const validDesc = /[^a-zA-Z0-9 ]/.test(branch_desc) // /[^a-zA-Z0-9]+/g
+
+    if (canEditBranchCode === "true") { // Branch Code can be edited..
+        validCode = /[^a-zA-Z0-9]/.test(trimmedBranchCode) // /[^a-zA-Z0-9]+/g
+        if (validCode) {
+            locals = {errorMessage: "Values for CODE must not contain Special Characters!"}
+
+        } else if (validAddress) {
+            locals = {errorMessage: "Values for ADDRESS must not contain Special Characters!"}
+
+        } else if (branch_code === branchCodeHide) {
+            if (branch_desc.length == 0) {
+                locals = {errorMessage: "Values for the fields must NOT be space/s!"}
+            } else if (validDesc) {
+                locals = {errorMessage: "Values for DESCRIPTION must not contain Special Characters!"}
+            } else {
+                fieldsOkay = true          
+            }
+        } else {
+            if (trimmedBranchCode.length < 3) {
+                locals = {errorMessage: "Values for the AREA CODE field must NOT contain space/s!"}
+            } else {
+                fieldsOkay = true          
+            }
+        }
+    
+    } else { // Branch Code is locked for Editing
+        if (branch_desc.length == 0) {
+            locals = {errorMessage: "Values for the fields must NOT be space/s!"}
+        } else if (validDesc) {
+            locals = {errorMessage: "Values for DESCRIPTION must not contain Special Characters!"}
+        } else if (validAddress) {
+            locals = {errorMessage: "Values for ADDRESS must not contain Special Characters!"}
+        } else {
+            fieldsOkay = true          
+        }
+    }
+
+    let canProceed = false
+    let sameBranchDesc = false
+    let newBranchCode = branch_code
+
+    let getBranchForEdit
 
     let branch
         try {
 
-            branch = await Branch.findById(param)
-
-            branch.branch = branch_code
-            branch.branch_desc = branch_desc
-            branch.status = branch_status
+            if (fieldsOkay) {
+                const getExisBranch = await Branch.findOne({branch_desc: branch_desc}) //, function (err, foundArea) {
+                    fndArea = getExisBranch
+    
+                    const sameDEesc = _.find(getExisBranch, {branch_desc: branch_desc})
+    
+                if (canEditBranchCode === "true") { // Branch Code can be edited..
+                        getBranchForEdit = await Branch.findOne({branch: trimmedBranchCode})
         
-            await branch.save()
+                        if (getBranchForEdit) { // may kaparehang Branch Code
+                            if (getBranchForEdit.branch === branchCodeHide) {
+                                if (sameDEesc) {
+                                    canProceed = true
+                                    // sameBranchDesc = true
+                                    // locals = {errorMessage: "Branch DESCRIPTION already exists!"}
+                                } else { 
+                                    newBranchCode = trimmedBranchCode
+                                    canProceed = true
+                                }
+    
+                            } else {
+                                if (sameDEesc) {
+                                    sameBranchDesc = true
+                                    locals = {errorMessage: "Branch DESCRIPTION already exists!"}
+                                } else { 
+                                    newBranchCode = trimmedBranchCode
+                                    canProceed = true
+                                }
+                            }
+    
+                        } else if (sameDEesc) {
+                            if (branch_code === branchCodeHide) {
+                                sameBranchDesc = true
+                                locals = {errorMessage: "Branch DESCRIPTION already exists!"}
         
-            res.redirect('/areas/branches/'+ paramsID)
+                            } else {
+                                sameBranchDesc = false    
+                                canProceed = true
+                            }
+                        } else {
+                            getBranchForEdit = await Branch.findOne({branch: trimmedBranchCode})
+    
+                            newBranchCode = trimmedBranchCode
+                            canProceed = true
+    
+                        }
+                    
+                    } else {
+    
+                        if (sameDEesc) {
 
+                            getBranchForEdit = await Branch.findOne({branch: branchCodeHide})
+        
+                            if (getBranchForEdit) { // may kaparehang Branch Code
+                                if (getBranchForEdit.branch === branchCodeHide) {
+                                    canProceed = true
+                                }
+                            } else {
+                                sameBranchDesc = true
+                                locals = {errorMessage: "Branch DESCRIPTION already exists!"}
+                            }
+                        } else {
+                            getBranchForEdit = await Branch.findOne({branch: branchCodeHide})
+    
+                            newBranchCode = branchCodeHide
+                            canProceed = true
+    
+                        }    
+                    }
+            } else {
+    
+            }
+    
+                    if (canEditBranchCode === "true") { // Branch Code can be edited..
+                        if (validCode) {
+                            getBranchForEdit = await Branch.findOne({branch: branchCodeHide})                    
+                        } else if (!fieldsOkay) {
+                            getBranchForEdit = await Branch.findOne({branch: branchCodeHide})
+                        } else if (branch_code !== branchCodeHide) {
+                            getBranchForEdit = await Branch.findOne({branch: branchCodeHide})
+    
+                        } else {
+                            getBranchForEdit = await Branch.findOne({branch: trimmedBranchCode})
+                        }
+    
+                    } else {
+                        getBranchForEdit = await Branch.findOne({branch: branchCodeHide})
+                        newBranchCode = branchCodeHide
+                    }
+    
+                    if (canProceed && fieldsOkay && !sameBranchDesc) {
+                            getBranchForEdit.branch = newBranchCode
+                            getBranchForEdit.branch_desc = branch_desc
+                            getBranchForEdit.address = branch_add
+                            getBranchForEdit.status = branch_status
+                            getBranchForEdit.branch_category = branch_categ
+                    
+                            getBranchForEdit.save()
+    
+                        if (branch_code !== branchCodeHide) {
+                            const emailForSearch = branchCodeHide + '@kmbi.org.ph'
+                            const getUser = await User.findOne({user: emailForSearch})
+    
+                            if (!isNull(getUser)) {
+                                getUser.email = emailForSearch
+                                getUser.branch = branch_code
+                                getUser.assCode = branch_code
+    
+                                getUser.save()
+                            }
+    
+    
+                        }
+    
+                            res.redirect('/areas/branches/'+ req.user.area)
+                    } else {
+                        const brnStatus = ["Active","Deactivate"]
+
+                            const yoser = await User.findOne({assCode: branchCodeHide}) //, function (err, foundUser) {
+                                //            console.log(foundlist)
+                            if (!isNull(yoser)) {
+                                fndUser = yoser
+                                console.log(yoser)
+                    
+                                doneReadYoser = true
+                    
+                            }
+                    
+                            res.render('areas/editBranch', { 
+                                branchID: param,
+                                brnStatus: brnStatus,
+                               branch: getBranchForEdit, 
+                               areaCode: req.user.area,
+                               yuser : yoser,
+                               editBranch: true,
+                               newBranch : false,
+                               resetPW: false,
+                               canEditBranchCode: canEditBranchCode,
+                               locals: locals
+
+                           })
+                    }    
+            
         } catch (err) {
             console.log(err)
             let locals = {errorMessage: 'Something WENT went wrong.'}
@@ -1666,10 +2209,11 @@ router.delete('/deleteEmp/:id', authUser, authRole(ROLE.BM), async (req, res) =>
     }
 })
 
-// View AREA PROJECTED COLLECTIONS ROUTE
+
 router.get('/viewAreaProjCol/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     res.send('Ongoing development')
 })
+
 
 // View AREA PROJECTED COLLECTIONS ROUTE
 router.get('/viewAreaProjInc/:id', authUser, authRole(ROLE.AM), async (req, res) => {
@@ -1701,7 +2245,7 @@ router.get('/viewAreaProjInc/:id', authUser, authRole(ROLE.AM), async (req, res)
 
             let fndUnitBudgExecTotLonAmt = []
 
-            const poBudgExecTotLonAmt = await Budg_exec_sum.findOne({area: viewAreaCode, view_code: "TotLoanAmt"}, function (err, fndTotLonAmt) {
+            const poBudgExecTotLonAmt = await Budg_exec_sum.findOne({area: viewAreaCode, view_code: "TotLoanAmt", target_year: budgetYear}, function (err, fndTotLonAmt) {
             fndUnitBudgExecTotLonAmt = fndTotLonAmt
 
                 let jan_totLonReleaseInt = 0 
@@ -1931,8 +2475,7 @@ router.get('/viewAreaTargetMon/:id', authUser, authRole(ROLE.AM), async (req, re
     // let foundCenterDet = []
 
     const vwloanType = await Loan_type.find({})
-    const areaBudgExecViews = await Budg_exec_sum.find({area: viewAreaCode})
-
+    const brnBudgExecViews = await Budg_exec_sum.find({area: viewAreaCode, target_year: budgetYear})
     // console.log(vwloanType)
 
     let poTotLoanAmtArray = []
@@ -2100,7 +2643,7 @@ router.get('/viewAreaTargetMon/:id', authUser, authRole(ROLE.AM), async (req, re
             let octProcFeeAmt = 0
             let novProcFeeAmt = 0
             let decProcFeeAmt = 0
-
+    
             let doneReadNLC = false
             let doneReadOLC = false
             let doneReadNLA = false
@@ -2122,182 +2665,163 @@ router.get('/viewAreaTargetMon/:id', authUser, authRole(ROLE.AM), async (req, re
     
             try {
     
-            //  Pre-determine if items is already existed or saved in Budg_exec_sum Collection
+                if (!isNull(brnBudgExecViews)) {
 
-
-            if (!isNull(areaBudgExecViews)) {
-
-                areaBudgExecViews.forEach( TotNumCenter => { 
-                    const areaVwCode = TotNumCenter.view_code
-
-                    switch(areaVwCode) {
-                        case "NumberOfCenters":
-
-                            centerCntBegBal = centerCntBegBal + TotNumCenter.beg_bal
-                            jan_centerCount = jan_centerCount + TotNumCenter.jan_budg
-                            feb_centerCount = feb_centerCount + TotNumCenter.feb_budg
-                            mar_centerCount = mar_centerCount + TotNumCenter.mar_budg
-                            apr_centerCount = apr_centerCount + TotNumCenter.apr_budg
-                            may_centerCount = may_centerCount + TotNumCenter.may_budg
-                            jun_centerCount = jun_centerCount + TotNumCenter.jun_budg
-                            jul_centerCount = jul_centerCount + TotNumCenter.jul_budg
-                            aug_centerCount = aug_centerCount + TotNumCenter.aug_budg
-                            sep_centerCount = sep_centerCount + TotNumCenter.sep_budg
-                            oct_centerCount = oct_centerCount + TotNumCenter.oct_budg
-                            nov_centerCount = nov_centerCount + TotNumCenter.nov_budg
-                            dec_centerCount = dec_centerCount + TotNumCenter.dec_budg
-                            
-                            break;
-                        
-                        case "TotLoanAmt":
-                            
-                            janTotAmtLoan = janTotAmtLoan + TotNumCenter.jan_budg
-                            febTotAmtLoan = febTotAmtLoan + TotNumCenter.feb_budg
-                            marTotAmtLoan = marTotAmtLoan + TotNumCenter.mar_budg
-                            aprTotAmtLoan = aprTotAmtLoan + TotNumCenter.apr_budg
-                            mayTotAmtLoan = mayTotAmtLoan + TotNumCenter.may_budg
-                            junTotAmtLoan = junTotAmtLoan + TotNumCenter.jun_budg
-                            julTotAmtLoan = julTotAmtLoan + TotNumCenter.jul_budg
-                            augTotAmtLoan = augTotAmtLoan + TotNumCenter.aug_budg
-                            sepTotAmtLoan = sepTotAmtLoan + TotNumCenter.sep_budg
-                            octTotAmtLoan = octTotAmtLoan + TotNumCenter.oct_budg
-                            novTotAmtLoan = novTotAmtLoan + TotNumCenter.nov_budg
-                            decTotAmtLoan = decTotAmtLoan + TotNumCenter.dec_budg
+                    brnBudgExecViews.forEach( TotNumCenter => {
+        
+                        const areaVwCode = TotNumCenter.view_code
+        
+                        switch(areaVwCode) {
+                            case "NumberOfCenters":
+        
+                                centerCntBegBal = centerCntBegBal + TotNumCenter.beg_bal
+                                jan_centerCount = jan_centerCount + TotNumCenter.jan_budg
+                                feb_centerCount = feb_centerCount + TotNumCenter.feb_budg
+                                mar_centerCount = mar_centerCount + TotNumCenter.mar_budg
+                                apr_centerCount = apr_centerCount + TotNumCenter.apr_budg
+                                may_centerCount = may_centerCount + TotNumCenter.may_budg
+                                jun_centerCount = jun_centerCount + TotNumCenter.jun_budg
+                                jul_centerCount = jul_centerCount + TotNumCenter.jul_budg
+                                aug_centerCount = aug_centerCount + TotNumCenter.aug_budg
+                                sep_centerCount = sep_centerCount + TotNumCenter.sep_budg
+                                oct_centerCount = oct_centerCount + TotNumCenter.oct_budg
+                                nov_centerCount = nov_centerCount + TotNumCenter.nov_budg
+                                dec_centerCount = dec_centerCount + TotNumCenter.dec_budg                                
                                 break;
-                                
-                        case "NewClients":
-                            
-                            jan_newCliTot = jan_newCliTot + TotNumCenter.jan_budg
-                            feb_newCliTot = feb_newCliTot + TotNumCenter.feb_budg
-                            mar_newCliTot = mar_newCliTot + TotNumCenter.mar_budg
-                            apr_newCliTot = apr_newCliTot + TotNumCenter.apr_budg
-                            may_newCliTot = may_newCliTot + TotNumCenter.may_budg
-                            jun_newCliTot = jun_newCliTot + TotNumCenter.jun_budg
-                            jul_newCliTot = jul_newCliTot + TotNumCenter.jul_budg
-                            aug_newCliTot = aug_newCliTot + TotNumCenter.aug_budg
-                            sep_newCliTot = sep_newCliTot + TotNumCenter.sep_budg
-                            oct_newCliTot = oct_newCliTot + TotNumCenter.oct_budg
-                            nov_newCliTot = nov_newCliTot + TotNumCenter.nov_budg
-                            dec_newCliTot = dec_newCliTot + TotNumCenter.dec_budg
-                            break;
-
-                        case "NumReLoanCli":
-                            begBalOldClient = begBalOldClient + TotNumCenter.beg_bal
-                            jan_oldCliTot = jan_oldCliTot + TotNumCenter.jan_budg
-                            feb_oldCliTot = feb_oldCliTot + TotNumCenter.feb_budg
-                            mar_oldCliTot = mar_oldCliTot + TotNumCenter.mar_budg
-                            apr_oldCliTot = apr_oldCliTot + TotNumCenter.apr_budg
-                            may_oldCliTot = may_oldCliTot + TotNumCenter.may_budg
-                            jun_oldCliTot = jun_oldCliTot + TotNumCenter.jun_budg
-                            jul_oldCliTot = jul_oldCliTot + TotNumCenter.jul_budg
-                            aug_oldCliTot = aug_oldCliTot + TotNumCenter.aug_budg
-                            sep_oldCliTot = sep_oldCliTot + TotNumCenter.sep_budg
-                            oct_oldCliTot = oct_oldCliTot + TotNumCenter.oct_budg
-                            nov_oldCliTot = nov_oldCliTot + TotNumCenter.nov_budg
-                            dec_oldCliTot = dec_oldCliTot + TotNumCenter.dec_budg
-                            break;
-                        
-                        case "NumNewLoanCli":
-
-                            jan_newCtotValue =  jan_newCtotValue + TotNumCenter.jan_budg 
-                            feb_newCtotValue =  feb_newCtotValue + TotNumCenter.feb_budg 
-                            mar_newCtotValue =  mar_newCtotValue + TotNumCenter.mar_budg 
-                            apr_newCtotValue =  apr_newCtotValue + TotNumCenter.apr_budg 
-                            may_newCtotValue =  may_newCtotValue + TotNumCenter.may_budg 
-                            jun_newCtotValue =  jun_newCtotValue + TotNumCenter.jun_budg 
-                            jul_newCtotValue =  jul_newCtotValue + TotNumCenter.jul_budg 
-                            aug_newCtotValue =  aug_newCtotValue + TotNumCenter.aug_budg 
-                            sep_newCtotValue =  sep_newCtotValue + TotNumCenter.sep_budg 
-                            oct_newCtotValue =  oct_newCtotValue + TotNumCenter.oct_budg 
-                            nov_newCtotValue =  nov_newCtotValue + TotNumCenter.nov_budg 
-                            dec_newCtotValue =  dec_newCtotValue + TotNumCenter.dec_budg
-                            break;
-                            
-                        case "ResignClients":
-
-                            jan_resCliTot = jan_resCliTot + TotNumCenter.jan_budg 
-                            feb_resCliTot = feb_resCliTot + TotNumCenter.feb_budg 
-                            mar_resCliTot = mar_resCliTot + TotNumCenter.mar_budg 
-                            apr_resCliTot = apr_resCliTot + TotNumCenter.apr_budg 
-                            may_resCliTot = may_resCliTot + TotNumCenter.may_budg 
-                            jun_resCliTot = jun_resCliTot + TotNumCenter.jun_budg 
-                            jul_resCliTot = jul_resCliTot + TotNumCenter.jul_budg 
-                            aug_resCliTot = aug_resCliTot + TotNumCenter.aug_budg 
-                            sep_resCliTot = sep_resCliTot + TotNumCenter.sep_budg 
-                            oct_resCliTot = oct_resCliTot + TotNumCenter.oct_budg 
-                            nov_resCliTot = nov_resCliTot + TotNumCenter.nov_budg 
-                            dec_resCliTot = dec_resCliTot + TotNumCenter.dec_budg 
+                                                                    
+                                case "NewClients":
+                                    
+                                    jan_newCliTot = jan_newCliTot + TotNumCenter.jan_budg
+                                    feb_newCliTot = feb_newCliTot + TotNumCenter.feb_budg
+                                    mar_newCliTot = mar_newCliTot + TotNumCenter.mar_budg
+                                    apr_newCliTot = apr_newCliTot + TotNumCenter.apr_budg
+                                    may_newCliTot = may_newCliTot + TotNumCenter.may_budg
+                                    jun_newCliTot = jun_newCliTot + TotNumCenter.jun_budg
+                                    jul_newCliTot = jul_newCliTot + TotNumCenter.jul_budg
+                                    aug_newCliTot = aug_newCliTot + TotNumCenter.aug_budg
+                                    sep_newCliTot = sep_newCliTot + TotNumCenter.sep_budg
+                                    oct_newCliTot = oct_newCliTot + TotNumCenter.oct_budg
+                                    nov_newCliTot = nov_newCliTot + TotNumCenter.nov_budg
+                                    dec_newCliTot = dec_newCliTot + TotNumCenter.dec_budg
                                     break;
-
-                        case "TotProcFee":
-
-                            janProcFeeAmt = janProcFeeAmt +  TotNumCenter.jan_budg 
-                            febProcFeeAmt = febProcFeeAmt +  TotNumCenter.feb_budg 
-                            marProcFeeAmt = marProcFeeAmt +  TotNumCenter.mar_budg 
-                            aprProcFeeAmt = aprProcFeeAmt +  TotNumCenter.apr_budg 
-                            mayProcFeeAmt = mayProcFeeAmt +  TotNumCenter.may_budg 
-                            junProcFeeAmt = junProcFeeAmt +  TotNumCenter.jun_budg 
-                            julProcFeeAmt = julProcFeeAmt +  TotNumCenter.jul_budg 
-                            augProcFeeAmt = augProcFeeAmt +  TotNumCenter.aug_budg 
-                            sepProcFeeAmt = sepProcFeeAmt +  TotNumCenter.sep_budg 
-                            octProcFeeAmt = octProcFeeAmt +  TotNumCenter.oct_budg 
-                            novProcFeeAmt = novProcFeeAmt +  TotNumCenter.nov_budg 
-                            decProcFeeAmt = decProcFeeAmt +  TotNumCenter.dec_budg
-                                break;
-
-                        case "TotProjInc":
-                            jan_totIntAmt = jan_totIntAmt + TotNumCenter.jan_budg
-                            feb_totIntAmt = feb_totIntAmt + TotNumCenter.feb_budg
-                            mar_totIntAmt = mar_totIntAmt + TotNumCenter.mar_budg
-                            apr_totIntAmt = apr_totIntAmt + TotNumCenter.apr_budg
-                            may_totIntAmt = may_totIntAmt + TotNumCenter.may_budg
-                            jun_totIntAmt = jun_totIntAmt + TotNumCenter.jun_budg
-                            jul_totIntAmt = jul_totIntAmt + TotNumCenter.jul_budg
-                            aug_totIntAmt = aug_totIntAmt + TotNumCenter.aug_budg
-                            sep_totIntAmt = sep_totIntAmt + TotNumCenter.sep_budg
-                            oct_totIntAmt = oct_totIntAmt + TotNumCenter.oct_budg
-                            nov_totIntAmt = nov_totIntAmt + TotNumCenter.nov_budg
-                            dec_totIntAmt = dec_totIntAmt + TotNumCenter.dec_budg
-                            break;
-
-                            
-                        case "NewLoanAmount":
-
-                            jan_newAtotValue =  jan_newAtotValue + TotNumCenter.jan_budg
-                            feb_newAtotValue =  feb_newAtotValue + TotNumCenter.feb_budg
-                            mar_newAtotValue =  mar_newAtotValue + TotNumCenter.mar_budg
-                            apr_newAtotValue =  apr_newAtotValue + TotNumCenter.apr_budg
-                            may_newAtotValue =  may_newAtotValue + TotNumCenter.may_budg
-                            jun_newAtotValue =  jun_newAtotValue + TotNumCenter.jun_budg
-                            jul_newAtotValue =  jul_newAtotValue + TotNumCenter.jul_budg
-                            aug_newAtotValue =  aug_newAtotValue + TotNumCenter.aug_budg
-                            sep_newAtotValue =  sep_newAtotValue + TotNumCenter.sep_budg
-                            oct_newAtotValue =  oct_newAtotValue + TotNumCenter.oct_budg
-                            nov_newAtotValue =  nov_newAtotValue + TotNumCenter.nov_budg
-                            dec_newAtotValue =  dec_newAtotValue + TotNumCenter.dec_budg
-                            break;
-
-                        case "ReLoanAmount":
-
-                            jan_oldAtotValue = jan_oldAtotValue + TotNumCenter.jan_budg 
-                            feb_oldAtotValue = feb_oldAtotValue + TotNumCenter.feb_budg 
-                            mar_oldAtotValue = mar_oldAtotValue + TotNumCenter.mar_budg 
-                            apr_oldAtotValue = apr_oldAtotValue + TotNumCenter.apr_budg 
-                            may_oldAtotValue = may_oldAtotValue + TotNumCenter.may_budg 
-                            jun_oldAtotValue = jun_oldAtotValue + TotNumCenter.jun_budg 
-                            jul_oldAtotValue = jul_oldAtotValue + TotNumCenter.jul_budg 
-                            aug_oldAtotValue = aug_oldAtotValue + TotNumCenter.aug_budg 
-                            sep_oldAtotValue = sep_oldAtotValue + TotNumCenter.sep_budg 
-                            oct_oldAtotValue = oct_oldAtotValue + TotNumCenter.oct_budg 
-                            nov_oldAtotValue = nov_oldAtotValue + TotNumCenter.nov_budg 
-                            dec_oldAtotValue = dec_oldAtotValue + TotNumCenter.dec_budg
-                            break;
-
-                        default:
-                            month = 0
-                            break;
-                    }
-                })
+        
+                                case "NumReLoanCli":
+                                    begBalOldClient = begBalOldClient + TotNumCenter.beg_bal
+                                    jan_oldCliTot = jan_oldCliTot + TotNumCenter.jan_budg
+                                    feb_oldCliTot = feb_oldCliTot + TotNumCenter.feb_budg
+                                    mar_oldCliTot = mar_oldCliTot + TotNumCenter.mar_budg
+                                    apr_oldCliTot = apr_oldCliTot + TotNumCenter.apr_budg
+                                    may_oldCliTot = may_oldCliTot + TotNumCenter.may_budg
+                                    jun_oldCliTot = jun_oldCliTot + TotNumCenter.jun_budg
+                                    jul_oldCliTot = jul_oldCliTot + TotNumCenter.jul_budg
+                                    aug_oldCliTot = aug_oldCliTot + TotNumCenter.aug_budg
+                                    sep_oldCliTot = sep_oldCliTot + TotNumCenter.sep_budg
+                                    oct_oldCliTot = oct_oldCliTot + TotNumCenter.oct_budg
+                                    nov_oldCliTot = nov_oldCliTot + TotNumCenter.nov_budg
+                                    dec_oldCliTot = dec_oldCliTot + TotNumCenter.dec_budg
+                                    break;
+                                
+                                case "NumNewLoanCli":
+        
+                                    jan_newCtotValue =  jan_newCtotValue + TotNumCenter.jan_budg 
+                                    feb_newCtotValue =  feb_newCtotValue + TotNumCenter.feb_budg 
+                                    mar_newCtotValue =  mar_newCtotValue + TotNumCenter.mar_budg 
+                                    apr_newCtotValue =  apr_newCtotValue + TotNumCenter.apr_budg 
+                                    may_newCtotValue =  may_newCtotValue + TotNumCenter.may_budg 
+                                    jun_newCtotValue =  jun_newCtotValue + TotNumCenter.jun_budg 
+                                    jul_newCtotValue =  jul_newCtotValue + TotNumCenter.jul_budg 
+                                    aug_newCtotValue =  aug_newCtotValue + TotNumCenter.aug_budg 
+                                    sep_newCtotValue =  sep_newCtotValue + TotNumCenter.sep_budg 
+                                    oct_newCtotValue =  oct_newCtotValue + TotNumCenter.oct_budg 
+                                    nov_newCtotValue =  nov_newCtotValue + TotNumCenter.nov_budg 
+                                    dec_newCtotValue =  dec_newCtotValue + TotNumCenter.dec_budg
+                                    break;
+                                    
+                                case "ResignClients":
+        
+                                    jan_resCliTot = jan_resCliTot + TotNumCenter.jan_budg 
+                                    feb_resCliTot = feb_resCliTot + TotNumCenter.feb_budg 
+                                    mar_resCliTot = mar_resCliTot + TotNumCenter.mar_budg 
+                                    apr_resCliTot = apr_resCliTot + TotNumCenter.apr_budg 
+                                    may_resCliTot = may_resCliTot + TotNumCenter.may_budg 
+                                    jun_resCliTot = jun_resCliTot + TotNumCenter.jun_budg 
+                                    jul_resCliTot = jul_resCliTot + TotNumCenter.jul_budg 
+                                    aug_resCliTot = aug_resCliTot + TotNumCenter.aug_budg 
+                                    sep_resCliTot = sep_resCliTot + TotNumCenter.sep_budg 
+                                    oct_resCliTot = oct_resCliTot + TotNumCenter.oct_budg 
+                                    nov_resCliTot = nov_resCliTot + TotNumCenter.nov_budg 
+                                    dec_resCliTot = dec_resCliTot + TotNumCenter.dec_budg 
+                                            break;
+        
+                                case "TotProcFee":
+        
+                                    janProcFeeAmt = janProcFeeAmt +  TotNumCenter.jan_budg 
+                                    febProcFeeAmt = febProcFeeAmt +  TotNumCenter.feb_budg 
+                                    marProcFeeAmt = marProcFeeAmt +  TotNumCenter.mar_budg 
+                                    aprProcFeeAmt = aprProcFeeAmt +  TotNumCenter.apr_budg 
+                                    mayProcFeeAmt = mayProcFeeAmt +  TotNumCenter.may_budg 
+                                    junProcFeeAmt = junProcFeeAmt +  TotNumCenter.jun_budg 
+                                    julProcFeeAmt = julProcFeeAmt +  TotNumCenter.jul_budg 
+                                    augProcFeeAmt = augProcFeeAmt +  TotNumCenter.aug_budg 
+                                    sepProcFeeAmt = sepProcFeeAmt +  TotNumCenter.sep_budg 
+                                    octProcFeeAmt = octProcFeeAmt +  TotNumCenter.oct_budg 
+                                    novProcFeeAmt = novProcFeeAmt +  TotNumCenter.nov_budg 
+                                    decProcFeeAmt = decProcFeeAmt +  TotNumCenter.dec_budg
+                                        break;
+        
+                                case "TotProjInc":
+                                    jan_totIntAmt = jan_totIntAmt + TotNumCenter.jan_budg
+                                    feb_totIntAmt = feb_totIntAmt + TotNumCenter.feb_budg
+                                    mar_totIntAmt = mar_totIntAmt + TotNumCenter.mar_budg
+                                    apr_totIntAmt = apr_totIntAmt + TotNumCenter.apr_budg
+                                    may_totIntAmt = may_totIntAmt + TotNumCenter.may_budg
+                                    jun_totIntAmt = jun_totIntAmt + TotNumCenter.jun_budg
+                                    jul_totIntAmt = jul_totIntAmt + TotNumCenter.jul_budg
+                                    aug_totIntAmt = aug_totIntAmt + TotNumCenter.aug_budg
+                                    sep_totIntAmt = sep_totIntAmt + TotNumCenter.sep_budg
+                                    oct_totIntAmt = oct_totIntAmt + TotNumCenter.oct_budg
+                                    nov_totIntAmt = nov_totIntAmt + TotNumCenter.nov_budg
+                                    dec_totIntAmt = dec_totIntAmt + TotNumCenter.dec_budg
+                                    break;
+        
+                                    
+                                case "NewLoanAmount":
+        
+                                    jan_newAtotValue =  jan_newAtotValue + TotNumCenter.jan_budg
+                                    feb_newAtotValue =  feb_newAtotValue + TotNumCenter.feb_budg
+                                    mar_newAtotValue =  mar_newAtotValue + TotNumCenter.mar_budg
+                                    apr_newAtotValue =  apr_newAtotValue + TotNumCenter.apr_budg
+                                    may_newAtotValue =  may_newAtotValue + TotNumCenter.may_budg
+                                    jun_newAtotValue =  jun_newAtotValue + TotNumCenter.jun_budg
+                                    jul_newAtotValue =  jul_newAtotValue + TotNumCenter.jul_budg
+                                    aug_newAtotValue =  aug_newAtotValue + TotNumCenter.aug_budg
+                                    sep_newAtotValue =  sep_newAtotValue + TotNumCenter.sep_budg
+                                    oct_newAtotValue =  oct_newAtotValue + TotNumCenter.oct_budg
+                                    nov_newAtotValue =  nov_newAtotValue + TotNumCenter.nov_budg
+                                    dec_newAtotValue =  dec_newAtotValue + TotNumCenter.dec_budg
+                                    break;
+        
+                                case "ReLoanAmount":
+        
+                                    jan_oldAtotValue = jan_oldAtotValue + TotNumCenter.jan_budg 
+                                    feb_oldAtotValue = feb_oldAtotValue + TotNumCenter.feb_budg 
+                                    mar_oldAtotValue = mar_oldAtotValue + TotNumCenter.mar_budg 
+                                    apr_oldAtotValue = apr_oldAtotValue + TotNumCenter.apr_budg 
+                                    may_oldAtotValue = may_oldAtotValue + TotNumCenter.may_budg 
+                                    jun_oldAtotValue = jun_oldAtotValue + TotNumCenter.jun_budg 
+                                    jul_oldAtotValue = jul_oldAtotValue + TotNumCenter.jul_budg 
+                                    aug_oldAtotValue = aug_oldAtotValue + TotNumCenter.aug_budg 
+                                    sep_oldAtotValue = sep_oldAtotValue + TotNumCenter.sep_budg 
+                                    oct_oldAtotValue = oct_oldAtotValue + TotNumCenter.oct_budg 
+                                    nov_oldAtotValue = nov_oldAtotValue + TotNumCenter.nov_budg 
+                                    dec_oldAtotValue = dec_oldAtotValue + TotNumCenter.dec_budg
+                                    break;
+        
+                                default:
+                                    month = 0
+                                    break;
+                            }
+                    })
                     poSumView.push({title: "NUMBER OF CENTERS", sortkey: 2, group: 1, isTitle: false, beg_bal: centerCntBegBal, jan_value: jan_centerCount, feb_value: feb_centerCount, mar_value: mar_centerCount,
                         apr_value: apr_centerCount, may_value: may_centerCount, jun_value: jun_centerCount, jul_value: jul_centerCount, aug_value: aug_centerCount,
                         sep_value: sep_centerCount, oct_value: oct_centerCount, nov_value: nov_centerCount, dec_value: dec_centerCount, tot_value : dec_centerCount
@@ -2317,6 +2841,20 @@ router.get('/viewAreaTargetMon/:id', authUser, authRole(ROLE.AM), async (req, re
                     dec_centerCount = dec_centerCount + nov_centerCount
     
                     doneReadNumCenters = true  // ****-----
+
+                    // total Disbursement Amount - for Copying to Area conso and Up
+                    janTotAmtLoan = jan_newAtotValue + jan_oldAtotValue
+                    febTotAmtLoan = feb_newAtotValue + feb_oldAtotValue
+                    marTotAmtLoan = mar_newAtotValue + mar_oldAtotValue
+                    aprTotAmtLoan = apr_newAtotValue + apr_oldAtotValue
+                    mayTotAmtLoan = may_newAtotValue + may_oldAtotValue
+                    junTotAmtLoan = jun_newAtotValue + jun_oldAtotValue
+                    julTotAmtLoan = jul_newAtotValue + jul_oldAtotValue
+                    augTotAmtLoan = aug_newAtotValue + aug_oldAtotValue
+                    sepTotAmtLoan = sep_newAtotValue + sep_oldAtotValue
+                    octTotAmtLoan = oct_newAtotValue + oct_oldAtotValue
+                    novTotAmtLoan = nov_newAtotValue + nov_oldAtotValue
+                    decTotAmtLoan = dec_newAtotValue + dec_oldAtotValue
 
                     totTotAmtLoan = janTotAmtLoan + febTotAmtLoan + marTotAmtLoan + aprTotAmtLoan + mayTotAmtLoan + junTotAmtLoan + julTotAmtLoan + augTotAmtLoan +
                         sepTotAmtLoan + octTotAmtLoan + novTotAmtLoan + decTotAmtLoan
@@ -2406,9 +2944,11 @@ router.get('/viewAreaTargetMon/:id', authUser, authRole(ROLE.AM), async (req, re
                         may_value : may_oldAtotValue, jun_value : jun_oldAtotValue, jul_value : jul_oldAtotValue, aug_value : aug_oldAtotValue,
                         sep_value : sep_oldAtotValue, oct_value : oct_oldAtotValue, nov_value : nov_oldAtotValue, dec_value : dec_oldAtotValue, tot_value : olTotValueAmt
                     }) 
-                    doneReadOLA = true  // ****-----
-                                          
-                }
+                    doneReadOLA = true  // ****-----                                          
+
+        }
+        
+                // console.log(poBudgExecTotLonAmt)
     
             poSumView.push({title: "CENTERS", sortkey: 1, group: 1, isTitle: true})
     
@@ -2460,7 +3000,8 @@ router.get('/viewAreaTargetMon/:id', authUser, authRole(ROLE.AM), async (req, re
         }
     
             poSumView.push({title: "NUMBER OF LOANS", sortkey: 8, group: 1, isTitle: true})
-        
+    
+    
                 if (doneReadNLC && doneReadOLC) {
                     let jan_totNoOfLoan = jan_reLoanCliTot + jan_newCtotValue
                     let feb_totNoOfLoan = feb_reLoanCliTot + feb_newCtotValue
@@ -2484,8 +3025,7 @@ router.get('/viewAreaTargetMon/:id', authUser, authRole(ROLE.AM), async (req, re
                    }) 
                 }
     
-                poSumView.push({title: "AMOUNT OF LOANS", sortkey: 12, group: 2, isTitle: true})
-    
+            poSumView.push({title: "AMOUNT OF LOANS", sortkey: 12, group: 2, isTitle: true})
     
     
             let jan_totColAmt = 0 
@@ -2525,7 +3065,6 @@ router.get('/viewAreaTargetMon/:id', authUser, authRole(ROLE.AM), async (req, re
                 let oct_totWklyCBUAmt = 0
                 let nov_totWklyCBUAmt = 0
                 let dec_totWklyCBUAmt = 0
-
             let jan_totCBUInt = 0 
             let feb_totCBUInt = 0
             let mar_totCBUInt = 0
@@ -3164,26 +3703,8 @@ router.get('/exportToExcel/:id', authUser, authRole(ROLE.AM), (req,res) => {
                 
                     let workbook = new excel.Workbook();
                     let worksheet = workbook.addWorksheet("Area_Exec_Sum");
-                    let worksheet1 = workbook.addWorksheet("Area_Exec_Sum2");
                 
-                    worksheet1.columns = [
-                        { header: "DESCRIPTION", key: "title", width: 20 },
-                        { header: "BEG. BALANCE", key: "beg_bal", width: 20 },
-                        { header: "JANUARY", key: "jan_value", width: 12, style: { numFmt: '#,##0' } },
-                        { header: "FEBRUARY", key: "feb_value", width: 12, style: { numFmt: '#,##0' } },
-                        { header: "MARCH", key: "mar_value", width: 12, style: { numFmt: '#,##0' } },
-                        { header: "APRIL", key: "apr_value", width: 12, style: { numFmt: '#,##0' } },
-                        { header: "MAY", key: "may_value", width: 12, style: { numFmt: '#,##0' } },
-                        { header: "JUNE", key: "jun_value", width: 12, style: { numFmt: '#,##0' } },
-                        { header: "JULY", key: "jul_value", width: 12, style: { numFmt: '#,##0' } },
-                        { header: "AUGUST", key: "aug_value", width: 12, style: { numFmt: '#,##0' } },
-                        { header: "SEPTEMBER", key: "sep_value", width: 12, style: { numFmt: '#,##0' } },
-                        { header: "OCTOBER", key: "oct_value", width: 12, style: { numFmt: '#,##0' } },
-                        { header: "NOVEMBER", key: "nov_value", width: 12, style: { numFmt: '#,##0' } },
-                        { header: "DECEMBER", key: "dec_value", width: 12, style: { numFmt: '#,##0' } },
-                        { header: "TOTAL", key: "tot_value", width: 12, style: { numFmt: '#,##0' } },
-                      ];
-                      worksheet.columns = [
+                    worksheet.columns = [
                       { header: "DESCRIPTION", key: "title", width: 20 },
                       { header: "BEG. BALANCE", key: "beg_bal", width: 20 },
                       { header: "JANUARY", key: "jan_value", width: 12, style: { numFmt: '#,##0' } },
@@ -3203,7 +3724,6 @@ router.get('/exportToExcel/:id', authUser, authRole(ROLE.AM), (req,res) => {
                 
                     // Add Array Rows
                     worksheet.addRows(dataForExcel)
-                    worksheet1.addRows(dataForExcel)
                 
                     worksheet.getRow(1).font = { size: 14, bold: true}
                     worksheet.getRow(2).font = { size: 12, bold: true}
@@ -3214,15 +3734,6 @@ router.get('/exportToExcel/:id', authUser, authRole(ROLE.AM), (req,res) => {
                     worksheet.getRow(22).font = { size: 12, bold: true}
                     worksheet.getRow(29).font = { size: 12, bold: true}
                 
-                    worksheet1.getRow(1).font = { size: 14, bold: true}
-                    worksheet1.getRow(2).font = { size: 12, bold: true}
-                    worksheet1.getRow(4).font = { size: 12, bold: true}
-                    worksheet1.getRow(9).font = { size: 12, bold: true}
-                    worksheet1.getRow(13).font = { size: 12, bold: true}
-                    worksheet1.getRow(17).font = { size: 12, bold: true}
-                    worksheet1.getRow(22).font = { size: 12, bold: true}
-                    worksheet1.getRow(29).font = { size: 12, bold: true}
-
                     res.setHeader(
                       "Content-Type",
                       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -3251,12 +3762,12 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
     const vwloanType = await Loan_type.find({})
     const vwAreaBranches = await Branch.find({area:viewAreaCode})
     
-    const areaCtrBudgDet = await Center_budget_det.find({area: viewAreaCode})
+    const areaCtrBudgDet = await Center_budget_det.find({area: viewAreaCode, target_year: budgetYear})
 
     // const areaCtrBudgTotLonAmt = await Center_budget_det.find({area: viewAreaCode, view_code: "TotLoanAmt"})
 
-    const poBudgExecTotReach = await Budg_exec_sum.find({area: viewAreaCode, view_code: "TotClientOutreach"})
-    const poBudgExecTotLonAmt = await Budg_exec_sum.find({area: viewAreaCode, view_code: "TotLoanAmt"})
+    const poBudgExecTotReach = await Budg_exec_sum.find({area: viewAreaCode, view_code: "TotClientOutreach", target_year: budgetYear})
+    const poBudgExecTotLonAmt = await Budg_exec_sum.find({area: viewAreaCode, view_code: "TotLoanAmt", target_year: budgetYear})
 
     // console.log(vwAreaBranches)
 
@@ -4417,92 +4928,14 @@ router.get('/viewAreaKRAMon/:id', authUser, authRole(ROLE.AM), async (req, res) 
                         poSumView: poSumView,
                         yuser: yuser   
                     })
-                // }
+                    
         } catch (err) {
             console.log(err)
             res.redirect('/areas/'+ viewAreaCode)
         }
     })
     
-
-    router.get('/expKRAtoExcel/:id', authUser, authRole(ROLE.AM), (req,res) => {
-
-        // let dataForExcel = []
-        // dataForExcel = poSumView
-
-        const dataForExcel = poSumView.map(unitExecSum => {
-            return [unitExecSum.title, unitExecSum.beg_bal, unitExecSum.jan_value, unitExecSum.feb_value, unitExecSum.mar_value,
-                unitExecSum.apr_value, unitExecSum.may_value, unitExecSum.jun_value, unitExecSum.jul_value, unitExecSum.aug_value,
-                unitExecSum.sep_value, unitExecSum.oct_value, unitExecSum.nov_value, unitExecSum.dec_value, unitExecSum.tot_value]
-        });
-    
-        console.log(dataForExcel)
-    
-        let workbook = new excel.Workbook();
-        let worksheet = workbook.addWorksheet("Area_KRA_Sum");
-        let worksheet1 = workbook.addWorksheet("Area_KRA_Sum2");
-    
-        worksheet1.columns = [
-            { header: "DESCRIPTION", key: "title", width: 20 },
-            { header: "BEG. BALANCE", key: "beg_bal", width: 20 },
-            { header: "JANUARY", key: "jan_value", width: 12, style: { numFmt: '#,##0' } },
-            { header: "FEBRUARY", key: "feb_value", width: 12, style: { numFmt: '#,##0' } },
-            { header: "MARCH", key: "mar_value", width: 12, style: { numFmt: '#,##0' } },
-            { header: "APRIL", key: "apr_value", width: 12, style: { numFmt: '#,##0' } },
-            { header: "MAY", key: "may_value", width: 12, style: { numFmt: '#,##0' } },
-            { header: "JUNE", key: "jun_value", width: 12, style: { numFmt: '#,##0' } },
-            { header: "JULY", key: "jul_value", width: 12, style: { numFmt: '#,##0' } },
-            { header: "AUGUST", key: "aug_value", width: 12, style: { numFmt: '#,##0' } },
-            { header: "SEPTEMBER", key: "sep_value", width: 12, style: { numFmt: '#,##0' } },
-            { header: "OCTOBER", key: "oct_value", width: 12, style: { numFmt: '#,##0' } },
-            { header: "NOVEMBER", key: "nov_value", width: 12, style: { numFmt: '#,##0' } },
-            { header: "DECEMBER", key: "dec_value", width: 12, style: { numFmt: '#,##0' } },
-            { header: "TOTAL", key: "tot_value", width: 12, style: { numFmt: '#,##0' } },
-          ];
-          worksheet.columns = [
-          { header: "DESCRIPTION", key: "title", width: 20 },
-          { header: "BEG. BALANCE", key: "beg_bal", width: 20 },
-          { header: "JANUARY", key: "jan_value", width: 12, style: { numFmt: '#,##0' } },
-          { header: "FEBRUARY", key: "feb_value", width: 12, style: { numFmt: '#,##0' } },
-          { header: "MARCH", key: "mar_value", width: 12, style: { numFmt: '#,##0' } },
-          { header: "APRIL", key: "apr_value", width: 12, style: { numFmt: '#,##0' } },
-          { header: "MAY", key: "may_value", width: 12, style: { numFmt: '#,##0' } },
-          { header: "JUNE", key: "jun_value", width: 12, style: { numFmt: '#,##0' } },
-          { header: "JULY", key: "jul_value", width: 12, style: { numFmt: '#,##0' } },
-          { header: "AUGUST", key: "aug_value", width: 12, style: { numFmt: '#,##0' } },
-          { header: "SEPTEMBER", key: "sep_value", width: 12, style: { numFmt: '#,##0' } },
-          { header: "OCTOBER", key: "oct_value", width: 12, style: { numFmt: '#,##0' } },
-          { header: "NOVEMBER", key: "nov_value", width: 12, style: { numFmt: '#,##0' } },
-          { header: "DECEMBER", key: "dec_value", width: 12, style: { numFmt: '#,##0' } },
-          { header: "TOTAL", key: "tot_value", width: 12, style: { numFmt: '#,##0' } },
-        ];
-    
-        // Add Array Rows
-        worksheet.addRows(dataForExcel)
-        worksheet1.addRows(dataForExcel)
-    
-        worksheet.getRow(1).font = { size: 14, bold: true}
-        worksheet.getRow(2).font = { size: 12, bold: true}
-        worksheet.getRow(6).font = { size: 12, bold: true}
-        worksheet.getRow(7).font = { size: 12, bold: true}
-        worksheet.getRow(13).font = { size: 12, bold: true}
-        worksheet.getRow(11).font = { size: 12, bold: true}
-
-        res.setHeader(
-          "Content-Type",
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        );
-        res.setHeader(
-          "Content-Disposition",
-          "attachment; filename=" + req.params.id+" - Area_KRA_Sum.xlsx"
-        );
-    
-        workbook.xlsx.write(res).then(function () {
-          res.status(200).end()
-        })
-    
-})
-   
+                
 
 module.exports = router
 //   function areYouSureDelete() {
@@ -4524,3 +4957,413 @@ module.exports = router
        
 
 
+// New EMPLOYEE Route
+// router.get('/newEmployee/:id', authUser, authRole(ROLE.AM), async (req, res) => {
+    
+//     const areaCode = req.params.id
+//     const _user = req.user
+//     let foundBranch = []
+//     const empStatus = ["Active","Deactivate"]
+
+//     try {
+
+//         // let foundBranch = await Branch.find({area: areaCode, emp_code: ""})
+
+//         const newEmpPost = await Branch.find({area: areaCode, emp_code: ""}, function (err, fndPost) {
+//             foundBranch = fndPost
+//            console.log(areaCode)
+//            const newEmp = new Employee()
+//            const newUser = new User()
+   
+//             res.render('areas/newEmployee', { 
+//                emp: newEmp, 
+//                user: newUser,
+//                areaCode: areaCode,
+//                branchAsignDesc: "",
+//                foundBranch: foundBranch,
+//                empStatus: empStatus,
+//                empHasBranchAss: false,
+//                yuser: _user,
+//                newEmp: true,
+//                resetPW: false,
+//                status: "Active"
+//            })
+//        })
+   
+//     } catch (err) {
+//         console.log(err)
+//         res.redirect('/')
+//     }
+// //    console.log(position)
+
+// })
+
+// // POST or Save new Employee
+// router.post('/postNewEmp/:id', authUser, authRole(ROLE.AM), async (req, res) => {
+//     const _user = req.user
+//    let eUnit
+//    let ePONum
+//    let locals
+
+//    const empBranCod = req.body.branch
+//     const nEmpCode = _.trim(req.body.empCode)
+//     const nLName = _.trim(req.body.lName).toUpperCase()
+//     const nFName = _.trim(req.body.fName).toUpperCase()
+//     const nMName = _.trim(req.body.mName).toUpperCase()
+//     const nPosit_Class = _.trim(req.body.position_class).toUpperCase()
+//     const empStat = req.body.empStat
+//     const nName =  nLName + ", " + nFName + " " + nMName
+    
+//     const validEmpCode = /[^a-zA-Z0-9]-/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
+//     const trimmedEmpCode = _.replace(nEmpCode, " ", "")
+//     const validLName = /[^a-zA-Z] /.test(nLName)
+//     const validFName = /[^a-zA-Z] /.test(nFName)
+//     const validMName = /[^a-zA-Z] /.test(nMName)
+
+//     let nameCanProceed = false
+//     let fieldsOkay = false
+    
+//     if (validEmpCode) {
+//         locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+//     } else if (validLName) {
+//         locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+//     } else if (validFName) {
+//         locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+//     } else if (validMName) {
+//         locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+//     } else if (nEmpCode.length == 0 || nLName.length == 0 || nFName.length == 0 || nMName.length == 0) {
+//         locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+//         // nameCanProceed = true
+//     } else {
+
+//         fieldsOkay = true
+//     }
+
+//     const areaCod = req.params.id
+
+//     let branchMgrID = ""
+//     let fndPositi = posisyon
+
+//     fndPositi.forEach(fndPosii => {
+//         const fndPositionEmp = fndPosii.code
+//         const fndPositID = fndPosii.id
+//         if (fndPositionEmp === "BRN_MGR") {
+//             branchMgrID = fndPositID
+//         }
+//     })
+  
+// //console.log(brnCode)
+// let getExistingUser = []
+// let canProceed = false
+// let UserProceed = false
+// let branchRegion = ""
+
+// try {
+
+//     const getRegCode = await Area.findOne({area: areaCod})
+//         branchRegion = getRegCode.region
+
+//     const branchEmployees = await Employee.find({})
+//     console.log(branchEmployees)
+
+//     const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
+
+//     const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
+
+//     const sameAssign = _.find(branchEmployees, {assign_code: empBranCod})
+//     console.log(sameAssign)
+
+//     if (branchEmployees) {
+//         if (sameName) {
+//             locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+//             canProceed = false
+//         } else if (sameAssign) {
+//             locals = {errorMessage: 'Assign Code: ' + empBranCod + ' already exists!'}
+//             canProceed = false
+
+//         } else if (sameCode) {
+//             locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+//             canProceed = false
+//         } else {
+//             canProceed = true
+//         }
+
+//     } else {
+//         canProceed = true
+//     }
+
+//     if (canProceed && fieldsOkay)  {
+//             const poAssignCode = await Branch.findOneAndUpdate({"branch": empBranCod}, {$set:{"emp_code": nEmpCode}})
+
+//         addedNewUser = true
+        
+//         let employee = new Employee({
+
+//             emp_code: nEmpCode,
+//             last_name: nLName,
+//             first_name: nFName,
+//             middle_name: nMName,
+//             position_code: branchMgrID,
+//             position_class: nPosit_Class,
+//             assign_code: empBranCod,
+//             branch: empBranCod,
+//             area: areaCod,
+//             region: branchRegion,
+//             unit: "N/A",
+//             po_number: "N/A",
+//             status: empStat
+//         })        
+//         const newCoa = employee.save()
+
+//         const getExistingUser = await User.findOne({branch: empBranCod, role: "BM"})
+//         if (getExistingUser) {
+
+//             getExistingUser.emp_code = nEmpCode
+//             getExistingUser.name = nLName + ', ' + nFName + ' ' + nMName.substr(0,1) + '.'
+//             const savedNewPW = getExistingUser.save()    
+//         }
+
+//         res.redirect('/areas/employees/'+ areaCod)
+//     } 
+//     else {
+//         let areaBranches = []
+//         const rePosition = await Area.find({area: areaCod}, function (err, fnd_Post) {
+//             areaBranches = fnd_Post
+//         })
+
+//         let errEmp = []
+//         let errUser = []
+
+//             errUser.push({email: nEmail, password: req.body.password})
+
+//             errEmp.push({emp_code: nEmpCode, branch: empBranCod, last_name: nLName, first_name: nFName, middle_name: nMName, position_class: nPosit_Class, position_code: branchMgrID})
+//             console.log(errEmp)
+
+//             res.render('areas/newEmployee', { 
+//                 emp: errEmp, 
+//                 user: errUser,
+//                 foundBranch: areaBranches,
+//                 areaCode: areaCod,
+//                 yuser: _user,
+//                 newEmp: true,
+//                 resetPW: false,
+//                 locals: locals
+//             })
+// }
+
+
+// } catch (err) {
+//     console.log(err)
+//    let locals = {errorMessage: 'Something WENT went wrong.'}
+//     res.redirect('/areas/employees/'+ areaCod)
+// }
+// })
+
+// // Get an Employee for EDIT
+// router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.AM), async (req, res) => {
+
+//     const parame = req.params.id // areaCode + emp_code
+//     const areaCode = parame.substr(0,3)
+//     const empCode = _.trim(parame.substr(3,10))
+//     const empStatus = ["Active","Deactivate"]
+
+//     const areaCod = areaCode
+
+//     console.log(empCode)
+//     const _user = req.user
+//     let locals = ""
+//     let foundEmploy = []
+//     let areaBranches = []
+
+//     let empHasBranchAss = false
+     
+//    try {
+//         let brnCod
+//         const emBranch = await Branch.find({area: areaCode}) //, function (err, fnd_Post) {
+
+//             emBranch.forEach( branchSelection => {
+//                 const region_Code = branchSelection.region    
+//                 const branch_Code = branchSelection.branch
+//                 const branch_Desc = branchSelection.branch_desc
+//                 const branch_EmpCode = branchSelection.emp_code
+
+//                 if (branch_EmpCode === "" || branch_EmpCode=== empCode) {
+//                     areaBranches.push({branch: branch_Code, branch_desc : branch_Desc, area: areaCode})
+//                 }
+//             })
+//             areaBranches.push({branch: "", branch_desc : "", area: ""})
+//             console.log(areaBranches)
+
+//             const empHasBranch = _.find(emBranch, {emp_code: empCode})
+
+//             if (empHasBranch) {
+//                 empHasBranchAss = true
+//                 locals = {errorMessage: "Employee Code is locked for editing, already has transactions."}
+//             }
+    
+//         const employe = await Employee.findOne({emp_code: empCode}, function (err, foundEmp) {
+// //            console.log(foundlist)
+//             foundEmploy = foundEmp
+//             brnCod = foundEmp.branch
+//         })
+//         console.log(employe)
+//         // const newUser = new User()
+
+//         res.render('areas/editEmployee', {
+//             areaCode: areaCode,
+//             foundBranch: areaBranches,
+//             emp: employe, 
+//             empHasBranchAss: empHasBranchAss,
+//             empStatus : empStatus,
+//             locals: locals,
+//             yuser: _user,
+//             newEmp: false,
+//             resetPW: false,
+//             empStatus: empStatus
+//        })
+
+// //        res.render('centers/edit', { centers: center, coaClass: coaClass })
+
+//    } catch (err) {
+//        console.log(err)
+//        res.redirect('/areas/employees/'+ areaCode)
+//    }
+// })
+
+// // SAVE EDITed Employee
+
+// router.put('/putEditedEmp/:id', authUser, authRole(ROLE.AM), async function(req, res){
+
+//     const paramsID = req.params.id
+//         console.log(paramsID)
+
+//     const areaCod = paramsID.substr(0,3)
+//     const empID = _.trim(paramsID.substr(3,45))
+
+//     const assCode = req.body.branch
+//     const brnCod = req.body.branch
+
+//     const eAssCode = assCode    
+
+//     const eCode = _.trim(req.body.empCode)
+//     const eLName = _.trim(req.body.lName).toUpperCase()
+//     const eFName = _.trim(req.body.fName).toUpperCase()
+//     const eMName = _.trim(req.body.mName).toUpperCase()
+//     const ePosit_Class = _.trim(req.body.position_class)
+//     const eStatus = req.body.empStat
+//     const HidBranchAss = req.body.HideBranchAss
+//     const HidEmpCode = req.body.HideEmpCode
+//     const nName =  eLName + ", " + eFName + " " + eMName
+        
+//     const validEmpCode = /[^a-zA-Z0-9]-/.test(eCode) // /[^a-zA-Z0-9]+/g
+//     const trimmedEmpCode = _.replace(eCode, " ", "")
+//     const validLName = /[^a-zA-Z ]/.test(eLName)
+//     const validFName = /[^a-zA-Z ]/.test(eFName)
+//     const validMName = /[^a-zA-Z ]/.test(eMName)
+
+//     let nameCanProceed = false
+//     let fieldsOkay = false
+    
+//     if (validEmpCode) {
+//         locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+//     } else if (validLName) {
+//         locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+//     } else if (validFName) {
+//         locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+//     } else if (validMName) {
+//         locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+//     } else if (HidEmpCode.length == 0 || eLName.length == 0 || eFName.length == 0 || eMName.length == 0) {
+//         locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+//         // nameCanProceed = true
+//     } else {
+
+//         fieldsOkay = true
+//     }
+//     // let eFoundBranch = []
+//     let employee
+
+//     const empStatus = ["Active","Deactivate"]
+
+//     try {
+
+//        const eFoundBranch = await Branch.find({area: areaCod, emp_code : HidEmpCode})
+
+//         employee = await Employee.findById(empID)
+
+//         console.log(employee)
+
+//         if (fieldsOkay) {
+//             employee.emp_code = HidEmpCode
+//             employee.last_name = eLName
+//             employee.first_name = eFName
+//             employee.middle_name = eMName
+//             employee.status = eStatus
+//             employee.position_class = ePosit_Class
+
+//             if (eAssCode === HidBranchAss) {
+//                 employee.branch = eAssCode
+//                 employee.assign_code = eAssCode
+
+//             } else {
+
+//                 if (eAssCode === "") {
+//                     const branchOldAssCode = await Branch.findOneAndUpdate({"branch": HidBranchAss}, {$set:{"emp_code": ""}})
+
+//                     const userAssignCode = await User.findOneAndUpdate({"assCode": HidBranchAss}, {$set:{"name": "", "emp_code": "",}})
+
+//                     employee.assign_code = ""
+//                     employee.branch = HidBranchAss
+
+//                 } else {
+
+//                     const branchNewAssCode = await Branch.findOneAndUpdate({"branch": eAssCode}, {$set:{"emp_code": HidEmpCode}})
+
+//                     const userNewAssignCode = await User.findOneAndUpdate({"branch": eAssCode}, {$set:{"name": nName, "emp_code": HidEmpCode }})
+    
+//                     if (HidBranchAss === "") {                        
+
+//                     } else {
+//                         const branchOldAssCode = await Branch.findOneAndUpdate({"branch": HidBranchAss}, {$set:{"emp_code": ""}})
+
+//                         const userOldAssignCode = await User.findOneAndUpdate({"branch": HidBranchAss}, {$set:{"name": "", "emp_code": "" }})
+    
+//                     }
+
+//                     employee.assign_code = eAssCode
+//                     employee.branch = eAssCode
+
+//                 }                            
+//             }
+
+//             await employee.save()
+    
+//             res.redirect('/areas/employees/'+ areaCod)
+
+//     } else {
+
+//         // eFoundBranch = await Area.find({area: areaCod, emp_code : ""})
+
+//         res.render('areas/editEmployee', {
+//             areaCode: areaCod,
+//             foundBranch: eFoundBranch,
+//             user: req.user,
+//             emp: employee, 
+//             empHasBranchAss: true,
+//             empStatus : empStatus ,
+//             locals: locals,
+//             yuser: req.user,
+//             newEmp: false,
+//             resetPW: false
+//        })
+
+//     }
+    
+//     } catch (err) {
+//         console.log(err)
+//         let locals = {errorMessage: 'Something WENT went wrong.'}
+//         res.redirect('/areas/employees/'+ areaCod, {
+//         locals: locals
+//         })
+//     }
+  
+// })

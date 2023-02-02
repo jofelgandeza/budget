@@ -1,0 +1,132 @@
+
+
+	<section class="s1">
+		<div class="main-container">
+
+            <div class="intro-wrapper">
+				<div class="nav-wrapper">
+
+					<!-- Link around dots-wrapper added after tutorial video -->
+					<a href="index.html">
+						<div>  
+                           <h4> AREA - <%= areaCode %></h4>
+						</div>
+					</a>
+					
+
+					<ul id="navigation">
+						<li><a href="index.html#contact">As of today, <%= dateToday.toLocaleDateString() %> </a></li>
+
+					</ul>
+				</div>
+
+				<div class="left-column">
+                    <table class="content-table-brnView">
+                        <tr>
+                            <th>PARTICULARS</th>
+                            <th></th>
+                            <th>BUDGET</th>
+                            <th>ACTUAL</th>
+                            <th>%AGE</th>
+                            <th>VARIANCE</th>
+                        </tr>
+                        <tr>
+                            <td class="td-bold">TOTAL DISBURSEMENT</td>
+                        </tr>
+                            <% loanTots.forEach(loanAmt => {  %>
+                                <tr>
+                                    <td></td>
+                                    <td><%= loanAmt.loan_type %></td>
+                                    <% if (loanAmt.amtDisburse > 0) { %>
+                                        <td><%= loanAmt.amtDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                    <% } else { %>
+                                        <td style=>-</td>
+                                    <% } %>
+                                    <td> -</td>
+                                    <td> -</td>
+                                    <td> -</td>
+                                </tr>
+                            <% }) %>
+                            <tr class="td-bold">
+                                <td> NUMBER OF CLIENTS</td>
+                            </tr>
+                            <% loanTots.forEach(loanCli => {  %>
+                                <tr>
+                                    <td></td>
+                                    <td><%= loanCli.loan_type %></td>
+                                    <% if (loanCli.budgEndBal > 0) { %>
+                                        <td><%= loanCli.budgEndBal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                    <% } else { %>
+                                        <td style=>-</td>
+                                    <% } %>
+                                    <td> -</td>
+                                    <td> -</td>
+                                    <td> -</td>
+                                </tr>
+                            <% }) %>
+
+                            <tr class="td-bold">
+                                <td>OTHER BUDGETS</td>
+                            </tr>
+                                <% poGrandTot.forEach( gTot => { %>                                    
+                                    <tr>
+                                        <td></td>
+                                        <td> Number of Branches: </td>
+                                        <% if (gTot.totBranches > 0) { %>
+                                            <td><%= gTot.totBranches.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                        <% } else { %>
+                                            <td style=>-</td>
+                                        <% } %>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td> Number of Units: </td>
+                                        <% if (gTot.totUnits > 0) { %>
+                                            <td><%= gTot.totUnits.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                        <% } else { %>
+                                            <td style=>-</td>
+                                        <% } %>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td></td>
+                                        <td> Number of POs: </td>
+                                        <% if (gTot.totPOs > 0) { %>
+                                            <td><%= gTot.totPOs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                        <% } else { %>
+                                            <td style=>-</td>
+                                        <% } %>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td> Number of Centers: </td>
+                                        <% if (gTot.totCenters > 0) { %>
+                                            <td><%= gTot.totCenters.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                        <% } else { %>
+                                            <td style=>-</td>
+                                        <% } %>
+                                    </tr>    
+                                <% }) %>
+                    </table>
+				</div>
+
+				<div class="right-column">
+
+					<div id="preview-shadow">
+						<div id="preview">
+							<div id="corner-tl" class="corner"></div>
+							<div id="corner-tr" class="corner"></div>
+                            <ul id="navigation">
+                                <lh>SETTINGS</lh>
+                                <li><a href='/areas/employees/<%= areaCode %>'>BRANCH MANAGERS</a></li>
+                                <li><a href='/areas/branches/<%= areaCode %>'>BRANCHES</a></li>
+                                <li><a href='/areas/budget/<%= areaCode %>'>BUDGETS</a></li>
+                            </ul>
+                            <div id="corner-br" class="corner"></div>
+							<div id="corner-bl" class="corner"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>

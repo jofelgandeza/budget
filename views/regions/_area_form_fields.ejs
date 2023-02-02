@@ -1,14 +1,43 @@
 <div class="form-row">
     <div class="form-item-column">
         <label>Area Code</label>
-        <input type="text" name="areaCode" value="<%= area.area %>" autocomplete="off">
+        <% if (canEditAreaCode) {%>
+            <input style="text-transform: uppercase" type="text" id="areaCode" name="areaCode" value="<%= area.area %>" minlength="3" maxlength="3" required autocomplete="off">
+        <% } else {%>
+            <input style="text-transform: uppercase" type="text" name="areaCode" value="<%= area.area %>" disabled>
+        <% } %>
+
     </div>
     <div class="form-item-column">
         <label>Area Description</label>
-        <input type="text" name="areaDesc" value="<%= area.area_desc %>" autocomplete="off">
+            <input style="text-transform: uppercase" type="text" name="areaDesc" value="<%= area.area_desc %>" required autocomplete="off">
+
     </div>
     <div class="form-item-column">
-    
+        <input style="text-transform: uppercase" type="text" name="areaCodeHid" value="<%= area.area %>" hidden>    
+        <input style="text-transform: uppercase" type="text" name="canEditAreaCode" value="<%= canEditAreaCode %>" hidden>    
     </div>
 
+</div>
+<div class="form-row">
+</div>
+
+<div class="form-row">
+    <% if (newArea || resetPW) { %> 
+        <div class="form-item-columnUSER">
+            <label>System's User Name</label>
+            <% if (newArea) { %> 
+                <input type="email" id="email" name="email" value="<%= user.email %>" onclick="setAreaEmailUser()" autocomplete="off">
+            <% } else { %>
+                <input type="email" name="email" value="<%= user.email %>" autocomplete="off" disabled>
+                <input type="user_id" name="user_id" value="<%= user.id %>" autocomplete="off" hidden>
+            <% } %>
+        </div>
+        <div class="form-item-columnUSER">
+            <label>Password</label>
+            <input type="password" name="password" value="<%= user.password %>">
+        </div>
+    <% } %>
+    <div class="form-item-column">
+    </div>
 </div>

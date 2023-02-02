@@ -1,0 +1,48 @@
+
+    <section class="s1">
+		<div class="main-container">
+            Budget Breakdown per PO  
+            <table class="content-table">
+                <tr>
+                    <th> PO NO.</th>
+                    <th> PO NAME</th>
+                    <th> LOAN TYPE</th>
+                    <th> BEG BAL</th>
+                    <th> NEW CLIENT</th>
+                    <th> RE-LOAN CLIENT</th>
+                    <th> RESIGN</th>
+                </tr>
+                <% unitLoanTots.forEach(unit => { %>
+                    <tr>
+                        <td><%= unit.po%> </td>
+                        <td><%= unit.unitHead%> </td>
+                        <td><%= unit.loan_type%> </td>
+                        <% if (unit.begClientTot > 0) { %>
+                            <td><%= unit.begClientTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
+                        <% if (unit.nnumClient > 0) { %>
+                            <td><%= unit.nnumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
+                        <% if (unit.onumClient > 0) { %>
+                            <td><%= unit.onumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
+                        <% if (unit.resiloanTot > 0) { %>
+                            <td><%= unit.resiloanTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                        <% } else { %>
+                            <td style=>-</td>
+                        <% } %>
+                    </tr>
+                <% }) %> 
+            </table>
+            <div>
+                <a class="btn btn-primary" href='/units/<%= yuser.assCode %>'> Back</a>
+            </div>
+        </div>
+    </section>
+

@@ -14,12 +14,13 @@
                 <th> UNIT HEAD</th>
                 <th> LOAN PRODUCT</th>
                 <th> OFFICE LOCATION</th>
+                <th> USERNAME</th>
                 <th> LINKS</th>
             </tr>
             <% fondUnits.forEach(brnUnit => { %>
                 <tr>
                     <td><%= brnUnit.unitUnit %> </td>
-                    <td><%= brnUnit.unitHead %> </td>
+                    <td><%= brnUnit.empName %> </td>
                     <td><%= brnUnit.unitLoanProd %> </td>
                     <td><%= brnUnit.unitOffLoc %> </td>
                     <td>
@@ -28,13 +29,31 @@
                             <!-- <%- include('../partials/deleteForm', { url: `/branches/deleteUnit/${brnUnit.id}` }) %> -->
                         </div>        
                     </td>
+                    <td>
+                        <div class="btn-row">
+                            <a class="btn btn-primary" href="/branches/getEmpEditPass/<%= brnUnit.unitCode %>/edit">Reset Password</a>
+                            <!-- <%- include('../partials/deleteForm', { url: `/branches/deleteUnit/${brnUnit.id}` }) %> -->
+                        </div>        
+                    </td>
                 </tr>
+                <tr>
+
+                </tr> 
             <% }) %> 
         </table>
-        <div>
-            <a class="btn btn-primary" href="/branches/newUnit/<%= branchCode %>">ADD NEW UNIT</a>
-            <a class="btn btn-primary" href="/branches/<%= branchCode %>">DONE</a>
-        </div>
+        <table>
+            <tr>
+                <td></td>
+                <td> 
+                    <a class="btn btn-primary" href="/branches/newUnit/<%= branchCode %>">ADD NEW UNIT</a>
+                </td>
+                <td></td>
+                <td>
+                    <a class="btn btn-primary" href="/branches/<%= branchCode %>">DONE</a>            
+                </td>
+            </tr>
+
+        </table>
     </div>
 </section>
 

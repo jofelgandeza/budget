@@ -1,14 +1,43 @@
 <div class="form-row">
     <div class="form-item-column">
         <label>Region Code</label>
-        <input type="text" name="regionCode" value="<%= region.region %>" autocomplete="off">
+        <% if (canEditRegionCode) {%>
+            <input style="text-transform: uppercase" type="text" id="regionCode" name="regionCode" value="<%= region.region %>" autocomplete="off" minlength="3" required maxlength="3">
+        <% } else {%>
+            <input style="text-transform: uppercase" type="text" name="regionCode" value="<%= region.region %>" disabled>
+        <% } %>
     </div>
     <div class="form-item-column">
         <label>Region Description</label>
-        <input type="text" name="regionDesc" value="<%= region.region_desc %>" autocomplete="off">
+        <input style="text-transform: uppercase" type="text" name="regionDesc" value="<%= region.region_desc %>" required autocomplete="off">
     </div>
     <div class="form-item-column">
-    
+        <input style="text-transform: uppercase" type="text" name="regionCodeHid" value="<%= region.region %>" hidden>        
     </div>
 
+</div>
+<div class="form-row">
+    <% if (newRegion || resetPW) { %> 
+        <div class="form-item-columnUSER">
+            <label>System's User Name</label>
+            <% if (newRegion) { %> 
+                <input type="email" id="email" name="email" value="<%= user.email %>" onclick="setRegionEmailUser()" autocomplete="off">
+            <% } else { %>
+                <input type="email" name="email" value="<%= user.email %>" autocomplete="off" disabled>
+                <input type="user_id" name="user_id" value="<%= user.id %>" autocomplete="off" hidden>
+            <% } %>
+        </div>
+        <div class="form-item-columnUSER">
+            <label>Password</label>
+            <input type="password" name="password" value="<%= user.password %>">
+        </div>
+    <% } %>
+    <div class="form-item-column">
+    </div>
+</div>
+<div>
+    <hr>
+</div>
+<div>
+<p></p>
 </div>

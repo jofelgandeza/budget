@@ -1,0 +1,32 @@
+<section class="s1">
+    <div class="main-container">
+       <h4> OPERATIONS DED MAINTENANCE</h4>
+        <table class="content-table">
+            <tr>
+                <th> NAME</th>
+                <th> REGION ASSIGNMENT</th>
+                <th> LINKS</th>
+            </tr>
+            <% fndEmploy.forEach(brnEmployee => { %>
+                <tr>
+                    <td><%= brnEmployee.empName %> </td>
+                    <td><%= brnEmployee.empPost %> </td>
+                    <td>
+                        <div class="btn-row">
+                            <a class="btn btn-primary" href="/admins/getEmpForEdit/<%= ded + brnEmployee.empCode %>/edit">Edit</a>
+                            <a class="btn btn-primary" href="/admins/getEmpEditPass/<%= ded + brnEmployee.empCode %>/edit">Reset Password</a>
+                            <!-- <%- include('../partials/deleteForm', { url: `/admins/deleteEmp/${brnEmployee.empID}` }) %> -->
+                        </div>        
+                    </td>
+                </tr>
+            <% }) %> 
+        </table>
+        <div>
+            <% if (recCount == 0) { %>
+                <a class="btn btn-primary" href="/admins/newEmployee/<%= admin %>">ADD NEW OPERATIONS DED</a>
+            <% } %> 
+            <a class="btn btn-primary" href="/admins/<%= ded %>"">DONE</a>
+        </div>
+    </div>
+</section>
+

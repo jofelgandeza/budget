@@ -1,0 +1,15 @@
+<h2 class="page-header">New Region Entry </h2>
+<form action="/deds/postNewRegion/ <%= ded %>" method="POST">
+            <%- include('../partials/errorMessage') %>    
+            <%- include('_region_form_fields') %>
+<div class="form-row">
+    <div class="form-item-column"></div>
+    <div class="form-item-column">
+        <button class="btn btn-primary" type="submit">Create</button>
+    </div>
+    <div class="form-item-column">
+        <a class="btn btn-primary" href="/deds/region/<%= ded %>" >Cancel</a>
+    </div>
+    <div class="form-item-column"></div>
+</div>
+</form>

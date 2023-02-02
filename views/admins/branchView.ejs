@@ -1,0 +1,42 @@
+<section class="s1">
+    <div class="main-container">
+       <h4> BRANCHES OF OPERATIONS </h4>
+        <table class="content-table">
+            <tr>
+                <% if (fondBranchs.length > 0) { %>
+                <% } else { %>
+                    <!-- <a class="btn btn-primary" href='/areas/setNewBranches'>SET NEW BRANCHES</a> -->
+                <% } %>
+
+            </tr>
+            <tr>
+                <th> REGION</th>
+                <th> AREA</th>
+                <th> BRANCH CODE</th>
+                <th> BRANCH DESCRIPTION</th>
+                <th> BRANCH CATEGORY</th>
+                <!-- <th> LINKS</th> -->
+            </tr>
+            <% fondBranchs.forEach(areaBranch => { %>
+                <tr>
+                    <td><%= areaBranch.regionCode %> </td>
+                    <td><%= areaBranch.areaCode %> </td>
+                    <td><%= areaBranch.branchCode %> </td>
+                    <td><%= areaBranch.branchDesc %> </td>
+                    <td><%= areaBranch.branch_category %> </td>
+                    <td>
+                        <div class="btn-row">
+                            <!-- <a class="btn btn-primary" href="/admins/getBranchForEdit/<%= areaCode + areaBranch.id %>/edit">Edit</a> -->
+                            <!-- <%- include('../partials/deleteForm', { url: `/areas/deleteArea/${areaBranch.id}` }) %> -->
+                        </div>        
+                    </td>
+                </tr>
+            <% }) %> 
+        </table>
+        <div>
+            <!-- <a class="btn btn-primary" href="/admins/newBranch/<%= areaCode %>">ADD NEW BRANCH</a> -->
+            <a class="btn btn-primary" href="/admins/<%= yuser.assCode %>">DONE</a>
+        </div>
+    </div>
+</section>
+

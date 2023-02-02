@@ -4,12 +4,14 @@
     <h2 class="login-header">Register</h2>
   
     <form class="login-container" action="/admins/saveRegister" method="POST">
-        <label for="name">Name</label>
-        <p><input type="text" placeholder="Name" id="name" name="name" required></p>
+      <%- include('../partials/errorMessage') %>    
+      <label for="name">LAST NAME</label><label for="name">FIRST NAME</label>
+      
+        <p><input style="text-transform: uppercase" type="text" placeholder="Name" id="name" name="name" value="regUser.name" required autofocus ></p>
         <label for="role">Role</label>  
-        <p><input type="text" placeholder="Role" id="role" name="role" required></p>
+        <p><input style="text-transform: uppercase" type="text" placeholder="Role" id="role" name="role" value="regUser.role" required maxlength="3"></p>
         <label for="assCode">Assign Code</label>  
-        <p><input type="text" placeholder="Assign Code" id="assCode" name="assCode" required>
+        <p><input style="text-transform: uppercase" type="text" placeholder="Assign Code" id="assCode" name="assCode" value="regUser.assCode" required maxlength="3">
             </p>
         <label for="email">E-mail</label>  
       <p><input type="email" placeholder="Email" name="email" required></p>

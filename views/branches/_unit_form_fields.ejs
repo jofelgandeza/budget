@@ -4,20 +4,35 @@
     </div>
     <div class="form-item-column">
         <label>Unit</label>
-        <input type="text" name="uUnit" value="<%= unit.unit %>" autocomplete="off">
+        <% if (newUnit && !editUnit) { %> 
+            <input style="text-transform: uppercase" type="text" id="unitLetter" name="uUnit" value="<%= unit.unit %>" autocomplete="off" minlength="1" maxlength="1">
+        <% } else { %>
+            <input style="text-transform: uppercase" type="text" id="unitLetter" name="uUnit" value="<%= unit.unit %>" disabled>
+        <% } %>
+        <input style="text-transform: uppercase" type="text" name="hiddenUnit" value="<%= unit.unit %>" hidden>
+        <input style="text-transform: uppercase" type="text" name="hiddenUnitCode" value="<%= unit.unit_code %>" hidden>
+        <input style="text-transform: uppercase" type="text" id="brnCode" name="brnCode" value="<%= branchCode %>" hidden>
+        <input style="text-transform: uppercase" type="text" name="newUnit" value="<%= newUnit %>" hidden>
+        <input style="text-transform: uppercase" type="text" name="editUnit" value="<%= editUnit %>" hidden>
     </div>
     <div class="form-item-column">
         <label>Loan Product Offered</label>
-        <select name="loanTyp">
-            <% lonType.forEach(lnTyp => { %>
-                <% if ( lnTyp.title === unit.loan_type) { %>
-                   <option selected value="<%= lnTyp.title %>"><%= lnTyp.title %></option>
-                <% } else { %>
-                    <option value="<%= lnTyp.title %>"><%= lnTyp.title %></option>
-                <%  } %>
-            <% }) %> 
-        </select>
-    </div>
+        <% if (newUnit || editUnit) { %> 
+            <select name="loanTyp">
+                <% lonType.forEach(lnTyp => { %>
+                    <% if ( lnTyp.title === unit.loan_type) { %>
+                       <option selected value="<%= lnTyp.title %>"><%= lnTyp.title %></option>
+                    <% } else { %>
+                        <option value="<%= lnTyp.title %>"><%= lnTyp.title %></option>
+                    <%  } %>
+                <% }) %> 
+            </select>
+        <% } else { %>
+            <input style="text-transform: uppercase" type="text" name="loanTyp" value="<%= unit.loan_type %>" disabled>
+            <input style="text-transform: uppercase" type="text" name="hidLoanTyp" value="<%= unit.loan_type %>" hidden>
+
+        <% } %>
+</div>
     <div class="form-item-column">
     </div>
 </div>
@@ -27,27 +42,74 @@
     </div>
     <div class="form-item-column">
         <label>Address</label>
-        <input type="text" enable name="unitAdd" id="unitAdd" value="<%= unit.address %>">
+        <% if (newUnit || editUnit) { %> 
+            <input style="text-transform: uppercase" type="text" enable name="unitAdd" id="unitAdd" value="<%= unit.address %>">
+        <% } else { %>
+            <input style="text-transform: uppercase" type="text" enable name="unitAdd" id="unitAdd" value="<%= unit.address %>" hidden>
+        <% } %>
     </div>
     <div class="form-item-column">
         Office Location
         <div>
             <% if (unit.office_loc === "In-house") { %>
-                <input type="radio" name="office_loc" id="inHouse" value="In-house" checked>
+                <% if (newUnit || editUnit) { %> 
+                    <input type="radio" name="office_loc" id="inHouse" value="In-house" checked>
+                <% } else { %>
+                    <input type="radio" name="office_loc" id="inHouse" value="In-house" checked disabled>
+                <% } %>
             <% } else { %>
-                <input type="radio" name="office_loc" id="inHouse" value="In-house">
+                <% if (newUnit || editUnit) { %> 
+                    <input type="radio" name="office_loc" id="inHouse" value="In-house">
+                <% } else { %>
+                    <input type="radio" name="office_loc" id="inHouse" value="In-house" disabled>
+                <% } %>
             <% } %>
             <label for="inHouse">In-house</label>
             <br>
             <% if (unit.office_loc === "Sattelite") { %>
-                <input type="radio" name="office_loc" id="inHouse" value="Sattelite" checked>
+                <% if (newUnit || editUnit) { %> 
+                    <input type="radio" name="office_loc" id="inHouse" value="Sattelite" checked>
+                <% } else { %>
+                    <input type="radio" name="office_loc" id="inHouse" value="Sattelite" checked disabled>
+                <% } %>
             <% } else { %>
-                <input type="radio" name="office_loc" id="inHouse" value="Sattelite">
+                <% if (newUnit || editUnit) { %> 
+                    <input type="radio" name="office_loc" id="inHouse" value="Sattelite">
+                <% } else { %>
+                    <input type="radio" name="office_loc" id="inHouse" value="Sattelite" disabled>
+                <% } %>
             <% } %>
                 <label for="inHouse">Sattelite</label>
         </div>
     </div>
     <div class="form-item-column">
 
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-item-column">
+    </div>
+        <% if (resetPW || newUnit) { %> 
+            <div class="form-item-columnUSER">
+                <label>System's User Name</label>
+                <% if (newUnit) { %> 
+                    <input type="email" id="email" name="email" value="<%= user.email %>" onclick="setUnitEmailUser()" autocomplete="off">
+                <% } else { %>
+                    <input type="email" name="email" value="<%= user.email %>" autocomplete="off" disabled>
+                <% } %>
+                <input type="user_id" name="user_id" value="<%= user.id %>" autocomplete="off" hidden>
+            </div>
+            <div class="form-item-columnUSER">
+                <label>Password</label>
+                <% if (resetPW || newUnit) { %> 
+                    <input type="password" name="password" value="<%= user.password %>">
+                <% } else { %>
+                    <input type="password" name="password" value="<%= user.password %>" disabled>
+                <% } %>
+            </div>
+        <% } %>
+
+    <div class="form-item-column">
     </div>
 </div>

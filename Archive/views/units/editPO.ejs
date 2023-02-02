@@ -1,0 +1,14 @@
+<h2 class="page-header">Edit Program Officer</h2>
+<form action='/units/putEditedPO/<%= po.po_code %>?_method=PUT' method="POST">
+    <%- include('_form_fields') %>
+    <div class="form-item">
+        <div>
+
+        </div>
+        <div>
+            <button class="btn btn-primary" type="submit">Update</button>
+        
+            <a class="btn btn-primary" href='/units/pos/<%= unitCode %>'>Cancel</a>    
+        </div>
+    </div>
+</form>

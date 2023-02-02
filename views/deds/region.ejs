@@ -12,24 +12,27 @@
             <tr>
                 <th> REGION CODE</th>
                 <th> REGION DESCRIPTION</th>
+                <th> ASSIGNED REGIONAL DIRECTOR</th>
                 <th> LINKS</th>
             </tr>
             <% fondRegions.forEach(opRegion => { %>
                 <tr>
                     <td><%= opRegion.regionCode %> </td>
                     <td><%= opRegion.regionDesc %> </td>
+                    <td><%= opRegion.empName %> </td>
                     <td>
                         <div class="btn-row">
                             <a class="btn btn-primary" href="/deds/getRegionForEdit/<%= ded + opRegion.id %>/edit">Edit</a>
-                            <%- include('../partials/deleteForm', { url: `/deds/deleteRegion/${opRegion.id}` }) %>
+                            <a class="btn btn-primary" href="/deds/getEmpEditPass/<%= ded + opRegion.regionCode %>/edit">Reset Password</a>
+                            <!-- <%- include('../partials/deleteForm', { url: `/deds/deleteRegion/${opRegion.id}` }) %> -->
                         </div>        
                     </td>
                 </tr>
             <% }) %> 
         </table>
         <div>
-            <a class="btn btn-primary" href="/deds/newRegion">ADD NEW REGION</a>
-            <a class="btn btn-primary" href="/deds">DONE</a>
+            <a class="btn btn-primary" href="/deds/newRegion/<%= ded %>">ADD NEW REGION</a>
+            <a class="btn btn-primary" href="/deds/<%= ded %>">DONE</a>
         </div>
     </div>
 </section>

@@ -1,9 +1,9 @@
 <div>
     <h2 class="dashboard-page"> Admin dashboard page!</h2>
     <ul text-align="center">
-            <li class="header-nav header-link"> <a href="/admins/region">REGIONS</a></li>
-            <li class="header-nav header-link"><a href="#">AREAS</a></li>
-            <li class="header-nav header-link"> <a href="#">BRANCHES</a></li>
+            <li class="header-nav header-link"> <a href='/admins/regionView/<%= yuser.assCode %>'>REGIONS</a></li>
+            <li class="header-nav header-link"><a href="/admins/areaView/<%= yuser.assCode %>">AREAS</a></li>
+            <li class="header-nav header-link"> <a href="/admins/branchView/<%= yuser.assCode %>">BRANCHES</a></li>
     </ul>
 
 </div>

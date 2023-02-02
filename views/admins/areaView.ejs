@@ -1,0 +1,33 @@
+<section class="s1">
+    <div class="main-container">
+       <h4> AREA OPERATIONS VIEW</h4>
+        <table class="content-table">
+            <tr>
+
+            </tr>
+            <tr>
+                <th> REGION</th>
+                <th> AREA CODE</th>
+                <th> AREA DESCRIPTION</th>
+            </tr>
+            <% fondAreas.forEach(regArea => { %>
+                <tr>
+                    <td><%= regArea.regionCode %> </td>
+                    <td><%= regArea.areaCode %> </td>
+                    <td><%= regArea.areaDesc %> </td>
+                    <td>
+                        <div class="btn-row">
+                            <!-- <a class="btn btn-primary" href="/regions/getAreaForEdit/<%= regionCode + regArea.id %>/edit">Edit</a> -->
+                            <!-- <%- include('../partials/deleteForm', { url: `/regions/deleteArea/${regionCode + regArea.id}` }) %> -->
+                        </div>        
+                    </td>
+                </tr>
+            <% }) %> 
+        </table>
+        <div>
+            <!-- <a class="btn btn-primary" href="/regions/newArea/<%= regionCode %>">ADD NEW AREA</a> -->
+            <a class="btn btn-primary" href="/admins/<%= yuser %>">DONE</a>
+        </div>
+    </div>
+</section>
+

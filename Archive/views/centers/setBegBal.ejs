@@ -1,0 +1,76 @@
+    <div class="box1" id="heading">
+        <h5> SET BEGINNING BALANCES FOR CENTER : <%= listTitle %> </h5>
+      </div>
+              <table>
+                  <tr>
+                      <th></th>
+                      <th>LOAN TYPE</th>
+                      <th>CLIENTS COUNT</th>
+                      <th>PRINCIPAL AMT</th>
+                      <th>INTEREST AMT</th>
+                      <th>MATURITY</th>
+                      <th></th>
+                  </tr>
+                  <% newListItems.forEach(function(item) { %>
+                      <form  action="/centers/delBegBal/<%= listTitle %>" method="post">
+                          <tr>
+                              <td>
+                                  <input type="checkbox" name="checkbox" value="<%=item._id%>" onChange="this.form.submit()">
+                              </td>
+                              <td>
+                                  <p><%= item.loan_type %></p>
+                              </td>
+                              <td>
+                                  <p><%= item.begBalClientCnt %></p>
+                              </td>
+                              <td>
+                                <p><%= item.beg_principal %></p>                                  
+                              </td>
+                              <td>
+                                  <p><%= item.beg_interest %></p>
+                              </td>
+                              <td>
+                                <p><%= item.expected_maturity_date %></p>
+                            </td>
+                    </tr>
+                      <input type="hidden" name="listName" value="<%= listTitle %>"> </input>
+                  </form>
+                  <% }) %>
+                  <tr class="form-item-target">
+                      <form action="/centers/putBegBal/<%= listTitle %>?_method=PUT" method="POST">
+                        <%- include('../partials/errorMessage') %>    
+                      <td>New:</td>
+                      <td>
+                          <select name="loanType" id="loanType">
+                              <% loanType.forEach(function(loan_type, index) { %>
+                                      <option label="<%= loan_type.title %>" value="<%= loan_type.title  %>"></option>
+                              <% }) %>
+                          </select>            
+                      </td>
+                      <td>
+                          <input type="text" class="BegBalCli" name="numClient" placeholder="No. of Clients" required autocomplete="off">
+                      </td>
+                      <td>
+                          <input type="text" class="BegBalPrin" name="begBalAmt" placeholder="Principal Amt" autocomplete="off">
+                      </td>
+                      <td>
+                        <input type="text" class="BegBalInt" name="begBalInt" placeholder="Interest Amount" autocomplete="off">
+                      </td>
+                    <td>
+                        <select name="numMonth" id="numMonth"">
+                            <% monthSelect.forEach(function(month, index) { %> 
+                                    <option label="<%= month %>" value="<%= month  %>"></option>
+                            <% }) %>
+                        </select>            
+                    </td>
+                    <td>
+                          <button type="submit" name="list" value=<%= listTitle %>>+</button>
+                    </td>
+                      <td class="btn-row">
+                              <a class="btn btn-primary" href="/centers/viewTarget/<%= listTitle %>">Done</a>
+  
+                          </td>
+                      </form>
+                  </tr>
+              </table>
+  

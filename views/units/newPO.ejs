@@ -1,15 +1,21 @@
-<h2 class="page-header">New PO Entry - <%= unitCode %> </h2>
+<h2 class="page-header">New PO Entry for Unit - <%= unitCode %> </h2>
 <form action='/units/postNewPO/<%= unitCode %>' method="POST">
             <%- include('../partials/errorMessage') %>    
             <%- include('_form_fields') %>
+
 <div class="form-row">
-    <div class="form-item-column"></div>
+</div>
+<div class="form-row">
     <div class="form-item-column">
-        <a class="btn btn-primary" href='/units/<%= unitCode %>'>Cancel</a>
-    </div>
-    <div>
         <button class="btn btn-primary" type="submit">Create</button>
-        <a class="btn btn-primary" href='/units/budget/%= unitID %>'>Back</a>        
+    </div>
+    <div class="form-item-column">
+        <a class="btn btn-primary" href='/units/po/%= unitCode %>'>Back</a>        
+    </div>
+    <div class="form-item-column">
+        <a class="btn btn-primary" href='/units/pos/<%= unitCode %>'>Cancel</a>
+    </div>
+    <div class="form-item-column">
     </div>
 </div>
 

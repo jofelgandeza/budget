@@ -1,0 +1,58 @@
+<header> 
+<nav class="header-nav">
+    <% if (yuser.name) { %>
+        <div class="header-nav header-title"> 
+           Budget Module 
+        </div> 
+
+        <div>
+            <div class="header-nav header-nav-user"> 
+                <p>Hi <%= yuser.name %>, <%= yuser.assCode %></p>
+                <form action="/logout?_method=DELETE" method="POST">
+                    <button type="submit">Log Out</button>
+                  </form>
+                                  <!-- <a class="logout" href="/logout">Logout</a> -->
+            </div>
+            <ul>
+                <%if (yuser.role === "PO") { %>
+                    <li class="header-nav header-link"> <a href='/'>Home</a></li>
+                    <li class="header-nav header-link"> <a href='/centers/viewTarget/<%= yuser.assCode + "target_mode" %>'>Set Targets</a></li>
+                    <li class="header-nav header-link"> <a href='/centers/viewTargetsMonthly/<%=yuser.assCode %>' >Monthly View</a></li>
+                <% } %>
+                <%if (yuser.role === "PUH") { %>
+                    <li class="header-nav header-link"> <a href='/units/<%= yuser.assCode %>'>Home</a></li>
+                    <li class="header-nav header-link"> <a href='/units/pos/<%= yuser.assCode %>'>PO & Center Settings</a></li>
+                <% } %>
+                <%if (yuser.role === "BM") { %>
+                    <li class="header-nav header-link"> <a href='/branches/<%= yuser.assCode %>'>Home</a></li>
+                    <li class="header-nav header-link"> <a href='/branches/budget/<%= yuser.assCode %>'>Budget</a></li>
+                    <li class="header-nav header-link"> <a href='/branches/units/<%= yuser.assCode %>'>Units</a></li>
+                <% } %>
+                <%if (yuser.role === "AM") { %>
+                    <li class="header-nav header-link"> <a href='/areas/<%= yuser.assCode %>'>Home</a></li>
+                    <li class="header-nav header-link"> <a href='/areas/budget/<%= yuser.assCode %>'>Budget</a></li>
+                    <li class="header-nav header-link"> <a href='/areas/branches/<%= yuser.assCode %>'>Branch Settings</a></li>
+                <% } %>
+                <%if (yuser.role === "RD") { %>
+                    <li class="header-nav header-link"> <a href='/regions/<%= yuser.assCode %>'>Home</a></li>
+                    <li class="header-nav header-link"> <a href='/regions/budget/<%= yuser.assCode %>'>Budget</a></li>
+                    <li class="header-nav header-link"> <a href='/regions/areas/<%= yuser.assCode %>'>Area Settings</a></li>
+                <% } %>
+                <%if (yuser.role === "DED") { %>
+                    <li class="header-nav header-link"> <a href='/deds/<%= yuser.assCode %>'>Home</a></li>
+                    <li class="header-nav header-link"> <a href='/deds/budget/<%= yuser.assCode %>'>Budget</a></li>
+                    <li class="header-nav header-link"> <a href='/deds/region/<%= yuser.assCode %>'>Region Settings</a></li>
+                <% } %>
+                <%if (yuser.role === "ADMIN") { %>
+                    <li class="header-nav header-link"> <a href='/admins/register/<%= yuser.assCode %>'>Register User</a></li>
+                    <li class="header-nav header-link"><a href='/admins/employees/<%= yuser.assCode %>'>Users</a></li>
+                    <li class="header-nav header-link"><a href='/admins/settings/<%= yuser.assCode %>'>System Settings</a></li>
+                    <li class="header-nav header-link"> <a href='/'>Home</a></li>
+                <% } %>
+
+            </ul>
+        </div>
+    <% } %>
+</nav>
+</header>
+

@@ -1,0 +1,160 @@
+
+<h5 class="page-header">UNIT Executive Summary per Month - <%= vwUniCod %></h5>
+<div class="inputAmountContainer2">
+    <label class="accountLabel">TITLE</label>
+    <label>BEG BAL</label>
+    <label>JAN</label>
+    <label>FEB</label>
+    <label>MAR</label>
+    <label>APR</label>
+    <label>MAY</label>
+    <label>JUN</label>
+    <label>JUL</label>
+    <label>AUG</label>
+    <label>SEPT</label>
+    <label>OCT</label>
+    <label>NOV</label>
+    <label>DEC</label>
+    <label>TOTAL</label>
+</div>
+    <% poSumView.forEach(poView => { %>
+        <div class="<%= poView.group == 1 ? "inputAmountContainer1" : "inputAmountContainer2" %>">
+            <label class="accountLabel"> <%= poView.title %> </label>
+            <% if (!poView.isTitle) { %>
+
+                <% if (poView.beg_bal >= 1000) { %>
+                    <label><%= poView.beg_bal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.beg_bal > 0) { %>
+                        <label><%= poView.beg_bal %></label>
+                    <% } else { %>
+                        <label></label>
+                    <% } %>
+                <% } %>
+                
+                <% if (poView.jan_value > 1000) { %>
+                    <label><%= poView.jan_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.jan_value > 0) { %>
+                        <label><%= poView.jan_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+
+                <% if (poView.feb_value > 1000) { %>
+                    <label><%= poView.feb_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.feb_value > 0) { %>
+                        <label><%= poView.feb_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+                <% if (poView.mar_value > 1000) { %>
+                    <label><%= poView.mar_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.mar_value > 0) { %>
+                        <label><%= poView.mar_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+                <% if (poView.apr_value > 1000) { %>
+                    <label><%= poView.apr_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.apr_value > 0) { %>
+                        <label><%= poView.apr_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+                <% if (poView.may_value > 1000) { %>
+                    <label><%= poView.may_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.may_value > 0) { %>
+                        <label><%= poView.may_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+                <% if (poView.jun_value > 1000) { %>
+                    <label><%= poView.jun_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.jun_value > 0) { %>
+                        <label><%= poView.jun_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+                <% if (poView.jul_value > 1000) { %>
+                    <label><%= poView.jul_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.jul_value > 0) { %>
+                        <label><%= poView.jul_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+                <% if (poView.aug_value > 1000) { %>
+                    <label><%= poView.aug_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.aug_value > 0) { %>
+                        <label><%= poView.aug_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+                <% if (poView.sep_value > 1000) { %>
+                    <label><%= poView.sep_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.sep_value > 0) { %>
+                        <label><%= poView.sep_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+                <% if (poView.oct_value > 1000) { %>
+                    <label><%= poView.oct_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.oct_value > 0) { %>
+                        <label><%= poView.oct_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+                <% if (poView.nov_value > 1000) { %>
+                    <label><%= poView.nov_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.nov_value > 0) { %>
+                        <label><%= poView.nov_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+                <% if (poView.dec_value > 1000) { %>
+                    <label><%= poView.dec_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.dec_value > 0) { %>
+                        <label><%= poView.dec_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+                <% if (poView.tot_value > 1000) { %>
+                    <label><%= poView.tot_value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></label>
+                <% } else { %>
+                    <% if (poView.tot_value > 0) { %>
+                        <label><%= poView.tot_value %></label>
+                    <% } else { %>
+                        <label>-</label>
+                    <% } %>
+                <% } %>
+            <% } %>
+        </div>
+        <% }) %>
+        <div>
+            <a class="btn btn-primary" href='/units/<%= vwUniCod %>'>BACK</a>
+            <a class="btn btn-primary" href='/units/exportToExcel/<%= vwUniCod %>'>EXPORT TO EXCEL</a>
+        </div>
+    

@@ -3,18 +3,18 @@
        <h4> AREA BM MAINTENANCE</h4>
         <table class="content-table">
             <tr>
-                <th> POSITION</th>
                 <th> NAME</th>
+                <th> ASSIGNED BRANCH</th>
                 <th> LINKS</th>
             </tr>
             <% fndEmploy.forEach(brnEmployee => { %>
                 <tr>
-                    <td><%= brnEmployee.empPost %> </td>
                     <td><%= brnEmployee.empName %> </td>
+                    <td><%= brnEmployee.empPost %> </td>
                     <td>
                         <div class="btn-row">
                             <a class="btn btn-primary" href="/areas/getEmpForEdit/<%= areaCode + brnEmployee.empCode %>/edit">Edit</a>
-                            <a class="btn btn-primary" href="/areas/getEmpEditPass/<%= areaCode + brnEmployee.empCode %>/edit">Reset Password</a>
+                            <a class="btn btn-primary" href="#">Employee Movement</a>
                             <!-- <%- include('../partials/deleteForm', { url: `/areas/deleteEmp/${areaCode+brnEmployee.empID}` }) %> -->
                         </div>        
                     </td>

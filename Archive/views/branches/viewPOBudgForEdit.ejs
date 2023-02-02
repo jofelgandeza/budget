@@ -1,0 +1,90 @@
+
+
+	<section class="s1">
+		<div class="main-container">
+
+            <div class="intro-wrapper">
+				<div class="nav-wrapper">
+
+					<!-- Link around dots-wrapper added after tutorial video -->
+					<a href="index.html">
+						<div>  
+                            BM Name: <%= officerName%>
+						</div>
+					</a>
+					
+
+					<ul id="navigation">
+						<li><a href="index.html#contact">As of today, <%= dateToday.toLocaleDateString() %></a></li>
+
+					</ul>
+				</div>
+
+				<div class="left-column">
+                    <table class="content-table-brnView">
+                        <tr>
+                            <th>BUDGET</th>
+                            <th colspan="7"></th>
+                        </tr>
+                        <tr>
+                            <th>PROGRAM OFFICERS</th>
+                            <th>BEGINNING BALANCE</th>
+                            <th>RE-LOAN CLIENTS</th>
+                            <th>RESIGN CLIENTS</th>
+                            <th>NEW CLIENTS</th>
+                            <th>ENDING BALANCE</th>
+                            <th>DISBURSEMENT AMOUNT</th>
+                            <th>LINK</th>
+                        </tr>
+                        <% poLoanTots.forEach(loan => {  %>
+                            <tr>
+                                <td><%= loan.unitHead %></td>
+                                <% if (!loan.isTitle) { %>
+                                    <% if (loan.begClientTot > 0) { %>
+                                        <td><%= loan.begClientTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                    <% } else { %>
+                                        <td style=>-</td>
+                                    <% } %>
+                                    <% if (loan.onumClient > 0) { %>
+                                        <td><%= loan.onumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                    <% } else { %>
+                                        <td style=>-</td>
+                                    <% } %>
+                                    <% if (loan.resiloanTot > 0) { %>
+                                        <td><%= loan.resiloanTot.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                    <% } else { %>
+                                        <td style=>-</td>
+                                    <% } %>
+                                    <% if (loan.nnumClient > 0) { %>
+                                        <td><%= loan.nnumClient.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                    <% } else { %>
+                                        <td style=>-</td>
+                                    <% } %>
+                                    <% if (loan.budgEndBal > 0) { %>
+                                        <td><%= loan.budgEndBal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')%> </td>
+                                    <% } else { %>
+                                        <td style=>-</td>
+                                    <% } %>
+                                    <% if (loan.amtDisburse > 0) { %>
+                                        <td><%= loan.amtDisburse.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') %></td>
+                                    <% } else { %>
+                                    <td style=>-</td>
+                                    <% } %>
+
+                                    <% if (loan.isEdit) { %>
+                                        <td>
+                                            <a href='/centers/<%= loan.unitHead %>/edit'>EDIT</a>
+                                        </td>
+                                    <% } %>
+                                <% } %>
+                            </tr>
+                        <% }) %>
+                </table>
+				</div>
+
+			</div>
+		</div>
+        <div>
+            <a class="btn btn-primary" href='/branches/budget/<%= listTitle %>'>BACK</a>
+        </div>
+</section>

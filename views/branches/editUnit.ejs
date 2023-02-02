@@ -1,12 +1,15 @@
 <h2 class="page-header">Edit Unit</h2>
 <form action="/branches/putEditedUnit/<%= unit.unit_code %>?_method=PUT" method="POST">
     <%- include('_unit_form_fields') %>
-    <div >
-    </div>
-    <div class="form-item">
+<div class="form-row"> </div>
+<div class="form-row">
+    <div class="form-item-column"></div>
+    <div class="form-item-column">
         <a class="btn btn-primary" href="/branches/units/<%= branchCode %>%>">Cancel</a>
+    </div>
+    <div class="form-item-column">
         <button class="btn btn-primary" type="submit">Update</button>
     </div>
-    <div >
-    </div>
+    <div class="form-item-column"></div>
+</div>
 </form>

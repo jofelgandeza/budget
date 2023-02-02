@@ -12,16 +12,19 @@
             <tr>
                 <th> AREA CODE</th>
                 <th> AREA DESCRIPTION</th>
+                <th> ASSIGNED AREA MANAGER</th>
                 <th> LINKS</th>
             </tr>
             <% fondAreas.forEach(regArea => { %>
                 <tr>
                     <td><%= regArea.areaCode %> </td>
                     <td><%= regArea.areaDesc %> </td>
+                    <td><%= regArea.empName %> </td>
                     <td>
                         <div class="btn-row">
                             <a class="btn btn-primary" href="/regions/getAreaForEdit/<%= regionCode + regArea.id %>/edit">Edit</a>
-                            <%- include('../partials/deleteForm', { url: `/regions/deleteArea/${regionCode + regArea.id}` }) %>
+                            <a class="btn btn-primary" href="/regions/getEmpEditPass/<%= regionCode + regArea.areaCode %>/edit">Reset Password</a>
+                            <!-- <%- include('../partials/deleteForm', { url: `/regions/deleteArea/${regionCode + regArea.id}` }) %> -->
                         </div>        
                     </td>
                 </tr>

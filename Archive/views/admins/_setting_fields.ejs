@@ -1,0 +1,43 @@
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Budget Year</label>
+            <input type="number"  min="2022"  max="2032" name="budgYear" value="<%= fndSetting[0].budget_year %>" autocomplete="off" required>
+    </div>
+    <div class="form-item-column">
+        <label>Budget Status</label>
+        <select id="budgStatus" name="budgStatus"">
+            <% statSelect.forEach(function(budgStat, index) { %>
+                <% if ( budgStat === fndSetting[0].status) { %>
+                   <option selected value="<%= budgStat %>" label="<%= budgStat %>"> </option>
+                <% } else { %>
+                    <option value="<%= budgStat %>" label="<%= budgStat %>"> </option>
+                <%  } %>
+            <% }) %> 
+        </select>
+    </div>
+    <div class="form-item-column">  </div>
+    <div class="form-item-column">  </div>
+</div>
+
+<div class="form-row"> </div>
+
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Budget Period START</label>
+            <input type="date" name="startBudgDet" value="<%= fndSetting[0].start_budget_date.toISOString().split('T')[0] %>" autocomplete="off">
+     </div>
+    <div class="form-item-column">
+        <label>Budget Period END</label>
+            <input type="date" name="endBudgDet" value="<%= fndSetting[0].end_budget_date.toISOString().split('T')[0] %>" autocomplete="off">
+    </div>
+    <div class="form-item-column">
+    </div>
+    <div class="form-item-column">  </div>
+
+</div>
+<div class="form-row">
+
+</div>
+<div>
+    <p></p>
+</div>

@@ -1,0 +1,10 @@
+<h2 class="page-header">Edit Center <%= center.center %></h2>
+<form action='/units/putEditedCenter/<%= center.center %>?_method=PUT' method="POST">
+    <%- include('_center_form_fields') %>
+    <div class="btn-row">
+        <div></div>
+        <div></div>
+        <button class="btn btn-primary" type="submit">Update</button>
+        <a class="btn btn-primary" href='/units/setPOCenters/<%= poCode %>'>Cancel</a>
+    </div>
+</form>

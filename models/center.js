@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const centerTargetSchema = {
     target_year: String,
     loan_type: String,
+    loan_term: String,
     month: String,
     semester: String,
     numClient: Number,

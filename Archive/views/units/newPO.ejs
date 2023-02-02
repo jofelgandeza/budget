@@ -1,0 +1,16 @@
+<h2 class="page-header">New PO Entry - <%= unitCode %> </h2>
+<form action='/units/postNewPO/<%= unitCode %>' method="POST">
+            <%- include('../partials/errorMessage') %>    
+            <%- include('_form_fields') %>
+<div class="form-row">
+    <div class="form-item-column"></div>
+    <div class="form-item-column">
+        <a class="btn btn-primary" href='/units/<%= unitCode %>'>Cancel</a>
+    </div>
+    <div>
+        <button class="btn btn-primary" type="submit">Create</button>
+        <a class="btn btn-primary" href='/units/budget/%= unitID %>'>Back</a>        
+    </div>
+</div>
+
+</form>

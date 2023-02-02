@@ -1,13 +1,19 @@
 <div class="form-row">
     <div class="form-item-column">
         <label>Branch Code</label>
-        <input type="text" name="branchCode" value="<%= branch.branch %>" autocomplete="off">
+        <% if (canEditBranchCode) { %>
+            <input style="text-transform: uppercase" type="text" id="branch" name="branchCode" value="<%= branch.branch %>" minlength="3" maxlength="3" autocomplete="off">
+        <% } else { %>
+            <input style="text-transform: uppercase" type="text" name="branchCode" value="<%= branch.branch %>" maxlength="3" disabled>
+        <% } %>
     </div>
     <div class="form-item-column">
         <label>Branch Description</label>
-        <input type="text" name="branchDesc" value="<%= branch.branch_desc %>" autocomplete="off">
+        <input style="text-transform: uppercase" type="text" name="branchDesc" value="<%= branch.branch_desc %>" autocomplete="off">
     </div>
     <div class="form-item-column">
+        <input style="text-transform: uppercase" type="text" name="branchCodeHide" value="<%= branch.branch %>" maxlength="3" hidden>
+        <input style="text-transform: uppercase" type="text" name="canEditBranchCode" value="<%= canEditBranchCode %>" hidden>    
     
     </div>
 
@@ -34,3 +40,66 @@
     
     </div>
 </div>
+
+<div class="form-row">
+</div>
+
+<div class="form-row">
+    <div class="form-item-column">
+        Branch Category
+        <div>
+            <% if (branch.branch_category === "MEGA") { %>
+                <input type="radio" name="branch_category" id="Mega" value="MEGA" checked>
+            <% } else { %>
+                <input type="radio" name="branch_category" id="Mega" value="MEGA">
+            <% } %>
+            <label for="Mega">Mega Branch</label>
+            <br>
+            <% if (branch.branch_category === "FULL") { %>
+                <input type="radio" name="branch_category" id="inHouse" value="FULL" checked>
+            <% } else { %>
+                <input type="radio" name="branch_category" id="inHouse" value="FULL">
+            <% } %>
+            <label for="Full">Full Branch</label>
+            <br>
+            <% if (branch.branch_category === "STANDALONEUNIT") { %>
+                <input type="radio" name="branch_category" id="standAloneUnit" value="STANDALONEUNIT" checked>
+            <% } else { %>
+                <input type="radio" name="branch_category" id="standAloneUnit" value="STANDALONEUNIT">
+            <% } %>
+                <label for="standAloneUnit">Stand Alone Unit</label>
+        </div>
+    </div>
+    
+</div>
+
+<div class="form-row">
+    <div class="form-item-columnUSER">
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-item-columnUSER">
+    </div>
+</div>
+    
+<div class="form-row">
+    <% if (newBranch || resetPW) { %> 
+        <div class="form-item-columnUSER">
+            <label>System's User Name</label>
+            <% if (newBranch) { %> 
+                <input type="email" id="email" name="email" value="<%= user.email %>" onclick="setBranchEmailUser()" autocomplete="off">
+            <% } else { %>
+                <input type="email" name="email" value="<%= user.email %>" autocomplete="off" disabled>
+                <input type="user_id" name="user_id" value="<%= user.id %>" autocomplete="off" hidden>
+            <% } %>
+        </div>
+        <div class="form-item-columnUSER">
+            <label>Password</label>
+            <input type="password" name="password" value="<%= user.password %>">
+        </div>
+    <% } %>
+    <div class="form-item-column">
+    </div>
+</div>
+
+
