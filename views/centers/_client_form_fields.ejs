@@ -1,0 +1,78 @@
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Client Code</label>
+        <% if (resetPW) { %>
+            <input type="text" name="clientCode" value="<%= kliyente.client_code %>" autocomplete="off" required disabled>
+        <% } else { %>
+            <input style="text-transform: uppercase" type="text" name="clientCode" value="<%= kliyente.client_code %>" required autocomplete="off">
+        <% } %>
+        <input type="text" name="HideclientCode" value="<%= kliyente.client_code %>" hidden>
+    </div>
+    <div class="form-item-column">
+        <label>Branch Code</label>
+        <% if (resetPW) { %>
+            <input type="text" id="brn1Code" name="brn1Code" value="<%= kliyente.branch %>" disabled>
+        <% } else { %>
+            <input type="text" id="brn1Code" name="brn1Code" value="<%= kliyente.branch %>" disabled>
+        <% } %>
+            <!-- <input style="text-transform: uppercase" type="text" id="brnCode" name="brn1Code" value="<%= kliyente.branch %>" required> -->
+            <input type="text" id="brnCode" name="brnCode" value="<%= kliyente.branch %>" hidden>
+    </div>
+    <div class="form-item-column">
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Last Name</label>
+        <% if (resetPW) { %>
+            <input type="text" name="lName" value="<%= kliyente.last_name %>" autocomplete="off" disabled>
+        <% } else { %>
+            <input style="text-transform: uppercase" type="text" name="lName" value="<%= kliyente.last_name %>" autocomplete="off"  required>
+        <% } %>
+    </div>
+    <div class="form-item-column">
+        <label>First Name</label>
+        <% if (resetPW) { %>
+            <input type="text" name="fName" value="<%= kliyente.first_name %>" autocomplete="off" disabled>
+        <% } else { %>
+            <input style="text-transform: uppercase" type="text" name="fName" value="<%= kliyente.first_name %>" autocomplete="off" required>
+        <% } %>
+    </div>
+    <div class="form-item-column">
+        <label>Middle Name</label>
+        <% if (resetPW) { %>
+            <input type="text" name="mName" value="<%= kliyente.middle_name %>" autocomplete="off" disabled>
+        <% } else { %>
+            <input style="text-transform: uppercase" type="text" name="mName" value="<%= kliyente.middle_name %>" autocomplete="off" required>
+        <% } %>
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-item-column">
+        <label>Date of Birth</label>
+            <input type="date" name="dateBirth" value="<%= startDate.toISOString().split('T')[0] %>" min="<%= startDate.toISOString().split('T')[0] %>" max="<%= endDate.toISOString().split('T')[0] %>" autocomplete="off">
+    </div>
+    <div class="form-item-column">
+        <label>Age</label>
+            <input type="number" name="age" value="<%= cliAge %>" autocomplete="off">
+    </div>
+    <div class="form-item-column">
+    </div>
+    <input type="text" name="HideAssCode" value="<%= kliyente.assign_code %>" hidden>
+</div>
+
+<div class="form-row">
+    <div class="form-item-column">
+    </div>
+    
+</div>
+
+<div>
+    <p></p>
+</div>
+<div>
+    <hr>
+</div>
+<div>
+<p></p>
+</div>

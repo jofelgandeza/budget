@@ -1,0 +1,39 @@
+<section class="s1">
+    <div class="main-container">
+       <h4> Search Employee</h4>
+       <form action="/regions/search/<%= region %>" method="GET">
+        <div class="form-row">
+            <div class="form-item form-item-search">
+                <label>Name of Employee: </label>
+                <input type="text" name="emp_name" value="<%= searchOptions.emp_name %>" autocomplete="off">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </div>
+     </form>
+            <table class="content-table">
+            <tr>
+                <th> LAST NAME</th>
+                <th> FIRST NAME</th>
+                <th> MIDDLE NAME</th>
+                <th> ASSIGNMENT</th>
+                <th> LINKS</th>
+            </tr>
+            <% emp.forEach(employe => { %>
+                <tr>
+                    <td><%= employe.last_name %> </td>
+                    <td><%= employe.first_name %> </td>
+                    <td><%= employe.middle_name %> </td>
+                    <td><%= employe.assign_code %> </td>
+                    <td>
+                        <div class="btn-row">
+                            <a class="btn btn-primary" href="/regions/getEmpForEdit/<%= region + employe.emp_code %>/edit">View</a>
+                            <!-- <%- include('../partials/deleteForm', { url: `/regions/deleteEmp/${region + employe._id}` }) %> -->
+                        </div>        
+                    </td>
+                </tr>
+            <% }) %> 
+        </table>
+            <a class="btn btn-primary" href="/regions/<%= region %>">DONE</a>
+        </div>
+    </div>
+</section>

@@ -1308,7 +1308,7 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
    let eUnit
    let ePONum
    const emPostCod = req.body.ayPost
-    const nEmpCode = _.trim(req.body.empCode)
+    const nEmpCode = _.trim(req.body.empCode).toUpperCase()
     const nEmail = _.trim(req.body.email).toLowerCase()
     const nLName = _.trim(req.body.lName).toUpperCase()
     const nFName = _.trim(req.body.fName).toUpperCase()
@@ -1319,7 +1319,7 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => 
     const nUnitLetter = _.trim(req.body.poUnit).toUpperCase()
     const branCod = req.params.id
 
-    const validEmpCode = /[^a-zA-Z0-9-]/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
+    const validEmpCode = /[^a-zA-Z0-9-]/.test(nEmpCode)
     const trimmedEmpCode = _.replace(nEmpCode, " ", "")
     const validLName = /[^a-zA-Z. ]/.test(nLName)
     const validFName = /[^a-zA-Z. ]/.test(nFName)
@@ -1428,19 +1428,6 @@ try {
     } else {
         canProceed = true
     }
-    // const nEmail = _.trim(req.body.email).toLowerCase()
-
-        // const hashedPassword = await bcrypt.hash(req.body.password, 10)
-                
-        // const getExistingUser = await User.findOne({email: nEmail})
-        //     // console.log(foundUser)
-        //     if (getExistingUser) {
-        //             UserProceed = false 
-        //             locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
-        //         } else {
-        //             UserProceed = true
-        //             // const userAssignCode = await User.findOneAndUpdate({assCode: assCode}, {$set:{"emp_code": req.body.empCode, "password": hashedPassword }})
-        //     }    
     
     if (canProceed && fieldsOkay)  {
         if (ePosition === "PRO_OFR") {
@@ -1451,13 +1438,15 @@ try {
         } 
 
         addedNewUser = true
-        
+        const empName = nLName + ' ' + nFName + ' ' + nMName
+
         let employee = new Employee({
 
             emp_code: nEmpCode,
             last_name: nLName,
             first_name: nFName,
             middle_name: nMName,
+            emp_name: empName,
             position_code: emPostCod,
             position_class: nPosit_Class,
             assign_code: assCode,
@@ -1471,19 +1460,6 @@ try {
         
         const newCoa = employee.save()
 
-        // let nUser = new User({
-        //     email: nEmail,
-        //     password: hashedPassword,
-        //     name: nName,
-        //     emp_code: nEmpCode,
-        //     assCode: assCode,
-        //     role: eShortTitle,
-        //     region: _user.region,
-        //     area: _user.area,
-        //     branch: brnCode
-        // })
-        // const saveUser = nUser.save()
-
         res.redirect('/branches/employees/'+ brnCode)
     } 
     else {  
@@ -1492,12 +1468,12 @@ try {
              psitCode = fnd_Post
         })
         console.log(psitCode)
-        let errEmp = []
-        let errUser = []
+        let errEmp
+        let errUser
 
-            errUser.push({email: nEmail, password: req.body.password})
+            // errUser.push({email: nEmail, password: req.body.password})
 
-            errEmp.push({emp_code: nEmpCode, branch: brnCode, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: emPostCod, unit: eUnit, po_number: ePONum})
+            errEmp = {emp_code: nEmpCode, branch: brnCode, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: emPostCod, unit: eUnit, po_number: ePONum}
             console.log(errEmp)
 
             res.render('branches/newEmployee', { 
@@ -1696,7 +1672,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
     const emPost =  req.body.ayPost
     const empStatus = req.body.empStat
 
-    const eCode = _.trim(req.body.empCode)
+    const eCode = _.trim(req.body.empCode).toUpperCase()
     const eLName = _.trim(req.body.lName).toUpperCase()
     const eFName = _.trim(req.body.fName).toUpperCase()
     const eMName = _.trim(req.body.mName).toUpperCase()
@@ -1783,7 +1759,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
             } 
             if (ePosition === "PRO_OFR") {
                 eUnit = req.body.poUnit
-                ePONum = req.body.poNumber    
+                ePONum = req.body.poNumber
             } 
 
             console.log(req.params.id)
@@ -1832,6 +1808,8 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
         
             if (fieldsOkay && canProceed) {
 
+                const empName = eLName + ' ' + eFName + ' ' + eMName
+
                 employee = await Employee.findById(empID)
                 console.log(employee)
     
@@ -1839,6 +1817,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.BM), async function(req,
                 employee.last_name = eLName
                 employee.first_name = eFName
                 employee.middle_name = eMName
+                employee.emp_name = empName
                 employee.position_code = emPost
                 employee.assign_code = eAssCode
                 employee.po_number = ePONum
@@ -2002,6 +1981,8 @@ router.post('/postNewUnitEmp/:id', authUser, authRole(ROLE.BM), async (req, res)
         locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
     } else if (nEmpCode.length == 0 || nLName.length == 0 || nFName.length == 0 || nMName.length == 0) {
         locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+    } else if (assignedUnit == null) {
+        locals = {errorMessage: "New Employee cannot be saved. There is no available or vacant UNIT to tag!"}
         // nameCanProceed = true
     } else {
 
@@ -2091,6 +2072,7 @@ try {
         } 
 
         addedNewUser = true
+        const empName = nLName + ' ' + nFName + ' ' + nMName
         
         let employee = new Employee({
 
@@ -2098,6 +2080,7 @@ try {
             last_name: nLName,
             first_name: nFName,
             middle_name: nMName,
+            emp_name: empName,
             position_code: emPostCod,
             position_class: nPosit_Class,
             assign_code: assCode,
@@ -2164,7 +2147,7 @@ router.put('/putEditedUnitEmp/:id', authUser, authRole(ROLE.BM), async function(
     const emPost =  req.body.ayPost
     const empStatus = req.body.empStat
 
-    const eCode = _.trim(req.body.empCode)
+    const eCode = _.trim(req.body.empCode).toUpperCase()
     const eLName = _.trim(req.body.lName).toUpperCase()
     const eFName = _.trim(req.body.fName).toUpperCase()
     const eMName = _.trim(req.body.mName).toUpperCase()
@@ -2317,6 +2300,7 @@ router.put('/putEditedUnitEmp/:id', authUser, authRole(ROLE.BM), async function(
         
             if (fieldsOkay && canProceed) {
 
+                const empName = eLName + ' ' + eFName + ' ' + eMName
                 const employee = await Employee.findById(empID)
                 console.log(employee)
 
@@ -2324,6 +2308,7 @@ router.put('/putEditedUnitEmp/:id', authUser, authRole(ROLE.BM), async function(
                 employee.last_name = eLName
                 employee.first_name = eFName
                 employee.middle_name = eMName
+                employee.emp_name = empName
                 employee.status = eStatus
                 employee.position_class = ePosit_Class
     
@@ -2336,6 +2321,8 @@ router.put('/putEditedUnitEmp/:id', authUser, authRole(ROLE.BM), async function(
                 } else {
     
                     if (eAssCode === "") {
+                        const empOldAssCode = await Employee.findOneAndUpdate({"assign_code": HidAssCode}, {$set:{"assign_code": ""}})
+
                         const unitOldAssCode = await Unit.findOneAndUpdate({"unit_code": HidAssCode}, {$set:{"emp_code": ""}})
     
                         const userAssignCode = await User.findOneAndUpdate({"assCode": HidAssCode}, {$set:{"name": "", "emp_code": "",}})
@@ -2480,6 +2467,48 @@ router.get('/newEmpPO/:id', authUser, authRole(ROLE.BM), async (req, res) => {
 
 })
 
+// SEARCH FUNCTIONALITIES
+router.get('/search/:id', authUser, authRole(ROLE.BM), async (req, res) => {
+
+    let searchOptions = {}
+    if (req.query.emp_name  !=null && req.query.emp_name !== '') {
+        searchOptions.branch = req.user.branch
+        searchOptions.emp_name = RegExp(req.query.emp_name, 'i')
+    } else {
+        searchOptions.branch = req.user.branch
+    }
+
+    let regEmp = []
+    let empForSearch = []
+    console.log(searchOptions) 
+    console.log(req.query) 
+    let sortedEmp
+
+    try {
+        const employee = await Employee.find(searchOptions)
+
+            sortedEmp = employee.sort( function (a,b) {
+                if  ( a.emp_name < b.emp_name ){
+                    return -1;
+                  }
+                  if ( a.emp_name > b.emp_name ){
+                    return 1;
+                  }
+                   return 0;
+            })
+
+
+        res.render('branches/search', {
+            emp: sortedEmp,
+            searchOptions: req.query,
+            branch: req.params.id
+        })
+    } catch(err) {
+        console.log(err)
+        res.redirect('/branches/' + req.params.id)
+    }
+})
+
 // POST or Save new Employee
 router.post('/postNewPOEmp/:id', authUser, authRole(ROLE.BM), async (req, res) => {
     const _user = req.user
@@ -2521,6 +2550,8 @@ router.post('/postNewPOEmp/:id', authUser, authRole(ROLE.BM), async (req, res) =
         locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
     } else if (nEmpCode.length == 0 || nLName.length == 0 || nFName.length == 0 || nMName.length == 0) {
         locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+    } else if (assignedPO == null) {
+        locals = {errorMessage: "New Employee cannot be saved. There is no available or vacant PO Number to tag!"}
         // nameCanProceed = true
     } else {
 
@@ -2538,13 +2569,18 @@ router.post('/postNewPOEmp/:id', authUser, authRole(ROLE.BM), async (req, res) =
 
     let eShortTitle
     let assignUnit = ""
+    if (assignedPO) {
+        if (ePosition === "PRO_OFR") {
+            eShortTitle = "PO"
+            eUnit = assignedPO.substr(4,1)   //_.trim(req.body.poUnit).toUpperCase()
+            ePONum = assignedPO.substr(5,1)   //_.trim(req.body.poUnit).toUpperCase()
+        }
 
-    if (ePosition === "PRO_OFR") {
-        eShortTitle = "PO"
-        eUnit = assignedPO.substr(4,1)   //_.trim(req.body.poUnit).toUpperCase()
-        ePONum = assignedPO.substr(5,1)   //_.trim(req.body.poUnit).toUpperCase()
+    } else {
+        locals = {errorMessage: "There is no available or vacant CENTER to be assigned. Please create Center/s using Unit login in case no Center/s is not yet created."}
+        fieldsOkay = false
     }
-
+ 
     const brnCode = _.trim(req.body.brnCode).toUpperCase()
     
     const assCode = assignedPO
@@ -2561,31 +2597,34 @@ try {
 
     const branchEmployees = await Employee.find({}) //, function (err, fndBranchEmp) {
         foundBranchEmp = branchEmployees
-
-    if (branchEmployees) {
-        const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
-
-        const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
     
-        const sameAssign = _.find(branchEmployees, {assign_code: assCode})
-        console.log(sameAssign)
+    if (fieldsOkay) {
+        if (branchEmployees) {
+            const sameName = _.find(branchEmployees, {last_name: nLName, first_name: nFName, middle_name: nMName})
+    
+            const sameCode = _.find(branchEmployees, {emp_code: nEmpCode})
         
-        if (sameName) {
-            locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
-            canProceed = false
-        } else if (sameAssign) {
-            locals = {errorMessage: 'Assign Code: ' + assCode + ' already exists!'}
-            canProceed = false
-
-          } else if (sameCode) {
-                locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+            const sameAssign = _.find(branchEmployees, {assign_code: assCode})
+            console.log(sameAssign)
+            
+            if (sameName) {
+                locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
                 canProceed = false
-            } else {
-                canProceed = true
-            }
-
-    } else {
-        canProceed = true
+            } else if (sameAssign) {
+                locals = {errorMessage: 'Assign Code: ' + assCode + ' already exists!'}
+                canProceed = false
+    
+              } else if (sameCode) {
+                    locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                    canProceed = false
+                } else {
+                    canProceed = true
+                }
+    
+        } else {
+            canProceed = true
+        }
+    
     }
     
     if (canProceed && fieldsOkay)  {
@@ -2594,6 +2633,7 @@ try {
         } 
 
         addedNewUser = true
+        const empName = nLName + ' ' + nFName + ' ' + nMName
         
         let employee = new Employee({
 
@@ -2601,6 +2641,7 @@ try {
             last_name: nLName,
             first_name: nFName,
             middle_name: nMName,
+            emp_name: empName,
             position_code: emPostCod,
             position_class: nPosit_Class,
             assign_code: assCode,
@@ -2821,6 +2862,7 @@ router.put('/putEditedPOEmp/:id', authUser, authRole(ROLE.BM), async function(re
         
             if (fieldsOkay && canProceed) {
 
+                const empName = eLName + ' ' + eFName + ' ' + eMName
                 const employee = await Employee.findById(empID)
                 console.log(employee)
 
@@ -2828,6 +2870,7 @@ router.put('/putEditedPOEmp/:id', authUser, authRole(ROLE.BM), async function(re
                 employee.last_name = eLName
                 employee.first_name = eFName
                 employee.middle_name = eMName
+                employee.emp_name = empName
                 employee.status = eStatus
                 employee.position_class = ePosit_Class
     
@@ -2841,6 +2884,8 @@ router.put('/putEditedPOEmp/:id', authUser, authRole(ROLE.BM), async function(re
                 } else {
     
                     if (eAssCode === "") {
+                        const empOldAssCode = await Employee.findOneAndUpdate({"assign_code": HidAssCode}, {$set:{"assign_code": ""}})
+
                         const unitOldAssCode = await Po.findOneAndUpdate({"po_code": HidAssCode}, {$set:{"emp_code": ""}})
     
                         const userAssignCode = await User.findOneAndUpdate({"assCode": HidAssCode}, {$set:{"name": "", "emp_code": "",}})
@@ -3200,8 +3245,11 @@ router.post('/postNewUnit/:id', authUser, authRole(ROLE.BM), async (req, res) =>
 
         const loanType = await Loan_type.find({})
 
+        let errUnit = {region: req.user.region, area: req.user.area, unit_code: uUnitCode, unit: uUnit, branch: brnCod, loan_type: req.body.loanTyp,
+            office_loc: req.body.office_loc, address: req.body.unitAdd}
+
         res.render('branches/newUnit', { 
-           unit: new Unit(), 
+           unit: errUnit, 
            lonType: loanType,
            branchCode: brnCod,
            locals: locals,
@@ -3282,7 +3330,7 @@ router.get('/getUnitForEdit/:id/edit', authUser, authRole(ROLE.BM), async (req, 
 router.put('/putEditedUnit/:id', authUser, authRole(ROLE.BM), async function(req, res){
     const param = req.params.id
     const brnCod = param.substring(0,3)
-    const ueUnit = req.body.uUnit.toUpperCase()
+    let ueUnit = req.body.uUnit
     const uUnitCode = param
     const ln_Typ = req.body.loanTyp
     const hidUnitLet = req.body.hiddenUnit
@@ -3294,7 +3342,7 @@ router.put('/putEditedUnit/:id', authUser, authRole(ROLE.BM), async function(req
     let locals = ""
     let uUnit = ""
     if (ueUnit) {
-        uUnit = ueUnit.toUpperCase()
+        ueUnit = ueUnit.toUpperCase()
         const validUnit = /[^A-C]/.test(uUnit)
         if (validUnit) {
             locals = {errorMessage: "Values for UNIT must be A, B or C ONLY!"}
@@ -3303,6 +3351,7 @@ router.put('/putEditedUnit/:id', authUser, authRole(ROLE.BM), async function(req
         }
 
     } else {
+        ueUnit = hidUnitLet.toUpperCase()
         fieldsOkay = true
     }
 
@@ -3369,7 +3418,7 @@ router.put('/putEditedUnit/:id', authUser, authRole(ROLE.BM), async function(req
 
                     const hashedPassword = await bcrypt.hash(newUserPassword, 10)
                 
-                    const getExistingUser = await User.findOneAndUpdate({email: emailForEdit}, {$set:{"email": newEmail, "password": hashedPassword }})
+                    const getExistingUser = await User.findOneAndUpdate({email: emailForEdit}, {$set:{"email": newEmail, "password": hashedPassword, assCode: newUnitCode }})
                 
                 }
             

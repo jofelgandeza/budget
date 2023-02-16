@@ -1,9 +1,8 @@
 
 const express = require('express')
 const router  = express.Router()
+const stringify = require('json-stringify-safe')
 const app = express()
-const bodyParser = require('body-parser')
-const methodOverride = require('method-override')
 const { model } = require('mongoose')
 const bcrypt = require('bcryptjs')
 const { forEach, isNull } = require('lodash')
@@ -1994,7 +1993,7 @@ router.get('/setNewRegions', async (req, res) => {
                 numRegions: numRegions,
                 uniCod: unitCode,
                 lonType: loanType,
-                canEditAreaCode: true,
+                canEditRegionCode: true,
                 newRegion : true,
                 resetPW: false,
                 searchOptions: req.query,
@@ -2039,7 +2038,7 @@ router.post('/postNewRegion/:id', async (req, res) => {
     const nEmail = _.trim(req.body.email).toLowerCase()
     const nPassword = _.trim(req.body.password)
 
-    const validDesc = /[^a-zA-Z0-9 ]/.test(region_desc) // /[^a-zA-Z0-9]+/g
+    const validDesc = /[^a-zA-Z0-9. ]/.test(region_desc) // /[^a-zA-Z0-9]+/g
 
     let validCode = /[^a-zA-Z0-9]/.test(region_code) // /[^a-zA-Z0-9]+/g    
 
@@ -2062,34 +2061,55 @@ router.post('/postNewRegion/:id', async (req, res) => {
     let getExisRegion
     let UserProceed = false
 
+    let regDescExist = false
+    let regCodeExist = false
+
     try {
         
-        getExisRegion = await Region.findOne({region: trimmedRegionCode}) //, function (err, foundRegion) {
-
-        if (isNull(getExisRegion)) {
-            canProceed = true 
-        } else {
-            canProceed = false
-            locals = {errorMessage: "Region Code " + region_code + " already exists! Please try again."}
-        }
-
-        console.log(getExisRegion)
-        
-        const hashedPassword = await bcrypt.hash(req.body.password, 10)
-                
-        const getExistingUser = await User.findOne({email: nEmail})
-            // console.log(foundUser)
-            if (!getExistingUser) {
-                if (nPassword.length == 0) {
-                    UserProceed = false
-                    locals = {errorMessage: 'Password must NOT be SPACE/S!'}
-                } else {
-                    UserProceed = true 
-                }
+        if (fieldsOkay) {
+             const getExisRegDesc = await Region.findOne({region_desc: region_desc}) //, function (err, foundRegion) {
+    
+            if (isNull(getExisRegDesc)) {
+                canProceed = true 
             } else {
-                    UserProceed = false
-                    locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
-            }    
+                regDescExist = true
+            }
+    
+            const getExisRegion = await Region.findOne({region: trimmedRegionCode}) //, function (err, foundRegion) {
+
+                if (isNull(getExisRegion) && canProceed) {
+                    canProceed = true 
+                } else {
+                    regCodeExist = true
+                }
+        
+                if (regDescExist && regCodeExist) {
+                    locals = {errorMessage: "Region Code " + region_code + " and Description " + region_desc + " already exists! Please try again."}
+                } else if (regDescExist && !regCodeExist) {
+                    locals = {errorMessage: "Region Description " + region_desc + " already exists! Please try again."}
+                } else if (!regDescExist && regCodeExist) {
+                    locals = {errorMessage: "Region Code " + region_code + " already exists! Please try again."}
+                } else {
+                    canProceed = true 
+                }
+
+            const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                    
+            const getExistingUser = await User.findOne({email: nEmail})
+                // console.log(foundUser)
+                if (!getExistingUser) {
+                    if (nPassword.length == 0) {
+                        UserProceed = false
+                        locals = {errorMessage: 'Password must NOT be SPACE/S!'}
+                    } else {
+                        UserProceed = true 
+                    }
+                } else {
+                        UserProceed = false
+                        locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
+                }    
+    
+        }
 
         if (canProceed && fieldsOkay && UserProceed) {
             let nRegion  = new Region({
@@ -2120,7 +2140,7 @@ router.post('/postNewRegion/:id', async (req, res) => {
                 name: "",
                 emp_code: "",
                 assCode: trimmedRegionCode,
-                role: 'AM',
+                role: 'RD',
                 region: region_code,
                 area: 'N/A',
             })
@@ -2133,9 +2153,12 @@ router.post('/postNewRegion/:id', async (req, res) => {
             if (!fieldsOkay) {
                 getExisRegion = new Region()
             }
+
+            let errRegion = {region: region_code, region_desc: region_desc}
+
             res.render('deds/newRegion', {
                 ded: 'DED',
-                region: getExisRegion,
+                region: errRegion,
                 user: new User(),
                 editRegion: false,
                 newRegion : true,
@@ -2184,8 +2207,8 @@ router.post('/postNewRegion/:id', async (req, res) => {
             }
             doneReadRegion = true 
         }
-        fondArea = regForEdit
-        console.log(fondArea)
+        const fondRegion = regForEdit
+        console.log(fondRegion)
 
         const yoser = await User.findOne({assCode: regAsignCode}) //, function (err, foundUser) {
             //            console.log(foundlist)
@@ -2207,10 +2230,10 @@ router.post('/postNewRegion/:id', async (req, res) => {
                 locals: locals,
                 newRegion : false,
                 resetPW: false,
-                editArea: true,
+                editRegion: true,
                 ded: "DED",
                 editRegion: true,
-                yuser : _user
+                user : yoser
            })
     
         }
@@ -2231,58 +2254,183 @@ router.put('/putEditedRegion/:id', authUser, authRole(ROLE.DED), async function(
 
     const param = _.trim(parame.substr(3,25))
     const region_code = _.trim(req.body.regionCode).toUpperCase()
+    const trimmedRegionCode = _.replace(region_code, " ", "") // if Region Code can be Edited
+    const canEditRegionCode = req.body.canEditRegionCode
+
     const region_desc = _.trim(req.body.regionDesc).toUpperCase()
     const regionCodeHide = _.trim(req.body.regionCodeHid).toUpperCase()
-    console.log(req.params.id)
-    let fieldsOkay = false
 
-    if (region_desc.length == 0) {
-        // locals = {errorMessage: "Values for the fields must NOT be space/s!"}
-    } else {
-        fieldsOkay = true
+    let fieldsOkay = false
+    let locals
+    let validCode
+
+    // if (region_desc.length == 0) {
+    //     // locals = {errorMessage: "Values for the fields must NOT be space/s!"}
+    // } else {
+    //     fieldsOkay = true
+    // }
+
+    const validDesc = /[^a-zA-Z0-9 ]/.test(region_desc) // /[^a-zA-Z0-9]+/g
+
+    if (canEditRegionCode === "true") { // Region Code can be edited..
+        validCode = /[^a-zA-Z0-9]/.test(trimmedRegionCode) // /[^a-zA-Z0-9]+/g
+        if (validCode) {
+            locals = {errorMessage: "Values for CODE must not contain Special Characters!"}
+
+        } else if (region_code === regionCodeHide) {
+            if (region_desc.length == 0) {
+                locals = {errorMessage: "Values for the fields must NOT be space/s!"}
+            } else if (validDesc) {
+                locals = {errorMessage: "Values for DESCRIPTION must not contain Special Characters!"}
+            } else {
+                fieldsOkay = true          
+            }
+        } else if (region_desc.length == 0) {
+            locals = {errorMessage: "Values for the fields must NOT be space/s!"}
+
+        } else {
+            if (trimmedRegionCode.length < 3) {
+                locals = {errorMessage: "Values for the Region CODE field must NOT contain space/s!"}
+            } else {
+                fieldsOkay = true          
+            }
+        }
+    
+    } else { // Region Code is locked for Editing
+        if (region_desc.length == 0) {
+            locals = {errorMessage: "Values for the fields must NOT be space/s!"}
+        } else if (validDesc) {
+            locals = {errorMessage: "Values for DESCRIPTION must not contain Special Characters!"}
+        } else {
+            fieldsOkay = true          
+        }
     }
 
-    let region
+    let canProceed = false
+    let sameRegionDesc = false
+    let newRegionCode = region_code
+    let fndRegion
+
+    let getRegionForEdit
+
         try {
 
-            const regionForEdit = await Region.findOne({region: regionCodeHide}) //, function (err, foundRegion) {
+            if (fieldsOkay) {
 
-            // const regForEdit = await Region.findOne({region: regionCodeHide}) //, function (err, foundRegion) {
-            console.log(regionForEdit)
+                const getExisRegion = await Region.findOne({region_desc: region_desc}) //, function (err, foundregion) {
+                    fndRegion = getExisRegion
 
-            // if (!isNull(regionForEdit) [
-            
-            if (!fieldsOkay) {
+                    const sameDEesc = _.find(getExisRegion, {region_desc: region_desc})
+
+                    const chkRegionCodeExist = await Region.findOne({region: trimmedRegionCode})
+
+                if (canEditRegionCode === "true") { // Region Code can be edited..
+        
+                    if (trimmedRegionCode === regionCodeHide) {
+                        // No Changes on Region COde
+                    } else {
+
+                        if (chkRegionCodeExist) { // may kaparehang Area Code
+                                locals = {errorMessage: "Region CODE " + trimmedRegionCode + " already exists!"}    
+                        } else {
+                            canProceed = true
+
+                        }
+                    }
+
+                    if (sameDEesc) {
+                        if (sameDEesc.region === regionCodeHide) {
+                        } else {
+                            sameAreaDesc = true
+                            locals = {errorMessage: "Region DESCRIPTION already exists!"}    
+        
+                        }
+                    } else {
+                        canProceed = true
     
-                fndRegion = regionForEdit
-                if (!fieldsOkay) {
-                    locals = {errorMessage: "Values for the fields must NOT be space/s!"}
+                    }
+
                 } else {
-                    // locals = {errorMessage: "Region Code " + region_code + " already exists!"}
-                }
+                    if (sameDEesc) {        
+                        if (chkRegionCodeExist) { // may kaparehang Region Code
+                            if (chkRegionCodeExist.region === regionCodeHide) {
+                                canProceed = true
+                            }
+                        } else {
+                            sameRegionDesc = true
+                            locals = {errorMessage: "Region DESCRIPTION already exists!"}
+                        }
+                    } else {
 
+                        newRegionCode = regionCodeHide
+                        canProceed = true
 
-                res.render('deds/editRegion', { 
-                    regID: param,
-                   region: fndRegion, 
-                   ded: "DED",
-                   locals: locals,
-                   editRegion: true,
-                   yuser : req.user
-               })
-                        
-            } else {
-                if (!isNull(regionForEdit)) { 
-                    // regionForEdit.region = region_code,
-                    regionForEdit.region_desc = region_desc
-                
-                    await regionForEdit.save()
-    
-                }
+                    }    
 
-                res.redirect('/deds/region/'+ 'DED')
-
+                }                            
             }
+
+            getRegionForEdit = await Region.findOne({region: regionCodeHide})                    
+
+                if (canProceed && fieldsOkay && !sameRegionDesc) {
+
+                        getRegionForEdit.region = newRegionCode
+                        getRegionForEdit.region_desc = region_desc
+                
+                        getRegionForEdit.save()
+
+                    if (region_code !== regionCodeHide) {
+
+                        const hashedPassword = await bcrypt.hash(req.body.password, 10)
+
+                        const emailForSearch = regionCodeHide.toLowerCase() + '@kmbi.org.ph'
+                        const newEmail = newRegionCode.toLowerCase() + '@kmbi.org.ph'
+                        const getUser = await User.findOne({email: emailForSearch})
+
+                        if (!isNull(getUser)) {
+                            getUser.email = newEmail
+                            getUser.region = newRegionCode
+                            getUser.assCode = newRegionCode
+                            getUser.password = hashedPassword
+
+                            getUser.save()
+                        }
+
+
+                    }
+
+                        res.redirect('/deds/region/'+ 'DED')
+
+                        // Update USER Collection
+
+                } else {
+
+                    const yoser = await User.findOne({assCode: regionCodeHide}) //, function (err, foundUser) {
+                        //            console.log(foundlist)
+                    if (!isNull(yoser)) {
+                        fndUser = yoser
+                        console.log(yoser)
+            
+                        doneReadYoser = true
+            
+                    }
+            
+                    res.render('deds/editRegion', { 
+                        regID: param,
+                        ded: 'DED',
+                       region: getRegionForEdit, 
+                       regionCode: regionCodeHide,
+                       locals: locals,
+                       canEditRegionCode: canEditRegionCode,
+                       yuser : req.user,
+                       newRegion : false,
+                       resetPW: true,
+                       editRegion: true,
+                       user: yoser
+           
+                   })
+
+                }    
                 
         } catch (err) {
             console.log(err)
@@ -2404,6 +2552,46 @@ router.get('/employees/:id', authUser, authRole(ROLE.DED), async (req, res) => {
     }
 })
 
+// SEARCH FUNCTIONALITIES
+router.get('/search/:id', authUser, authRole(ROLE.DED), async (req, res) => {
+
+    let searchOptions = {}
+    if (req.query.emp_name  !=null && req.query.emp_name !== '') {
+        searchOptions.emp_name = RegExp(req.query.emp_name, 'i')
+    }
+
+    let regEmp = []
+    let empForSearch = []
+    console.log(searchOptions) 
+    console.log(req.query) 
+    let sortedEmp
+
+    try {
+        const employee = await Employee.find(searchOptions)
+
+            sortedEmp = employee.sort( function (a,b) {
+                if  ( a.emp_name < b.emp_name ){
+                    return -1;
+                  }
+                  if ( a.emp_name > b.emp_name ){
+                    return 1;
+                  }
+                   return 0;
+            })
+
+
+        res.render('deds/search', {
+            emp: sortedEmp,
+            ded: "DED",
+            searchOptions: req.query,
+            region: req.params.id
+        })
+    } catch(err) {
+        console.log(err)
+        res.redirect('/deds/' + req.params.id)
+    }
+})
+
 
 // New EMPLOYEE Route
 router.get('/newEmployee/:id', authUser, authRole(ROLE.DED), async (req, res) => {
@@ -2413,12 +2601,12 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.DED), async (req, res) =>
     const empStatus = ["Active","Deactivate"]
 
     // regionPosiID = "611d094bdb81bf7f61039616"
-    let foundRegion = []
+    // let foundRegion = []
     let fndRegions = []
 
     try {
 
-        foundRegion = await Region.find()
+        const foundRegion = await Region.find({emp_code: ""})
 
            console.log(foundRegion)
            const newEmp = new Employee()
@@ -2430,7 +2618,7 @@ router.get('/newEmployee/:id', authUser, authRole(ROLE.DED), async (req, res) =>
                user: newUser,
                ded: "DED",
                foundRegion: foundRegion,
-               areaAsignDesc: "",
+               RegionAsignDesc: "",
                empStatus : empStatus,
                empHasRegionAss: false,
                yuser: _user,
@@ -2457,18 +2645,18 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.DED), async (req, res) =>
    let nameCanProceed = false
 
    const empRegCod = req.body.region
-    const nEmpCode = _.trim(req.body.empCode)
+    const nEmpCode = _.trim(req.body.empCode).toUpperCase()
     const nLName = _.trim(req.body.lName).toUpperCase()
     const nFName = _.trim(req.body.fName).toUpperCase()
     const nMName = _.trim(req.body.mName).toUpperCase()
     const nName =  nLName + ", " + nFName + " " + nMName
     const empID = req.params.id
 
-    const validEmpCode = /[^a-zA-Z0-9]-/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
+    const validEmpCode = /[^a-zA-Z0-9-]/.test(nEmpCode)
     const trimmedEmpCode = _.replace(nEmpCode, " ", "")
-    const validLName = /[^a-zA-Z] /.test(nLName)
-    const validFName = /[^a-zA-Z] /.test(nFName)
-    const validMName = /[^a-zA-Z] /.test(nMName)
+    const validLName = /[^a-zA-Z. ]/.test(nLName)
+    const validFName = /[^a-zA-Z. ]/.test(nFName)
+    const validMName = /[^a-zA-Z. ]/.test(nMName)
 
     let fieldsOkay = false
     
@@ -2482,6 +2670,8 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.DED), async (req, res) =>
         locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
     } else if (nEmpCode.length == 0 || nLName.length == 0 || nFName.length == 0 || nMName.length == 0) {
         locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+    } else if (req.body.region == null) {
+        locals = {errorMessage: "New Employee cannot be saved. There is no available or vacant REGION to tag!"}
         // nameCanProceed = true
     } else {
 
@@ -2523,55 +2713,45 @@ try {
     const sameAssign = _.find(regionEmployees, {assign_code: empRegCod})
     console.log(sameAssign)
 
-    if (regionEmployees.length === 0) {
-        canProceed = true
-    } else {
-        if (sameName) {
-            locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
-            canProceed = false
-        } else if (sameAssign) {
-            const codeAssignName = sameAssign.last_name + ', ' + sameAssign.first_name + ' ' + sameAssign.middle_name
-            locals = {errorMessage: 'Assign Code: ' + empAreaCod + ' has been assigned to ' + codeAssignName}
-            canProceed = false
-
-        } else if (sameCode) {
-            locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
-            canProceed = false
-        } else {
+    if (fieldsOkay) {
+        if (regionEmployees.length === 0) {
             canProceed = true
+        } else {
+            if (sameName) {
+                locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+                canProceed = false
+            } else if (sameAssign) {
+                const codeAssignName = sameAssign.last_name + ', ' + sameAssign.first_name + ' ' + sameAssign.middle_name
+                locals = {errorMessage: 'Assign Code: ' + empRegCod + ' has been assigned to ' + codeAssignName}
+                canProceed = false
+    
+            } else if (sameCode) {
+                locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                canProceed = false
+            } else {
+                canProceed = true
+            }
+    
         }
-
+    
     }
 
-        // const hashedPassword = await bcrypt.hash(req.body.password, 10)
-                
-        // getExistingUser = await User.findOne({email: nEmail})
-        //     // console.log(foundUser)
-        //     if (!getExistingUser) {
-        //         if (nPassword.length == 0) {
-        //             UserProceed = false
-        //             locals = {errorMessage: 'Password must NOT be SPACE/S!'}
-        //         } else {
-        //             UserProceed = true 
-        //         }
-        //     } else {
-        //             UserProceed = false
-        //             locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
-        //     }    
-    
-    if (canProceed && nameCanProceed)  {
+    if (canProceed && fieldsOkay)  {
         // if (ePosition === "REG_DIR") {
             const poAssignCode = await Region.findOneAndUpdate({"region": empRegCod}, {$set:{"emp_code": req.body.empCode}})
         // } 
 
         addedNewUser = true
-        
+
+        const empName = nLName + ' ' + nFName + ' ' + nMName
+
         let employee = new Employee({
 
             emp_code: nEmpCode,
             last_name: nLName,
             first_name: nFName,
             middle_name: nMName,
+            emp_name: empName,
             position_code: regionDirID,
             assign_code: empRegCod,
             status: "Active",
@@ -2585,38 +2765,25 @@ try {
         
         const newCoa = employee.save()
 
-        // let nUser = new User({
-        //     email: nEmail,
-        //     password: hashedPassword,
-        //     name: nName,
-        //     emp_code: nEmpCode,
-        //     assCode: empRegCod,
-        //     role: 'RD',
-        //     region: empRegCod,
-        //     area: "",
-        // })
-        // const saveUser = nUser.save()
-
         res.redirect('/deds/employees/'+ req.params.id)
     } 
     else {
         let psitCode = []
-        const foundRegion = await Region.find({region: "empRegCod"}, function (err, fnd_Post) {
-             psitCode = fnd_Post
-        })
+        const foundRegion = await Region.find({emp_code: ""})
+        
         console.log(psitCode)
-        let errEmp = []
+        let errEmp
         let errUser = []
 
-            errUser.push({email: nEmail, password: req.body.password})
+            // errUser.push({email: nEmail, password: req.body.password})
 
-            errEmp.push({emp_code: nEmpCode, region: empRegCod, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: regionDirID})
+            errEmp = {emp_code: nEmpCode, region: empRegCod, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: regionDirID}
             console.log(errEmp)
 
             res.render('deds/newEmployee', { 
                 emp: errEmp, 
                 empStatus: empStatus,
-                user: errUser,
+                // user: errUser,
                 ded: "DED",
                 foundRegion: foundRegion,
                 empHasRegAss: false,
@@ -2690,7 +2857,7 @@ router.get('/getEmpForEdit/:id/edit', authUser, authRole(ROLE.DED), async (req, 
         res.render('deds/editEmployee', {
             ded: ded,
             empStatus: empStatus,
-            fndRegion: dedRegions,
+            foundRegion: dedRegions,
             region: region,
             user: newUser,
             emp: employe, 
@@ -2727,7 +2894,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.DED), async function(req
 
     const eAssCode = assCode
     
-    const eCode = _.trim(req.body.empCode)
+    const eCode = _.trim(req.body.empCode).toUpperCase()
     const eLName = _.trim(req.body.lName).toUpperCase()
     const eFName = _.trim(req.body.fName).toUpperCase()
     const eMName = _.trim(req.body.mName).toUpperCase()
@@ -2762,19 +2929,78 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.DED), async function(req
 
     let dedRegions = []
     let employee
+    let canProceed = false
 
         try {
-            const emRegion = await Region.find({emp_code : ""}) //, function (err, fnd_Post) {
-                dedRegions = emRegion
 
-            const employee = await Employee.findById(empID)
-            console.log(employee)
-            
             if (fieldsOkay) {
+                const emRegion = await Region.find({emp_code : ""}) //, function (err, fnd_Post) {
+                    dedRegions = emRegion
+    
+                const employee = await Employee.findById(empID)
+
+                const dedEmployees = await Employee.find({})
+
+                if (dedEmployees) {
+                    const sameName = _.find(dedEmployees, {last_name: eLName, first_name: eFName, middle_name: eMName})
+            
+                    const sameCode = _.find(dedEmployees, {emp_code: eCode})
+                
+                    const sameAssign = _.find(dedEmployees, {assign_code: eAssCode})
+                    console.log(sameAssign)
+    
+                    if (sameName) {
+                        const strEmpID = _.trim(stringify(sameName._id),'"')
+                        if (strEmpID === empID) {
+                            canProceed = true
+                        } else {
+                            locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+                            canProceed = false        
+                        }
+                    } else {
+                        canProceed = true
+    
+                    }
+                    if (sameAssign) {
+                        const strSameAssign = _.trim(stringify(sameAssign._id),'"')
+                        if (strSameAssign === empID) {
+                            canProceed = true
+                        } else {
+                            locals = {errorMessage: 'Assign Code: ' + assCode + ' already exists!'}
+                            canProceed = false
+    
+                        }
+                    } else {
+                        canProceed = true
+    
+                    }
+                    if (sameCode) {
+                        const strSameACode = _.trim(stringify(sameCode._id),'"')
+                         if (strSameACode === empID) {
+                            canProceed = true
+                        } else {
+                            locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                            canProceed = false    
+                        }
+                    } else {
+                            canProceed = true
+        
+                    }
+                
+                } else {
+                    canProceed = true
+                }
+            }
+
+            if (fieldsOkay && canProceed) {
+
+                const empName = eLName + ' ' + eFName + ' ' + eMName
+
                 employee.emp_code = eCode
                 employee.last_name = eLName
                 employee.first_name = eFName
                 employee.middle_name = eMName
+                employee.emp_name = empName
                 employee.status = empStatus
                 employee.assign_code = eAssCode
 
@@ -2792,11 +3018,16 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.DED), async function(req
 
                     } else {
 
-                        const oldAreaForUpdate = await Region.findOneAndUpdate({"region ": HidRegionAss}, {$set:{"emp_code": ""}})
+                        const fndAffectedEmp = await Employee.findOne({"assign_code": eAssCode}, {$set:{"assign_code": ""}})
+
+                        const oldRegionForUpdate = await Region.findOneAndUpdate({"region ": HidRegionAss}, {$set:{"emp_code": ""}})
 
                         const areaOldAssCode = await Region.findOneAndUpdate({"region": eAssCode}, {$set:{"emp_code": HidEmpCode}})
     
-                        const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": HidEmpCode, "region": regionCod }})
+                        const userToNoEmpcode = await User.findOneAndUpdate({"assCode": HidRegionAss}, {$set:{"name": "", "emp_code": "" }})
+
+                        const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": HidEmpCode}})
+
                         employee.region = eAssCode
 
                     }                            
@@ -2809,16 +3040,19 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.DED), async function(req
                     // const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": eCode, "region": regionCod}})
     
                     res.redirect('/deds/employees/'+ ded)
-    
+
             } else {
                 const newUser = new User()
+
+                let errEmp = {_id: empID, emp_code: eCode, last_name : eLName, first_name : eFName, middle_name : eMName,
+                    status : empStatus, assign_code : eAssCode, region: req.user.region}
 
                 res.render('deds/editEmployee', {
                     ded: ded,
                     empStatus: empStatus1,
                     foundRegion: dedRegions,
                     user: newUser,
-                    emp: employee, 
+                    emp: errEmp, 
                     empHasRegionAss: true,
                     locals: locals,
                     yuser: req.user,
@@ -2906,6 +3140,7 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.DED), async (req,
                 newRegion : false,
                 user: yoser,
                 locals: locals,
+                editRegion: false,
                 yuser: _user,
                 newEmp: false,
                 resetPW: true

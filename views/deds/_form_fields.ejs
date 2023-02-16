@@ -57,7 +57,7 @@
         <label>Region Assignment</label>
         <% if (!resetPW) { %>
             <select id="region" name="region">
-            <% fndRegion.forEach(fndRegion => { %>
+            <% foundRegion.forEach(fndRegion => { %>
                 <% if ( fndRegion.region == emp.assign_code) { %>
                    <option selected value="<%= fndRegion.region %>" label="<%= fndRegion.region_desc %>"> </option>
                 <% } else { %>

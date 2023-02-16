@@ -1,0 +1,15 @@
+<h2 class="page-header">New Client Entry</h2>
+<form action="/centers/postNewCli/<%= poCode %>" method="POST">
+            <%- include('../partials/errorMessage') %>    
+            <%- include('_client_form_fields') %>
+<div class="form-row">
+    <div class="form-item-column"></div>
+    <div class="form-item-column">
+        <a class="btn btn-primary" href="/centers/clients/<%= poCode %>">Cancel</a>
+    </div>
+    <div class="form-item-column">
+        <button class="btn btn-primary" type="submit">Create</button>
+    </div>
+    <div class="form-item-column"></div>
+</div>
+</form>

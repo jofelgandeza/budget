@@ -17,6 +17,7 @@
                     <li class="header-nav header-link"> <a href='/'>Home</a></li>
                     <li class="header-nav header-link"> <a href='/centers/viewTarget/<%= yuser.assCode + "target_mode" %>'>Set Targets</a></li>
                     <li class="header-nav header-link"> <a href='/centers/viewTargetsMonthly/<%=yuser.assCode %>' >Monthly View</a></li>
+                    <li class="header-nav header-link"> <a href='/centers/clients/<%=yuser.assCode %>' >Clients</a></li>
                 <% } %>
                 <%if (yuser.role === "PUH") { %>
                     <li class="header-nav header-link"> <a href='/units/<%= yuser.assCode %>'>Home</a></li>
@@ -26,24 +27,27 @@
                     <li class="header-nav header-link"> <a href='/branches/<%= yuser.assCode %>'>Home</a></li>
                     <li class="header-nav header-link"> <a href='/branches/budget/<%= yuser.assCode %>'>Budget</a></li>
                     <li class="header-nav header-link"> <a href='/branches/units/<%= yuser.assCode %>'>Units</a></li>
+                    <li class="header-nav header-link"> <a href='/branches/search/<%= yuser.assCode %>'>Search</a></li>
                 <% } %>
                 <%if (yuser.role === "AM") { %>
                     <li class="header-nav header-link"> <a href='/areas/<%= yuser.assCode %>'>Home</a></li>
                     <li class="header-nav header-link"> <a href='/areas/budget/<%= yuser.assCode %>'>Budget</a></li>
                     <li class="header-nav header-link"> <a href='/areas/branches/<%= yuser.assCode %>'>Branch Settings</a></li>
+                    <li class="header-nav header-link"> <a href='/areas/search/<%= yuser.assCode %>'>Search</a></li>
                 <% } %>
                 <%if (yuser.role === "RD") { %>
                     <li class="header-nav header-link"> <a href='/regions/<%= yuser.assCode %>'>Home</a></li>
                     <li class="header-nav header-link"> <a href='/regions/budget/<%= yuser.assCode %>'>Budget</a></li>
                     <li class="header-nav header-link"> <a href='/regions/areas/<%= yuser.assCode %>'>Area Settings</a></li>
+                    <li class="header-nav header-link"> <a href='/regions/search/<%= yuser.assCode %>'>Search</a></li>
                 <% } %>
                 <%if (yuser.role === "DED") { %>
                     <li class="header-nav header-link"> <a href='/deds/<%= yuser.assCode %>'>Home</a></li>
                     <li class="header-nav header-link"> <a href='/deds/budget/<%= yuser.assCode %>'>Budget</a></li>
                     <li class="header-nav header-link"> <a href='/deds/region/<%= yuser.assCode %>'>Region Settings</a></li>
+                    <li class="header-nav header-link"> <a href='/deds/search/<%= yuser.assCode %>'>Search</a></li>
                 <% } %>
                 <%if (yuser.role === "ADMIN") { %>
-                    <!-- <li class="header-nav header-link"> <a href='/admins/employees/<%= yuser.assCode %>'>Register User</a></li> -->
                     <li class="header-nav header-link"><a href='/admins/employees/<%= yuser.assCode %>'>Users</a></li>
                     <li class="header-nav header-link"><a href='/admins/settings/<%= yuser.assCode %>'>System Settings</a></li>
                     <li class="header-nav header-link"> <a href='/'>Home</a></li>

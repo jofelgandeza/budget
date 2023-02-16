@@ -1,0 +1,27 @@
+<section class="s1">
+    <div class="main-container">
+       <h4> PO CLIENT MAINTENANCE</h4>
+       <div>
+            <a class="btn btn-primary" href="/centers/newClient/<%= poCode %>">ADD NEW CLIENT</a>
+            <a class="btn btn-primary" href="/centers/<%= poCode %>">DONE</a>
+        </div>
+    <table class="content-table">
+            <tr>
+                <th> NAME</th>
+                <th> CENTER</th>
+                <th> ADDRESS</th>
+                <th> LINKS</th>
+            </tr>
+            <% fndClient.forEach(poClient => { %>
+                <tr>
+                    <td><%= poClient.client_name %> </td>
+                    <td><%= poClient.center %> </td>
+                    <td><%= poClient.address %> </td>
+                    <td>
+                    </td>
+                </tr>
+            <% }) %> 
+        </table>
+    </div>
+</section>
+

@@ -9,8 +9,12 @@
 
     </div>
     <div class="form-item-column">
-        <label>Area Description</label>
+            <label>Area Description</label>
+        <% if (editArea) {%>
             <input style="text-transform: uppercase" type="text" name="areaDesc" value="<%= area.area_desc %>" required autocomplete="off">
+        <% } else {%>
+            <input style="text-transform: uppercase" type="text" name="areaDesc" value="<%= area.area_desc %>" disabled>
+        <% } %>
 
     </div>
     <div class="form-item-column">
@@ -23,10 +27,10 @@
 </div>
 
 <div class="form-row">
-    <% if (newArea || resetPW) { %> 
+    <% if (newArea || resetPW || canEditAreaCode) { %> 
         <div class="form-item-columnUSER">
             <label>System's User Name</label>
-            <% if (newArea) { %> 
+            <% if (newArea || canEditAreaCode) { %> 
                 <input type="email" id="email" name="email" value="<%= user.email %>" onclick="setAreaEmailUser()" autocomplete="off">
             <% } else { %>
                 <input type="email" name="email" value="<%= user.email %>" autocomplete="off" disabled>

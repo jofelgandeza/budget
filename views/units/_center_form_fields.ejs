@@ -1,7 +1,16 @@
 <div class="form-row">
     <div class="form-item-column">
         <label>Center Number</label>
-        <input type="number" name="cntrNum" value="<%= center.center_no %>" autocomplete="off" min="1" max="19" step="1">
+        <% if (newCenter && canEditCenter) { %> 
+            <input type="number" name="cntrNum" value="<%= center.center_no %>" autocomplete="off" min="1" max="19" step="1">
+        <% } else { %>
+            <input type="number" name="cntrNum" value="<%= center.center_no %>" disabled>
+        <% } %>
+        <input style="text-transform: uppercase" type="text" name="hiddenCenterNum" value="<%= center.center_no %>" hidden>
+        <input style="text-transform: uppercase" type="text" name="hiddenCenter" value="<%= center.center %>" hidden>
+        <input style="text-transform: uppercase" type="text" name="hiddenPOCode" value="<%= poCode %>" hidden>
+        <input style="text-transform: uppercase" type="text" name="newCenter" value="<%= newCenter %>" hidden>
+        <input style="text-transform: uppercase" type="text" name="canEditCenter" value="<%= canEditCenter %>" hidden>
     </div>
     <div class="form-item-column">
         <label>Loan Type</label>
@@ -16,7 +25,7 @@
         </select>
     </div>
     <div class="form-item-column">
-        <input type="hidden" id="poCode" name="po_Code" value="<%= poCode %>">
+        <input type="hidden" id="centerCode" name="center_Code" value="<%= center.center %>">
     </div>
 </div>
 <div class="form-row">
@@ -37,6 +46,6 @@
         </select>
     </div>
     <div class="form-item-column">
-        <input type="hidden" id="brnCode" name="branCode" value="<%= unitCode %>">
+        <input type="hidden" id="brnCode" name="branCode" value="<%= center.center %>">
     </div>
 </div>

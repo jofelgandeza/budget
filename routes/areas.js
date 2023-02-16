@@ -422,6 +422,7 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     let doneReadCenter = false
     let doneFoundMgr = false
     let doneReadLonTyp = false
+    let doneFoundPO = false
 
     console.log(fndPositi)
    
@@ -698,6 +699,48 @@ router.get('/budget/:id', authUser, authRole(ROLE.AM), async (req, res) => {
     }
 })
 
+// SEARCH FUNCTIONALITIES
+router.get('/search/:id', authUser, authRole(ROLE.AM), async (req, res) => {
+
+    let searchOptions = {}
+    if (req.query.emp_name  !=null && req.query.emp_name !== '') {
+        searchOptions.area = req.user.area
+        searchOptions.emp_name = RegExp(req.query.emp_name, 'i')
+    } else {
+        searchOptions.area = req.user.area
+    }
+
+    let regEmp = []
+    let empForSearch = []
+    console.log(searchOptions) 
+    console.log(req.query) 
+    let sortedEmp
+
+    try {
+        const employee = await Employee.find(searchOptions)
+
+            sortedEmp = employee.sort( function (a,b) {
+                if  ( a.emp_name < b.emp_name ){
+                    return -1;
+                  }
+                  if ( a.emp_name > b.emp_name ){
+                    return 1;
+                  }
+                   return 0;
+            })
+
+
+        res.render('areas/search', {
+            emp: sortedEmp,
+            searchOptions: req.query,
+            area: req.params.id
+        })
+    } catch(err) {
+        console.log(err)
+        res.redirect('/areas/' + req.params.id)
+    }
+})
+
 //View EMPLOYEES per AREA Level - TUG
 
 router.get('/employees/:id', authUser, authRole(ROLE.AM), async (req, res) => {
@@ -857,7 +900,7 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.AM), async (req, res) => 
    let locals
 
    const empBranCod = req.body.branch
-    const nEmpCode = _.trim(req.body.empCode)
+    const nEmpCode = _.trim(req.body.empCode).toUpperCase()
     const nLName = _.trim(req.body.lName).toUpperCase()
     const nFName = _.trim(req.body.fName).toUpperCase()
     const nMName = _.trim(req.body.mName).toUpperCase()
@@ -865,11 +908,11 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.AM), async (req, res) => 
     const empStat = req.body.empStat
     const nName =  nLName + ", " + nFName + " " + nMName
     
-    const validEmpCode = /[^a-zA-Z0-9]-/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
+    const validEmpCode = /[^a-zA-Z0-9-]/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
     const trimmedEmpCode = _.replace(nEmpCode, " ", "")
-    const validLName = /[^a-zA-Z] /.test(nLName)
-    const validFName = /[^a-zA-Z] /.test(nFName)
-    const validMName = /[^a-zA-Z] /.test(nMName)
+    const validLName = /[^a-zA-Z. ]/.test(nLName)
+    const validFName = /[^a-zA-Z. ]/.test(nFName)
+    const validMName = /[^a-zA-Z. ]/.test(nMName)
 
     let nameCanProceed = false
     let fieldsOkay = false
@@ -884,6 +927,8 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.AM), async (req, res) => 
         locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
     } else if (nEmpCode.length == 0 || nLName.length == 0 || nFName.length == 0 || nMName.length == 0) {
         locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
+    } else if (req.body.branch == null) {
+        locals = {errorMessage: "New Employee cannot be saved. There is no available or vacant BRANCH to tag!"}
         // nameCanProceed = true
     } else {
 
@@ -924,36 +969,42 @@ try {
     const sameAssign = _.find(branchEmployees, {assign_code: empBranCod})
     console.log(sameAssign)
 
-    if (branchEmployees) {
-        if (sameName) {
-            locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
-            canProceed = false
-        } else if (sameAssign) {
-            locals = {errorMessage: 'Assign Code: ' + empBranCod + ' already exists!'}
-            canProceed = false
+    if (fieldsOkay) {
 
-        } else if (sameCode) {
-            locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
-            canProceed = false
+        if (branchEmployees) {
+            if (sameName) {
+                locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+                canProceed = false
+            } else if (sameAssign) {
+                locals = {errorMessage: 'Assign Code: ' + empBranCod + ' already exists!'}
+                canProceed = false
+    
+            } else if (sameCode) {
+                locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                canProceed = false
+            } else {
+                canProceed = true
+            }
+    
         } else {
             canProceed = true
         }
-
-    } else {
-        canProceed = true
+    
     }
 
     if (canProceed && fieldsOkay)  {
             const poAssignCode = await Branch.findOneAndUpdate({"branch": empBranCod}, {$set:{"emp_code": nEmpCode}})
 
         addedNewUser = true
-        
+        const empName = nLName + ' ' + nFName + ' ' + nMName
+
         let employee = new Employee({
 
             emp_code: nEmpCode,
             last_name: nLName,
             first_name: nFName,
             middle_name: nMName,
+            emp_name: empName,
             position_code: branchMgrID,
             position_class: nPosit_Class,
             assign_code: empBranCod,
@@ -981,20 +1032,23 @@ try {
         const rePosition = await Area.find({area: areaCod}, function (err, fnd_Post) {
             areaBranches = fnd_Post
         })
+        const empStatus = ["Active","Deactivate"]
 
-        let errEmp = []
-        let errUser = []
+        let errEmp
+        let errUser
 
-            errUser.push({email: nEmail, password: req.body.password})
+            // errUser = {email: nEmail, password: req.body.password}
 
-            errEmp.push({emp_code: nEmpCode, branch: empBranCod, last_name: nLName, first_name: nFName, middle_name: nMName, position_class: nPosit_Class, position_code: branchMgrID})
+            errEmp = {emp_code: nEmpCode, branch: empBranCod, last_name: nLName, first_name: nFName, middle_name: nMName, position_class: nPosit_Class, position_code: branchMgrID}
             console.log(errEmp)
 
             res.render('areas/newEmployee', { 
                 emp: errEmp, 
                 user: errUser,
                 foundBranch: areaBranches,
+                empHasBranchAss: false,
                 areaCode: areaCod,
+                empStatus: empStatus,
                 yuser: _user,
                 newEmp: true,
                 resetPW: false,
@@ -1096,7 +1150,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.AM), async function(req,
 
     const eAssCode = assCode    
 
-    const eCode = _.trim(req.body.empCode)
+    const eCode = _.trim(req.body.empCode).toUpperCase()
     const eLName = _.trim(req.body.lName).toUpperCase()
     const eFName = _.trim(req.body.fName).toUpperCase()
     const eMName = _.trim(req.body.mName).toUpperCase()
@@ -1144,10 +1198,13 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.AM), async function(req,
         console.log(employee)
 
         if (fieldsOkay) {
+            const empName = eLName + ' ' + eFName + ' ' + eMName
+
             employee.emp_code = HidEmpCode
             employee.last_name = eLName
             employee.first_name = eFName
             employee.middle_name = eMName
+            employee.emp_name = empName
             employee.status = eStatus
             employee.position_class = ePosit_Class
 
@@ -1292,6 +1349,7 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.AM), async (req, 
             yuser: _user,
             newEmp: false,
             resetPW: true,
+            editBranch: false,
             brnStatus: brnStatus,
             newBranch : false
        })
@@ -1375,6 +1433,7 @@ router.put('/putEditedPass/:id', authUser, authRole(ROLE.AM), async function(req
                             user: yoser,
                             canEditBranchCode : false,
                             locals: locals,
+                            editBranch: false,
                             yuser: yoser,
                             newEmp: false,
                             resetPW: true,
@@ -1682,10 +1741,11 @@ router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) 
                 res.redirect('/areas/branches/' + areaCod)
             } else {
                 canProceed = false
-                // locals = {errorMessage: "ERROR: Branch Code " + branch_code + " already exists with the information below!"}
+
+                let errBranch = {branch: branch_code, branch_desc: branch_desc}
 
                 res.render('areas/newBranch', {
-                    branch: new Branch(),
+                    branch: errBranch,
                     areaCode: areaCod,
                     brnStatus: brnStatus,
                     branchHasTrans: false,
@@ -1695,6 +1755,7 @@ router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) 
                     resetPW: false,
                     canEditBranchCode: true,
                     user: new User(),
+                    locals: locals
                 })
                             // res.redirect('/areas/branches/' + areaCod)
             }
@@ -1733,6 +1794,8 @@ router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) 
 
         const brnForEdit = await Branch.findById(param)  
         
+        // const userEdit = await User.findOne({assCode: uUnitCode}) 
+
         if (!isNull(brnForEdit)) {
             branchID = brnForEdit.id
             branchEmpCode = brnForEdit.emp_code
@@ -1765,7 +1828,7 @@ router.post('/postNewBranch/:id', authUser, authRole(ROLE.AM), async (req, res) 
                 brnStat: brnStat,
                branch: brnForEdit, 
                areaCode: areaCod,
-               yuser : _user,
+               user : yoser,
                editBranch: true,
                newBranch : false,
                resetPW: false,
@@ -1790,7 +1853,7 @@ router.put('/putEditedBranch/:id', authUser, authRole(ROLE.AM), async function(r
     const param = _.trim(parame.substr(3,25))
     const branch_code = _.trim(req.body.branchCode).toUpperCase()
     const trimmedBranchCode = _.replace(branch_code, " ", "") // if Area Code can be Edited
-    const branch_desc = _.trim(req.body.branchDesc).toUpperCase()
+    const branchdesc = _.trim(req.body.branchDesc).toUpperCase()
     const branch_status = req.body.brnStat
     const branch_categ = _.trim(req.body.branch_category).toUpperCase()
     const branch_add = _.trim(req.body.branchAdd).toUpperCase()
@@ -1803,7 +1866,7 @@ router.put('/putEditedBranch/:id', authUser, authRole(ROLE.AM), async function(r
     let validCode
 
     const validAddress = /[^a-zA-Z0-9 -,.]/.test(branch_add) // /[^a-zA-Z0-9]+/g
-    const validDesc = /[^a-zA-Z0-9 ]/.test(branch_desc) // /[^a-zA-Z0-9]+/g
+    const validDesc = /[^a-zA-Z0-9 ]/.test(branchdesc) // /[^a-zA-Z0-9]+/g
 
     if (canEditBranchCode === "true") { // Branch Code can be edited..
         validCode = /[^a-zA-Z0-9]/.test(trimmedBranchCode) // /[^a-zA-Z0-9]+/g
@@ -1814,7 +1877,7 @@ router.put('/putEditedBranch/:id', authUser, authRole(ROLE.AM), async function(r
             locals = {errorMessage: "Values for ADDRESS must not contain Special Characters!"}
 
         } else if (branch_code === branchCodeHide) {
-            if (branch_desc.length == 0) {
+            if (branchdesc.length == 0) {
                 locals = {errorMessage: "Values for the fields must NOT be space/s!"}
             } else if (validDesc) {
                 locals = {errorMessage: "Values for DESCRIPTION must not contain Special Characters!"}
@@ -1830,7 +1893,7 @@ router.put('/putEditedBranch/:id', authUser, authRole(ROLE.AM), async function(r
         }
     
     } else { // Branch Code is locked for Editing
-        if (branch_desc.length == 0) {
+        if (branchdesc.length == 0) {
             locals = {errorMessage: "Values for the fields must NOT be space/s!"}
         } else if (validDesc) {
             locals = {errorMessage: "Values for DESCRIPTION must not contain Special Characters!"}
@@ -1845,116 +1908,90 @@ router.put('/putEditedBranch/:id', authUser, authRole(ROLE.AM), async function(r
     let sameBranchDesc = false
     let newBranchCode = branch_code
 
-    let getBranchForEdit
+    let branchForEdit
+
+    let emailForEdit = ""
+    let newUserPassword = ""
+    let newEmail = ""
 
     let branch
         try {
 
+            const areaBranches = await Branch.find({area: req.user.area})
+
+            const branch = await Branch.findOne({branch: branchCodeHide})
+
+                  const oldBranchDesc = branch.branch_desc
+
             if (fieldsOkay) {
-                const getExisBranch = await Branch.findOne({branch_desc: branch_desc}) //, function (err, foundArea) {
+                const getExisBranch = await Branch.findOne({branch_desc: branchdesc}) //, function (err, foundArea) {
                     fndArea = getExisBranch
     
-                    const sameDEesc = _.find(getExisBranch, {branch_desc: branch_desc})
-    
-                if (canEditBranchCode === "true") { // Branch Code can be edited..
-                        getBranchForEdit = await Branch.findOne({branch: trimmedBranchCode})
-        
-                        if (getBranchForEdit) { // may kaparehang Branch Code
-                            if (getBranchForEdit.branch === branchCodeHide) {
-                                if (sameDEesc) {
-                                    canProceed = true
-                                    // sameBranchDesc = true
-                                    // locals = {errorMessage: "Branch DESCRIPTION already exists!"}
-                                } else { 
-                                    newBranchCode = trimmedBranchCode
-                                    canProceed = true
-                                }
-    
-                            } else {
-                                if (sameDEesc) {
-                                    sameBranchDesc = true
-                                    locals = {errorMessage: "Branch DESCRIPTION already exists!"}
-                                } else { 
-                                    newBranchCode = trimmedBranchCode
-                                    canProceed = true
-                                }
-                            }
-    
-                        } else if (sameDEesc) {
-                            if (branch_code === branchCodeHide) {
-                                sameBranchDesc = true
-                                locals = {errorMessage: "Branch DESCRIPTION already exists!"}
-        
-                            } else {
-                                sameBranchDesc = false    
-                                canProceed = true
-                            }
-                        } else {
-                            getBranchForEdit = await Branch.findOne({branch: trimmedBranchCode})
-    
-                            newBranchCode = trimmedBranchCode
-                            canProceed = true
-    
-                        }
-                    
-                    } else {
-    
-                        if (sameDEesc) {
+                    const sameDEesc = _.find(areaBranches, {branch_desc: branchdesc})
 
-                            getBranchForEdit = await Branch.findOne({branch: branchCodeHide})
-        
-                            if (getBranchForEdit) { // may kaparehang Branch Code
-                                if (getBranchForEdit.branch === branchCodeHide) {
-                                    canProceed = true
-                                }
-                            } else {
-                                sameBranchDesc = true
-                                locals = {errorMessage: "Branch DESCRIPTION already exists!"}
-                            }
-                        } else {
-                            getBranchForEdit = await Branch.findOne({branch: branchCodeHide})
-    
-                            newBranchCode = branchCodeHide
+
+                    if (trimmedBranchCode) { // can EDIT BRANCH CODE
+
+                        if (branchCodeHide === trimmedBranchCode) { // NEW & OLD CODE are the same
                             canProceed = true
-    
-                        }    
-                    }
-            } else {
-    
-            }
-    
-                    if (canEditBranchCode === "true") { // Branch Code can be edited..
-                        if (validCode) {
-                            getBranchForEdit = await Branch.findOne({branch: branchCodeHide})                    
-                        } else if (!fieldsOkay) {
-                            getBranchForEdit = await Branch.findOne({branch: branchCodeHide})
-                        } else if (branch_code !== branchCodeHide) {
-                            getBranchForEdit = await Branch.findOne({branch: branchCodeHide})
-    
+                            branch.branch_desc = branchdesc
+
+                            branchForEdit= await Branch.findOne({branch: trimmedBranchCode})
+        
                         } else {
-                            getBranchForEdit = await Branch.findOne({branch: trimmedBranchCode})
+                            const brnCodeFound = _.find(areaBranches, {branch: trimmedBranchCode}) 
+        
+                            if (brnCodeFound) { // Nagbago ang Unit Letter & may Existing na Unit Letter
+                                locals = {errorMessage: "ERROR: BRANCH CODE " + ueUnit + " already exists!"}
+                                
+                            } else {
+                                canProceed = true
+                                editUserProceed = true 
+        
+                                branch.branch = trimmedBranchCode
+                                branch.branch_desc = branchdesc
+                                        
+                                emailForEdit = branchCodeHide.toLowerCase() + '@kmbi.org.ph'
+                                newEmail = trimmedBranchCode.toLowerCase() + '@kmbi.org.ph'
+                                newUserPassword = trimmedBranchCode.toLowerCase()
+                            }
                         }
-    
+            
                     } else {
-                        getBranchForEdit = await Branch.findOne({branch: branchCodeHide})
-                        newBranchCode = branchCodeHide
+                        canProceed = true
+        
                     }
-    
+
+                    if (sameBranchDesc) {
+
+                        if (sameBranchDesc.branch === branchCodeHide) {
+                            canProceed = true
+                        } else {
+
+                            locals = {errorMessage: "Branch DESCRIPTION already exists!"}
+                            canProceed = false
+
+                        }
+
+                    }
+             
+            }
                     if (canProceed && fieldsOkay && !sameBranchDesc) {
-                            getBranchForEdit.branch = newBranchCode
-                            getBranchForEdit.branch_desc = branch_desc
-                            getBranchForEdit.address = branch_add
-                            getBranchForEdit.status = branch_status
-                            getBranchForEdit.branch_category = branch_categ
+                            branch.address = branch_add
+                            branch.status = branch_status
+                            branch.branch_category = branch_categ
                     
-                            getBranchForEdit.save()
+                            branch.save()
     
                         if (branch_code !== branchCodeHide) {
-                            const emailForSearch = branchCodeHide + '@kmbi.org.ph'
-                            const getUser = await User.findOne({user: emailForSearch})
+
+                            const hashedPassword = await bcrypt.hash(req.body.password, 10)
+
+                            const getUser = await User.findOne({email: emailForEdit})
     
-                            if (!isNull(getUser)) {
-                                getUser.email = emailForSearch
+                            if (getUser) {
+                                getUser.email = newEmail
+                                getUser.password = hashedPassword
                                 getUser.branch = branch_code
                                 getUser.assCode = branch_code
     
@@ -1981,7 +2018,7 @@ router.put('/putEditedBranch/:id', authUser, authRole(ROLE.AM), async function(r
                             res.render('areas/editBranch', { 
                                 branchID: param,
                                 brnStatus: brnStatus,
-                               branch: getBranchForEdit, 
+                               branch: branch, 
                                areaCode: req.user.area,
                                yuser : yoser,
                                editBranch: true,

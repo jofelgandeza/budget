@@ -19,6 +19,7 @@ const Branch = require('../models/branch')
 const Employee = require('../models/employee')
 const Setting = require('../models/setting')
 const region = require('../models/region')
+const employee = require('../models/employee')
 
 // let LoggedUser = {}
 // app.use(setSysUser)
@@ -362,12 +363,15 @@ try {
 
         addedNewUser = true
         
+        const empName = nLName + ' ' + nFName + ' ' + nMName
+
         let employee = new Employee({
 
             emp_code: nEmpCode,
             last_name: nLName,
             first_name: nFName,
             middle_name: nMName,
+            emp_name: empName,
             position_code: opDED_ID,
             assign_code: empID,
             status: "Active",
@@ -497,30 +501,124 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.ADMIN), async function(r
 
     // const eAssCode = assCode
     
-    const eCode = _.trim(req.body.empCode)
+    const eCode = _.trim(req.body.empCode).toUpperCase()
     const eLName = _.trim(req.body.lName).toUpperCase()
     const eFName = _.trim(req.body.fName).toUpperCase()
     const eMName = _.trim(req.body.mName).toUpperCase()
     const nName =  eLName + ", " + eFName + " " + eMName
-        
+
+    const validEmpCode = /[^a-zA-Z0-9]-/.test(eCode) // /[^a-zA-Z0-9]+/g
+    const trimmedEmpCode = _.replace(eCode, " ", "")
+    const validLName = /[^a-zA-Z ]/.test(eLName)
+    const validFName = /[^a-zA-Z ]/.test(eFName)
+    const validMName = /[^a-zA-Z ]/.test(eMName)
+
+    let nameCanProceed = false
+    let fieldsOkay = false
+
+    if (validEmpCode) {
+        locals = {errorMessage: "Employee Code must not contain Special Charecters including Space/s!"}
+    } else if (validLName) {
+        locals = {errorMessage: "Values for LAST NAME must not contain Special/Space Characters!"}
+    } else if (validFName) {
+        locals = {errorMessage: "Values for FIRST NAME must not contain Special Characters!"}
+    } else if (validMName) {
+        locals = {errorMessage: "Values for MIDDLE NAME must not contain Special Characters!"}
+    } else if (trimmedEmpCode.length == 0 || eLName.length == 0 || eFName.length == 0 || eMName.length == 0) {
+        locals = {errorMessage: 'Field/s must NOT be SPACE/S!'}
+        // nameCanProceed = true
+    } else {
+
+        fieldsOkay = true
+    }
+
         try {
 
-            employee = await Employee.findById(empID)
-            console.log(employee)
+            if (fieldsOkay) {
+    
+                const employee = await Employee.findById(empID)
 
-            employee.emp_code = eCode
-            employee.last_name = eLName
-            employee.first_name = eFName
-            employee.middle_name = eMName
-            employee.status = empStatus
+                const OpEmployees = await Employee.find({})
+
+                if (OpEmployees) {
+                    const sameName = _.find(OpEmployees, {last_name: eLName, first_name: eFName, middle_name: eMName})
+            
+                    const sameCode = _.find(OpEmployees, {emp_code: eCode})
+                    
+                    if (sameName) {
+                        const sameNameID = sameName._id
+                        // const strEmpID = sameNameID //_.trim(stringify(sameName._id),'"')
+                        if (sameNameID == empID) {
+                            canProceed = true
+                        } else {
+                            locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+                            canProceed = false        
+                        }
+                    } else {
+                        canProceed = true
+    
+                    }
+                    if (sameCode) {
+                        // const strSameACode = _.trim(stringify(sameCode._id),'"')
+                        const sameCodeID = sameCode._id
+                        if (sameCodeID == empID) {
+                            canProceed = true
+                        } else {
+                            locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                            canProceed = false    
+                        }
+                    } else {
+                            canProceed = true
         
-            await employee.save()
+                    }
+                
+                } else {
+                    canProceed = true
+                }
+            }
+
+            if (fieldsOkay && canProceed) {
+
+
+                const empName = eLName + ' ' + eFName + ' ' + eMName
+
+                const dedEmp = await Employee.findById(empID)
+    
+                dedEmp.emp_code = eCode
+                dedEmp.last_name = eLName
+                dedEmp.first_name = eFName
+                dedEmp.middle_name = eMName
+                dedEmp.emp_name = empName
+                dedEmp.status = empStatus
+            
+                await dedEmp.save()
+                
+                    res.redirect('/admins/employees/'+ ded)
+    
+            } else {
+                const empStatus = ["Active","Deactivate"]
+
+                const dedEmp = await Employee.findById(empID)
+    
+                dedEmp.emp_code = eCode
+                dedEmp.last_name = eLName
+                dedEmp.first_name = eFName
+                dedEmp.middle_name = eMName
+                dedEmp.emp_name = empName
+                dedEmp.status = empStatus
+
+                res.render('admins/editEmployee', {
+                    ded: ded,
+                    empStatus: empStatus,
+                    user: newUser,
+                    emp: dedEmp, 
+                    locals: locals,
+                    yuser: _user,
+                    newEmp: false,
+                    resetPW: false
+               })
         
-                // const poAssignCode = await Region.findOneAndUpdate({"region": regionCod}, {$set:{"emp_code": eCode}})
-
-                // const userAssignCode = await User.findOneAndUpdate({"assCode": eAssCode}, {$set:{"name": nName, "emp_code": eCode, "region": regionCod}})
-
-                res.redirect('/admins/employees/'+ ded)
+            }
 
         } catch (err) {
             console.log(err)
@@ -566,7 +664,7 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.ADMIN), async (re
         }
 //            console.log(foundlist)
         
-        // const region = await Region.findOne({region: regionAsignCode}) //, function (err, fndArea) {
+        // const region = await Region.findOne({region: regionAsignCode}) //, function (err, fnd_area) {
         
         // if (!isNull(region)) {
         //     areaAsignDesc = region.region_desc
@@ -796,7 +894,7 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.ADMIN), async (re
         // }
 //            console.log(foundlist)
         
-        // const region = await Region.findOne({region: regionAsignCode}) //, function (err, fndArea) {
+        // const region = await Region.findOne({region: regionAsignCode}) //, function (err, fnd_area) {
         
         // if (!isNull(region)) {
         //     areaAsignDesc = region.region_desc
@@ -1048,7 +1146,15 @@ router.get('/regionView/:id', async (req, res) => {
 
         fndRegion = await Region.find()
         
-        let fndEmployee = await Employee.find()
+        const fndEmployee = await Employee.find()
+
+        // WILL UPDATE emp_name field in EMPLOYEE Collection
+        // fndEmployee.forEach( fndEmp => {
+        //     const empName = fndEmp.last_name + ' ' + fndEmp.first_name + ' ' + fndEmp.middle_name
+        //     fndEmp.emp_name = empName
+        //     fndEmp.status = "ACTIVE"
+        //     fndEmp.save()
+        // })
         
     //            const fndEmployees = foundEmployees
     //            const empStatus = fndEmployees.status
@@ -1108,7 +1214,6 @@ router.get('/areaView/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => 
 
     let foundArea = []
     let sortedEmp = []
-    let fndArea = []
     let fndAreas = []
     let sortedAreas = []
     let doneReadRegion = false
@@ -1134,23 +1239,21 @@ router.get('/areaView/:id', authUser, authRole(ROLE.ADMIN), async (req, res) => 
 
     try {
 
-        const fnd_area = await Area.find({}, function (err, fnd_Areas) {
-            fndArea = fnd_Areas
-        })
+        const fnd_area = await Area.find() //{}, function (err, fnd_Areas) {
         
         let fndEmployee = await Employee.find({position_code: areaMgrID})
         
     //            const fndEmployees = foundEmployees
     //            const empStatus = fndEmployees.status
-        if (fndArea.length === 0) {
+        if (fnd_area.length === 0) {
             doneReadRegion = true
         } else {
-            fndArea.forEach(fndAreas =>{
-                id = fndAreas._id
-                areaCode = fndAreas.area
-                areaDesc = fndAreas.area_desc
-                areaEmp = fndAreas.emp_code
-                regionCode = fndAreas.region
+            fnd_area.forEach(fnd_areas =>{
+                id = fnd_areas._id
+                areaCode = fnd_areas.area
+                areaDesc = fnd_areas.area_desc
+                areaEmp = fnd_areas.emp_code
+                regionCode = fnd_areas.region
 
                 // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
                 empName = _.filter(fndEmployee, {'emp_code': areaEmp})
@@ -1200,7 +1303,6 @@ router.get('/branchView/:id', authUser, authRole(ROLE.ADMIN), async (req, res) =
 
     let foundBranch = []
     let sortedEmp = []
-    let fndBranch = []
     let fndBranchs = []
     let sortedBranchs = []
     let doneReadarea = false
@@ -1221,26 +1323,24 @@ router.get('/branchView/:id', authUser, authRole(ROLE.ADMIN), async (req, res) =
 
     try {
 
-        const fnd_branch = await Branch.find({}, function (err, fnd_Branchs) {
-            fndBranch = fnd_Branchs
-        })
+        const fnd_branch = await Branch.find() //{}, function (err, fnd_Branchs) {
         
         let fndEmployee = await Employee.find({position_code: branchMgrID})
         
     //            const fndEmployees = foundEmployees
     //            const empStatus = fndEmployees.status
-        if (fndBranch.length === 0) {
+        if (fnd_branch.length == 0) {
             doneReadarea = true
         } else {
-            fndBranch.forEach(fndBranchs =>{
-                id = fndBranchs._id
-                branchCode = fndBranchs.branch
-                branchDesc = fndBranchs.branch_desc
-                branchEmp = fndBranchs.emp_code
-                branchStat = fndBranchs.status
-                branchCategory = fndBranchs.branch_category
-                areaCode = fndBranchs.area
-                regionCode = fndBranchs.region
+            fnd_branch.forEach(fnd_branchs =>{
+                id = fnd_branchs._id
+                branchCode = fnd_branchs.branch
+                branchDesc = fnd_branchs.branch_desc
+                branchEmp = fnd_branchs.emp_code
+                branchStat = fnd_branchs.status
+                branchCategory = fnd_branchs.branch_category
+                areaCode = fnd_branchs.area
+                regionCode = fnd_branchs.region
 
                 // picked = lodash.filter(arr, { 'city': 'Amsterdam' } );
                 empName = _.filter(fndEmployee, {'emp_code': branchEmp})

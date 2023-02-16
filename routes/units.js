@@ -635,11 +635,18 @@ router.post('/postNewPOs/:id', authUser, authRole(ROLE.PUH), async (req, res) =>
         // const unit = await Po.findOne({po_code: poCod}, function (err, foundedPO) {
 
         // })
-
+        let nEmail = ""
+        let hashedPassword = ""
         let cntrNum = 0
+
         for (i = 1; i <= numPOs; i++) { //starts loop
             console.log("The Number Is: " + i) //What ever you want
             let po_Code = poCod + _.trim(_.toString(i))
+
+            hashedPassword = await bcrypt.hash(po_Code.toLowerCase(), 10)
+
+            nEmail = po_Code.toLowerCase() + '@kmbi.org.ph'
+
 
             let po = new Po({
                 po_code: po_Code,
@@ -656,6 +663,20 @@ router.post('/postNewPOs/:id', authUser, authRole(ROLE.PUH), async (req, res) =>
                 status: "Active"
             })
             const newPO = await po.save()
+
+            let nUser = new User({
+                email: nEmail,
+                password: hashedPassword,
+                name: "",
+                emp_code: "",
+                assCode: po_Code,
+                role: "PO",
+                region: req.user.region,
+                area: req.user.area,
+                branch: brnCod
+            })
+            const saveUser = nUser.save()
+    
         }
 
        res.redirect('/units/pos/'+ param)
@@ -718,8 +739,11 @@ console.log(unitCode)
                 
                 if (poEmpCod ===""){
                 } else {
-                      const po_Name = _.find(brnEmployees, {emp_code: poEmpCod})
-                        poName = po_Name.last_name + ", "+ po_Name.first_name + " "+ _.trim(po_Name.middle_name).substr(0,1) + "."
+                        const po_Name = _.find(brnEmployees, {emp_code: poEmpCod})
+
+                        if (po_Name) {
+                            poName = po_Name.last_name + ", "+ po_Name.first_name + " "+ _.trim(po_Name.middle_name).substr(0,1) + "."
+                        }
                  }
                     
                 fondPO.push({poID: id, poCode: poNumStr, realPOCode: poCode, poNum: poNum, UnitCode: unitCode, poUnitLet: poUnitLet, 
@@ -789,7 +813,8 @@ router.post('/postNewPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => 
     const poNUm = req.body.poNum
     const poCod = param + poNUm
 
-    const nEmail = _.trim(req.body.email).toLowerCase()
+    const passEmail = poCod.toLowerCase()
+    const nEmail = poCod.toLowerCase() + '@kmbi.org.ph'
 
     // const validPONum = /[^1-19]/.test(poNUm)
 
@@ -812,7 +837,7 @@ router.post('/postNewPO/:id', authUser, authRole(ROLE.PUH), async (req, res) => 
 
     })
 
-    const hashedPassword = await bcrypt.hash(req.body.password, 10)
+    const hashedPassword = await bcrypt.hash(passEmail, 10)
                 
     const getExistingUser = await User.findOne({email: nEmail})
         // console.log(foundUser)
@@ -1029,7 +1054,7 @@ router.put('/putEditedPO/:id', authUser, authRole(ROLE.PUH), async function(req,
 
                     const hashedPassword = await bcrypt.hash(newUserPassword, 10)
                 
-                    const getExistingUser = await User.findOneAndUpdate({email: emailForEdit}, {$set:{"email": newEmail, "password": hashedPassword }})
+                    const getExistingUser = await User.findOneAndUpdate({email: emailForEdit}, {$set:{"email": newEmail, "password": hashedPassword, assCode: newPOCode }})
                 
                 }
 
@@ -1061,6 +1086,92 @@ router.put('/putEditedPO/:id', authUser, authRole(ROLE.PUH), async function(req,
         }
   
 })
+
+// GET Employee User for RESET PASSWORD
+router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.PUH), async (req, res) => {
+
+    const paramsID = req.params.id
+         console.log(paramsID)
+     const branCod = req.body.brnCode
+     const empID = req.params.id
+     const unitLetter = _.trim(paramsID.substr(4,2))
+     const poCode = paramsID
+     const unitCode = paramsID.substr(0,5)
+     const _user = req.user
+     let locals = ""
+     let possit = ""
+     let foundEmploy = []
+     
+     let ass_Code = ""
+ 
+    try {
+         let brnCod
+         const loanType = await Loan_type.find({})
+ 
+         const pos = await Po.findOne({po_code: poCode}, function (err, fndUnit) {
+             const fondUnit = fndUnit
+         })
+     
+             // console.log(employe)
+         const yoser = await User.findOne({assCode: poCode}, function (err, foundUser) {
+             //            console.log(foundlist)
+             const fndUser = foundUser
+             console.log(fndUser)
+         })
+ 
+         yoser.password = ""
+             
+         res.render('units/resetPassword', {
+             branchCode: branCod,
+             unitCode: unitCode,
+             po: pos,
+             user: yoser,
+             lonType: loanType,
+             yuser: _user,
+             newPO: false,
+             editPO : false,
+             resetPW: true
+        })
+ 
+ //        res.render('centers/edit', { centers: center, coaClass: coaClass })
+ 
+    } catch (err) {
+        console.log(err)
+        res.redirect('units/pos/'+ unitCode)
+    }
+ })
+ 
+ router.put('/putEditedPass/:id', authUser, authRole(ROLE.PUH), async function(req, res){
+ 
+     const paramsID = req.params.id
+ 
+     const branCod = paramsID.substr(0,3)
+     const unitCode = req.body.unitCode
+     const empID = _.trim(paramsID.substr(3,45))
+     const newPassword = _.trim(req.body.password)
+     const userID = req.body.user_id
+ 
+     // let getExistingUser
+     
+         try {
+             const hashdPassword = await bcrypt.hash(newPassword, 10)
+             let getExistingUser = await User.findById(userID)
+ 
+                 getExistingUser.password = hashdPassword
+                 const savedNewPW = getExistingUser.save()
+         
+             res.redirect('/units/pos/'+ unitCode)
+ 
+         } catch (err) {
+             console.log(err)
+             let locals = {errorMessage: 'Something WENT went wrong.'}
+             res.render('/units/pos/'+ unitCode, {
+             locals: locals
+             })
+         }
+   
+ })
+ 
 
 //Set/View CENTERS per PO 
 
@@ -1329,6 +1440,8 @@ router.get('/newCenter/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
             centerAdd: ctrAdd,
             poCode: poCode,
             unitCode: uniCode,
+            newCenter: true,
+            canEditCenter: true,
             lonType: lonType,
             centerStatus: centerStatus,
             yuser: yuser
@@ -1340,14 +1453,15 @@ router.get('/newCenter/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 router.post('/postNewCenter/:id', authUser, authRole(ROLE.PUH), async (req, res) => {
 
     const _user = req.user
-    const centerPoCode = req.body.po_Code
+    const centerPoCode = req.body.hiddenPOCode
     const poNumber = centerPoCode.substr(5,1)
     const unitCode = centerPoCode.substr(4,1)
     const branchCode = centerPoCode.substr(0,3)
     const centerNumber = req.body.cntrNum
     let cntrNum = _.toNumber(req.body.cntrNum) 
 
-    
+    let cntrCode = ""
+
     switch(poNumber) {
         case "1": 
             if (cntrNum < 10) {
@@ -1479,6 +1593,9 @@ router.get('/getCenterForEdit/:id/edit', authUser, authRole(ROLE.PUH), async (re
     let ctrInfo = []
     let ctrAdd = ""
     const yuser = req.user
+    let canEditCenter = false
+    let canProceed = false
+    let locals = {}
 
 try {
     const ctrLonType = await Loan_type.find({})
@@ -1488,6 +1605,15 @@ try {
         const ctrPoCod = Fndcenter.center.substr(0,6)
         const ctrUniCod = ctrPoCod.substr(0,5)
         const ctrBranch = ctrPoCod.substr(0,3)
+        const ctrLonBegBal = Fndcenter.Loan_beg_bal
+        const ctrTargets = Fndcenter.Targets
+
+        if ((ctrLonBegBal.length > 0) || (ctrTargets.length > 0)) {
+            locals = {errorMessage: "CENTER Code is locked for editing, already has transactions."}
+
+        } else {
+            canEditCenter = true
+        }
 
         ctrInfo = Fndcenter.Info
         if (ctrInfo.length === 0) {
@@ -1503,15 +1629,18 @@ try {
         centerAdd: ctrAdd,
         poCode: ctrPoCod,
         unitCode: ctrUniCod,
+        newCenter: true,
+        canEditCenter: canEditCenter,
         lonType: ctrLonType,
         centerStatus: centerStatus,
-        yuser: yuser
+        yuser: yuser,
+        locals: locals
     })
 
 } catch (err) {
         console.log(err)
-        let locals = {errorMessage: 'Something WENT went wrong.'}
-        res.redirect('/units/pos/'+ ctrUniCod)
+        locals = {errorMessage: 'Something WENT went wrong.'}
+        res.redirect('/units/pos/'+ params)
 }
 })
 
@@ -1520,53 +1649,62 @@ try {
 
 router.put('/putEditedCenter/:id', authUser, authRole(ROLE.PUH), async function(req, res){
     //params.id is center.center
-    const centerPoCode = req.body.po_Code
+    const centerPoCode = req.body.hiddenPOCode
     const poNumber = centerPoCode.substr(5,1)
     const unitCode = centerPoCode.substr(4,1)
     const branchCode = centerPoCode.substr(0,3)
     const centerNumber = req.body.cntrNum
-    let cntrNum = _.toNumber(req.body.cntrNum) 
+    const eStrCenterNum = centerNumber.toString()
+    const HidCenterCode = req.body.hiddenCenter
+    const HidCenterNum = req.body.hiddenCenterNum
+    
+    let cntrNum
     let cntrCode = ""
     
-    switch(poNumber) {
-        case "1": 
-            if (cntrNum < 10) {
-                cntrCode = centerPoCode + _.padStart(cntrNum, 2, '0')        
-            } else {
-                cntrCode = centerPoCode + cntrNum
+    if (centerNumber) {
+        cntrNum = _.toNumber(req.body.cntrNum) 
+    
+        switch(poNumber) {
+            case "1": 
+                if (cntrNum < 10) {
+                    cntrCode = centerPoCode + _.padStart(cntrNum, 2, '0')        
+                } else {
+                    cntrCode = centerPoCode + cntrNum
+                }
+                break;
+            case "2": 
+                cntrNum = cntrNum + 10
+                break;
+            case "3": 
+                cntrNum = cntrNum + 20
+                break;
+            case "4": 
+                cntrNum = cntrNum + 30
+                break;
+            case "5": 
+                cntrNum = cntrNum + 40
+                break;
+            case "6": 
+                cntrNum = cntrNum + 50
+                break;
+            case "7": 
+                cntrNum = cntrNum + 60
+                break;
+            case "8": 
+                cntrNum = cntrNum + 70
+                break;
+            case "9": 
+                cntrNum = cntrNum + 80
+                break;
+            default:
+                cntrNum = 0
+        }   
+    
+            if (poNumber > 1) {
+                cntrCode = centerPoCode + _.toString(cntrNum)
             }
-            break;
-        case "2": 
-            cntrNum = cntrNum + 10
-            break;
-        case "3": 
-            cntrNum = cntrNum + 20
-            break;
-        case "4": 
-            cntrNum = cntrNum + 30
-            break;
-        case "5": 
-            cntrNum = cntrNum + 40
-            break;
-        case "6": 
-            cntrNum = cntrNum + 50
-            break;
-        case "7": 
-            cntrNum = cntrNum + 60
-            break;
-        case "8": 
-            cntrNum = cntrNum + 70
-            break;
-        case "9": 
-            cntrNum = cntrNum + 80
-            break;
-        default:
-            cntrNum = 0
-    }   
-
-        if (poNumber > 1) {
-            cntrCode = centerPoCode + _.toString(cntrNum)
-        }
+    
+    }
 
     const cntrLoanType = req.body.cntrLoan
     let cntrAdd = req.body.centerAdd
@@ -1576,22 +1714,101 @@ router.put('/putEditedCenter/:id', authUser, authRole(ROLE.PUH), async function(
     const cntrInfo = [
         {address: cntrAdd}
       ]
+    let canEditCenterNum = false
+    let newCenterCode = ""
+    let canProceed = false
 
     let center_no
         try {
 
-            center = await Center.findOne({center: req.params.id})
+            const fondCtr = await Center.findOne({center: cntrCode})
 
-            center.center_no = centerNumber
-            center.center = cntrCode
-            center.loan_type = cntrLoanType
-            center.status = cntrStat
-            center.address = req.body.unitAdd
-            center.Info = cntrInfo
+            const unitCenters = await Center.find({po_code: centerPoCode})
+
+            const center = await Center.findOne({center: req.params.id})
+
+            if (centerNumber) { // can EDIT Unit Letter
+                canEditCenterNum = true
+
+                if (HidCenterNum === eStrCenterNum) { // NEW Unit & OLD Unit are the same
+                    canProceed = true
+
+                    poforEdit= await Center.findOne({center: HidCenterCode})
+
+                } else {
+                    const ctrNumFound = _.find(unitCenters, {center_no: eStrCenterNum}) 
+
+                    if (ctrNumFound) { // Nagbago ang Unit Letter & may Existing na Unit Letter
+                        locals = {errorMessage: "ERROR: CENTER " + eStrCenterNum + " already exists!"}
+                        
+                    } else {
+                        canProceed = true
+                        editUserProceed = true 
+
+                        newCenterCode = centerPoCode + cntrNum
+                        
+                        center.center_no = eStrCenterNum
+                        center.center = cntrCode
+
+                    }
+                }
+    
+            } else {
+                canProceed = true
+
+            }
+
+            if (canProceed) {
+                // center.center_no = centerNumber
+                // center.center = cntrCode
+                center.loan_type = cntrLoanType
+                center.status = cntrStat
+                center.address = req.body.centerAdd.toUpperCase()
+                center.Info = cntrInfo
+            
+                await center.save()
+            
+                res.redirect('/units/setPOCenters/'+ centerPoCode)
+    
+            } else {
+                let canEditCenter = false
+                const Fndcenter = await Center.findOne({center: req.params.id})
+                if (Fndcenter) {
+                    const ctrPoCod = Fndcenter.center.substr(0,6)
+                    const ctrUniCod = ctrPoCod.substr(0,5)
+                    const ctrBranch = ctrPoCod.substr(0,3)
+                    const ctrLonBegBal = Fndcenter.Loan_beg_bal
+                    const ctrTargets = Fndcenter.Targets
+            
+                    if ((ctrLonBegBal.length > 0) || (ctrTargets.length > 0)) {
+                        locals = {errorMessage: "CENTER Code is locked for editing, already has transactions."}
+            
+                    } else {
+                        canEditCenter = true
+                    }
+    
+                }
+                
+                const centerStatus = ["Target","Active"]
         
-            await center.save()
+                const lonType = await Loan_type.find({})
+             
+                res.render('units/newCenter', { 
+                    center: fondCtr,
+                    centerAdd: cntrAdd,
+                    newCenter: false,
+                    canEditCenter: canEditCenter,
+                    poCode: centerPoCode,
+                    unitCode: unitCode,
+                    lonType: lonType,
+                    centerStatus: centerStatus,
+                    locals: locals
+                })
         
-            res.redirect('/units/setPOCenters/'+ centerPoCode)
+                // LALAGYAN NG LAMAN
+ 
+            }
+
 
         } catch (err) {
             console.log(err)

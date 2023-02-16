@@ -6,7 +6,7 @@
             <tr>
                 <% if (fondPos.length > 0) { %>
                 <% } else { %>
-                    <a class="btn btn-primary" href='/units/setNewPOs/<%= uniCod %>'>SET NEW PO's</a>
+                    <a class="btn btn-primary" href='/units/setNewPOs/<%= uniCod %>'>SET NEW PO's (One-Time)</a>
                 <% } %>
             </tr>
             <tr>
@@ -30,7 +30,7 @@
                     </td>
                     <td>
                         <div class="btn-row">
-                            <a class="btn btn-primary" href="/branches/getEmpEditPass/<%= fndPOs.realPOCode %>/edit">Reset Password</a>
+                            <a class="btn btn-primary" href="/units/getEmpEditPass/<%= fndPOs.realPOCode %>/edit">Reset Password</a>
                             <!-- <%- include('../partials/deleteForm', { url: `/branches/deleteUnit/${fndPOs.id}` }) %> -->
                         </div>        
                     </td>

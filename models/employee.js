@@ -17,6 +17,10 @@ const employeeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    emp_name: {
+        type: String,
+        required: true
+    },
     position_code: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,

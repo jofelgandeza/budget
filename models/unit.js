@@ -52,7 +52,7 @@ const centerTargetSchema = {
     },
     address: {
         type: String,
-        required: true
+        required: false
     },
     num_centers: {
         type: Number,

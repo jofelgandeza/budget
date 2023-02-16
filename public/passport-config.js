@@ -10,8 +10,6 @@ const User = require('../models/user')
             //  console.log(user)
             if(user == null) {
                 return done(null, false, {message: 'No user with that email.'})
-            } else if (user.name === '') {
-                user.name = 'VACANT'
             } 
 
             try {
@@ -32,9 +30,9 @@ const User = require('../models/user')
               done(err, user)
             })
           })
-        // passport.deserializeUser((id, done) => {
-        //     return done(null, getUserById(id))
-        // })
+        passport.deserializeUser((id, done) => {
+            return done(null, getUserById(id))
+        })
     }
 
 module.exports = initialize

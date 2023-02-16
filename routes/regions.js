@@ -87,6 +87,8 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
     let doneFoundPO = false
     let doneReadLonTyp = false
 
+    // const alert = alert("Inner Region main page view route,")
+    
     const budget_Year = await Setting.find()
 
     fndPositi.forEach(fndPosii => {
@@ -121,16 +123,17 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
 
         const ctrResBudgDet = await Center_budget_det.find({region: regionCode, view_code: "ResClientCount"})
 
-        const areaManager = await Employee.find({region: regionCode}, function (err, foundAreaEmp){
-            fndAreaEmps = foundAreaEmp
-        })
+        const areaManager = await Employee.find({region: regionCode}) //, function (err, foundAreaEmp){
+        //     fndAreaEmps = foundAreaEmp
+        // })
+
         const foundRegion = await Region.findOne({region: regionCode})
             fndRegion = foundRegion
             console.log(fndRegion)
 
 
         let i = 0
-        fndAreaEmps.forEach( areaEmps => {
+        areaManager.forEach( areaEmps => {
             const areaEmpPost = areaEmps.position_code
             const assignCode = areaEmps.assign_code
 
@@ -381,24 +384,6 @@ router.get('/:id', authUser, authRole(ROLE.RD),  async (req, res) => {
 
             })
         }
-
-    // if (req.query.title  !=null && req.query.title !== '') {
-    //     searchOptions.description = RegExp(req.query.title, 'i')
-    // }
-    // try {
-
-    //     const foundRegion = await Region.findOne({region: regionCode})
-    //     fndRegion = foundRegion
-    //     console.log(fndRegion)
-
-    //     areaName = "REGION BUDGET MODULE VIEW"
-    //     res.render('regions/index', {
-    //         regionCode: regionCode,
-    //         regionDesc: fndRegion.region_desc,
-    //         searchOptions: req.query,
-    //         yuser: _user,
-    //         dateToday: new Date()
-    //     })
     } catch (err) {
         console.log(err)
         res.redirect('/')
@@ -729,6 +714,47 @@ router.get('/budget/:id', authUser, authRole(ROLE.RD), async (req, res) => {
     }
 })
 
+// SEARCH FUNCTIONALITIES
+router.get('/search/:id', authUser, authRole(ROLE.RD), async (req, res) => {
+
+    let searchOptions = {}
+    if (req.query.emp_name  !=null && req.query.emp_name !== '') {
+        searchOptions.region = req.user.region
+        searchOptions.emp_name = RegExp(req.query.emp_name, 'i')
+    } else {
+        searchOptions.region = req.user.region
+    }
+
+    let regEmp = []
+    let empForSearch = []
+    console.log(searchOptions) 
+    console.log(req.query) 
+    let sortedEmp
+
+    try {
+        const employee = await Employee.find(searchOptions)
+
+            sortedEmp = employee.sort( function (a,b) {
+                if  ( a.emp_name < b.emp_name ){
+                    return -1;
+                  }
+                  if ( a.emp_name > b.emp_name ){
+                    return 1;
+                  }
+                   return 0;
+            })
+
+
+        res.render('regions/search', {
+            emp: sortedEmp,
+            searchOptions: req.query,
+            region: req.params.id
+        })
+    } catch(err) {
+        console.log(err)
+        res.redirect('/regions/' + req.params.id)
+    }
+})
 
 // GET AREA for Maintenance
 router.get('/areas/:id', authUser, authRole(ROLE.RD), async (req, res) => {
@@ -910,7 +936,7 @@ router.get('/newArea/:id', authUser, authRole(ROLE.RD), async (req, res) => {
 router.post('/postNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) => {
 
     const regionCod = req.params.id
-    let locals
+    let locals = {}
     let canProceed = false
     const area_code = _.trim(req.body.areaCode).toUpperCase()
     const trimmedAreaCode = _.replace(area_code, " ", "")
@@ -942,35 +968,60 @@ router.post('/postNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) =>
     let doneReadArea = false
     let fndArea = [ ]
     let UserProceed = false
+    let areaDescExist = false
+    let areaCodeExist = false
     try {
         
-        // const regionAreas = await Area.find({area:area_code})
-        const getExisArea = await Area.findOne({area: trimmedAreaCode}) //, function (err, foundArea) {
+        if (fieldsOkay) {
+            const getExisAreaDesc = await Area.findOne({area_desc: area_desc}) //, function (err, foundArea) {
 
-            if (isNull(getExisArea)) {
-                canProceed = true 
-            } else {
-                canProceed = false
-                locals = {errorMessage: "Area Code " + area_code + " already exists! Please try again."}
-            }
-
-        console.log(canProceed)
-
-        const hashedPassword = await bcrypt.hash(req.body.password, 10)
-                
-        getExistingUser = await User.findOne({email: nEmail})
-            // console.log(foundUser)
-            if (!getExistingUser) {
-                if (nPassword.length == 0) {
-                    UserProceed = false
-                    locals = {errorMessage: 'Password must NOT be SPACE/S!'}
+                if (isNull(getExisAreaDesc)) {
+                    canProceed = true 
                 } else {
-                    UserProceed = true 
+                    areaDescExist = true
                 }
-            } else {
-                    UserProceed = false
-                    locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
-            }    
+
+            const getExisArea = await Area.findOne({area: trimmedAreaCode}) //, function (err, foundArea) {
+                
+                if (isNull(getExisArea) && canProceed) {
+                    canProceed = true 
+                } else {
+                    areaCodeExist = true
+                }
+
+                if (areaDescExist && areaCodeExist) {
+                    locals = {errorMessage: "Area Code " + area_code + " and Description " + area_desc + " already exists! Please try again."}
+                } else if (areaDescExist && !areaCodeExist) {
+                    locals = {errorMessage: "Area Description " + area_desc + " already exists! Please try again."}
+                } else if (!areaDescExist && areaCodeExist) {
+                    locals = {errorMessage: "Area Code " + area_code + " already exists! Please try again."}
+                } else {
+                    canProceed = true 
+                }
+
+                // if (!canProceed) {
+                    const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                    
+                    getExistingUser = await User.findOne({email: nEmail})
+                        // console.log(foundUser)
+                        if (!getExistingUser) {
+                            if (nPassword.length == 0) {
+                                UserProceed = false
+                                locals = {errorMessage: 'Password must NOT be SPACE/S!'}
+                            } else {
+                                UserProceed = true 
+                            }
+                        } else {
+                                UserProceed = false
+                                locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
+                        }    
+        
+                // } 
+    
+            }
+    
+    
+        // const regionAreas = await Area.find({area:area_code})
 
         
         if (canProceed && fieldsOkay && UserProceed) {
@@ -997,6 +1048,8 @@ router.post('/postNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) =>
         
             const saveArea = nArea.save()
 
+            const hashedPassword = await bcrypt.hash(req.body.password, 10)
+
             let nUser = new User({
                 email: nEmail,
                 password: hashedPassword,
@@ -1013,9 +1066,12 @@ router.post('/postNewArea/:id', authUser, authRole(ROLE.RD), async (req, res) =>
             res.redirect('/regions/areas/' + regionCod)
 
         } else {
+
+            let errArea = {area: area_code, area_desc: area_desc}
+
             res.render('regions/newArea', {
                 regionCode: regionCod,
-                area: new Area(),
+                area: errArea,
                 user: new User(),
                 locals: locals,
                 canEditAreaCode: true,
@@ -1114,10 +1170,13 @@ router.put('/putEditedArea/:id', authUser, authRole(ROLE.RD), async function(req
     const trimmedAreaCode = _.replace(area_code, " ", "") // if Area Code can be Edited
     const canEditAreaCode = req.body.canEditAreaCode
 
+    const nEmail = _.trim(req.body.email).toLowerCase()
+    const nPassword = _.trim(req.body.password).toLowerCase()
+
     const area_desc = _.trim(req.body.areaDesc).toUpperCase()
     const areaCodeHide = _.trim(req.body.areaCodeHid).toUpperCase()
     let fieldsOkay = false
-    let locals
+    let locals = {}
     let validCode
 
     const validDesc = /[^a-zA-Z0-9 ]/.test(area_desc) // /[^a-zA-Z0-9]+/g
@@ -1127,17 +1186,23 @@ router.put('/putEditedArea/:id', authUser, authRole(ROLE.RD), async function(req
         if (validCode) {
             locals = {errorMessage: "Values for CODE must not contain Special Characters!"}
 
-        } else if (area_code === areaCodeHide) {
+        } else if (trimmedAreaCode === areaCodeHide) {
             if (area_desc.length == 0) {
                 locals = {errorMessage: "Values for the fields must NOT be space/s!"}
             } else if (validDesc) {
                 locals = {errorMessage: "Values for DESCRIPTION must not contain Special Characters!"}
+            } else if (nPassword.length == 0) {
+                locals = {errorMessage: "Values for the PASSWORD field must NOT be space/s!"}
             } else {
                 fieldsOkay = true          
             }
+        } else if (nPassword.length == 0) {
+            locals = {errorMessage: "Values for the PASSWORD field must NOT be space/s!"}
         } else {
             if (trimmedAreaCode.length < 3) {
                 locals = {errorMessage: "Values for the AREA CODE field must NOT contain space/s!"}
+            } else if (validDesc) {
+                locals = {errorMessage: "Values for DESCRIPTION must not contain Special Characters!"}
             } else {
                 fieldsOkay = true          
             }
@@ -1153,160 +1218,189 @@ router.put('/putEditedArea/:id', authUser, authRole(ROLE.RD), async function(req
         }
     }
 
-
-    console.log(req.params.id)
-
     let canProceed = false
     let sameAreaDesc = false
-    let newAreaCode = area_code
+    let newAreaCode = trimmedAreaCode
+    let noChangeOnFields = false
 
     let getAreaForEdit
+    let chkAreaCodeExist
 
         try {
 
+            const getExisArea = await Area.find({}) //, function (err, foundArea) {
+                fndArea = getExisArea
+
+            const sameDEesc = _.find(getExisArea, {area_desc: area_desc})
+
+            if (trimmedAreaCode === areaCodeHide) {
+                chkAreaCodeExist = await Area.findOne({area: areaCodeHide})
+            } else {
+                chkAreaCodeExist = await Area.findOne({area: trimmedAreaCode})// lkjh
+
+            }
+
             if (fieldsOkay) {
 
-                const getExisArea = await Area.findOne({area_desc: area_desc}) //, function (err, foundArea) {
-                    fndArea = getExisArea
 
-                    const sameDEesc = _.find(getExisArea, {area_desc: area_desc})
+                if (canEditAreaCode === "true") { // Area Code can be edited..    
 
-                if (canEditAreaCode === "true") { // Area Code can be edited..
-    
-                    getAreaForEdit = await Area.findOne({area: trimmedAreaCode})
-    
-                    if (getAreaForEdit) { // may kaparehang Area Code
-                        if (getAreaForEdit.area === areaCodeHide) {
-                            if (sameDEesc) {
-                                canProceed = true
-                                // sameAreaDesc = true
-                                // locals = {errorMessage: "Area DESCRIPTION already exists!"}
-                            } else { 
-                                newAreaCode = trimmedAreaCode
-                                canProceed = true
-                            }
-
+                    if (sameDEesc) {
+                        if (sameDEesc.area === areaCodeHide) {
                         } else {
-                            if (sameDEesc) {
-                                sameAreaDesc = true
-                                locals = {errorMessage: "Area DESCRIPTION already exists!"}
-                            } else { 
-                                newAreaCode = trimmedAreaCode
-                                canProceed = true
-                            }
-                        }
-
-                    } else if (sameDEesc) {
-                        if (area_code === areaCodeHide) {
                             sameAreaDesc = true
-                            locals = {errorMessage: "Area DESCRIPTION already exists!"}
+                            locals = {errorMessage: "Area DESCRIPTION already exists!"}    
     
-                        } else {
-                            sameAreaDesc = false    
-                            canProceed = true
                         }
                     } else {
-                        getAreaForEdit = await Area.findOne({area: trimmedAreaCode})
-
-                        newAreaCode = trimmedAreaCode
                         canProceed = true
 
                     }
+
+                    if (trimmedAreaCode === areaCodeHide) {
+                        canProceed = true
+                    } else {
+
+                        if (chkAreaCodeExist && !sameAreaDesc) { // may kaparehang Area Code
+                                locals = {errorMessage: "Area CODE " + trimmedAreaCode + " already exists!"}    
+                                canProceed = false
+                            } else {
+                            canProceed = true
+
+                        }
+                    }
+
                 
                 } else {
 
-                    if (sameDEesc) {
-                        getAreaForEdit = await Area.findOne({area: areaCodeHide})
-        
-                        if (getAreaForEdit) { // may kaparehang Branch Code
-                            if (getAreaForEdit.branch === areaCodeHide) {
+                    if (sameDEesc) {        
+                        if (chkAreaCodeExist) { // may kaparehang Branch Code
+                            if (chkAreaCodeExist.area === areaCodeHide) {
                                 canProceed = true
                             }
                         } else {
-                            sameAreaDesc = true
-                            locals = {errorMessage: "Area DESCRIPTION already exists!"}
+                            if (chkAreaCodeExist.area === areaCodeHide) {
+                                canProceed = true
+                            } else {
+                                sameAreaDesc = true
+                                locals = {errorMessage: "Area DESCRIPTION already exists!"}    
+                            }
                         }
                     } else {
-                        getAreaForEdit = await Area.findOne({area: areaCodeHide})
 
                         newAreaCode = areaCodeHide
                         canProceed = true
 
                     }    
                 }
-            } else {
 
-            }
-
-                if (canEditAreaCode === "true") { // Area Code can be edited..
-                    if (validCode) {
-                        getAreaForEdit = await Area.findOne({area: areaCodeHide})                    
-                    } else if (!fieldsOkay) {
-                        getAreaForEdit = await Area.findOne({area: areaCodeHide})
-                    } else if (area_code !== areaCodeHide) {
-                        getAreaForEdit = await Area.findOne({area: areaCodeHide})
-
-                    } else {
-                        getAreaForEdit = await Area.findOne({area: trimmedAreaCode})
+                if (canProceed) {
+                    if (canEditAreaCode === "true") { // Area Code can be edited..    
+                        const oldEmail = areaCodeHide.toLowerCase() + '@kmbi.org.ph'
+                        const newEmail = newAreaCode.toLowerCase() + '@kmbi.org.ph'
+                        
+                        if (trimmedAreaCode !== areaCodeHide) {
+        
+                            let getUser
+                            let newExistEmail = ""
+                            if (newEmail === oldEmail) {
+                                getUser = await User.findOne({email: newEmail})    
+                                newExistEmail = newEmail
+                            } else {
+                                getUser = await User.findOne({email: nEmail})    
+                                newExistEmail = nEmail
+                            }
+        
+        
+                            if (getUser) {
+                                locals = {errorMessage: "Email " + newExistEmail + " already exists!"}
+                                canProceed = false
+                            }
+                        }
+    
+                        if ((trimmedAreaCode === areaCodeHide) && sameDEesc && (oldEmail === nEmail)) {
+                            noChangeOnFields = true
+                        } else {
+                            // canProceed = false
+    
+                        }
+                    } else { // ONLY REGION DESC IS OPEN FOR EDITING
+                        if (sameDEesc) {
+                            noChangeOnFields = true
+                        } 
+                            canProceed = true
                     }
-
-                } else {
-                    getAreaForEdit = await Area.findOne({area: areaCodeHide})
+    
                 }
+                if (noChangeOnFields) {
+                    res.redirect('/regions/areas/'+ paramsID)
+                } else {
+
+                }
+            }
+                getAreaForEdit = await Area.findOne({area: areaCodeHide})                    
 
                 if (canProceed && fieldsOkay && !sameAreaDesc) {
-                        getAreaForEdit.area = newAreaCode
-                        getAreaForEdit.area_desc = area_desc
-                
-                        getAreaForEdit.save()
 
-                    if (area_code !== areaCodeHide) {
-                        const emailForSearch = areaCodeHide + '@kmbi.org.ph'
-                        const getUser = await User.findOne({user: emailForSearch})
+                       getAreaForEdit.area = newAreaCode
+                       getAreaForEdit.area_desc = area_desc
+               
+                       getAreaForEdit.save()
 
-                        if (!isNull(getUser)) {
-                            getUser.email = emailForSearch
-                            getUser.area = area_code
-                            getUser.assCode = area_code
+                    
+                    if (canEditAreaCode === "true") { // Area Code can be edited..
+                        if (trimmedAreaCode !== areaCodeHide) {
 
-                            getUser.save()
+                            const hashedPassword = await bcrypt.hash(req.body.password, 10)
+     
+                            const oldEmail = areaCodeHide.toLowerCase() + '@kmbi.org.ph'
+                            const newEmail = newAreaCode.toLowerCase() + '@kmbi.org.ph'
+                            const getUser = await User.findOne({email: oldEmail})
+     
+                            if (!isNull(getUser)) {
+                                getUser.email = newEmail
+                                getUser.area = newAreaCode
+                                getUser.assCode = newAreaCode
+                                getUser.password = hashedPassword
+     
+                                getUser.save()
+                            }
+     
+     
                         }
+                    }    
 
+                       res.redirect('/regions/areas/'+ paramsID)
 
-                    }
+                       // Update USER Collection
 
-                        res.redirect('/regions/areas/'+ paramsID)
+               } else {
 
-                        // Update USER Collection
-
-                } else {
-
-                    const yoser = await User.findOne({assCode: areaCodeHide}) //, function (err, foundUser) {
-                        //            console.log(foundlist)
-                    if (!isNull(yoser)) {
-                        fndUser = yoser
-                        console.log(yoser)
-            
-                        doneReadYoser = true
-            
-                    }
-            
-                    res.render('regions/editArea', { 
-                        regID: param,
-                       area: getAreaForEdit, 
-                       regionCode: paramsID,
-                       locals: locals,
-                       canEditAreaCode: canEditAreaCode,
-                       yuser : req.user,
-                       newArea : false,
-                       resetPW: true,
-                       editArea: true,
-                       user: yoser
+                   const yoser = await User.findOne({assCode: areaCodeHide}) //, function (err, foundUser) {
+                       //            console.log(foundlist)
+                   if (!isNull(yoser)) {
+                       fndUser = yoser
+                       console.log(yoser)
            
-                   })
+                       doneReadYoser = true
+           
+                   }
+           
+                   res.render('regions/editArea', { 
+                       regID: param,
+                      area: getAreaForEdit, 
+                      regionCode: paramsID,
+                      locals: locals,
+                      canEditAreaCode: canEditAreaCode,
+                      yuser : req.user,
+                      newArea : false,
+                      resetPW: true,
+                      editArea: true,
+                      user: yoser
+          
+                  })
 
-                }    
-    
+               }    
 
         } catch (err) {
             console.log(err)
@@ -1488,19 +1582,27 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.RD), async (req, res) => 
     let locals
     const empStatus = ["Active","Deactivate"]
 
-   const empAreaCod = req.body.area
-    const nEmpCode = _.trim(req.body.empCode)
+    let empAreaCod
+    if (req.body.area == null) {
+        empAreaCod = req.body.HideAreaAss
+
+    } else {
+        empAreaCod = req.body.area
+
+    }
+   
+    const nEmpCode = _.trim(req.body.empCode).toUpperCase()
     const nLName = _.trim(req.body.lName).toUpperCase()
     const nFName = _.trim(req.body.fName).toUpperCase()
     const nMName = _.trim(req.body.mName).toUpperCase()
     const empStat = req.body.empStat
     const nName =  nLName + ", " + nFName + " " + nMName
     
-    const validEmpCode = /[^a-zA-Z0-9]-/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
+    const validEmpCode = /[^a-zA-Z0-9-]/.test(nEmpCode) // /[^a-zA-Z0-9]+/g
     const trimmedEmpCode = _.replace(nEmpCode, " ", "")
-    const validLName = /[^a-zA-Z] /.test(nLName)
-    const validFName = /[^a-zA-Z] /.test(nFName)
-    const validMName = /[^a-zA-Z] /.test(nMName)
+    const validLName = /[^a-zA-Z. ]/.test(nLName)
+    const validFName = /[^a-zA-Z. ]/.test(nFName)
+    const validMName = /[^a-zA-Z. ] /.test(nMName)
 
     let nameCanProceed = false
     let fieldsOkay = false
@@ -1516,6 +1618,8 @@ router.post('/postNewEmp/:id', authUser, authRole(ROLE.RD), async (req, res) => 
     } else if (nEmpCode.length == 0 || nLName.length == 0 || nFName.length == 0 || nMName.length == 0) {
         locals = {errorMessage: 'Field/s must NOT be a SPACE/S!'}
         // nameCanProceed = true
+    } else if (req.body.area == null) {
+        locals = {errorMessage: "New Employee cannot be saved. There is no available or vacant AREA to tag!"}
     } else {
 
         fieldsOkay = true
@@ -1560,47 +1664,34 @@ try {
     const sameAssign = _.find(areaEmployees, {assign_code: empAreaCod})
     console.log(sameAssign)
 
-    if (areaEmployees.length == 0) {
-        canProceed = true
-    } else {
-        if (sameName) {
-            locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
-            canProceed = false
-        } else if (sameAssign) {
-            const codeAssignName = sameAssign.last_name + ', ' + sameAssign.first_name + ' ' + sameAssign.middle_name
-            locals = {errorMessage: 'Assign Code: ' + empAreaCod + ' has been assigned to ' + codeAssignName}
-            canProceed = false
-
-        } else if (sameCode) {
-            locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
-            canProceed = false
-        } else {
+    if (fieldsOkay) {
+        if (areaEmployees.length == 0) {
             canProceed = true
-        }
-    }
-
-        // const hashedPassword = await bcrypt.hash(req.body.password, 10)
-                
-        // getExistingUser = await User.findOne({email: nEmail})
-        //     // console.log(foundUser)
-        //     if (!getExistingUser) {
-        //         if (nPassword.length == 0) {
-        //             UserProceed = false
-        //             locals = {errorMessage: 'Password must NOT be SPACE/S!'}
-        //         } else {
-        //             UserProceed = true 
-        //         }
-        //     } else {
-        //             UserProceed = false
-        //             locals = {errorMessage: 'Username : ' + nEmail + ' already exists!'}
-        //     }    
+        } else {
+            if (sameName) {
+                locals = {errorMessage: 'Employee Name: ' + nName + ' already exists!'}
+                canProceed = false
+            } else if (sameAssign) {
+                const codeAssignName = sameAssign.last_name + ', ' + sameAssign.first_name + ' ' + sameAssign.middle_name
+                locals = {errorMessage: 'Assign Code: ' + empAreaCod + ' has been assigned to ' + codeAssignName}
+                canProceed = false
     
+            } else if (sameCode) {
+                locals = {errorMessage: 'Employee Code: ' + nEmpCode + ' already exists!'}
+                canProceed = false
+            } else {
+                canProceed = true
+            }
+        }
+    
+    }
     if (canProceed && fieldsOkay)  {
         // if (ePosition === "REG_DIR") {
             const poAssignCode = await Area.findOneAndUpdate({"area": empAreaCod}, {$set:{"emp_code": req.body.empCode}})
         // } 
 
         addedNewUser = true
+        const empName = nLName + ' ' + nFName + ' ' + nMName
         
         let employee = new Employee({
 
@@ -1608,6 +1699,7 @@ try {
             last_name: nLName,
             first_name: nFName,
             middle_name: nMName,
+            emp_name: empName,
             position_code: areaMgrID,
             assign_code: empAreaCod,
             po_number: 'N/A',
@@ -1632,12 +1724,12 @@ try {
     } 
     else {
 
-        let errEmp = []
+        let errEmp
         let errUser = []
 
             // errUser.push({email: nEmail, password: req.body.password})
 
-            errEmp.push({emp_code: nEmpCode, area: empAreaCod, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: empAreaCod})
+            errEmp = {emp_code: nEmpCode, area: empAreaCod, last_name: nLName, first_name: nFName, middle_name: nMName, position_code: empAreaCod}
             console.log(errEmp)
 
             res.render('regions/newEmployee', { 
@@ -1747,7 +1839,7 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.RD), async function(req,
 
     const eAssCode = assCode
     
-    const eCode = _.trim(req.body.empCode)
+    const eCode = _.trim(req.body.empCode).toUpperCase()
     const eLName = _.trim(req.body.lName).toUpperCase()
     const eFName = _.trim(req.body.fName).toUpperCase()
     const eMName = _.trim(req.body.mName).toUpperCase()
@@ -1793,10 +1885,13 @@ router.put('/putEditedEmp/:id', authUser, authRole(ROLE.RD), async function(req,
             console.log(employee)
 
             if (fieldsOkay) {
+                const empName = eLName + ' ' + eFName + ' ' + eMName
+
                 employee.emp_code = HidEmpCode
                 employee.last_name = eLName
                 employee.first_name = eFName
                 employee.middle_name = eMName
+                employee.emp_name = empName
                 employee.status = eStatus
             
                     if (eAssCode === HidAreaAss) {
@@ -1940,6 +2035,7 @@ router.get('/getEmpEditPass/:id/edit', authUser, authRole(ROLE.RD), async (req, 
                 area: emArea,
                 canEditAreaCode : false,
                 newArea : false,
+                editArea: true,
                 user: yoser,
                 locals: locals,
                 yuser: _user,
@@ -1985,6 +2081,8 @@ router.put('/putEditedPass/:id', authUser, authRole(ROLE.RD), async function(req
 
             if (fieldsOkay) {
                 const hashdPassword = await bcrypt.hash(newPassword, 10)
+
+                // const updateAdminPass = await User.findOneAndUpdate({email: "jpg@jpg.com"}, {$set :{password:hashdPassword}})
 
                 const getExistingUser = await User.findOne({area: areaCod, role: "AM"})
                     if (getExistingUser) {

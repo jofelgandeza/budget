@@ -1,17 +1,3 @@
-// const Position = require('../models/position')
-// const _ = require('lodash')
-// const Cleave = require('../public/javascripts/cleave.js')
-//alert('Reply from main.js')
-// const Cleave = require('cleave')
-
-const setTargetBtn = document.querySelector('.btn-setTarget');
-const okBtn = document.querySelector('.ok-btn');
-const popupBox = document.querySelector('popup-overlay');
-
-setTargetBtn.addEventListener('click',() => {
-    alert('Set Target button is clicked!')
-    popupBox.classList.add('active')
-})
 
 function onClickOkay() {
     // alert('Set target link was clicked!');
@@ -105,6 +91,16 @@ const cleave11 = new Cleave('.decAmount', {
     numeral: true,
     numeralThousandGroupStyle: 'thousand'
 })
+
+const setTargetBtn = document.querySelector('.btn-setTarget');
+const okBtn = document.querySelector('.ok-btn');
+const popupBox = document.querySelector('popup-overlay');
+
+setTargetBtn.addEventListener('click',() => {
+    alert('Set Target button is clicked!')
+    popupBox.classList.add('active')
+})
+
 
 function hideUnitPoInputs() {
     var e = document.getElementById("ayApo");
@@ -439,3 +435,13 @@ function compareFirstNames( a, b ) {
     return 0;
   }
   
+
+  function CompareDateEmpMove() {
+    var today = new Date();
+    var date_from = document.getElementById("date_from").value;
+    date_from = new Date(date_from)
+    if (today >= date_from) {
+      document.getElementById("controllo_giorni").innerHTML = "You cannot select today or the days before.";
+    }
+  
+  }

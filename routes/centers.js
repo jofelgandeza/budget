@@ -5,6 +5,7 @@ const router  = express.Router()
 // const Swal = require('sweetalert2')
 const Center = require('../models/center')
 const Employee = require('../models/employee')
+const Client = require('../models/client')
 const Loan_type = require('../models/loan_type')
 const Center_budget_det = require('../models/center_budget_det')
 const Center_det_budg_view = require('../models/center_det_budg_view')
@@ -82,10 +83,16 @@ router.get('/:id', authUser, authRole("PO"), async (req, res) => {
 
     try {
 
-        POdata = await Employee.findOne({assign_code: assignCode}, function (err, foundedEmp) {
-            POname = foundedEmp.first_name + " " + foundedEmp.middle_name.substr(0,1) + ". " + foundedEmp.last_name
-            POposition = foundedEmp.position_code
-        })
+        const POdata = await Employee.findOne({assign_code: assignCode}) //, function (err, foundedEmp) {
+
+        if (POdata) {
+            POname = POdata.first_name + " " + POdata.middle_name.substr(0,1) + ". " + POdata.last_name
+            POposition = POdata.position_code
+
+        } else {
+            POname = "Vacant"
+        }
+
                 //  console.log(ctrResBudgDet)
          
         loanTypes = await Loan_type.find()
@@ -241,8 +248,13 @@ router.get('/viewTarget/:id', authUser, authRole("PO", "BM"), async (req, res) =
      let POname =" "
      let POposition = " "
      const POdata = await Employee.findOne({assign_code: assignCode}, function (err, foundedEmp) {
-        POname = foundedEmp.first_name + " " + foundedEmp.middle_name.substr(0,1) + ". " + foundedEmp.last_name
-        POposition = foundedEmp.position_code
+        if (foundedEmp == null) {
+            POname ="Vacant"
+        } else {
+            POname = foundedEmp.first_name + " " + foundedEmp.middle_name.substr(0,1) + ". " + foundedEmp.last_name
+            POposition = foundedEmp.position_code
+    
+        }
     })
 
     let doneCenterRead = false
@@ -9865,7 +9877,118 @@ router.put('/saveEditTargets2/:id', authUser, authRole("PO", "BM"), async functi
     }
 })
 
+//View CLIENTS per PO Level 
 
+router.get('/clients/:id', authUser, authRole("PO"), async (req, res) => {
+
+    const poCode = req.params.id
+    const _user = req.user
+
+
+    let fondClient = []
+    let sortedClient = []
+    let fndPosition = {}
+    let clientCode = ""
+    let clientName = ""
+    let clientPostCode = ""
+    let clientPost = ""
+    let clientSortKey = ""
+    let clientPst
+    let clientAssign = ""
+    let cliID = ""
+    let clientPoCode = ""
+    let clientAssCode = ""
+
+    let clientCanProceed = false
+    
+    try {
+        const poClients = await Client.find({po_code: poCode})
+            
+            poClients.forEach(foundCli =>{
+                cliID = foundCli._id
+                clientName = foundCli.last_name + ", " + foundCli.first_name + " " + foundCli.middle_name
+                clientCode = foundCli.client_code
+                clientCenter = foundCli.center
+                clientPoCode = foundCli.po_code
+                clientAdd = foundCli.address
+
+                fondClient.push({cliID: cliID, branchC: brnCode, clientName: clientName, clientCode: clientCode, address: clientAdd, center: clientCenter, clientSortKey: clientName})
+
+                clientCanProceed = true            
+
+            })
+
+            if (poClients.length == 0) {
+                clientCanProceed = true
+            }
+
+
+        sortedClient = fondClient.sort( function (a,b) {
+            if ( a.clientSortKey < b.clientSortKey ){
+                return -1;
+              }
+              if ( a.clientSortKey > b.clientSortKey ){
+                return 1;
+              }
+               return 0;
+        })        
+
+    if (clientCanProceed)
+        res.render('centers/client', {
+            poCode: poCode,
+            fndClient: sortedClient,
+            searchOptions: req.query,
+            yuser: _user
+        })
+
+} catch (err) {
+        console.log(err)
+        res.redirect('/'+ poCode)
+    }
+})
+
+router.get('/newClient/:id', authUser, authRole("PO"), async (req, res) => {
+
+    const poCode = req.params.id
+    const _user = req.user
+
+    let fndPost = []
+
+    try {
+
+        // const date = new Date('2022-02-20T00:00:00.000Z');
+        const detToday = new Date()
+
+        const startYear = detToday.getFullYear(detToday) 
+        const startNumYear = startYear - 60
+        
+
+        const str1Date = detToday.toISOString()
+        const strDate = detToday.toISOString().split('T')[0]
+        const det1 = detToday.setFullYear()
+
+        const startDate = subtractYears(detToday, 60)
+
+        const endDate = subtractYears(detToday, 20)
+
+        const newClient = new Client()
+
+            res.render('centers/newClients', { 
+               kliyente: newClient, 
+               startDate: startDate,
+               endDate: endDate,
+               cliAge: 0,
+               poCode: poCode,
+               newCliet: true,
+               yuser: _user,
+               resetPW: false
+           })
+   
+    } catch (err) {
+        console.log(err)
+        res.redirect('/')
+    }
+})
 
 function setProject(req, res, next) {
     const projectId = parseInt(req.params.projectId)

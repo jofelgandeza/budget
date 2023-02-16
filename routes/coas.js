@@ -3,6 +3,7 @@ const router  = express.Router()
 const Swal = require('sweetalert2')
 const Coa = require('../models/coa')
 const _ = require('lodash')
+const { sortedLastIndexOf } = require('lodash')
 
 
 const coaClass = ["Income", "Expense","Asset - Current", "Asset - Non-current", "Contra Asset",
@@ -14,7 +15,8 @@ router.get('/', async (req, res) => {
     let searchOptions = {}
     if (req.query.title  !=null && req.query.title !== '') {
         searchOptions.title = RegExp(req.query.title, 'i')
-    }
+    } 
+
     console.log(searchOptions) 
     try {
         const coas = await Coa.find(searchOptions)

@@ -1,3 +1,4 @@
+
 <div class="form-row">
     <div class="form-item-column">
         <label>Branch Code</label>
@@ -8,8 +9,13 @@
         <% } %>
     </div>
     <div class="form-item-column">
+        
         <label>Branch Description</label>
-        <input style="text-transform: uppercase" type="text" name="branchDesc" value="<%= branch.branch_desc %>" autocomplete="off">
+        <% if (editBranch) { %>
+            <input style="text-transform: uppercase" type="text" name="branchDesc" value="<%= branch.branch_desc %>" autocomplete="off">
+        <% } else { %>
+            <input style="text-transform: uppercase" type="text" name="branchDesc" value="<%= branch.branch_desc %>" disabled>
+        <% } %>
     </div>
     <div class="form-item-column">
         <input style="text-transform: uppercase" type="text" name="branchCodeHide" value="<%= branch.branch %>" maxlength="3" hidden>
@@ -22,19 +28,28 @@
 <div class="form-row">
     <div class="form-item-column">
         <label>Address</label>
-        <input type="text" enable name="branchAdd" id="branchAdd" value="<%= branch.address %>">
+        <% if (editBranch) { %>
+            <input type="text" enable name="branchAdd" id="branchAdd" value="<%= branch.address %>">
+        <% } else { %>
+            <input type="text" enable name="branchAdd" id="branchAdd" value="<%= branch.address %>" disabled>
+        <% } %>
     </div>
     <div class="form-item-column">
         <label>Status</label>
-            <select name="brnStat" id="brnStat" >
-                <% brnStatus.forEach(brnStat => { %>
-                    <% if (brnStat === branch.status) { %>
-                       <option selected value="<%= brnStat %>"> <%= brnStat %></option>
-                    <% } else { %>
-                        <option value="<%= brnStat %>"> <%= brnStat %></option>
-                    <% } %>
-                <% }) %>
-            </select>
+        <% if (editBranch) { %>
+            <select enable name="brnStat" id="brnStat" > 
+        <% } else { %>
+            <select disabled name="brnStat" id="brnStat"> 
+        <% } %>
+        <% brnStatus.forEach(brnStat => { %>
+                <% if (brnStat === branch.status) { %>
+                    <option selected value="<%= brnStat %>"> <%= brnStat %></option>
+                <% } else { %>
+                    <option value="<%= brnStat %>"> <%= brnStat %></option>
+                <% } %>
+            <% }) %>
+        </select>
+
     </div>
     <div class="form-item-column">
     
@@ -83,10 +98,10 @@
 </div>
     
 <div class="form-row">
-    <% if (newBranch || resetPW) { %> 
+    <% if (newBranch || resetPW || editBranch) { %> 
         <div class="form-item-columnUSER">
             <label>System's User Name</label>
-            <% if (newBranch) { %> 
+            <% if (newBranch || editBranch) { %> 
                 <input type="email" id="email" name="email" value="<%= user.email %>" onclick="setBranchEmailUser()" autocomplete="off">
             <% } else { %>
                 <input type="email" name="email" value="<%= user.email %>" autocomplete="off" disabled>
